@@ -1,0 +1,4 @@
+/var/spool/slurmd/job20154092/slurm_script: line 26: /bin/activate: No such file or directory
+/usr/bin/which: no python in (/bin:/leonardo/home/userinternal/rscheda0/.local/bin:/leonardo/home/userinternal/rscheda0/bin:/cineca/bin:/leonardo/prod/opt/tools/cintools/1.0/none/bin:/leonardo/prod/spack/03/install/0.19/linux-rhel8-icelake/gcc-8.5.0/environment-modules-5.2.0-rz47odw4phlhzhhbz7b65nv5s5othgmi/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin)
+/var/spool/slurmd/job20154092/slurm_script: line 33: python: command not found
+slurmstepd: error: *** JOB 20154092 ON lrdn1342 CANCELLED AT 2025-09-15T12:15:42 ***

@@ -1,0 +1,89 @@
+srun: error: Task launch for StepId=20208727.30 failed on node lrdn2414: Communication connection failure
+srun: error: Application launch failed: Communication connection failure
+srun: Job step aborted
+[2025-09-16 14:14:09,648 W 419166 419166] global_state_accessor.cc:429: Retrying to get node with node ID d2e9ae5ea98117d00f001b7062eb5d2e1d28627db9f1d4757045092f
+[2025-09-16 14:14:09,649 W 399043 399043] global_state_accessor.cc:429: Retrying to get node with node ID e13be4a59e41d61263ed0c255620651fdf7822b2d8d200ed5590b3d9
+[2025-09-16 14:14:29,110 W 385990 385990] global_state_accessor.cc:429: Retrying to get node with node ID 781633b73c9e4f2dda622214c546652165787dccfe69360858cdc16d
+[2025-09-16 14:14:29,283 W 2134793 2134793] global_state_accessor.cc:429: Retrying to get node with node ID 8eb2fca6e5e552a464fa878b693e567ce7e33009bcc70156ba68b3bf
+[2025-09-16 14:14:30,261 W 381997 381997] global_state_accessor.cc:429: Retrying to get node with node ID ce715509cb579fca1700eff963b390187c618641cb766abcedd0a857
+[2025-09-16 14:14:30,267 W 182666 182666] global_state_accessor.cc:429: Retrying to get node with node ID 3d8e946a22b0181b988131b79b6b49d017abddb2025d3f15950c4eb2
+[2025-09-16 14:14:32,363 W 187608 187608] global_state_accessor.cc:429: Retrying to get node with node ID a998cbd33815aba0462be372051fb76010c18c8d3e12f089b459942b
+[2025-09-16 14:14:32,826 W 395535 395535] global_state_accessor.cc:429: Retrying to get node with node ID ac99f506814d5dc7d6b2702fde690fb64efd9173d92c23b718a929d0
+[2025-09-16 14:14:32,905 W 2648941 2648941] global_state_accessor.cc:429: Retrying to get node with node ID 438e29a06df7ed29fd014b450b477c96e966a6ab23c6f6a3b6454072
+[2025-09-16 14:14:49,004 W 1799555 1799555] global_state_accessor.cc:429: Retrying to get node with node ID 8d3a4bad6b9c7907ee163d3a36dcf70da92fa5d16b91ace2b4d7fb2f
+[2025-09-16 14:14:49,785 W 2121453 2121453] global_state_accessor.cc:429: Retrying to get node with node ID eef89c7ae26a95291d4c27e9e3789fb79f5e511abe86f298ad07e9ef
+[2025-09-16 14:14:51,564 W 2468515 2468515] global_state_accessor.cc:429: Retrying to get node with node ID ed71af0c9b00ce58f1051379913fb22a4a133a084798de3519a85a35
+[2025-09-16 14:14:57,211 W 1685570 1685570] global_state_accessor.cc:429: Retrying to get node with node ID 0aa97dc27cb5115ccaa8daf2e1f762cbc170f02ff980fb57559b86b7
+[2025-09-16 14:14:57,211 W 3861505 3861505] global_state_accessor.cc:429: Retrying to get node with node ID 05f42a84e2e4abb98a5bde724461ba5e6cdc5f0f5fef913ff8d27965
+[2025-09-16 14:15:00,228 W 2096716 2096716] global_state_accessor.cc:429: Retrying to get node with node ID 2a1ea5f13f316960d77e3bd57918fc9bc2109cd9edbc6fb485240712
+[2025-09-16 14:15:00,655 W 4097763 4097763] global_state_accessor.cc:429: Retrying to get node with node ID 010d09504c83294c761d29dd4f4dbd967d3f86bfcdcea817ab9042c9
+[2025-09-16 14:15:03,424 W 204917 204917] global_state_accessor.cc:429: Retrying to get node with node ID 10dd3ea577fe4452e788edda5cd16036d768125808222890ede29aa9
+[2025-09-16 14:15:09,127 W 2299863 2299863] global_state_accessor.cc:429: Retrying to get node with node ID 0dc49420d6fa2ee8bc70f9fab151d45c679719e33e67c35c93d53e3b
+[2025-09-16 14:15:12,719 W 1785336 1785336] global_state_accessor.cc:429: Retrying to get node with node ID 5922065f47888e891d711bc1ecf95e200f917c373e0d552d633fc76f
+[2025-09-16 14:15:27,370 W 1498565 1498565] global_state_accessor.cc:429: Retrying to get node with node ID 5ce3cee28b238f229016fd7b305ea33ea0e52c61fb5569a4cebd4a72
+[2025-09-16 14:15:49,621 W 2704115 2704115] global_state_accessor.cc:429: Retrying to get node with node ID 873c5fd376181981c98a680d07f7b4ee617db6830e76b556e62e6f53
+slurmstepd: error: *** STEP 20208727.51 ON lrdn1826 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.37 ON lrdn0695 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.47 ON lrdn1764 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.71 ON lrdn2283 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.67 ON lrdn2220 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.59 ON lrdn2127 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.79 ON lrdn2337 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.69 ON lrdn2252 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.73 ON lrdn2301 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.41 ON lrdn1385 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.43 ON lrdn1599 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.57 ON lrdn2035 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.77 ON lrdn2311 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.75 ON lrdn2309 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.35 ON lrdn0690 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.83 ON lrdn2359 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.81 ON lrdn2353 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.53 ON lrdn1920 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.63 ON lrdn2160 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.55 ON lrdn1933 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.87 ON lrdn2381 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.85 ON lrdn2377 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.49 ON lrdn1769 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.33 ON lrdn0115 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.89 ON lrdn2392 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.61 ON lrdn2144 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.45 ON lrdn1748 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.91 ON lrdn2414 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.93 ON lrdn2426 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 20208727 ON lrdn0115 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.95 ON lrdn2430 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.39 ON lrdn0715 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 20208727.65 ON lrdn2197 CANCELLED AT 2025-09-16T14:45:35 DUE TO TIME LIMIT ***
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.
+srun: Job step aborted: Waiting up to 182 seconds for job step to finish.

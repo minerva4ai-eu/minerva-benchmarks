@@ -1,0 +1,873 @@
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+LAUNCH_FOLDER: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/gemma-3-12b-it/Nodes_2-GPUs_4-TP_8-PP_1/launch-1}
+BENCHMARK_FILE: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+Node: lrdn0346 - IP: 10.1.1.90
+Node: lrdn0348 - IP: 10.1.1.92
+Starting HEAD at lrdn0346
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-15 17:02:14,096	INFO usage_lib.py:472 -- Usage stats collection is enabled. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2025-09-15 17:02:14,096	INFO scripts.py:865 -- [37mLocal node IP[39m: [1m10.1.1.90[22m
+2025-09-15 17:02:21,085	SUCC scripts.py:902 -- [32m--------------------[39m
+2025-09-15 17:02:21,085	SUCC scripts.py:903 -- [32mRay runtime started.[39m
+2025-09-15 17:02:21,085	SUCC scripts.py:904 -- [32m--------------------[39m
+2025-09-15 17:02:21,086	INFO scripts.py:906 -- [36mNext steps[39m
+2025-09-15 17:02:21,086	INFO scripts.py:909 -- To add another node to this Ray cluster, run
+2025-09-15 17:02:21,086	INFO scripts.py:912 -- [1m  ray start --address='10.1.1.90:6379'[22m
+2025-09-15 17:02:21,086	INFO scripts.py:921 -- To connect to this Ray cluster:
+2025-09-15 17:02:21,086	INFO scripts.py:923 -- [35mimport[39m[26m ray
+2025-09-15 17:02:21,086	INFO scripts.py:924 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'10.1.1.90'[39m[26m)
+2025-09-15 17:02:21,086	INFO scripts.py:936 -- To submit a Ray job using the Ray Jobs CLI:
+2025-09-15 17:02:21,086	INFO scripts.py:937 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2025-09-15 17:02:21,086	INFO scripts.py:946 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2025-09-15 17:02:21,086	INFO scripts.py:950 -- for more information on submitting Ray jobs to the Ray cluster.
+2025-09-15 17:02:21,086	INFO scripts.py:955 -- To terminate the Ray runtime, run
+2025-09-15 17:02:21,086	INFO scripts.py:956 -- [1m  ray stop[22m
+2025-09-15 17:02:21,086	INFO scripts.py:959 -- To view the status of the cluster, use
+2025-09-15 17:02:21,086	INFO scripts.py:960 --   [1mray status[22m[26m
+2025-09-15 17:02:21,086	INFO scripts.py:964 -- To monitor and debug Ray, view the dashboard at 
+2025-09-15 17:02:21,086	INFO scripts.py:965 --   [1m127.0.0.1:8265[22m[26m
+2025-09-15 17:02:21,086	INFO scripts.py:972 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+Starting workers Nodes
+Starting WORKER 1 at lrdn0348
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Ray Cluster started correctly
+2025-09-15 17:03:29,211	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.1.92[22m
+2025-09-15 17:03:31,666	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-15 17:03:31,666	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-15 17:03:31,666	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-15 17:03:31,666	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-15 17:03:31,666	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-15 17:03:31,666	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-15 17:03:31,667	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-15 17:03:31,667	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Ray Status
+======== Autoscaler status: 2025-09-15 17:03:52.263392 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_977be9c4e60feab99a7e2fc15cdf554efe545b6cbb6c322dd27e7a98
+ 1 node_6d6bc3085421f068088a0164a86d0d61470e09b1a9ec17548e04fba3
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Usage:
+ 0.0/64.0 CPU
+ 0.0/8.0 GPU
+ 0B/687.16GiB memory
+ 0B/298.49GiB object_store_memory
+
+Demands:
+ (no resource demands)
+VLLM serve loading... Head Node Address: 10.1.1.90
+2025-09-15 17:03:58,350	INFO cli.py:39 -- [37mJob submission server address[39m: [1mhttp://127.0.0.1:8265[22m
+2025-09-15 17:04:00,999	SUCC cli.py:63 -- [32m-------------------------------------------------------[39m
+2025-09-15 17:04:00,999	SUCC cli.py:64 -- [32mJob 'raysubmit_HquJKZusxJnu8y8Q' submitted successfully[39m
+2025-09-15 17:04:00,999	SUCC cli.py:65 -- [32m-------------------------------------------------------[39m
+2025-09-15 17:04:00,999	INFO cli.py:289 -- [36mNext steps[39m
+2025-09-15 17:04:00,999	INFO cli.py:290 -- Query the logs of the job:
+2025-09-15 17:04:00,999	INFO cli.py:292 -- [1mray job logs raysubmit_HquJKZusxJnu8y8Q[22m
+2025-09-15 17:04:00,999	INFO cli.py:294 -- Query the status of the job:
+2025-09-15 17:04:00,999	INFO cli.py:296 -- [1mray job status raysubmit_HquJKZusxJnu8y8Q[22m
+2025-09-15 17:04:00,999	INFO cli.py:298 -- Request the job to be stopped:
+2025-09-15 17:04:00,999	INFO cli.py:300 -- [1mray job stop raysubmit_HquJKZusxJnu8y8Q[22m
+2025-09-15 17:04:01,002	INFO cli.py:307 -- Tailing logs until the job exits (disable with --no-wait):
+2025-09-15 17:04:00,809	INFO job_manager.py:530 -- Runtime env is setting up.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+serve.sh: LAUNCH_FOLDER: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/gemma-3-12b-it/Nodes_2-GPUs_4-TP_8-PP_1/launch-1
+serve.sh: ADDITIONAL_ARGS: 
+Waiting for vLLM server to be ready...
+Waiting for vLLM server to be ready...
+INFO 09-15 17:06:16 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-15 17:06:47 [api_server.py:1287] vLLM API server version 0.9.1
+INFO 09-15 17:06:48 [cli_args.py:309] non-default args: {'port': 2950, 'model': '/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', 'enforce_eager': True, 'distributed_executor_backend': 'ray', 'tensor_parallel_size': 8, 'swap_space': 2.0, 'enable_chunked_prefill': True}
+INFO 09-15 17:07:07 [config.py:823] This model supports multiple tasks: {'classify', 'embed', 'score', 'generate', 'reward'}. Defaulting to 'generate'.
+INFO 09-15 17:07:07 [config.py:2195] Chunked prefill is enabled with max_num_batched_tokens=2048.
+WARNING 09-15 17:07:07 [cuda.py:91] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+WARNING 09-15 17:07:11 [env_override.py:17] NCCL_CUMEM_ENABLE is set to 0, skipping override. This may increase memory overhead with cudagraph+allreduce: https://github.com/NVIDIA/nccl/issues/1234
+INFO 09-15 17:07:15 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-15 17:07:20 [core.py:455] Waiting for init message from front-end.
+INFO 09-15 17:07:20 [core.py:70] Initializing a V1 LLM engine (v0.9.1) with config: model='/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', speculative_config=None, tokenizer='/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=131072, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=8, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=False, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":[],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":0,"local_cache_dir":null}
+2025-09-15 17:07:20,265	INFO worker.py:1514 -- Using address 10.1.1.90:6379 set in the environment variable RAY_ADDRESS
+2025-09-15 17:07:20,265	INFO worker.py:1654 -- Connecting to existing Ray cluster at address: 10.1.1.90:6379...
+2025-09-15 17:07:20,274	INFO worker.py:1832 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+INFO 09-15 17:07:20 [ray_utils.py:334] No current placement group found. Creating a new placement group.
+WARNING 09-15 17:07:21 [ray_utils.py:198] tensor_parallel_size=8 is bigger than a reserved number of GPUs (4 GPUs) in a node 977be9c4e60feab99a7e2fc15cdf554efe545b6cbb6c322dd27e7a98. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 8 GPUs available at each node.
+WARNING 09-15 17:07:21 [ray_utils.py:198] tensor_parallel_size=8 is bigger than a reserved number of GPUs (4 GPUs) in a node 6d6bc3085421f068088a0164a86d0d61470e09b1a9ec17548e04fba3. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 8 GPUs available at each node.
+INFO 09-15 17:07:21 [ray_distributed_executor.py:177] use_ray_spmd_worker: True
+[36m(pid=3925491)[0m INFO 09-15 17:07:28 [__init__.py:244] Automatically detected platform cuda.
+[36m(pid=1536833, ip=10.1.1.92)[0m INFO 09-15 17:09:13 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 4x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m
+INFO 09-15 17:09:28 [ray_distributed_executor.py:353] non_carry_over_env_vars from config: set()
+INFO 09-15 17:09:28 [ray_distributed_executor.py:355] Copying the following environment variables to workers: ['VLLM_USE_RAY_SPMD_WORKER', 'VLLM_USE_RAY_COMPILED_DAG', 'VLLM_WORKER_MULTIPROC_METHOD', 'VLLM_USE_V1']
+INFO 09-15 17:09:28 [ray_distributed_executor.py:358] If certain env vars should NOT be copied to workers, add them to /leonardo/home/userinternal/rscheda0/.config/vllm/ray_non_carry_over_env_vars.json file
+[36m(RayWorkerWrapper pid=3925491)[0m WARNING 09-15 17:09:41 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x14b54c3c6bd0>
+[36m(pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:09:13 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 3x across cluster][0m
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:09:43 [utils.py:1126] Found nccl from library libnccl.so.2
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:09:43 [pynccl.py:70] vLLM is using nccl==2.26.2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO cudaDriverVersion 12020
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Bootstrap: Using ib0:10.128.11.137<0>
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL version 2.26.2+cuda12.2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_IB_DISABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.11.137<0>
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Using network IB
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO ncclCommInitRank comm 0xc901cb0 rank 3 nranks 8 cudaDev 3 nvmlDev 3 busId c8000 commId 0x410855588fb506b3 - Init START
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO RAS client listening socket at ::1<28028>
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Bootstrap timings total 0.087862 (create 0.000015, send 0.000054, recv 0.087391, ring 0.000129, delay 0.000001)
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Setting affinity for GPU 3 to ffff
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO comm 0xc901cb0 rank 3 nRanks 8 nNodes 2 localRanks 4 localRank 3 MNNVL 0
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Trees [0] 0/-1/-1->3->2 [1] 0/-1/-1->3->2 [2] 0/-1/-1->3->2 [3] 0/-1/-1->3->2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO P2P Chunksize set to 131072
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3926151 [3] NCCL INFO [Proxy Service UDS] Device 3 CPU core 8
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3926149 [3] NCCL INFO [Proxy Service] Device 3 CPU core 14
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3926153 [3] NCCL INFO [Proxy Progress] Device 3 CPU core 2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 00/0 : 3[3] -> 6[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 02/0 : 3[3] -> 6[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 01/0 : 6[2] -> 3[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 03/0 : 6[2] -> 3[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 01/0 : 3[3] -> 1[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 03/0 : 3[3] -> 1[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 00/0 : 3[3] -> 0[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 01/0 : 3[3] -> 0[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 02/0 : 3[3] -> 0[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 03/0 : 3[3] -> 0[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 00/0 : 3[3] -> 2[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 01/0 : 3[3] -> 2[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 02/0 : 3[3] -> 2[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Channel 03/0 : 3[3] -> 2[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO ncclCommInitRank comm 0xc901cb0 rank 3 nranks 8 cudaDev 3 nvmlDev 3 busId c8000 commId 0x410855588fb506b3 - Init COMPLETE
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3925491 [3] NCCL INFO Init timings - ncclCommInitRank: rank 3 nranks 8 total 0.83 (kernels 0.50, alloc 0.05, bootstrap 0.09, allgathers 0.00, topo 0.06, gr
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3925490 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Channel 00/04 : 0 3 6 5 4 7 2 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Channel 01/04 : 0 2 7 5 4 6 3 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Channel 02/04 : 0 3 6 5 4 7 2 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Channel 03/04 : 0 2 7 5 4 6 3 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Check P2P Type intraNodeP2pSupport 1 directMode 0
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO CC Off, workFifoBytes 1048576
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3925487 [0] NCCL INFO Init timings - ncclCommInitRank: rank 0 nrank
+[36m(RayWorkerWrapper pid=1536832, ip=10.1.1.92)[0m lrdn0348:1536832:1536832 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl-
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1536834 [3] NCCL INFO Init timings - ncclCommInitRank: rank 7 nranks 8 total 0.75 (kernels 0.42, alloc 0.12, bootstrap 0.02, allgathers 0.00, topo 0.06, 
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m lrdn0348:1536833:1536833 [0] NCCL INFO Init timings - ncclCommInitRank: rank 4 nranks 8 total 0.75 (kernels 0.42, alloc 0.13, bootstrap 0.00, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.11, rest 0.01)
+[36m(RayWorkerWrapper pid=1536832, ip=10.1.1.92)[0m tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m graphs 0.01, connections 0.10, rest 0.02)
+[36m(RayWorkerWrapper pid=3925491)[0m aphs 0.01, connections 0.10, rest 0.02)
+[36m(RayWorkerWrapper pid=3925490)[0m -tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=3925487)[0m s 8 total 0.84 (kernels 0.51, alloc 0.05, bootstrap 0.09, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.11, rest 0.00)
+[36m(RayWorkerWrapper pid=3925491)[0m WARNING 09-15 17:09:46 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.
+[36m(RayWorkerWrapper pid=3925487)[0m INFO 09-15 17:09:46 [shm_broadcast.py:289] vLLM message queue communication handle: Handle(local_reader_ranks=[1, 2, 3], buffer_handle=(3, 4194304, 6, 'psm_5684eea1'), local_subscribe_addr='ipc:///tmp/72273bef-1436-4899-a270-5c02b57ced19', remote_subscribe_addr='tcp://10.1.1.90:51343', remote_addr_ipv6=False)
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:09:46 [parallel_state.py:1065] rank 3 in world size 8 is assigned as DP rank 0, PP rank 0, TP rank 3, EP rank 3
+[36m(RayWorkerWrapper pid=3925491)[0m Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+[36m(RayWorkerWrapper pid=3925487)[0m WARNING 09-15 17:09:52 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m WARNING 09-15 17:09:41 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x15159f637ed0>[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:09:43 [utils.py:1126] Found nccl from library libnccl.so.2[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:09:43 [pynccl.py:70] vLLM is using nccl==2.26.2[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO cudaDriverVersion 12020[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Bootstrap: Using ib0:10.128.11.137<0>[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL version 2.26.2+cuda12.2[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL_IB_DISABLE set by environment to 0.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.11.137<0>[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. [32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Using network IB[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO ncclCommInitRank comm 0xd32adb0 rank 1 nranks 8 cudaDev 1 nvmlDev 1 busId 56000 commId 0x410855588fb506b3 - Init START[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO RAS client listening socket at ::1<28028>[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Bootstrap timings total 0.087871 (create 0.000018, send 0.000067, recv 0.008476, ring 0.079058, delay 0.000001)[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Setting affinity for GPU 1 to ffff[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO comm 0xd32adb0 rank 1 nRanks 8 nNodes 2 localRanks 4 localRank 1 MNNVL 0[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] -1/-1/-1->1->0 [2] -1/-1/-1->1->0 [3] -1/-1/-1->1->0[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO P2P Chunksize set to 131072[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3926150 [1] NCCL INFO [Proxy Service UDS] Device 1 CPU core 10[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3926147 [1] NCCL INFO [Proxy Service] Device 1 CPU core 9[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3926156 [1] NCCL INFO [Proxy Progress] Device 1 CPU core 11[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1536834 [3] NCCL INFO Channel 02/0 : 7[3] -> 2[2] [send] via NET/IB/2[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1536834 [3] NCCL INFO Channel 03/0 : 2[2] -> 7[3] [receive] via NET/IB/3[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Channel 03/0 : 1[1] -> 0[0] via P2P/IPC/read[32m [repeated 50x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 0[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Connected all trees[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.[32m [repeated 5x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO ncclCommInitRank comm 0xd32adb0 rank 1 nranks 8 cudaDev 1 nvmlDev 1 busId 56000 commId 0x410855588fb506b3 - Init COMPLETE[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m lrdn0346:3925489:3925489 [1] NCCL INFO Init timings - ncclCommInitRank: rank 1 nranks 8 total 0.83 (kernels 0.50, alloc 0.05, bootstrap 0.09, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.07, rest 0.05)[32m [repeated 4x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m WARNING 09-15 17:09:46 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:09:46 [parallel_state.py:1065] rank 5 in world size 8 is assigned as DP rank 0, PP rank 0, TP rank 5, EP rank 5[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m INFO 09-15 17:09:53 [gpu_model_runner.py:1595] Starting to load model /leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it...
+[36m(RayWorkerWrapper pid=3925487)[0m INFO 09-15 17:09:53 [gpu_model_runner.py:1600] Loading model from scratch...
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m INFO 09-15 17:09:53 [cuda.py:252] Using Flash Attention backend on V1 engine.
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards:   0% Completed | 0/5 [00:00<?, ?it/s]
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards:  20% Completed | 1/5 [00:32<02:11, 32.80s/it]
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards:  40% Completed | 2/5 [00:44<01:01, 20.57s/it]
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards:  60% Completed | 3/5 [01:16<00:51, 25.82s/it]
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards:  80% Completed | 4/5 [01:43<00:26, 26.02s/it]
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:12:14 [default_loader.py:272] Loading weights took 139.53 seconds
+[36m(RayWorkerWrapper pid=1536832, ip=10.1.1.92)[0m WARNING 09-15 17:09:53 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m INFO 09-15 17:09:53 [gpu_model_runner.py:1595] Starting to load model /leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it...[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925489)[0m INFO 09-15 17:09:53 [gpu_model_runner.py:1600] Loading model from scratch...[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m INFO 09-15 17:09:53 [cuda.py:252] Using Flash Attention backend on V1 engine.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards: 100% Completed | 5/5 [02:19<00:00, 29.71s/it]
+[36m(RayWorkerWrapper pid=3925487)[0m 
+Loading safetensors checkpoint shards: 100% Completed | 5/5 [02:19<00:00, 27.89s/it]
+[36m(RayWorkerWrapper pid=3925487)[0m 
+[36m(RayWorkerWrapper pid=3925489)[0m INFO 09-15 17:12:14 [gpu_model_runner.py:1624] Model loading took 3.4109 GiB and 141.063865 seconds
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m INFO 09-15 17:12:33 [default_loader.py:272] Loading weights took 158.56 seconds[32m [repeated 4x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m INFO 09-15 17:12:14 [gpu_model_runner.py:1624] Model loading took 3.4109 GiB and 141.099664 seconds[32m [repeated 3x across cluster][0m
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:12:34 [gpu_model_runner.py:1978] Encoder cache will be initialized with a budget of 2048 tokens, and profiled with 8 image items of the maximum feature size.
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3925490 [2] NCCL INFO Comm config Blocking set to 1
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3927501 [2] NCCL INFO Using network IB
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3927501 [2] NCCL INFO ncclCommInitRankConfig comm 0x38e7d1a0 rank 2 nranks 8 cudaDev 2 nvmlDev 2 busId 8f000 commId 0xc2a231d3417bb33c - Init START
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:12:33 [default_loader.py:272] Loading weights took 158.58 seconds[32m [repeated 3x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:12:34 [gpu_model_runner.py:1624] Model loading took 3.4109 GiB and 160.121481 seconds[32m [repeated 4x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:12:34 [gpu_model_runner.py:1978] Encoder cache will be initialized with a budget of 2048 tokens, and profiled with 8 image items of the maximum feature size.[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Bootstrap timings total 0.040524 (create 0.000018, send 0.000060, recv 0.039694, ring 0.000555, delay 0.000000)
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Setting affinity for GPU 3 to ffff
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO comm 0x3800ba80 rank 3 nRanks 8 nNodes 2 localRanks 4 localRank 3 MNNVL 0
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Trees [0] 0/-1/-1->3->2 [1] 0/-1/-1->3->2 [2] 0/-1/-1->3->2 [3] 0/-1/-1->3->2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO P2P Chunksize set to 131072
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927509 [3] NCCL INFO [Proxy Service UDS] Device 3 CPU core 12
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927508 [3] NCCL INFO [Proxy Service] Device 3 CPU core 10
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927512 [3] NCCL INFO [Proxy Progress] Device 3 CPU core 6
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 00/0 : 3[3] -> 6[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 02/0 : 3[3] -> 6[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 01/0 : 6[2] -> 3[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 03/0 : 6[2] -> 3[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 01/0 : 3[3] -> 1[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Channel 03/0 : 3[3] -> 1[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Channel 00/04 : 0 3 6 5 4 7 2 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Channel 01/04 : 0 2 7 5 4 6 3 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Channel 02/04 : 0 3 6 5 4 7 2 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Channel 03/04 : 0 2 7 5 4 6 3 1
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Check P2P Type intraNodeP2pSupport 1 directMode 0
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m lrdn0348:1536833:1538114 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO ncclCommInitRankConfig comm 0x3800ba80 rank 3 nranks 8 cudaDev 3 nvmlDev 3 busId c8000 commId 0xc2a231d3417bb33c - Init COMPLETE
+[36m(RayWorkerWrapper pid=3925491)[0m lrdn0346:3925491:3927500 [3] NCCL INFO Init timings - ncclCommInitRankConfig: rank 3 nranks 8 total 0.22 (kernels 0.00, alloc 0.00, bootstrap 0.04, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.09, rest 0.02)
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO CC Off, workFifoBytes 1048576
+[36m(RayWorkerWrapper pid=3925491)[0m INFO 09-15 17:13:23 [gpu_worker.py:227] Available KV cache memory: 50.72 GiB
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,107,920 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.37x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,109,456 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.44x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,109,456 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.44x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,107,920 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.37x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,107,920 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.37x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,109,456 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.44x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,109,456 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.44x
+INFO 09-15 17:13:23 [kv_cache_utils.py:870] GPU KV cache size: 1,107,920 tokens
+INFO 09-15 17:13:23 [kv_cache_utils.py:874] Maximum concurrency for 131,072 tokens per request: 45.37x
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m [rank4]:W0915 17:13:24.577000 1536833 torch/_dynamo/convert_frame.py:964] [1/8] torch._dynamo hit config.recompile_limit (8)
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m [rank4]:W0915 17:13:24.577000 1536833 torch/_dynamo/convert_frame.py:964] [1/8]    function: 'forward_static' (/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/model_executor/layers/layernorm.py:242)
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m [rank4]:W0915 17:13:24.577000 1536833 torch/_dynamo/convert_frame.py:964] [1/8]    last reason: 1/4: ___check_obj_id(residual, 22930654433504)              
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m [rank4]:W0915 17:13:24.577000 1536833 torch/_dynamo/convert_frame.py:964] [1/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+[36m(RayWorkerWrapper pid=1536833, ip=10.1.1.92)[0m [rank4]:W0915 17:13:24.577000 1536833 torch/_dynamo/convert_frame.py:964] [1/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.
+INFO 09-15 17:13:25 [core.py:171] init engine (profile, create kv cache, warmup model) took 51.04 seconds
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+INFO 09-15 17:13:32 [loggers.py:137] Engine 000: vllm cache_config_info with initialization after num_gpu_blocks is: 415475
+WARNING 09-15 17:13:32 [config.py:1363] Default sampling parameters have been overridden by the model's Hugging Face generation config recommended from the model creator. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+INFO 09-15 17:13:32 [serving_chat.py:118] Using default chat sampling params from model: {'top_k': 64, 'top_p': 0.95}
+INFO 09-15 17:13:32 [serving_completion.py:66] Using default completion sampling params from model: {'top_k': 64, 'top_p': 0.95}
+INFO 09-15 17:13:32 [api_server.py:1349] Starting vLLM API server 0 on http://0.0.0.0:2950
+INFO 09-15 17:13:32 [launcher.py:29] Available routes are:
+INFO 09-15 17:13:32 [launcher.py:37] Route: /openapi.json, Methods: HEAD, GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /docs, Methods: HEAD, GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /redoc, Methods: HEAD, GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /health, Methods: GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /load, Methods: GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /ping, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /ping, Methods: GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /tokenize, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /detokenize, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/models, Methods: GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /version, Methods: GET
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/chat/completions, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/completions, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/embeddings, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /pooling, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /classify, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /score, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/score, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/audio/transcriptions, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /rerank, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v1/rerank, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /v2/rerank, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /invocations, Methods: POST
+INFO 09-15 17:13:32 [launcher.py:37] Route: /metrics, Methods: GET
+INFO:     Started server process [3924387]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:37872 - "GET /v1/models HTTP/1.1" 200 OK
+Starting sending requests to the Llama-405b model
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+100   279    0     0  100   279      0    126  0:00:02  0:00:02 --:--:--   126INFO 09-15 17:13:40 [chat_utils.py:420] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.
+INFO 09-15 17:13:41 [logger.py:43] Received request chatcmpl-4b98b8e918af4696b37b11183a765cd1: prompt: '<bos><start_of_turn>user\nsay I have many shapes and I have a 3D cavity. I want to study the fit between possible shapes and the cavity. What is this problem? Has it been studied?<end_of_turn>\n<start_of_turn>model\n', params: SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=1.0, top_p=0.95, top_k=64, min_p=0.0, seed=None, stop=[], stop_token_ids=[], bad_words=[], include_stop_str_in_output=False, ignore_eos=False, max_tokens=131026, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, truncate_prompt_tokens=None, guided_decoding=None, extra_args=None), prompt_token_ids: None, prompt_embeds shape: None, lora_request: None, prompt_adapter_request: None.
+INFO 09-15 17:13:41 [async_llm.py:271] Added request chatcmpl-4b98b8e918af4696b37b11183a765cd1.
+INFO 09-15 17:13:41 [ray_distributed_executor.py:562] VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE = auto
+INFO 09-15 17:13:41 [ray_distributed_executor.py:564] VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM = False
+INFO 09-15 17:13:41 [ray_distributed_executor.py:579] RAY_CGRAPH_get_timeout is set to 300
+
+100   279    0     0  100   279      0     66  0:00:04  0:00:04 --:--:--    66
+100   279    0     0  100   279      0     44  0:00:06  0:00:06 --:--:--    44
+100   279    0     0  100   279      0     33  0:00:08  0:00:08 --:--:--    33
+100   279    0     0  100   279      0     27  0:00:10  0:00:10 --:--:--    27
+100   279    0     0  100   279      0     22  0:00:12  0:00:12 --:--:--     0
+100   279    0     0  100   279      0     19  0:00:14  0:00:14 --:--:--     0ERROR 09-15 17:13:52 [dump_input.py:69] Dumping input data
+ERROR 09-15 17:13:52 [dump_input.py:71] V1 LLM engine (v0.9.1) with config: model='/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', speculative_config=None, tokenizer='/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=131072, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=8, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=False, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":[],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":0,"local_cache_dir":null}, 
+ERROR 09-15 17:13:52 [dump_input.py:79] Dumping scheduler output for model execution:
+ERROR 09-15 17:13:52 [dump_input.py:80] SchedulerOutput(scheduled_new_reqs=[NewRequestData(req_id=chatcmpl-4b98b8e918af4696b37b11183a765cd1,prompt_token_ids_len=46,mm_inputs=[],mm_hashes=[],mm_positions=[],sampling_params=SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=1.0, top_p=0.95, top_k=64, min_p=0.0, seed=None, stop=[], stop_token_ids=[106], bad_words=[], include_stop_str_in_output=False, ignore_eos=False, max_tokens=131026, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, truncate_prompt_tokens=None, guided_decoding=None, extra_args=None),block_ids=([1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]),num_computed_tokens=0,lora_request=None)], scheduled_cached_reqs=[], num_scheduled_tokens={chatcmpl-4b98b8e918af4696b37b11183a765cd1: 46}, total_num_scheduled_tokens=46, scheduled_spec_decode_tokens={}, scheduled_encoder_inputs={}, num_common_prefix_blocks=[3, 0, 0, 0, 0, 0], finished_req_ids=[], free_encoder_input_ids=[], structured_output_request_ids={}, grammar_bitmask=null, kv_connector_metadata=null)
+ERROR 09-15 17:13:52 [dump_input.py:82] SchedulerStats(num_running_reqs=1, num_waiting_reqs=0, gpu_cache_usage=4.5730790059539395e-05, prefix_cache_stats=PrefixCacheStats(reset=False, requests=1, queries=46, hits=0), spec_decoding_stats=None)
+ERROR 09-15 17:13:52 [core.py:517] EngineCore encountered a fatal error.
+ERROR 09-15 17:13:52 [core.py:517] Traceback (most recent call last):
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/dag/compiled_dag_node.py", line 2344, in _execute_until
+ERROR 09-15 17:13:52 [core.py:517]     result = self._dag_output_fetcher.read(timeout)
+ERROR 09-15 17:13:52 [core.py:517]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/common.py", line 318, in read
+ERROR 09-15 17:13:52 [core.py:517]     outputs = self._read_list(timeout)
+ERROR 09-15 17:13:52 [core.py:517]               ^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/common.py", line 409, in _read_list
+ERROR 09-15 17:13:52 [core.py:517]     raise e
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/common.py", line 391, in _read_list
+ERROR 09-15 17:13:52 [core.py:517]     result = c.read(min(remaining_timeout, iteration_timeout))
+ERROR 09-15 17:13:52 [core.py:517]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/shared_memory_channel.py", line 776, in read
+ERROR 09-15 17:13:52 [core.py:517]     return self._channel_dict[self._resolve_actor_id()].read(timeout)
+ERROR 09-15 17:13:52 [core.py:517]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/shared_memory_channel.py", line 612, in read
+ERROR 09-15 17:13:52 [core.py:517]     output = self._buffers[self._next_read_index].read(timeout)
+ERROR 09-15 17:13:52 [core.py:517]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/channel/shared_memory_channel.py", line 480, in read
+ERROR 09-15 17:13:52 [core.py:517]     ret = self._worker.get_objects(
+ERROR 09-15 17:13:52 [core.py:517]           ^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/_private/worker.py", line 893, in get_objects
+ERROR 09-15 17:13:52 [core.py:517]     ] = self.core_worker.get_objects(
+ERROR 09-15 17:13:52 [core.py:517]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "python/ray/_raylet.pyx", line 3189, in ray._raylet.CoreWorker.get_objects
+ERROR 09-15 17:13:52 [core.py:517]   File "python/ray/includes/common.pxi", line 106, in ray._raylet.check_status
+ERROR 09-15 17:13:52 [core.py:517] ray.exceptions.RayChannelTimeoutError: System error: Timed out waiting for object available to read. ObjectID: 001c039f931d919e8c9c9cc49c3d0779bcdf10c30200000002e1f505
+ERROR 09-15 17:13:52 [core.py:517] 
+ERROR 09-15 17:13:52 [core.py:517] The above exception was the direct cause of the following exception:
+ERROR 09-15 17:13:52 [core.py:517] 
+ERROR 09-15 17:13:52 [core.py:517] Traceback (most recent call last):
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 508, in run_engine_core
+ERROR 09-15 17:13:52 [core.py:517]     engine_core.run_busy_loop()
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 535, in run_busy_loop
+ERROR 09-15 17:13:52 [core.py:517]     self._process_engine_step()
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 560, in _process_engine_step
+ERROR 09-15 17:13:52 [core.py:517]     outputs, model_executed = self.step_fn()
+ERROR 09-15 17:13:52 [core.py:517]                               ^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 231, in step
+ERROR 09-15 17:13:52 [core.py:517]     model_output = self.execute_model(scheduler_output)
+ERROR 09-15 17:13:52 [core.py:517]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 217, in execute_model
+ERROR 09-15 17:13:52 [core.py:517]     raise err
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 211, in execute_model
+ERROR 09-15 17:13:52 [core.py:517]     return self.model_executor.execute_model(scheduler_output)
+ERROR 09-15 17:13:52 [core.py:517]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/executor/ray_distributed_executor.py", line 58, in execute_model
+ERROR 09-15 17:13:52 [core.py:517]     return refs[0].get()
+ERROR 09-15 17:13:52 [core.py:517]            ^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/experimental/compiled_dag_ref.py", line 124, in get
+ERROR 09-15 17:13:52 [core.py:517]     self._dag._execute_until(
+ERROR 09-15 17:13:52 [core.py:517]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/ray/dag/compiled_dag_node.py", line 2350, in _execute_until
+ERROR 09-15 17:13:52 [core.py:517]     raise RayChannelTimeoutError(
+ERROR 09-15 17:13:52 [core.py:517] ray.exceptions.RayChannelTimeoutError: System error: If the execution is expected to take a long time, increase RAY_CGRAPH_get_timeout which is currently 10 seconds. Otherwise, this may indicate that the execution is hanging.
+INFO 09-15 17:13:52 [ray_distributed_executor.py:128] Shutting down Ray distributed executor. If you see error log from logging.cc regarding SIGTERM received, please ignore because this is the expected termination process in Ray.
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2109 -- Tearing down compiled DAG
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, d9338d6f3825c434b8978ea702000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 423cb79e14b10509cda3b75702000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 3a1b62ec8751acc22dc5cad302000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 09f1beb47019cd419ffac46d02000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, e3d71342f8610f53e2b7df9802000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 6616b812411cae33d0ffcb6202000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 4ac669cc41965362f2fcc87402000000)
+2025-09-15 17:13:52,855	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 8c9c9cc49c3d0779bcdf10c302000000)
+2025-09-15 17:13:52,865	INFO compiled_dag_node.py:2137 -- Waiting for worker tasks to exit
+ERROR 09-15 17:13:52 [async_llm.py:420] AsyncLLM output_handler failed.
+ERROR 09-15 17:13:52 [async_llm.py:420] Traceback (most recent call last):
+ERROR 09-15 17:13:52 [async_llm.py:420]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/async_llm.py", line 379, in output_handler
+ERROR 09-15 17:13:52 [async_llm.py:420]     outputs = await engine_core.get_output_async()
+ERROR 09-15 17:13:52 [async_llm.py:420]               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR 09-15 17:13:52 [async_llm.py:420]   File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/v1/engine/core_client.py", line 790, in get_output_async
+ERROR 09-15 17:13:52 [async_llm.py:420]     raise self._format_exception(outputs) from None
+ERROR 09-15 17:13:52 [async_llm.py:420] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
+INFO 09-15 17:13:52 [async_llm.py:346] Request chatcmpl-4b98b8e918af4696b37b11183a765cd1 failed (engine dead).
+INFO:     127.0.0.1:37878 - "POST /v1/chat/completions HTTP/1.1" 500 Internal Server Error
+
+100   279    0     0  100   279      0     19  0:00:14  0:00:14 --:--:--     0
+
+real	0m14.527s
+user	0m0.001s
+sys	0m0.003s
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3924387]
+*** SIGTERM received at time=1757949233 on cpu 8 ***
+PC: @     0x14c603d847aa  (unknown)  pthread_cond_timedwait@@GLIBC_2.3.2
+    @     0x14c603d88cf0  (unknown)  (unknown)
+[2025-09-15 17:13:53,010 E 3925323 3925323] logging.cc:484: *** SIGTERM received at time=1757949233 on cpu 8 ***
+[2025-09-15 17:13:53,010 E 3925323 3925323] logging.cc:484: PC: @     0x14c603d847aa  (unknown)  pthread_cond_timedwait@@GLIBC_2.3.2
+[2025-09-15 17:13:53,010 E 3925323 3925323] logging.cc:484:     @     0x14c603d88cf0  (unknown)  (unknown)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2109 -- Tearing down compiled DAG
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, d9338d6f3825c434b8978ea702000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 423cb79e14b10509cda3b75702000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 3a1b62ec8751acc22dc5cad302000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 09f1beb47019cd419ffac46d02000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, e3d71342f8610f53e2b7df9802000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 6616b812411cae33d0ffcb6202000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 4ac669cc41965362f2fcc87402000000)
+2025-09-15 17:13:53,894	INFO compiled_dag_node.py:2115 -- Cancelling compiled worker on actor: Actor(RayWorkerWrapper, 8c9c9cc49c3d0779bcdf10c302000000)
+2025-09-15 17:13:53,903	INFO compiled_dag_node.py:2137 -- Waiting for worker tasks to exit
+2025-09-15 17:13:55,336	INFO compiled_dag_node.py:2143 -- Teardown complete
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1536834 [3] NCCL INFO Comm config Blocking set to 1[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1538115 [3] NCCL INFO Using network IB[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1538115 [3] NCCL INFO ncclCommInitRankConfig comm 0x39a99290 rank 7 nranks 8 cudaDev 3 nvmlDev 3 busId c8000 commId 0xc2a231d3417bb33c - Init START[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536834, ip=10.1.1.92)[0m lrdn0348:1536834:1538115 [3] NCCL INFO Bootstrap timings total 0.000791 (create 0.000017, send 0.000067, recv 0.000419, ring 0.000199, delay 0.000000)[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO Setting affinity for GPU 1 to ffff[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO comm 0x3824db30 rank 5 nRanks 8 nNodes 2 localRanks 4 localRank 1 MNNVL 0[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO Trees [0] -1/-1/-1->5->4 [1] -1/-1/-1->5->4 [2] -1/-1/-1->5->4 [3] -1/-1/-1->5->4[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO P2P Chunksize set to 131072[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538120 [1] NCCL INFO [Proxy Service UDS] Device 1 CPU core 7[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538117 [1] NCCL INFO [Proxy Service] Device 1 CPU core 6[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538127 [1] NCCL INFO [Proxy Progress] Device 1 CPU core 5[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3927501 [2] NCCL INFO Channel 03/0 : 2[2] -> 6[2] [send] via NET/IB/3[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=3925490)[0m lrdn0346:3925490:3927501 [2] NCCL INFO Channel 03/0 : 6[2] -> 2[2] [receive] via NET/IB/3[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Channel 03/0 : 0[0] -> 3[3] via P2P/IPC/read[32m [repeated 58x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m lrdn0346:3925487:3927499 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO Connected all trees[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO ncclCommInitRankConfig comm 0x3824db30 rank 5 nranks 8 cudaDev 1 nvmlDev 1 busId 56000 commId 0xc2a231d3417bb33c - Init COMPLETE[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m lrdn0348:1536835:1538113 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 5 nranks 8 total 0.18 (kernels 0.00, alloc 0.00, bootstrap 0.00, allgathers 0.00, topo 0.05, graphs 0.01, connections 0.06, rest 0.04)[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=1536835, ip=10.1.1.92)[0m INFO 09-15 17:13:23 [gpu_worker.py:227] Available KV cache memory: 50.79 GiB[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m [rank0]:W0915 17:13:24.554000 3925487 torch/_dynamo/convert_frame.py:964] [1/8] torch._dynamo hit config.recompile_limit (8)[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m [rank0]:W0915 17:13:24.554000 3925487 torch/_dynamo/convert_frame.py:964] [1/8]    function: 'forward_static' (/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/model_executor/layers/layernorm.py:242)[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m [rank0]:W0915 17:13:24.554000 3925487 torch/_dynamo/convert_frame.py:964] [1/8]    last reason: 1/4: ___check_obj_id(residual, 22553545408736)              [32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m [rank0]:W0915 17:13:24.554000 3925487 torch/_dynamo/convert_frame.py:964] [1/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".[32m [repeated 7x across cluster][0m
+[36m(RayWorkerWrapper pid=3925487)[0m [rank0]:W0915 17:13:24.554000 3925487 torch/_dynamo/convert_frame.py:964] [1/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.[32m [repeated 7x across cluster][0m
+Parallel requests
+      %%%   TTToootttaaalll            %%%   RRReeeccceeeiiivvveeeddd   %%%   XXXfffereedrr dd   A  vAAevvreearrgaaegg eeS  pSSeppeeedee dd      T  iTTmiiemm ee         T  iTTmiiemm ee            T  iTTmiiemm ee   C  uCCruurrrerrneetnn
+tt 
+
+                                                                                       D  l  o  a  d    D DlUlopoaladod a  d U Up pl loToaoadtd a  l    T To otStapalel n  t    S Sp pe enLntet  f  t    S Lp eeLfeetdf 
+t  S p
+Se pe ed0e
+ d
+
+   
+ 0      00         0    0 0       0      00         0    0 0       0      00         0         0   00               0   00    -- -- :: --0-- ::------:  ------:::------ ::------:  ------:::------ ::------:  -  -  :  -  -00     0cccuuurrrlll:::   (((777)))   FFFaaaiiillleeeddd   tttooo   cccooonnnnnneeecccttt   tttooo   lllooocccaaalllhhhooosssttt   pppooorrrttt   222999555000:::   CCCooonnnnnneeeccctttiiiooonnn   rrreeefffuuussseeeddd
+
+
+Requests sent
+Running concurrency level 50
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 100
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 200
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 300
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 400
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 500
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+Running concurrency level 1000
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1091, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 123, in start_connection
+    raise OSError(first_errno, msg)
+ConnectionRefusedError: [Errno 111] Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 484, in async_request_openai_completions
+    async with session.post(url=api_url, json=payload,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 1359, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/client.py", line 663, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 563, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1032, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1366, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1335, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/aiohttp/connector.py", line 1106, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host localhost:2950 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 2950, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 2950)]
+
+2025-09-15 17:17:51,094	SUCC cli.py:63 -- [32m------------------------------------------[39m
+2025-09-15 17:17:51,094	SUCC cli.py:64 -- [32mJob 'raysubmit_HquJKZusxJnu8y8Q' succeeded[39m
+2025-09-15 17:17:51,094	SUCC cli.py:65 -- [32m------------------------------------------[39m
+Ray Job submitted...
+Checking for running jobs...
+No jobs are currently running.
+Worker Node activated 10.1.1.90:6379
+Ray Cluster started with PID 3921798
+Process 3921798 has finished, exiting script

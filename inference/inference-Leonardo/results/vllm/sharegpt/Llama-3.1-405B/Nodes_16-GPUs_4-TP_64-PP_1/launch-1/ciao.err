@@ -1,0 +1,8 @@
+srun: error: Task launch for StepId=20211864.5 failed on node lrdn0040: Communication connection failure
+srun: error: Application launch failed: Communication connection failure
+srun: Job step aborted
+[2025-09-17 04:35:32,076 W 3827215 3827215] global_state_accessor.cc:429: Retrying to get node with node ID cf2ddf19832fb41ba0801c4d930c2255005525bc79d68eb6dea8d4aa
+[2025-09-17 04:35:34,323 W 3129220 3129220] global_state_accessor.cc:429: Retrying to get node with node ID fc71217b85ba147dec3ef8d2b25f92bd8fedee9c9521b5ecc47df6ea
+[2025-09-17 04:36:20,267 W 2139809 2139809] global_state_accessor.cc:429: Retrying to get node with node ID e10b752f2ef2ae84dc02107083cf078870d8a4a7320a5e548ab00413
+[2025-09-17 04:36:20,267 W 1810124 1810124] global_state_accessor.cc:429: Retrying to get node with node ID 88e2ccb6915de3e4e4d916fe3ccd750501f947678d9836ca41eb477b
+[2025-09-17 04:36:20,267 W 416264 416264] global_state_accessor.cc:429: Retrying to get node with node ID ba2eb00000ad5c06f20349b6a3640c19632b1281e6714d3b6b7183ae

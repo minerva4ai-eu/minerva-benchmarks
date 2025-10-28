@@ -1,0 +1,1038 @@
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+LAUNCH_FOLDER: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_64-GPUs_4-TP_256-PP_1/launch-1}
+BENCHMARK_FILE: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+Node: lrdn0013 - IP: 10.1.0.13
+Node: lrdn0067 - IP: 10.1.0.67
+Node: lrdn0082 - IP: 10.1.0.82
+Node: lrdn0108 - IP: 10.1.0.108
+Node: lrdn0109 - IP: 10.1.0.109
+Node: lrdn0114 - IP: 10.1.0.114
+Node: lrdn0128 - IP: 10.1.0.128
+Node: lrdn0135 - IP: 10.1.0.135
+Node: lrdn0159 - IP: 10.1.0.159
+Node: lrdn0172 - IP: 10.1.0.172
+Node: lrdn0181 - IP: 10.1.0.181
+Node: lrdn0198 - IP: 10.1.0.198
+Node: lrdn0205 - IP: 10.1.0.205
+Node: lrdn0213 - IP: 10.1.0.213
+Node: lrdn0286 - IP: 10.1.1.30
+Node: lrdn0328 - IP: 10.1.1.72
+Node: lrdn0362 - IP: 10.2.0.2
+Node: lrdn0444 - IP: 10.2.0.84
+Node: lrdn0474 - IP: 10.2.0.114
+Node: lrdn0480 - IP: 10.2.0.120
+Node: lrdn0494 - IP: 10.2.0.134
+Node: lrdn0509 - IP: 10.2.0.149
+Node: lrdn0517 - IP: 10.2.0.157
+Node: lrdn0528 - IP: 10.2.0.168
+Node: lrdn0537 - IP: 10.2.0.177
+Node: lrdn0544 - IP: 10.2.0.184
+Node: lrdn0587 - IP: 10.2.0.227
+Node: lrdn0592 - IP: 10.2.0.232
+Node: lrdn0608 - IP: 10.2.0.248
+Node: lrdn0612 - IP: 10.2.0.252
+Node: lrdn0626 - IP: 10.2.1.10
+Node: lrdn0684 - IP: 10.2.1.68
+Node: lrdn0737 - IP: 10.3.0.17
+Node: lrdn0752 - IP: 10.3.0.32
+Node: lrdn0923 - IP: 10.3.0.203
+Node: lrdn0959 - IP: 10.3.0.239
+Node: lrdn0997 - IP: 10.3.1.21
+Node: lrdn1017 - IP: 10.3.1.41
+Node: lrdn1028 - IP: 10.3.1.52
+Node: lrdn1056 - IP: 10.3.1.80
+Node: lrdn1072 - IP: 10.3.1.96
+Node: lrdn1116 - IP: 10.4.0.36
+Node: lrdn1145 - IP: 10.4.0.65
+Node: lrdn1152 - IP: 10.4.0.72
+Node: lrdn1159 - IP: 10.4.0.79
+Node: lrdn1165 - IP: 10.4.0.85
+Node: lrdn1174 - IP: 10.4.0.94
+Node: lrdn1186 - IP: 10.4.0.106
+Node: lrdn1222 - IP: 10.4.0.142
+Node: lrdn1226 - IP: 10.4.0.146
+Node: lrdn1252 - IP: 10.4.0.172
+Node: lrdn1711 - IP: 10.5.1.15
+Node: lrdn2189 - IP: 10.7.0.29
+Node: lrdn2516 - IP: 10.7.1.100
+Node: lrdn2532 - IP: 10.8.0.12
+Node: lrdn2597 - IP: 10.8.0.77
+Node: lrdn2748 - IP: 10.8.0.228
+Node: lrdn2816 - IP: 10.8.1.40
+Node: lrdn2854 - IP: 10.8.1.78
+Node: lrdn2954 - IP: 10.9.0.74
+Node: lrdn3012 - IP: 10.9.0.132
+Node: lrdn3112 - IP: 10.9.0.232
+Node: lrdn3216 - IP: 10.9.1.80
+Node: lrdn3259 - IP: 10.10.0.19
+Starting HEAD at lrdn0013
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:11:38,025	INFO usage_lib.py:472 -- Usage stats collection is enabled. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2025-09-16 14:11:38,026	INFO scripts.py:865 -- [37mLocal node IP[39m: [1m10.1.0.13[22m
+2025-09-16 14:11:45,510	SUCC scripts.py:902 -- [32m--------------------[39m
+2025-09-16 14:11:45,510	SUCC scripts.py:903 -- [32mRay runtime started.[39m
+2025-09-16 14:11:45,510	SUCC scripts.py:904 -- [32m--------------------[39m
+2025-09-16 14:11:45,510	INFO scripts.py:906 -- [36mNext steps[39m
+2025-09-16 14:11:45,510	INFO scripts.py:909 -- To add another node to this Ray cluster, run
+2025-09-16 14:11:45,510	INFO scripts.py:912 -- [1m  ray start --address='10.1.0.13:6379'[22m
+2025-09-16 14:11:45,510	INFO scripts.py:921 -- To connect to this Ray cluster:
+2025-09-16 14:11:45,511	INFO scripts.py:923 -- [35mimport[39m[26m ray
+2025-09-16 14:11:45,511	INFO scripts.py:924 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'10.1.0.13'[39m[26m)
+2025-09-16 14:11:45,511	INFO scripts.py:936 -- To submit a Ray job using the Ray Jobs CLI:
+2025-09-16 14:11:45,511	INFO scripts.py:937 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2025-09-16 14:11:45,511	INFO scripts.py:946 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2025-09-16 14:11:45,511	INFO scripts.py:950 -- for more information on submitting Ray jobs to the Ray cluster.
+2025-09-16 14:11:45,511	INFO scripts.py:955 -- To terminate the Ray runtime, run
+2025-09-16 14:11:45,511	INFO scripts.py:956 -- [1m  ray stop[22m
+2025-09-16 14:11:45,511	INFO scripts.py:959 -- To view the status of the cluster, use
+2025-09-16 14:11:45,511	INFO scripts.py:960 --   [1mray status[22m[26m
+2025-09-16 14:11:45,511	INFO scripts.py:964 -- To monitor and debug Ray, view the dashboard at 
+2025-09-16 14:11:45,511	INFO scripts.py:965 --   [1m127.0.0.1:8265[22m[26m
+2025-09-16 14:11:45,511	INFO scripts.py:972 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+Starting workers Nodes
+Starting WORKER 1 at lrdn0067
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 2 at lrdn0082
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 3 at lrdn0108
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 4 at lrdn0109
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 5 at lrdn0114
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 6 at lrdn0128
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 7 at lrdn0135
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 8 at lrdn0159
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 9 at lrdn0172
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 10 at lrdn0181
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 11 at lrdn0198
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 12 at lrdn0205
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 13 at lrdn0213
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 14 at lrdn0286
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 15 at lrdn0328
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 16 at lrdn0362
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.82[22m
+2025-09-16 14:12:40,386	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,386	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,386	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,386	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,386	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,386	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,387	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.109[22m
+2025-09-16 14:12:40,386	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,386	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.135[22m
+2025-09-16 14:12:40,386	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,386	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,386	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,386	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,386	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,387	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,387	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,387	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,387	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:40,387	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,387	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.198[22m
+2025-09-16 14:12:40,387	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,387	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,387	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,387	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,387	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,387	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,387	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.172[22m
+2025-09-16 14:12:40,388	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.181[22m
+2025-09-16 14:12:40,387	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,387	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.67[22m
+2025-09-16 14:12:39,597	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.114[22m
+2025-09-16 14:12:39,151	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.128[22m
+2025-09-16 14:12:40,388	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,389	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,389	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:40,388	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:12:39,597	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.108[22m
+2025-09-16 14:12:40,388	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:40,388	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:40,388	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:40,388	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:40,388	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:40,388	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:12:40,454	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.159[22m
+2025-09-16 14:12:41,740	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:12:41,740	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:12:41,740	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:12:41,740	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:12:41,740	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:12:41,740	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:12:41,740	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:12:41,741	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 17 at lrdn0444
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 18 at lrdn0474
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 19 at lrdn0480
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 20 at lrdn0494
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 21 at lrdn0509
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 22 at lrdn0517
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 23 at lrdn0528
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 24 at lrdn0537
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 25 at lrdn0544
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+2025-09-16 14:13:11,769	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.213[22m
+2025-09-16 14:13:13,137	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:13,137	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:13,137	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:13,137	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:13,137	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:13,138	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:13,138	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:13,138	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:11,799	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.1.30[22m
+2025-09-16 14:13:13,137	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:13,138	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:13,138	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:13,138	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:13,138	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:13,138	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:13,138	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:13,138	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:11,768	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.2[22m
+2025-09-16 14:13:13,138	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:13,138	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:13,138	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:13,138	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:13,138	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:13,138	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:13,138	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:13,138	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:11,769	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.1.72[22m
+2025-09-16 14:13:14,257	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:14,257	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:14,257	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:14,257	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:14,257	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:14,258	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:14,258	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:14,258	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 26 at lrdn0587
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Ray Status
+Configuration written to config.json
+======== Autoscaler status: 2025-09-16 14:13:16.489185 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_a44ffae9a1d107e8475bf574b79132492659870aedfb4caebcae4a95
+ 1 node_deb8fca366d9f52d7c6e4b9d07659ae2b4fe6b1125910a88060b5406
+ 1 node_5a900827f678749606e8c3bc6a5fe437c6d8028ed11b9804b7970682
+ 1 node_1fb7c0910edeea3b1191f6997138efebae16177ef839ad314fd3a6a3
+ 1 node_c850f8fe8632cc19dc3c3913c48b074e2f11636fdc03cd2c1460f950
+ 1 node_d5aaae6340c22014e0822292f47a4de3299dfe6a10ab4e50ed17d47c
+ 1 node_c0c0ef02aca603663513e4fc01d16f577813531ae8145edd98353f8c
+ 1 node_8b08a2e80722bd6a86737fd908e55f92faea6e6e123cfc99e395eae9
+ 1 node_1e271f19fd7d1943b064b637f35aa21cc25eee76bfc55f1f6c7feff3
+ 1 node_17b3fe780951306363f9a2a0995e295faf076d56d1073f5993d8dd7e
+ 1 node_e92afc6d097d4ea3636fda0a3e697ec51c664eeef98ac570445f3931
+ 1 node_52138e104911ecde96d12b59fe6a0dc52a9ae729733e3b3a0ba61d6a
+ 1 node_222b483ccd0b4bebe4c42d4f9c5e67d68a864a96fb41540a4990850f
+ 1 node_9b0abfd70367afe9dedaa965892b02175c26f0900064049aaf9fe0c2
+ 1 node_1a39f29458a964d430cea957968f8cc9b0c0335d4492cda519a8c18d
+ 1 node_581d7a6a0fd2029b452da615fbdecd720a9472c9447dfb2e9a99b929
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Usage:
+ 0.0/512.0 CPU
+ 0.0/64.0 GPU
+ 0B/5.43TiB memory
+ 0B/2.33TiB object_store_memory
+
+Demands:
+ (no resource demands)
+Starting WORKER 27 at lrdn0592
+VLLM serve loading... Head Node Address: 10.1.0.13
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 28 at lrdn0608
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 29 at lrdn0612
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 30 at lrdn0626
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 31 at lrdn0684
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 32 at lrdn0737
+2025-09-16 14:13:35,127	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.1.0.205[22m
+2025-09-16 14:13:36,704	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:36,704	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:36,704	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:36,704	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:36,704	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:36,704	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:36,704	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:36,704	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 33 at lrdn0752
+2025-09-16 14:13:38,586	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.149[22m
+2025-09-16 14:13:39,959	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:39,960	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:39,960	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:39,960	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:39,960	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:39,960	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:39,960	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:39,960	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:38,586	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.114[22m
+2025-09-16 14:13:39,961	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:39,961	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:39,961	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:39,961	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:39,961	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:38,587	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.84[22m
+2025-09-16 14:13:39,960	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:39,961	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:39,961	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:39,961	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:39,961	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:39,961	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:39,961	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:39,961	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:39,961	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:39,961	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:39,961	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:38,586	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.120[22m
+2025-09-16 14:13:39,962	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:39,962	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:39,962	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:39,962	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:39,962	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:39,963	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:39,963	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:39,963	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Starting WORKER 34 at lrdn0923
+2025-09-16 14:13:42,835	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.134[22m
+2025-09-16 14:13:44,253	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:44,253	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:44,253	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:44,253	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:44,253	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:44,253	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:44,253	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:44,253	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Configuration written to config.json
+Starting WORKER 35 at lrdn0959
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+2025-09-16 14:13:47,104	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.157[22m
+2025-09-16 14:13:48,686	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:48,687	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:48,687	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:48,687	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:48,687	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:48,687	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:48,687	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:48,687	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Configuration written to config.json
+Starting WORKER 36 at lrdn0997
+2025-09-16 14:13:50,095	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.177[22m
+2025-09-16 14:13:50,714	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:50,714	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:50,715	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:50,715	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:50,715	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:50,715	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:50,715	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:50,715	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+2025-09-16 14:13:51,156	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.168[22m
+2025-09-16 14:13:51,498	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:13:51,498	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:13:51,498	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:13:51,498	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:13:51,498	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:13:51,498	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:13:51,498	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:13:51,498	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Configuration written to config.json
+Starting WORKER 37 at lrdn1017
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 38 at lrdn1028
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 39 at lrdn1056
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 40 at lrdn1072
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 41 at lrdn1116
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.184[22m
+2025-09-16 14:14:09,154	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.252[22m
+2025-09-16 14:14:10,661	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,660	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,660	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,660	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,660	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,661	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,660	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,661	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,661	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,661	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:10,661	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,522	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.232[22m
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.227[22m
+2025-09-16 14:14:10,661	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.0.248[22m
+2025-09-16 14:14:10,661	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,661	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,661	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,661	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,661	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,661	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,661	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,661	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,662	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,661	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,662	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,662	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,662	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:10,662	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:10,662	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,027	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.0.203[22m
+2025-09-16 14:14:10,662	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,662	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,662	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,662	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,662	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,662	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,662	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,662	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,027	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.1.10[22m
+2025-09-16 14:14:10,663	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.0.32[22m
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.0.17[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,665	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.0.239[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,665	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,665	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,665	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 42 at lrdn1145
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 43 at lrdn1152
+2025-09-16 14:14:15,165	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.1.68[22m
+2025-09-16 14:14:15,600	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:15,600	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:15,600	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:15,600	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:15,600	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:15,600	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:15,600	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:15,600	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 44 at lrdn1159
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Starting WORKER 45 at lrdn1165
+Configuration written to config.json
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 46 at lrdn1174
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 47 at lrdn1186
+2025-09-16 14:14:28,078	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.65[22m
+2025-09-16 14:14:30,116	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:28,098	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.1.96[22m
+2025-09-16 14:14:30,116	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:29,005	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.1.52[22m
+2025-09-16 14:14:30,117	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:29,716	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.1.80[22m
+2025-09-16 14:14:30,116	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:29,688	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.1.41[22m
+2025-09-16 14:14:30,294	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:30,117	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,994	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:30,116	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,994	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:30,295	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,117	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,994	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,117	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,994	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,295	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,117	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,994	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,994	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,295	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,117	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,117	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,994	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,994	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,295	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,117	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,994	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,994	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,117	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,117	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:30,295	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,117	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,994	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,295	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,995	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,117	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:30,994	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,295	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:30,995	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,994	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:30,995	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 48 at lrdn1222
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:36,754	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.36[22m
+2025-09-16 14:14:39,535	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:39,535	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:39,535	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:39,535	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:39,535	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:39,536	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:39,536	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:39,536	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 49 at lrdn1226
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 50 at lrdn1252
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 51 at lrdn1711
+2025-09-16 14:14:45,896	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.3.1.21[22m
+2025-09-16 14:14:47,262	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:47,262	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:47,262	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:47,262	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:47,262	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:47,263	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:47,263	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:47,263	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.94[22m
+2025-09-16 14:14:49,061	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,062	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.106[22m
+2025-09-16 14:14:49,062	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,062	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,062	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:49,062	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:49,062	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,062	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.79[22m
+2025-09-16 14:14:49,062	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,062	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:49,062	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,062	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.85[22m
+2025-09-16 14:14:49,062	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,063	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,063	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,063	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,063	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:49,063	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,063	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,063	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:48,682	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.72[22m
+2025-09-16 14:14:50,016	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:50,016	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:50,016	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:50,016	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:50,016	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:50,017	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:50,017	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:50,017	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 52 at lrdn2189
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 53 at lrdn2516
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 54 at lrdn2532
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:00,086	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.5.1.15[22m
+2025-09-16 14:15:00,482	SUCC scripts.py:1063 -- [32m--------------------[39m
+Starting WORKER 55 at lrdn2597
+2025-09-16 14:15:00,482	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:00,482	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:00,482	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:00,482	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:00,483	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:00,483	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:00,483	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:01,321	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.146[22m
+2025-09-16 14:15:02,588	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:02,588	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:02,588	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:02,588	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:02,588	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:02,589	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:02,589	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:02,589	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 56 at lrdn2748
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 57 at lrdn2816
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:08,638	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.0.12[22m
+2025-09-16 14:15:08,638	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.1.100[22m
+2025-09-16 14:15:10,141	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:08,639	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.29[22m
+2025-09-16 14:15:10,141	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:10,142	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:10,142	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:10,141	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:10,142	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:10,142	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:10,142	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:10,142	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:10,142	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:10,142	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:10,142	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:10,142	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:10,142	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:10,142	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:10,142	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:10,142	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:10,142	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:10,142	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:10,142	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:10,142	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:10,142	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:10,142	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:10,142	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 58 at lrdn2854
+2025-09-16 14:15:11,271	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.142[22m
+2025-09-16 14:15:12,838	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:12,838	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:12,838	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:12,838	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:12,838	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:12,839	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:12,839	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:12,839	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:14,030	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.0.172[22m
+2025-09-16 14:15:15,301	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:15,301	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:15,301	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:15,301	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:15,301	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:15,301	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:15,301	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:15,301	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 59 at lrdn2954
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 60 at lrdn3012
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 61 at lrdn3112
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 62 at lrdn3216
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 63 at lrdn3259
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.0.77[22m
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.0.228[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,271	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,271	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,271	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.1.40[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.1.78[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,271	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,272	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:32,271	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,271	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,272	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:32,272	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,272	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:32,271	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,272	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Ray Cluster started correctly
+2025-09-16 14:15:47,921	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.0.232[22m
+2025-09-16 14:15:50,634	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:50,634	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:50,634	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:50,634	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:50,634	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:50,634	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:50,634	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:50,634	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:47,921	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.0.74[22m
+2025-09-16 14:15:50,635	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:50,635	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:50,635	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:50,635	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:50,635	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:50,636	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:50,636	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:50,636	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:47,921	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.0.132[22m
+2025-09-16 14:15:50,635	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:50,636	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:50,636	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:50,636	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:50,636	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:50,636	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:50,636	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:50,636	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:16:29,263	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.10.0.19[22m
+2025-09-16 14:16:31,104	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:16:31,104	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:16:31,104	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:16:31,104	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:16:31,104	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:16:31,104	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:16:31,104	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:16:31,104	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:16:29,873	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.1.80[22m
+2025-09-16 14:16:31,322	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:16:31,322	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:16:31,322	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:16:31,322	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:16:31,322	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:16:31,322	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:16:31,322	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:16:31,322	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:13:22,439	INFO cli.py:39 -- [37mJob submission server address[39m: [1mhttp://127.0.0.1:8265[22m
+2025-09-16 14:13:24,738	SUCC cli.py:63 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:13:24,738	SUCC cli.py:64 -- [32mJob 'raysubmit_VpX3FrHntkWdAE1B' submitted successfully[39m
+2025-09-16 14:13:24,738	SUCC cli.py:65 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:13:24,738	INFO cli.py:289 -- [36mNext steps[39m
+2025-09-16 14:13:24,739	INFO cli.py:290 -- Query the logs of the job:
+2025-09-16 14:13:24,739	INFO cli.py:292 -- [1mray job logs raysubmit_VpX3FrHntkWdAE1B[22m
+2025-09-16 14:13:24,739	INFO cli.py:294 -- Query the status of the job:
+2025-09-16 14:13:24,739	INFO cli.py:296 -- [1mray job status raysubmit_VpX3FrHntkWdAE1B[22m
+2025-09-16 14:13:24,739	INFO cli.py:298 -- Request the job to be stopped:
+2025-09-16 14:13:24,739	INFO cli.py:300 -- [1mray job stop raysubmit_VpX3FrHntkWdAE1B[22m
+2025-09-16 14:13:24,742	INFO cli.py:307 -- Tailing logs until the job exits (disable with --no-wait):
+2025-09-16 14:13:24,214	INFO job_manager.py:530 -- Runtime env is setting up.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+serve.sh: LAUNCH_FOLDER: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_64-GPUs_4-TP_256-PP_1/launch-1
+serve.sh: ADDITIONAL_ARGS: --max-model-len=32000 --cpu-offload-gb=0.5
+Waiting for vLLM server to be ready...
+Waiting for vLLM server to be ready...
+INFO 09-16 14:16:01 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-16 14:16:44 [api_server.py:1287] vLLM API server version 0.9.1
+INFO 09-16 14:16:45 [cli_args.py:309] non-default args: {'port': 2950, 'model': '/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', 'max_model_len': 32000, 'enforce_eager': True, 'distributed_executor_backend': 'ray', 'tensor_parallel_size': 256, 'swap_space': 2.0, 'cpu_offload_gb': 0.5, 'enable_chunked_prefill': True}
+INFO 09-16 14:17:05 [config.py:823] This model supports multiple tasks: {'classify', 'score', 'generate', 'reward', 'embed'}. Defaulting to 'generate'.
+INFO 09-16 14:17:05 [config.py:2195] Chunked prefill is enabled with max_num_batched_tokens=2048.
+WARNING 09-16 14:17:05 [cuda.py:91] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/vllm", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/cli/main.py", line 59, in main
+    args.dispatch_function(args)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/cli/serve.py", line 58, in cmd
+    uvloop.run(run_server(args))
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/uvloop/__init__.py", line 105, in run
+    return runner.run(wrapper())
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/uvloop/__init__.py", line 61, in wrapper
+    return await main
+           ^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/openai/api_server.py", line 1323, in run_server
+    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/openai/api_server.py", line 1343, in run_server_worker
+    async with build_async_engine_client(args, client_config) as engine_client:
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/openai/api_server.py", line 155, in build_async_engine_client
+    async with build_async_engine_client_from_engine_args(
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/entrypoints/openai/api_server.py", line 177, in build_async_engine_client_from_engine_args
+    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/engine/arg_utils.py", line 1225, in create_engine_config
+    config = VllmConfig(
+             ^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/pydantic/_internal/_dataclasses.py", line 123, in __init__
+    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for VllmConfig
+  Value error, Total number of attention heads (128) must be divisible by tensor parallel size (256). [type=value_error, input_value=ArgsKwargs((), {'model_co...additional_config': {}}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+❌ vLLM serve failed to start or crashed!
+2025-09-16 14:17:14,077	ERR cli.py:71 -- [31m---------------------------------------[39m
+2025-09-16 14:17:14,077	ERR cli.py:72 -- [31mJob 'raysubmit_VpX3FrHntkWdAE1B' failed[39m
+2025-09-16 14:17:14,077	ERR cli.py:73 -- [31m---------------------------------------[39m
+2025-09-16 14:17:14,077	INFO cli.py:86 -- Status message: Job entrypoint command failed with exit code 1, last available logs (truncated to 20,000 chars):
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/vllm/engine/arg_utils.py", line 1225, in create_engine_config
+    config = VllmConfig(
+             ^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/lib/python3.11/site-packages/pydantic/_internal/_dataclasses.py", line 123, in __init__
+    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for VllmConfig
+  Value error, Total number of attention heads (128) must be divisible by tensor parallel size (256). [type=value_error, input_value=ArgsKwargs((), {'model_co...additional_config': {}}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+❌ vLLM serve failed to start or crashed!
+
+Ray Job submitted...
+Checking for running jobs...
+No jobs are currently running.
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Worker Node activated 10.1.0.13:6379
+Ray Cluster started with PID 2962065
+Process 2962065 has finished, exiting script

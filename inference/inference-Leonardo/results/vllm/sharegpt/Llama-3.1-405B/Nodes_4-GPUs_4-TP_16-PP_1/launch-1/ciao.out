@@ -1,0 +1,551 @@
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+LAUNCH_FOLDER: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_4-GPUs_4-TP_16-PP_1/launch-1}
+BENCHMARK_FILE: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+Node: lrdn2737 - IP: 10.8.0.217
+Node: lrdn2766 - IP: 10.8.0.246
+Node: lrdn2953 - IP: 10.9.0.73
+Node: lrdn3020 - IP: 10.9.0.140
+Starting HEAD at lrdn2737
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:12:39,151	INFO usage_lib.py:472 -- Usage stats collection is enabled. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2025-09-16 14:12:39,151	INFO scripts.py:865 -- [37mLocal node IP[39m: [1m10.8.0.217[22m
+2025-09-16 14:12:46,045	SUCC scripts.py:902 -- [32m--------------------[39m
+2025-09-16 14:12:46,045	SUCC scripts.py:903 -- [32mRay runtime started.[39m
+2025-09-16 14:12:46,045	SUCC scripts.py:904 -- [32m--------------------[39m
+2025-09-16 14:12:46,045	INFO scripts.py:906 -- [36mNext steps[39m
+2025-09-16 14:12:46,045	INFO scripts.py:909 -- To add another node to this Ray cluster, run
+2025-09-16 14:12:46,045	INFO scripts.py:912 -- [1m  ray start --address='10.8.0.217:6379'[22m
+2025-09-16 14:12:46,045	INFO scripts.py:921 -- To connect to this Ray cluster:
+2025-09-16 14:12:46,045	INFO scripts.py:923 -- [35mimport[39m[26m ray
+2025-09-16 14:12:46,045	INFO scripts.py:924 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'10.8.0.217'[39m[26m)
+2025-09-16 14:12:46,045	INFO scripts.py:936 -- To submit a Ray job using the Ray Jobs CLI:
+2025-09-16 14:12:46,045	INFO scripts.py:937 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2025-09-16 14:12:46,045	INFO scripts.py:946 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2025-09-16 14:12:46,045	INFO scripts.py:950 -- for more information on submitting Ray jobs to the Ray cluster.
+2025-09-16 14:12:46,045	INFO scripts.py:955 -- To terminate the Ray runtime, run
+2025-09-16 14:12:46,045	INFO scripts.py:956 -- [1m  ray stop[22m
+2025-09-16 14:12:46,045	INFO scripts.py:959 -- To view the status of the cluster, use
+2025-09-16 14:12:46,046	INFO scripts.py:960 --   [1mray status[22m[26m
+2025-09-16 14:12:46,046	INFO scripts.py:964 -- To monitor and debug Ray, view the dashboard at 
+2025-09-16 14:12:46,046	INFO scripts.py:965 --   [1m127.0.0.1:8265[22m[26m
+2025-09-16 14:12:46,046	INFO scripts.py:972 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+Starting workers Nodes
+Starting WORKER 1 at lrdn2766
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 2 at lrdn2953
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 3 at lrdn3020
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Ray Cluster started correctly
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.0.140[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.9.0.73[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.8.0.246[22m
+2025-09-16 14:14:10,665	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,665	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,665	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,665	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,665	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,665	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,665	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,665	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Ray Status
+======== Autoscaler status: 2025-09-16 14:14:15.856491 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_05e00fce7616d093c5f1b5402d7ddeb28727ba7fe33b153b9594a572
+ 1 node_d474f540df68674bb1a0bf2263137ffb331b346796560c0e0dcd9bd8
+ 1 node_501833d3e758d767f8a849166f3bab91dda4112b5ae5f88b4deb2b17
+ 1 node_d3c07ca1c91222d28db8fb13768326ebadb26d92f264f89f81cafbf7
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Usage:
+ 0.0/128.0 CPU
+ 0.0/16.0 GPU
+ 0B/1.35TiB memory
+ 0B/596.42GiB object_store_memory
+
+Demands:
+ (no resource demands)
+VLLM serve loading... Head Node Address: 10.8.0.217
+2025-09-16 14:14:22,855	INFO cli.py:39 -- [37mJob submission server address[39m: [1mhttp://127.0.0.1:8265[22m
+2025-09-16 14:14:24,479	SUCC cli.py:63 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:14:24,479	SUCC cli.py:64 -- [32mJob 'raysubmit_DJXTAjiCwRVq5QjA' submitted successfully[39m
+2025-09-16 14:14:24,479	SUCC cli.py:65 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:14:24,479	INFO cli.py:289 -- [36mNext steps[39m
+2025-09-16 14:14:24,479	INFO cli.py:290 -- Query the logs of the job:
+2025-09-16 14:14:24,479	INFO cli.py:292 -- [1mray job logs raysubmit_DJXTAjiCwRVq5QjA[22m
+2025-09-16 14:14:24,479	INFO cli.py:294 -- Query the status of the job:
+2025-09-16 14:14:24,479	INFO cli.py:296 -- [1mray job status raysubmit_DJXTAjiCwRVq5QjA[22m
+2025-09-16 14:14:24,479	INFO cli.py:298 -- Request the job to be stopped:
+2025-09-16 14:14:24,479	INFO cli.py:300 -- [1mray job stop raysubmit_DJXTAjiCwRVq5QjA[22m
+2025-09-16 14:14:24,482	INFO cli.py:307 -- Tailing logs until the job exits (disable with --no-wait):
+2025-09-16 14:14:24,112	INFO job_manager.py:530 -- Runtime env is setting up.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+serve.sh: LAUNCH_FOLDER: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_4-GPUs_4-TP_16-PP_1/launch-1
+serve.sh: ADDITIONAL_ARGS: --max-model-len=32000 --cpu-offload-gb=0.5
+Waiting for vLLM server to be ready...
+Waiting for vLLM server to be ready...
+INFO 09-16 14:16:52 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-16 14:17:23 [api_server.py:1287] vLLM API server version 0.9.1
+INFO 09-16 14:17:24 [cli_args.py:309] non-default args: {'port': 2950, 'model': '/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', 'max_model_len': 32000, 'enforce_eager': True, 'distributed_executor_backend': 'ray', 'tensor_parallel_size': 16, 'swap_space': 2.0, 'cpu_offload_gb': 0.5, 'enable_chunked_prefill': True}
+INFO 09-16 14:17:45 [config.py:823] This model supports multiple tasks: {'score', 'generate', 'reward', 'embed', 'classify'}. Defaulting to 'generate'.
+INFO 09-16 14:17:46 [config.py:2195] Chunked prefill is enabled with max_num_batched_tokens=2048.
+WARNING 09-16 14:17:46 [cuda.py:91] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+WARNING 09-16 14:17:49 [env_override.py:17] NCCL_CUMEM_ENABLE is set to 0, skipping override. This may increase memory overhead with cudagraph+allreduce: https://github.com/NVIDIA/nccl/issues/1234
+INFO 09-16 14:17:53 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-16 14:17:58 [core.py:455] Waiting for init message from front-end.
+INFO 09-16 14:17:58 [core.py:70] Initializing a V1 LLM engine (v0.9.1) with config: model='/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', speculative_config=None, tokenizer='/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32000, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=16, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=False, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":[],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":0,"local_cache_dir":null}
+2025-09-16 14:17:58,253	INFO worker.py:1514 -- Using address 10.8.0.217:6379 set in the environment variable RAY_ADDRESS
+2025-09-16 14:17:58,253	INFO worker.py:1654 -- Connecting to existing Ray cluster at address: 10.8.0.217:6379...
+2025-09-16 14:17:58,261	INFO worker.py:1832 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+INFO 09-16 14:17:58 [ray_utils.py:334] No current placement group found. Creating a new placement group.
+WARNING 09-16 14:17:59 [ray_utils.py:198] tensor_parallel_size=16 is bigger than a reserved number of GPUs (4 GPUs) in a node d474f540df68674bb1a0bf2263137ffb331b346796560c0e0dcd9bd8. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 16 GPUs available at each node.
+WARNING 09-16 14:17:59 [ray_utils.py:198] tensor_parallel_size=16 is bigger than a reserved number of GPUs (4 GPUs) in a node 501833d3e758d767f8a849166f3bab91dda4112b5ae5f88b4deb2b17. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 16 GPUs available at each node.
+WARNING 09-16 14:17:59 [ray_utils.py:198] tensor_parallel_size=16 is bigger than a reserved number of GPUs (4 GPUs) in a node d3c07ca1c91222d28db8fb13768326ebadb26d92f264f89f81cafbf7. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 16 GPUs available at each node.
+WARNING 09-16 14:17:59 [ray_utils.py:198] tensor_parallel_size=16 is bigger than a reserved number of GPUs (4 GPUs) in a node 05e00fce7616d093c5f1b5402d7ddeb28727ba7fe33b153b9594a572. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 16 GPUs available at each node.
+INFO 09-16 14:17:59 [ray_distributed_executor.py:177] use_ray_spmd_worker: True
+[36m(pid=418742)[0m INFO 09-16 14:18:06 [__init__.py:244] Automatically detected platform cuda.
+[36m(pid=391314, ip=10.9.0.73)[0m INFO 09-16 14:20:00 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 4x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m
+INFO 09-16 14:20:16 [ray_distributed_executor.py:353] non_carry_over_env_vars from config: set()
+INFO 09-16 14:20:16 [ray_distributed_executor.py:355] Copying the following environment variables to workers: ['VLLM_USE_RAY_SPMD_WORKER', 'VLLM_USE_RAY_COMPILED_DAG', 'VLLM_WORKER_MULTIPROC_METHOD', 'VLLM_USE_V1']
+INFO 09-16 14:20:16 [ray_distributed_executor.py:358] If certain env vars should NOT be copied to workers, add them to /leonardo/home/userinternal/rscheda0/.config/vllm/ray_non_carry_over_env_vars.json file
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m WARNING 09-16 14:20:34 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x14b4dd7bd790>
+[36m(pid=443721, ip=10.8.0.246)[0m INFO 09-16 14:20:00 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 11x across cluster][0m
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m INFO 09-16 14:20:35 [utils.py:1126] Found nccl from library libnccl.so.2
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m INFO 09-16 14:20:35 [pynccl.py:70] vLLM is using nccl==2.26.2
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO cudaDriverVersion 12020
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Bootstrap: Using ib0:10.128.49.89<0>
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL version 2.26.2+cuda12.2
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_IB_DISABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.49.89<0>
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Using network IB
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO ncclCommInitRank comm 0xd627920 rank 7 nranks 16 cudaDev 3 nvmlDev 3 busId c8000 commId 0x13ccb245f1c7883a - Init START
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO RAS client listening socket at ::1<28028>
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Bootstrap timings total 0.005857 (create 0.000018, send 0.000063, recv 0.000069, ring 0.004919, delay 0.000001)
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Setting affinity for GPU 3 to ffff
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO comm 0xd627920 rank 7 nRanks 16 nNodes 4 localRanks 4 localRank 3 MNNVL 0
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Trees [0] 4/-1/-1->7->6 [1] 4/-1/-1->7->6 [2] 4/10/-1->7->6 [3] 4/10/-1->7->6
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO P2P Chunksize set to 131072
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:444367 [3] NCCL INFO [Proxy Service UDS] Device 3 CPU core 7
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:444363 [3] NCCL INFO [Proxy Service] Device 3 CPU core 13
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:444371 [3] NCCL INFO [Proxy Progress] Device 3 CPU core 5
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 00/0 : 7[3] -> 10[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 02/0 : 7[3] -> 10[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 01/0 : 2[2] -> 7[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 2[2] -> 7[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 01/0 : 7[3] -> 5[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 7[3] -> 5[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 7[3] -> 10[2] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 02/0 : 10[2] -> 7[3] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 10[2] -> 7[3] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 00/0 : 7[3] -> 4[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 01/0 : 7[3] -> 4[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 02/0 : 7[3] -> 4[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 7[3] -> 4[0] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 00/0 : 7[3] -> 6[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 01/0 : 7[3] -> 6[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 02/0 : 7[3] -> 6[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Channel 03/0 : 7[3] -> 6[2] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO threadThresholds 8/8/64 | 128/8/64 | 512 | 512
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p channels per peer
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m lrdn2766:443723:443723 [3] NCCL INFO ncclCommInitRank comm 0xd627920 rank 7 nranks 16 cudaDev 3 nvmlDev 3 busId c8000 commId 0x13ccb245f1c7883a - Init
+[36m(RayWorkerWrapper pid=443721, ip=10.8.0.246)[0m lrdn2766:443721:443721 [2
+[36m(RayWorkerWrapper pid=391315, ip=10.9.0.73)[0m lrdn2953:3
+[36m(RayWorkerWrapper pid=418744)[0m lrdn2737:418744:418744 [2] NCCL INFO nccl
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Channel 00/04 :  0  3  6  5  4  7 10  9  8 11 14 13 12 15  2  1
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Channel 01/04 :  0  2  7  5  4  6 11  9  8 10 15 13 12 14  3  1
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Channel 02/04 :  0  3  6  5  4  7 10  9  8 11 14 13 12 15  2  1
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Channel 03/04 :  0  2  7  5  4  6 11  9  8 10 15 13 12 14  3  1
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Check P2P Type intraNodeP2pSupport 1 directMode 0
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO CC Off, workFifoBytes 1048576
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO ncclCommInitRank comm 0xd7b52c0 rank 0 nranks 16 cudaDev 0 nvmlDev 0 busId 1d000 commId 0x13ccb245f1c7883a - Init COMPLETE
+[36m(RayWorkerWrapper pid=418741)[0m lrdn2737:418741:418741 [0] NCCL INFO Init t
+[36m(RayWorkerWrapper pid=386193, ip=10.9.0.140)[0m lrdn3020:386193:386193 [3] NCCL INFO ncclCommInitRank comm 0xd575b20 rank 11 nranks 16 cudaDev 3 nvmlDev 3 busId c8000 commId 0x
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m lrdn2766:443724:443724 [0] NCCL INFO Init timings - ncclCommInitRank: rank 4 nranks 16 total 1.08 (kernels 0.81, alloc 0.04, bootstrap 0.02, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.13, rest 0.01)
+[36m(RayWorkerWrapper pid=443723, ip=10.8.0.246)[0m  COMPLETE
+[36m(RayWorkerWrapper pid=443721, ip=10.8.0.246)[0m ] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p channels per peer
+[36m(RayWorkerWrapper pid=418744)[0m CommInitRank comm 0xd4f14e0 rank 2 nranks 16 cudaDev 2 nvmlDev 2 busId 8f000 commId 0x13ccb245f1c7883a - Init COMPLETE
+[36m(RayWorkerWrapper pid=418741)[0m imings - ncclCommInitRank: rank 0 nranks 16 total 1.15 (kernels 0.90, alloc 0.04, bootstrap 0.02, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.12, rest 0.00)
+[36m(RayWorkerWrapper pid=386193, ip=10.9.0.140)[0m 13ccb245f1c7883a - Init COMPLETE
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m 2
+[36m(RayWorkerWrapper pid=391314, ip=10.9.0.73)[0m WARNING 09-16 14:20:37 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.
+[36m(RayWorkerWrapper pid=418741)[0m INFO 09-16 14:20:37 [shm_broadcast.py:289] vLLM message queue communication handle: Handle(local_reader_ranks=[1, 2, 3], buffer_handle=(3, 4194304, 6, 'psm_29e3d9b1'), local_subscribe_addr='ipc:///tmp/949f0f22-dbe6-4668-bd00-37bc7997eb1d', remote_subscribe_addr='tcp://10.8.0.217:44677', remote_addr_ipv6=False)
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m INFO 09-16 14:20:37 [parallel_state.py:1065] rank 4 in world size 16 is assigned as DP rank 0, PP rank 0, TP rank 4, EP rank 4
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m WARNING 09-16 14:20:38 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+[36m(RayWorkerWrapper pid=443724, ip=10.8.0.246)[0m INFO 09-16 14:20:38 [gpu_model_runner.py:1595] Starting to load model /leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B...
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m INFO 09-16 14:20:38 [gpu_model_runner.py:1600] Loading model from scratch...
+[36m(RayWorkerWrapper pid=391314, ip=10.9.0.73)[0m INFO 09-16 14:20:39 [cuda.py:252] Using Flash Attention backend on V1 engine.
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m WARNING 09-16 14:20:34 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x14ca0a1be790>[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   0% Completed | 0/191 [00:00<?, ?it/s]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   1% Completed | 1/191 [00:53<2:50:03, 53.70s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   1% Completed | 2/191 [01:34<2:25:15, 46.11s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   2% Completed | 3/191 [01:50<1:41:24, 32.37s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   2% Completed | 4/191 [02:01<1:13:59, 23.74s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   3% Completed | 5/191 [02:01<47:50, 15.43s/it]
+[36m(RayWorkerWrapper pid=418741)[0m   
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   3% Completed | 6/191 [02:02<32:18, 10.48s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   4% Completed | 7/191 [02:23<42:54, 13.99s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   4% Completed | 8/191 [02:35<40:38, 13.32s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   5% Completed | 9/191 [02:48<40:05, 13.22s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   5% Completed | 10/191 [02:49<28:32,  9.46s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   6% Completed | 11/191 [03:04<32:58, 10.99s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   6% Completed | 12/191 [03:29<45:56, 15.40s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   7% Completed | 13/191 [03:30<32:23, 10.92s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   7% Completed | 14/191 [03:31<23:24,  7.94s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   8% Completed | 15/191 [03:50<33:30, 11.42s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   8% Completed | 16/191 [03:51<23:42,  8.13s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   9% Completed | 17/191 [04:00<24:13,  8.36s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:   9% Completed | 18/191 [04:00<17:32,  6.08s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  10% Completed | 19/191 [05:02<1:05:27, 22.84s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  10% Completed | 20/191 [05:41<1:18:33, 27.57s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  11% Completed | 21/191 [05:42<55:11, 19.48s/it]
+[36m(RayWorkerWrapper pid=418741)[0m   
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  12% Completed | 22/191 [05:43<39:42, 14.10s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  12% Completed | 23/191 [06:02<43:06, 15.39s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  13% Completed | 24/191 [06:14<40:31, 14.56s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  13% Completed | 25/191 [06:27<38:32, 13.93s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  14% Completed | 26/191 [06:27<27:12,  9.89s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  14% Completed | 27/191 [06:49<37:15, 13.63s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  15% Completed | 28/191 [06:50<26:31,  9.77s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  15% Completed | 29/191 [06:51<19:08,  7.09s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  16% Completed | 30/191 [06:58<18:57,  7.07s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  16% Completed | 31/191 [07:15<26:28,  9.93s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  17% Completed | 32/191 [07:26<27:16, 10.29s/it]
+Ray Cluster started with PID 414975
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  17% Completed | 33/191 [07:37<27:27, 10.43s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  18% Completed | 34/191 [07:37<19:42,  7.53s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  18% Completed | 35/191 [07:38<14:26,  5.56s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  19% Completed | 36/191 [07:52<20:31,  7.94s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  19% Completed | 37/191 [07:52<14:45,  5.75s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  20% Completed | 38/191 [08:22<33:03, 12.96s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  20% Completed | 39/191 [08:24<24:15,  9.57s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  21% Completed | 40/191 [10:10<1:36:42, 38.43s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  21% Completed | 41/191 [10:13<1:09:51, 27.94s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  22% Completed | 42/191 [10:14<48:56, 19.71s/it]
+[36m(RayWorkerWrapper pid=418741)[0m   
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  23% Completed | 43/191 [10:36<50:21, 20.41s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  23% Completed | 44/191 [10:36<35:28, 14.48s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  24% Completed | 45/191 [10:45<31:10, 12.82s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  24% Completed | 46/191 [11:03<34:56, 14.46s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  25% Completed | 47/191 [11:18<34:51, 14.53s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  25% Completed | 48/191 [11:19<24:40, 10.36s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  26% Completed | 49/191 [11:40<32:26, 13.71s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  26% Completed | 50/191 [11:41<23:07,  9.84s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  27% Completed | 51/191 [12:11<36:50, 15.79s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  27% Completed | 52/191 [12:45<49:39, 21.44s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  28% Completed | 53/191 [12:47<35:21, 15.38s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  28% Completed | 54/191 [12:56<30:49, 13.50s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  29% Completed | 55/191 [13:08<29:29, 13.01s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  29% Completed | 56/191 [13:17<26:31, 11.79s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  30% Completed | 57/191 [13:17<19:00,  8.51s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  30% Completed | 58/191 [13:18<13:39,  6.16s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  31% Completed | 59/191 [14:43<1:05:29, 29.77s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  31% Completed | 60/191 [14:47<48:02, 22.01s/it]
+[36m(RayWorkerWrapper pid=418741)[0m   
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  32% Completed | 61/191 [14:48<33:52, 15.63s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  32% Completed | 62/191 [14:51<25:26, 11.84s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  33% Completed | 63/191 [15:28<41:35, 19.49s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  34% Completed | 64/191 [15:38<34:59, 16.53s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  34% Completed | 65/191 [15:47<30:11, 14.38s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  35% Completed | 66/191 [16:18<40:21, 19.37s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  35% Completed | 67/191 [16:19<28:26, 13.76s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  36% Completed | 68/191 [16:29<25:54, 12.64s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  36% Completed | 69/191 [16:37<23:11, 11.41s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  37% Completed | 70/191 [16:47<21:49, 10.82s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  37% Completed | 71/191 [16:52<18:25,  9.21s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  38% Completed | 72/191 [17:02<18:52,  9.52s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  38% Completed | 73/191 [17:09<16:54,  8.59s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  39% Completed | 74/191 [17:11<12:48,  6.57s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  39% Completed | 75/191 [17:18<13:11,  6.83s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  40% Completed | 76/191 [17:29<15:25,  8.05s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  40% Completed | 77/191 [17:39<16:13,  8.54s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  41% Completed | 78/191 [17:40<11:51,  6.30s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  41% Completed | 79/191 [17:40<08:39,  4.64s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  42% Completed | 80/191 [17:47<09:48,  5.30s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  42% Completed | 81/191 [17:48<07:05,  3.87s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  43% Completed | 82/191 [18:03<13:14,  7.29s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  43% Completed | 83/191 [18:11<13:35,  7.55s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  44% Completed | 84/191 [18:12<09:47,  5.49s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  45% Completed | 85/191 [18:13<07:12,  4.08s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  45% Completed | 86/191 [18:23<10:37,  6.07s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  46% Completed | 87/191 [18:31<11:21,  6.56s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  46% Completed | 88/191 [18:43<14:11,  8.27s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  47% Completed | 89/191 [18:44<10:06,  5.94s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  47% Completed | 90/191 [18:50<10:12,  6.07s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  48% Completed | 91/191 [19:06<15:02,  9.02s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  48% Completed | 92/191 [19:07<10:49,  6.56s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  49% Completed | 93/191 [19:18<12:44,  7.80s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  49% Completed | 94/191 [19:38<18:48, 11.64s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  50% Completed | 95/191 [19:49<18:14, 11.40s/it]
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  50% Completed | 96/191 [19:50<12:52,  8.14s/it]
+[36m(RayWorkerWrapper pid=391317, ip=10.9.0.73)[0m INFO 09-16 14:40:31 [default_loader.py:272] Loading weights took 1190.66 seconds
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m INFO 09-16 14:20:35 [utils.py:1126] Found nccl from library libnccl.so.2[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m INFO 09-16 14:20:35 [pynccl.py:70] vLLM is using nccl==2.26.2[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO cudaDriverVersion 12020[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3[32m [repeated 30x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Bootstrap: Using ib0:10.128.53.81<0>[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL version 2.26.2+cuda12.2[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL_IB_DISABLE set by environment to 0.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.53.81<0>[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. [32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Using network IB[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO ncclCommInitRank comm 0xde4f550 rank 9 nranks 16 cudaDev 1 nvmlDev 1 busId 56000 commId 0x13ccb245f1c7883a - Init START[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO RAS client listening socket at ::1<28028>[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Bootstrap timings total 0.087361 (create 0.000016, send 0.000111, recv 0.007168, ring 0.079173, delay 0.000000)[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Setting affinity for GPU 1 to ffff[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO comm 0xde4f550 rank 9 nRanks 16 nNodes 4 localRanks 4 localRank 1 MNNVL 0[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Trees [0] -1/-1/-1->9->8 [1] -1/-1/-1->9->8 [2] -1/-1/-1->9->8 [3] -1/-1/-1->9->8[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO P2P Chunksize set to 131072[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386819 [1] NCCL INFO [Proxy Service UDS] Device 1 CPU core 5[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386815 [1] NCCL INFO [Proxy Service] Device 1 CPU core 4[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386822 [1] NCCL INFO [Proxy Progress] Device 1 CPU core 14[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=418742)[0m lrdn2737:418742:418742 [3] NCCL INFO Channel 02/0 : 3[3] -> 6[2] [send] via NET/IB/2[32m [repeated 35x across cluster][0m
+[36m(RayWorkerWrapper pid=418742)[0m lrdn2737:418742:418742 [3] NCCL INFO Channel 03/0 : 14[2] -> 3[3] [receive] via NET/IB/3[32m [repeated 34x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Channel 03/0 : 9[1] -> 8[0] via P2P/IPC/read[32m [repeated 110x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 0[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO Connected all trees[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m lrdn3020:386194:386194 [1] NCCL INFO threadThresholds 8/8/64 | 128/8/64 | 512 | 512[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m lrdn3020:386195:386195 [2] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p channels per peer[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m lrdn3020:386195:386195 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m lrdn3020:386195:386195 [2] NCCL INFO ncclCommInitRank comm 0xda5b9f0 rank 10 nranks 16 cudaDev 2 nvmlDev 2 busId 8f000 commId 0x13ccb245f1c7883a - Init COMPLETE[32m [repeated 12x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m lrdn3020:386195:386195 [2] NCCL INFO Init timings - ncclCommInitRank: rank 10 nranks 16 total 0.87 (kernels 0.52, alloc 0.06, bootstrap 0.08, allgathers 0.00, topo 0.06, graphs 0.01, connections 0.11, rest 0.02)[32m [repeated 14x across cluster][0m
+[36m(RayWorkerWrapper pid=443721, ip=10.8.0.246)[0m WARNING 09-16 14:20:37 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m INFO 09-16 14:20:37 [parallel_state.py:1065] rank 10 in world size 16 is assigned as DP rank 0, PP rank 0, TP rank 10, EP rank 10[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m WARNING 09-16 14:20:38 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386195, ip=10.9.0.140)[0m INFO 09-16 14:20:38 [gpu_model_runner.py:1595] Starting to load model /leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B...[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=386194, ip=10.9.0.140)[0m INFO 09-16 14:20:38 [gpu_model_runner.py:1600] Loading model from scratch...[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=443721, ip=10.8.0.246)[0m INFO 09-16 14:20:39 [cuda.py:252] Using Flash Attention backend on V1 engine.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=418741)[0m 
+Loading safetensors checkpoint shards:  51% Completed | 97/191 [19:54<10:52,  6.94s/it]
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running
+Don't kill process 414975, it is still running

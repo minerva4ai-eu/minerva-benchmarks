@@ -1,0 +1,5 @@
+{
+  "Text Generation": "/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model/",
+  "Embedding": "/path/to/embedding/models",
+  "Vision": "/path/to/vision/models"
+}

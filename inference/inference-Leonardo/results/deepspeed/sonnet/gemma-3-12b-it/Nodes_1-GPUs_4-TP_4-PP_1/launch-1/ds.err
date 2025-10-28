@@ -1,0 +1,139 @@
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/deepspeed/sonnet/gemma-3-12b-it/Nodes_1-GPUs_4-TP_4-PP_1/launch-1/serve_deepspeed_mii.py", line 1, in <module>
+    import os, sys, mii
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/__init__.py", line 5, in <module>
+    from .api import client, serve, pipeline
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/api.py", line 8, in <module>
+    from mii.backend import MIIClient  # , MIIServer
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/__init__.py", line 5, in <module>
+    from .client import MIIClient
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/client.py", line 10, in <module>
+    from mii.batching.data_classes import Response
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/__init__.py", line 6, in <module>
+    from .ragged_batching import MIIAsyncPipeline, MIIPipeline
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/ragged_batching.py", line 17, in <module>
+    import torch
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+Traceback (most recent call last):
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
+    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
+    from transformers import (AutoTokenizer, PreTrainedTokenizer,
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
+    from torch import Tensor
+  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
+    from torch._C import *  # noqa: F403
+    ^^^^^^^^^^^^^^^^^^^^^^
+ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd

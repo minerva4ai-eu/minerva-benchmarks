@@ -1,0 +1,28 @@
+INFO 09-15 17:24:13 [__init__.py:244] Automatically detected platform cuda.
+Namespace(backend='vllm', base_url=None, host='localhost', port=2950, endpoint='/v1/completions', dataset=None, dataset_name='sonnet', dataset_path='/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/sonnet.txt', max_concurrency=400, model='/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it', tokenizer=None, best_of=1, use_beam_search=False, num_prompts=1000, logprobs=None, request_rate=inf, burstiness=1.0, seed=0, trust_remote_code=False, disable_tqdm=False, profile=False, save_result=True, metadata=None, result_dir=None, result_filename='/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sonnet/gemma-3-12b-it/Nodes_1-GPUs_4-TP_4-PP_1/launch-1/Concurrency_400.json', ignore_eos=False, percentile_metrics='ttft,tpot,itl', metric_percentiles='99', goodput=None, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, random_input_len=1024, random_output_len=128, random_range_ratio=1.0, random_prefix_len=0, hf_subset=None, hf_split=None, hf_output_len=None, tokenizer_mode='auto')
+Starting initial single prompt test run...
+Initial test run completed. Starting main benchmark run...
+Traffic request rate: inf
+Burstiness factor: 1.0 (Poisson process)
+Maximum request concurrency: 400
+============ Serving Benchmark Result ============
+Successful requests:                     1000      
+Benchmark duration (s):                  44.76     
+Total input tokens:                      513112    
+Total generated tokens:                  149972    
+Request throughput (req/s):              22.34     
+Output token throughput (tok/s):         3350.89   
+Total Token throughput (tok/s):          14815.60  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          5126.86   
+Median TTFT (ms):                        752.03    
+P99 TTFT (ms):                           11641.21  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          72.78     
+Median TPOT (ms):                        72.57     
+P99 TPOT (ms):                           75.11     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           72.78     
+Median ITL (ms):                         69.81     
+P99 ITL (ms):                            157.49    
+==================================================
