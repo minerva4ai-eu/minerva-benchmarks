@@ -1,0 +1,801 @@
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+LAUNCH_FOLDER: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_32-GPUs_4-TP_128-PP_1/launch-1}
+BENCHMARK_FILE: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+Node: lrdn0115 - IP: 10.1.0.115
+Node: lrdn0690 - IP: 10.2.1.74
+Node: lrdn0695 - IP: 10.2.1.79
+Node: lrdn0715 - IP: 10.2.1.99
+Node: lrdn1385 - IP: 10.4.1.49
+Node: lrdn1599 - IP: 10.5.0.159
+Node: lrdn1748 - IP: 10.5.1.52
+Node: lrdn1764 - IP: 10.5.1.68
+Node: lrdn1769 - IP: 10.5.1.73
+Node: lrdn1826 - IP: 10.6.0.26
+Node: lrdn1920 - IP: 10.6.0.120
+Node: lrdn1933 - IP: 10.6.0.133
+Node: lrdn2035 - IP: 10.6.0.235
+Node: lrdn2127 - IP: 10.6.1.71
+Node: lrdn2144 - IP: 10.6.1.88
+Node: lrdn2160 - IP: 10.6.1.104
+Node: lrdn2197 - IP: 10.7.0.37
+Node: lrdn2220 - IP: 10.7.0.60
+Node: lrdn2252 - IP: 10.7.0.92
+Node: lrdn2283 - IP: 10.7.0.123
+Node: lrdn2301 - IP: 10.7.0.141
+Node: lrdn2309 - IP: 10.7.0.149
+Node: lrdn2311 - IP: 10.7.0.151
+Node: lrdn2337 - IP: 10.7.0.177
+Node: lrdn2353 - IP: 10.7.0.193
+Node: lrdn2359 - IP: 10.7.0.199
+Node: lrdn2377 - IP: 10.7.0.217
+Node: lrdn2381 - IP: 10.7.0.221
+Node: lrdn2392 - IP: 10.7.0.232
+Node: lrdn2414 - IP: 
+Node: lrdn2426 - IP: 10.7.1.10
+Node: lrdn2430 - IP: 10.7.1.14
+Starting HEAD at lrdn0115
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:13:11,769	INFO usage_lib.py:472 -- Usage stats collection is enabled. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2025-09-16 14:13:11,769	INFO scripts.py:865 -- [37mLocal node IP[39m: [1m10.1.0.115[22m
+2025-09-16 14:13:17,938	SUCC scripts.py:902 -- [32m--------------------[39m
+2025-09-16 14:13:17,938	SUCC scripts.py:903 -- [32mRay runtime started.[39m
+2025-09-16 14:13:17,938	SUCC scripts.py:904 -- [32m--------------------[39m
+2025-09-16 14:13:17,938	INFO scripts.py:906 -- [36mNext steps[39m
+2025-09-16 14:13:17,938	INFO scripts.py:909 -- To add another node to this Ray cluster, run
+2025-09-16 14:13:17,938	INFO scripts.py:912 -- [1m  ray start --address='10.1.0.115:6379'[22m
+2025-09-16 14:13:17,938	INFO scripts.py:921 -- To connect to this Ray cluster:
+2025-09-16 14:13:17,938	INFO scripts.py:923 -- [35mimport[39m[26m ray
+2025-09-16 14:13:17,938	INFO scripts.py:924 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'10.1.0.115'[39m[26m)
+2025-09-16 14:13:17,938	INFO scripts.py:936 -- To submit a Ray job using the Ray Jobs CLI:
+2025-09-16 14:13:17,939	INFO scripts.py:937 -- [1m  RAY_ADDRESS='http://127.0.0.1:8265' ray job submit --working-dir . -- python my_script.py[22m
+2025-09-16 14:13:17,939	INFO scripts.py:946 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2025-09-16 14:13:17,939	INFO scripts.py:950 -- for more information on submitting Ray jobs to the Ray cluster.
+2025-09-16 14:13:17,939	INFO scripts.py:955 -- To terminate the Ray runtime, run
+2025-09-16 14:13:17,939	INFO scripts.py:956 -- [1m  ray stop[22m
+2025-09-16 14:13:17,939	INFO scripts.py:959 -- To view the status of the cluster, use
+2025-09-16 14:13:17,939	INFO scripts.py:960 --   [1mray status[22m[26m
+2025-09-16 14:13:17,939	INFO scripts.py:964 -- To monitor and debug Ray, view the dashboard at 
+2025-09-16 14:13:17,939	INFO scripts.py:965 --   [1m127.0.0.1:8265[22m[26m
+2025-09-16 14:13:17,939	INFO scripts.py:972 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+Starting workers Nodes
+Starting WORKER 1 at lrdn0690
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 2 at lrdn0695
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 3 at lrdn0715
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 4 at lrdn1385
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 5 at lrdn1599
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 6 at lrdn1748
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 7 at lrdn1764
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 8 at lrdn1769
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 9 at lrdn1826
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 10 at lrdn1920
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:08,028	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.4.1.49[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,664	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,664	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:08,027	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.1.79[22m
+2025-09-16 14:14:10,664	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:10,664	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:10,664	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:10,664	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:10,665	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:10,665	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:10,665	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 11 at lrdn1933
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 12 at lrdn2035
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 13 at lrdn2127
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 14 at lrdn2144
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 15 at lrdn2160
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 16 at lrdn2197
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:28,078	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.5.1.68[22m
+2025-09-16 14:14:30,124	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:30,124	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,124	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,124	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,124	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,125	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,125	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,125	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:29,005	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.0.26[22m
+2025-09-16 14:14:30,298	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:30,298	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:30,298	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:30,298	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:30,298	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:30,298	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:30,298	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:30,298	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:29,996	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.5.1.52[22m
+2025-09-16 14:14:31,275	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:31,276	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:31,276	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:31,276	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:31,276	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:31,276	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:31,276	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:31,276	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:29,996	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.5.1.73[22m
+2025-09-16 14:14:31,281	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:31,281	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:31,281	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:31,281	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:31,281	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:31,282	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:31,282	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:31,282	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 17 at lrdn2220
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:32,029	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.1.74[22m
+2025-09-16 14:14:33,377	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:33,377	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:33,377	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:33,377	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:33,378	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:33,378	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:33,378	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:33,378	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:32,472	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.2.1.99[22m
+2025-09-16 14:14:33,840	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:33,840	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:33,840	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:33,840	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:33,840	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:33,840	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:33,841	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:33,841	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:32,646	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.0.133[22m
+2025-09-16 14:14:33,920	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:33,920	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:33,921	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:33,921	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:33,921	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:33,921	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:33,921	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:33,921	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:34,241	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.5.0.159[22m
+2025-09-16 14:14:35,047	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:35,047	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:35,047	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:35,047	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:35,047	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:35,047	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:35,047	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:35,047	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 18 at lrdn2252
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 19 at lrdn2283
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 20 at lrdn2301
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 21 at lrdn2309
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.37[22m
+2025-09-16 14:14:49,062	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,062	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,062	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,062	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:49,063	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,063	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,063	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:48,835	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.0.120[22m
+2025-09-16 14:14:49,154	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:49,154	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:49,154	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:49,154	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:49,154	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:49,154	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:49,154	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:49,155	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Ray Status
+Starting WORKER 22 at lrdn2311
+2025-09-16 14:14:48,674	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.1.88[22m
+2025-09-16 14:14:50,019	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:50,019	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:50,019	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:50,019	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:50,019	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:50,019	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:50,019	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:50,019	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+2025-09-16 14:14:49,480	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.123[22m
+2025-09-16 14:14:50,799	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:50,799	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:50,799	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:50,799	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:50,800	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:50,800	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:50,800	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:50,800	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Configuration written to config.json
+======== Autoscaler status: 2025-09-16 14:14:49.293192 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_3d8e946a22b0181b988131b79b6b49d017abddb2025d3f15950c4eb2
+ 1 node_a998cbd33815aba0462be372051fb76010c18c8d3e12f089b459942b
+ 1 node_438e29a06df7ed29fd014b450b477c96e966a6ab23c6f6a3b6454072
+ 1 node_6b9829bcf7713adf8a0cf27b0b4d99496830a70ab66b224e3f3e8df4
+ 1 node_8d3a4bad6b9c7907ee163d3a36dcf70da92fa5d16b91ace2b4d7fb2f
+ 1 node_8eb2fca6e5e552a464fa878b693e567ce7e33009bcc70156ba68b3bf
+ 1 node_ae574a2f14f5ec9c54b095f88712485ebdde4ae5f80a6bde4acc44cf
+ 1 node_ce715509cb579fca1700eff963b390187c618641cb766abcedd0a857
+ 1 node_c737a44c2af3088a6f34dd80b882ef0642d2a30c481eb6ebe8f1de4f
+ 1 node_d2e9ae5ea98117d00f001b7062eb5d2e1d28627db9f1d4757045092f
+ 1 node_781633b73c9e4f2dda622214c546652165787dccfe69360858cdc16d
+ 1 node_e13be4a59e41d61263ed0c255620651fdf7822b2d8d200ed5590b3d9
+ 1 node_ac99f506814d5dc7d6b2702fde690fb64efd9173d92c23b718a929d0
+ 1 node_7e76c660ca79ddd1e9ba3eca55431a25d6d90681f62bc84b93467dd3
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Usage:
+ 0.0/448.0 CPU
+ 0.0/56.0 GPU
+ 0B/4.75TiB memory
+ 0B/2.04TiB object_store_memory
+
+Demands:
+ (no resource demands)
+2025-09-16 14:14:51,321	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.60[22m
+2025-09-16 14:14:52,578	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:52,579	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:52,579	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:52,579	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:52,579	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:52,579	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:52,579	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:52,579	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+VLLM serve loading... Head Node Address: 10.1.0.115
+Starting WORKER 23 at lrdn2337
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 24 at lrdn2353
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:14:56,871	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.1.71[22m
+2025-09-16 14:14:58,224	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:58,224	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:58,225	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:58,225	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:58,225	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:58,225	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:58,225	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:58,225	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:56,871	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.1.104[22m
+2025-09-16 14:14:58,225	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:58,225	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:58,225	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:58,225	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:58,225	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:58,225	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:58,226	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:58,226	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:59,564	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.6.0.235[22m
+2025-09-16 14:14:59,986	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:14:59,986	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:14:59,986	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:14:59,986	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:14:59,986	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:14:59,986	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:14:59,986	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:14:59,986	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 25 at lrdn2359
+2025-09-16 14:14:59,972	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.149[22m
+2025-09-16 14:15:01,242	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:01,242	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:01,242	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:01,242	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:01,242	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:01,243	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:01,243	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:01,243	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:00,100	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.92[22m
+2025-09-16 14:15:01,670	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:01,671	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:01,671	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:01,671	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:01,671	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:01,671	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:01,671	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:01,671	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 26 at lrdn2377
+2025-09-16 14:15:03,156	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.151[22m
+2025-09-16 14:15:04,437	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:04,437	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:04,437	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:04,437	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:04,437	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:04,438	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:04,438	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:04,438	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 27 at lrdn2381
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:08,687	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.193[22m
+2025-09-16 14:15:10,140	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:10,140	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:10,141	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:10,141	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:10,141	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:10,141	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:10,141	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:10,141	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 28 at lrdn2392
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+2025-09-16 14:15:12,272	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.141[22m
+2025-09-16 14:15:13,733	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:13,734	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:13,734	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:13,734	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:13,734	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:13,734	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:13,734	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:13,734	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+Starting WORKER 29 at lrdn2414
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 30 at lrdn2426
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Starting WORKER 31 at lrdn2430
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+Configuration written to config.json
+Ray Cluster started correctly
+2025-09-16 14:15:26,470	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.177[22m
+2025-09-16 14:15:28,383	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:28,383	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:28,383	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:28,383	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:28,383	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:28,384	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:28,384	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:28,384	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.221[22m
+2025-09-16 14:15:32,270	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,270	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,270	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,270	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,270	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.254[22m
+2025-09-16 14:15:32,270	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,270	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.217[22m
+2025-09-16 14:15:32,270	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,270	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,270	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,270	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,270	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,270	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,270	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:32,270	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,271	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.232[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,271	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,271	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,271	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,271	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:31,690	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.0.199[22m
+2025-09-16 14:15:32,271	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:32,271	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:32,272	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:32,272	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:32,272	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:32,272	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:32,272	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:15:47,921	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.1.10[22m
+2025-09-16 14:15:50,634	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:15:50,634	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:15:50,634	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:15:50,634	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:15:50,634	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:15:50,635	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:15:50,635	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:15:50,635	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:16:18,793	INFO scripts.py:1047 -- [37mLocal node IP[39m: [1m10.7.1.14[22m
+2025-09-16 14:16:24,565	SUCC scripts.py:1063 -- [32m--------------------[39m
+2025-09-16 14:16:24,565	SUCC scripts.py:1064 -- [32mRay runtime started.[39m
+2025-09-16 14:16:24,565	SUCC scripts.py:1065 -- [32m--------------------[39m
+2025-09-16 14:16:24,565	INFO scripts.py:1067 -- To terminate the Ray runtime, run
+2025-09-16 14:16:24,565	INFO scripts.py:1068 -- [1m  ray stop[22m
+2025-09-16 14:16:24,565	INFO scripts.py:1076 -- [36m[1m--block[22m[39m
+2025-09-16 14:16:24,565	INFO scripts.py:1077 -- This command will now block forever until terminated by a signal.
+2025-09-16 14:16:24,565	INFO scripts.py:1080 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2025-09-16 14:14:54,961	INFO cli.py:39 -- [37mJob submission server address[39m: [1mhttp://127.0.0.1:8265[22m
+2025-09-16 14:14:56,471	SUCC cli.py:63 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:14:56,471	SUCC cli.py:64 -- [32mJob 'raysubmit_U6eEhAne9FZEu1AS' submitted successfully[39m
+2025-09-16 14:14:56,471	SUCC cli.py:65 -- [32m-------------------------------------------------------[39m
+2025-09-16 14:14:56,472	INFO cli.py:289 -- [36mNext steps[39m
+2025-09-16 14:14:56,472	INFO cli.py:290 -- Query the logs of the job:
+2025-09-16 14:14:56,472	INFO cli.py:292 -- [1mray job logs raysubmit_U6eEhAne9FZEu1AS[22m
+2025-09-16 14:14:56,472	INFO cli.py:294 -- Query the status of the job:
+2025-09-16 14:14:56,472	INFO cli.py:296 -- [1mray job status raysubmit_U6eEhAne9FZEu1AS[22m
+2025-09-16 14:14:56,472	INFO cli.py:298 -- Request the job to be stopped:
+2025-09-16 14:14:56,472	INFO cli.py:300 -- [1mray job stop raysubmit_U6eEhAne9FZEu1AS[22m
+2025-09-16 14:14:56,475	INFO cli.py:307 -- Tailing logs until the job exits (disable with --no-wait):
+2025-09-16 14:14:56,156	INFO job_manager.py:530 -- Runtime env is setting up.
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm/bin/python
+serve.sh: LAUNCH_FOLDER: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/Llama-3.1-405B/Nodes_32-GPUs_4-TP_128-PP_1/launch-1
+serve.sh: ADDITIONAL_ARGS: --max-model-len=32000 --cpu-offload-gb=0.5
+Waiting for vLLM server to be ready...
+Waiting for vLLM server to be ready...
+INFO 09-16 14:17:53 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-16 14:18:34 [api_server.py:1287] vLLM API server version 0.9.1
+INFO 09-16 14:18:35 [cli_args.py:309] non-default args: {'port': 2950, 'model': '/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', 'max_model_len': 32000, 'enforce_eager': True, 'distributed_executor_backend': 'ray', 'tensor_parallel_size': 128, 'swap_space': 2.0, 'cpu_offload_gb': 0.5, 'enable_chunked_prefill': True}
+INFO 09-16 14:18:56 [config.py:823] This model supports multiple tasks: {'embed', 'generate', 'score', 'reward', 'classify'}. Defaulting to 'generate'.
+INFO 09-16 14:18:56 [config.py:2195] Chunked prefill is enabled with max_num_batched_tokens=2048.
+WARNING 09-16 14:18:56 [cuda.py:91] To see benefits of async output processing, enable CUDA graph. Since, enforce-eager is enabled, async output processor cannot be used
+WARNING 09-16 14:18:56 [config.py:1599] Possibly too large swap space. 256.00 GiB out of the 502.91 GiB total CPU memory is allocated for the swap space.
+WARNING 09-16 14:19:00 [env_override.py:17] NCCL_CUMEM_ENABLE is set to 0, skipping override. This may increase memory overhead with cudagraph+allreduce: https://github.com/NVIDIA/nccl/issues/1234
+INFO 09-16 14:19:04 [__init__.py:244] Automatically detected platform cuda.
+INFO 09-16 14:19:09 [core.py:455] Waiting for init message from front-end.
+WARNING 09-16 14:19:09 [config.py:1599] Possibly too large swap space. 256.00 GiB out of the 502.91 GiB total CPU memory is allocated for the swap space.
+INFO 09-16 14:19:09 [core.py:70] Initializing a V1 LLM engine (v0.9.1) with config: model='/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', speculative_config=None, tokenizer='/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=32000, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=128, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model//Llama-3.1-405B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=False, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":[],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":0,"local_cache_dir":null}
+2025-09-16 14:19:09,126	INFO worker.py:1514 -- Using address 10.1.0.115:6379 set in the environment variable RAY_ADDRESS
+2025-09-16 14:19:09,126	INFO worker.py:1654 -- Connecting to existing Ray cluster at address: 10.1.0.115:6379...
+2025-09-16 14:19:09,135	INFO worker.py:1832 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+INFO 09-16 14:19:09 [ray_utils.py:334] No current placement group found. Creating a new placement group.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 7e76c660ca79ddd1e9ba3eca55431a25d6d90681f62bc84b93467dd3. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 2a1ea5f13f316960d77e3bd57918fc9bc2109cd9edbc6fb485240712. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 0aa97dc27cb5115ccaa8daf2e1f762cbc170f02ff980fb57559b86b7. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node ce715509cb579fca1700eff963b390187c618641cb766abcedd0a857. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 6b9829bcf7713adf8a0cf27b0b4d99496830a70ab66b224e3f3e8df4. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 05f42a84e2e4abb98a5bde724461ba5e6cdc5f0f5fef913ff8d27965. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 873c5fd376181981c98a680d07f7b4ee617db6830e76b556e62e6f53. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node ac99f506814d5dc7d6b2702fde690fb64efd9173d92c23b718a929d0. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node d2e9ae5ea98117d00f001b7062eb5d2e1d28627db9f1d4757045092f. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node ae574a2f14f5ec9c54b095f88712485ebdde4ae5f80a6bde4acc44cf. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 8d3a4bad6b9c7907ee163d3a36dcf70da92fa5d16b91ace2b4d7fb2f. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 010d09504c83294c761d29dd4f4dbd967d3f86bfcdcea817ab9042c9. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node eef89c7ae26a95291d4c27e9e3789fb79f5e511abe86f298ad07e9ef. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 2430574b5f92662ce8f459b508744125d64fea29bc6861fd9190bc3c. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 10dd3ea577fe4452e788edda5cd16036d768125808222890ede29aa9. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 5922065f47888e891d711bc1ecf95e200f917c373e0d552d633fc76f. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 438e29a06df7ed29fd014b450b477c96e966a6ab23c6f6a3b6454072. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node a998cbd33815aba0462be372051fb76010c18c8d3e12f089b459942b. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node e9369923e91e5e86983cc50068c47643d6e6cc774762ea87096cc100. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 3d8e946a22b0181b988131b79b6b49d017abddb2025d3f15950c4eb2. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 8eb2fca6e5e552a464fa878b693e567ce7e33009bcc70156ba68b3bf. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 5ce3cee28b238f229016fd7b305ea33ea0e52c61fb5569a4cebd4a72. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 781633b73c9e4f2dda622214c546652165787dccfe69360858cdc16d. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node e13be4a59e41d61263ed0c255620651fdf7822b2d8d200ed5590b3d9. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 75faa0a02e0e446ed43e542c3fa3e0a4486d3216b39ebbd900e0bde0. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 0dc49420d6fa2ee8bc70f9fab151d45c679719e33e67c35c93d53e3b. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 4487b2bd64cbf9dc2bd9bf1b5f6d068e18d52acb6b0448e6c5a69ea6. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node ed71af0c9b00ce58f1051379913fb22a4a133a084798de3519a85a35. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 59c4afa9c6e52f61257d78c899f7fdedae1c74afc0a93f982b1fbc3f. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node da0f2755b286181ec0f2874beaa3d0e1fdbf75e78721b9af3ec1631c. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node 8f08e78bb1d240a2c61cf6be2143fa115d0a3d56456bb782f6aaebbd. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+WARNING 09-16 14:19:10 [ray_utils.py:198] tensor_parallel_size=128 is bigger than a reserved number of GPUs (4 GPUs) in a node c737a44c2af3088a6f34dd80b882ef0642d2a30c481eb6ebe8f1de4f. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 128 GPUs available at each node.
+INFO 09-16 14:19:10 [ray_distributed_executor.py:177] use_ray_spmd_worker: True
+[36m(pid=2177256)[0m INFO 09-16 14:19:17 [__init__.py:244] Automatically detected platform cuda.
+[36m(pid=1499100, ip=10.7.0.177)[0m INFO 09-16 14:20:58 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 4x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m
+[36m(pid=3862032, ip=10.6.1.71)[0m INFO 09-16 14:21:06 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 88x across cluster][0m
+[36m(pid=396040, ip=10.2.1.99)[0m INFO 09-16 14:24:19 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 12x across cluster][0m
+[36m(pid=714739, ip=10.7.1.14)[0m INFO 09-16 14:25:02 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 8x across cluster][0m
+INFO 09-16 14:25:37 [ray_distributed_executor.py:353] non_carry_over_env_vars from config: set()
+INFO 09-16 14:25:37 [ray_distributed_executor.py:355] Copying the following environment variables to workers: ['VLLM_USE_RAY_SPMD_WORKER', 'VLLM_USE_RAY_COMPILED_DAG', 'VLLM_WORKER_MULTIPROC_METHOD', 'VLLM_USE_V1']
+INFO 09-16 14:25:37 [ray_distributed_executor.py:358] If certain env vars should NOT be copied to workers, add them to /leonardo/home/userinternal/rscheda0/.config/vllm/ray_non_carry_over_env_vars.json file
+[36m(RayWorkerWrapper pid=2177256)[0m WARNING 09-16 14:25:45 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x14692c22f450>
+[36m(pid=2469036, ip=10.7.0.60)[0m INFO 09-16 14:25:02 [__init__.py:244] Automatically detected platform cuda.[32m [repeated 15x across cluster][0m
+[36m(RayWorkerWrapper pid=1785922, ip=10.7.0.141)[0m WARNING 09-16 14:25:50 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x14ce54aa5010>[32m [repeated 52x across cluster][0m
+[36m(RayWorkerWrapper pid=2469037, ip=10.7.0.60)[0m WARNING 09-16 14:25:56 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x1484b2b20cd0>[32m [repeated 72x across cluster][0m
+[36m(RayWorkerWrapper pid=2097236, ip=10.7.0.149)[0m INFO 09-16 14:26:31 [utils.py:1126] Found nccl from library libnccl.so.2
+[36m(RayWorkerWrapper pid=2097236, ip=10.7.0.149)[0m INFO 09-16 14:26:31 [pynccl.py:70] vLLM is using nccl==2.26.2
+[36m(RayWorkerWrapper pid=2469036, ip=10.7.0.60)[0m WARNING 09-16 14:25:56 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x15213f3c2dd0>[32m [repeated 3x across cluster][0m
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO cudaDriverVersion 12020
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Bootstrap: Using ib0:10.128.39.161<0>
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL version 2.26.2+cuda12.2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_IB_DISABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.39.161<0>
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. 
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Using network IB
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO ncclCommInitRank comm 0xdcc5ed0 rank 62 nranks 128 cudaDev 2 nvmlDev 2 busId 8f000 commId 0xe8fafee45be30566 - Init START
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO RAS client listening socket at ::1<28028>
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Bootstrap timings total 0.489156 (create 0.000017, send 0.000154, recv 0.000233, ring 0.486481, delay 0.000000)
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Setting affinity for GPU 2 to ffff
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO comm 0xdcc5ed0 rank 62 nRanks 128 nNodes 32 localRanks 4 localRank 2 MNNVL 0
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Trees [0] 63/-1/-1->62->58 [1] 63/-1/-1->62->58 [2] 63/30/-1->62->126 [3] 63/30/-1->62->126
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO P2P Chunksize set to 131072
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1801018 [2] NCCL INFO [Proxy Service UDS] Device 2 CPU core 9
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1801015 [2] NCCL INFO [Proxy Service] Device 2 CPU core 7
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 00/0 : 59[3] -> 62[2] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 59[3] -> 62[2] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1801021 [2] NCCL INFO [Proxy Progress] Device 2 CPU core 11
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 01/0 : 62[2] -> 67[3] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 62[2] -> 67[3] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 00/0 : 62[2] -> 61[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 62[2] -> 61[1] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Connected all rings, use ring PXN 0 GDR 0
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 00/0 : 62[2] -> 63[3] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 01/0 : 62[2] -> 63[3] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 62[2] -> 63[3] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 62[2] -> 63[3] via P2P/IPC/read
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 00/0 : 58[2] -> 62[2] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 01/0 : 58[2] -> 62[2] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 30[2] -> 62[2] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 30[2] -> 62[2] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 126[2] -> 62[2] [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 126[2] -> 62[2] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 62[2] -> 126[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 62[2] -> 126[2] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 02/0 : 62[2] -> 30[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 03/0 : 62[2] -> 30[2] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:1800139 [2] NCCL INFO Channel 00/0 : 62[2] -> 58[2] [send] via NET/IB/2
+[36m(RayWorkerWrapper pid=1800139, ip=10.6.1.88)[0m lrdn2144:1800139:180
+[36m(RayWorkerWrapper pid=2469036, ip=10.7.0.60)[0m INFO 09-16 14:26:32 [utils.py:1126] Found nccl from library libnccl.so.2[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2469036, ip=10.7.0.60)[0m INFO 09-16 14:26:32 [pynccl.py:70] vLLM is using nccl==2.26.2[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=4098302, ip=10.7.0.92)[0m lrdn2252:4098302:4098302 [2] NCCL INFO Channel 03/0 : 118[2] 
+[36m(RayWorkerWrapper pid=2704433, ip=10.7.1.10)[0m lrdn2426:2704433:2704433 [2] NCCL INFO Channel 03/0 : 122[2] -> 1
+[36m(RayWorkerWrapper pid=2122010, ip=10.7.0.123)[0m lrdn2283:2122010:2122010 [2] NCCL 
+[36m(RayWorkerWrapper pid=1499103, ip=10.7.0.177)[0m lrdn2337:1499103:1499103 [2] 
+[36m(RayWorkerWrapper pid=3000579, ip=10.6.0.235)[0m lrdn2035:3000579:3000579 [
+[36m(RayWorkerWrapper pid=2135321, ip=10.6.0.26)[0m lrdn1826:2135321:2135321 [2]
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO threadThresholds 8/8/64 | 1024/8/64 | 512 | 512
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p channels per peer
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO ncclCommInitRank comm 0xd88c9e0 rank 127 nranks 128 cudaDev 3 nvmlDev 3 busId c8000 commId 0xe8fafee45be30566 - Init COMPLETE
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m lrdn2430:714745:714745 [3] NCCL INFO Init timings - ncclCommInitRank: rank 127 nranks 128 total 3.61 (kernels 0.20, alloc 0.07, bootstrap 0.45, allgathers 2.67, topo 0.
+[36m(RayWorkerWrapper pid=714744, ip=10.7.1.14)[0m lrdn2430:714744:714744 [2] NCCL INFO TUNER/Plugin: Could not find: libnc
+[36m(RayWorkerWrapper pid=3543948, ip=10.7.0.221)[0m lrdn2381:3543948:35
+[36m(RayWorkerWrapper pid=1893015, ip=10.7.0.199)[0m lrdn2359:1893
+[36m(RayWorkerWrapper pid=1893012, ip=10.7.0.199)[0m lrdn2359:1893012:1893012 [2] 
+[36m(RayWorkerWrapper pid=183207, ip=10.5.1.73)[0m lrdn1769:18320
+[36m(RayWorkerWrapper pid=183208, ip=10.5.1.73)[0m lrdn1769:183208:183208 [2] N
+[36m(RayWorkerWrapper pid=1809915, ip=10.6.0.120)[0m lrdn1920:1809915:1809915 [2
+[36m(RayWorkerWrapper pid=1809914, ip=10.6.0.120)[0m lrdn1920:1809
+[36m(RayWorkerWrapper pid=188114, ip=10.2.1.74)[0m lrdn0690:188114:188114 [3] NCCL INFO ncclCommInitRank comm 0xc9097b0 rank 7 nranks 128 cudaDev 3 nvmlDev 3 busId c8000 commId 0xe8fafee45be30566
+[36m(RayWorkerWrapper pid=382502, ip=10.5.1.52)[0m lrdn1748:382502:382502 [2] NCCL INFO threadThresholds 8/8/64 | 
+[36m(RayWorkerWrapper pid=188116, ip=10.2.1.74)[0m lrdn0690:188116:188
+[36m(RayWorkerWrapper pid=382504, ip=10.5.1.52)[0m lrdn1748:382504:382504 [3] NCCL INFO ncclCommInitRank comm 0xd8d6330 rank 27 nranks 128 cudaDev 3 nvml
+[36m(RayWorkerWrapper pid=2649465, ip=10.6.0.133)[0m lrdn1933:2649465:2649465 [2] NC
+[36m(RayWorkerWrapper pid=2649467, ip=10.6.0.133)[0m lrdn1933:2649467:
+[36m(RayWorkerWrapper pid=1785920, ip=10.7.0.141)[0m lrdn2301:178
+[36m(RayWorkerWrapper pid=1785919, ip=10.7.0.141)[0m lrdn2301:1785919:1785919 [2
+[36m(RayWorkerWrapper pid=1800140, ip=10.6.1.88)[0m lrdn2144:1800140:1800140 [3] NCCL INFO
+[36m(RayWorkerWrapper pid=4098300, ip=10.7.0.92)[0m lrdn2252:4098300:4098300 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tu
+[36m(RayWorkerWrapper pid=2704606, ip=10.7.1.10)[0m lrdn2426:2704606:2704606 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.
+[36m(RayWorkerWrapper pid=2300401, ip=10.7.0.193)[0m lrdn2353:2300401:2300401
+[36m(RayWorkerWrapper pid=2300404, ip=10.7.0.193)[0m lrdn2353:23
+[36m(RayWorkerWrapper pid=2177256)[0m lrdn0115:2177256:2177256 [0] NCCL INFO Check P2P Type intraNodeP2pSupport 1 directMode 0
+[36m(RayWorkerWrapper pid=2177256)[0m lrdn0115:2177256:2177256 [0] NCCL INFO CC
+[36m(RayWorkerWrapper pid=2177316)[0m lrdn0115:2177316:2177316 [2] NCCL INFO TUNER/Plugin: Could not 
+[36m(RayWorkerWrapper pid=2177317)[0m lrdn0115:2177317:2177317 [3] NCCL INFO Init timings - ncclCommInitRank: rank 3 nranks 128 total 3.71 (kernels 0.33, alloc 0.06, bootstrap 0.43, allgathers 2.67, t
+[36m(RayWorkerWrapper pid=205419, ip=10.7.0.151)[0m lrdn2311:205419:2
+[36m(RayWorkerWrapper pid=455230, ip=10.5.0.159)[0m lrdn1599:455230:455230 [3] NCCL INFO ncclCommInitRank comm 0xdacdca0 rank 23 nranks 128 cudaDev 3 nvmlDe
+[36m(RayWorkerWrapper pid=455232, ip=10.5.0.159)[0m lrdn1599:455232:455232 [2] NCCL INFO threadThresholds 8/8/64 
+[36m(RayWorkerWrapper pid=419671, ip=10.2.1.79)[0m lrdn0695:419671:419671 [3] NCCL INFO ncclCommInitRank comm 0xcdad170 rank 11 nranks 128 cudaDev 3 nvmlDev 3 busId c8000 c
+[36m(RayWorkerWrapper pid=2469037, ip=10.7.0.60)[0m lrdn2220:2469037:2469037 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p cha
+[36m(RayWorkerWrapper pid=1686126, ip=10.6.1.104)[0m lrdn2160:1
+[36m(RayWorkerWrapper pid=1686124, ip=10.6.1.104)[0m lrdn2160:1686124:1686124 
+[36m(RayWorkerWrapper pid=3862032, ip=10.6.1.71)[0m lrdn2127:3862032:
+[36m(RayWorkerWrapper pid=3862029, ip=10.6.1.71)[0m lrdn2127:3862029:3862029 [2] NCC
+[36m(RayWorkerWrapper pid=2135319, ip=10.6.0.26)[0m lrdn1826:2135319:2135319 [3] NCCL INF
+[36m(RayWorkerWrapper pid=1937037, ip=10.7.0.37)[0m lrdn2197:1937037:1937037 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 1 p2p chan
+[36m(RayWorkerWrapper pid=396040, ip=10.2.1.99)[0m lrdn0715:396040:
+[36m(RayWorkerWrapper pid=2097242, ip=10.7.0.149)[0m lrdn2309:209724
+[36m(RayWorkerWrapper pid=399612, ip=10.4.1.49)[0m lrdn1385:399612
+[36m(RayWorkerWrapper pid=399614, ip=10.4.1.49)[0m lrdn1385:399614:399614 [2] 
+[36m(RayWorkerWrapper pid=386497, ip=10.5.1.68)[0m lrdn1764:386497
+[36m(RayWorkerWrapper pid=658092, ip=10.7.0.254)[0m lrdn2414:658092:658092 [3] NCCL INFO ncclCommInitRank 
+[36m(RayWorkerWrapper pid=658090, ip=10.7.0.254)[0m lrd
+[36m(RayWorkerWrapper pid=3543949, ip=10.7.0.221)[0m lrdn2381:3543949:3543949 [3] NCCL IN
+[36m(RayWorkerWrapper pid=2704432, ip=10.7.1.10)[0m lrdn2426:2704432:2704432 [0] NCCL INFO Init timings - ncclCommInitRank: rank 120 nranks 128 total 5.33 (kernels 0.61, alloc 0.04, bootstrap 1.77, allgathers 2.67, topo 0.06, graphs 0.01, connections 0.16, rest 0.01)
+[36m(RayWorkerWrapper pid=2704433, ip=10.7.1.10)[0m 19[3] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=2704606, ip=10.7.1.10)[0m so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=1800140, ip=10.6.1.88)[0m  TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=455230, ip=10.5.0.159)[0m v 3 busId c8000 commId 0xe8fafee45be30566 - Init COMPLETE
+[36m(RayWorkerWrapper pid=2122010, ip=10.7.0.123)[0m INFO Channel 03/0 : 70[2] -> 66[2] [receive] via NET/IB/3
+[36m(RayWorkerWrapper pid=455232, ip=10.5.0.159)[0m | 1024/8/64 | 512 | 512
+[36m(RayWorkerWrapper pid=419671, ip=10.2.1.79)[0m ommId 0xe8fafee45be30566 - Init COMPLETE
+[36m(RayWorkerWrapper pid=419673, ip=10.2.1.79)[0m /64 | 512 | 512
+[36m(RayWorkerWrapper pid=3862029, ip=10.6.1.71)[0m L INFO Connected all trees
+[36m(RayWorkerWrapper pid=386494, ip=10.5.1.68)[0m CCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=658092, ip=10.7.0.254)[0m comm 0xd776ae0 rank 107 nranks 128 cudaDev 3 nvmlDev 3 busId c8000 commId 0xe8fafee45be30566 - Init COMPLETE
+[36m(RayWorkerWrapper pid=3543949, ip=10.7.0.221)[0m FO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=2135319, ip=10.6.0.26)[0m O TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=205418, ip=10.7.0.151)[0m  INFO Connected all trees
+[36m(RayWorkerWrapper pid=382504, ip=10.5.1.52)[0m Dev 3 busId c8000 commId 0xe8fafee45be30566 - Init COMPLETE
+[36m(RayWorkerWrapper pid=4098300, ip=10.7.0.92)[0m ner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=4098302, ip=10.7.0.92)[0m -> 114[2] [send] via NET/IB/3
+[36m(RayWorkerWrapper pid=2469037, ip=10.7.0.60)[0m nnels per peer
+[36m(RayWorkerWrapper pid=2469038, ip=10.7.0.60)[0m  [receive] via NET/IB/2
+[36m(RayWorkerWrapper pid=2177316)[0m find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=2177317)[0m opo 0.06, graphs 0.01, connections 0.14, rest 0.01)
+[36m(RayWorkerWrapper pid=2177256)[0m  Off, workFifoBytes 1048576
+[36m(RayWorkerWrapper pid=714745, ip=10.7.1.14)[0m 06, graphs 0.01, connections 0.14, rest 0.01)
+[36m(RayWorkerWrapper pid=714744, ip=10.7.1.14)[0m cl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=1809915, ip=10.6.0.120)[0m ] NCCL INFO Connected all trees
+[36m(RayWorkerWrapper pid=188114, ip=10.2.1.74)[0m  - Init COMPLETE
+[36m(RayWorkerWrapper pid=1838910, ip=10.7.0.217)[0m INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+[36m(RayWorkerWrapper pid=396042, ip=10.2.1.99)[0m Connected all trees
+[36m(RayWorkerWrapper pid=1937037, ip=10.7.0.37)[0m nels per peer
+[36m(RayWorkerWrapper pid=2649465, ip=10.6.0.133)[0m CL INFO Connected all trees
+[36m(RayWorkerWrapper pid=714739, ip=10.7.1.14)[0m WARNING 09-16 14:26:52 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO cudaDriverVersion 12020[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL_SOCKET_IFNAME set by environment to ib0,ib1,ib2,ib3[32m [repeated 254x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Bootstrap: Using ib0:10.128.36.85<0>[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL version 2.26.2+cuda12.2[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NET/Plugin: Could not find: libnccl-net.so. Using internal net plugin.[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL_IB_DISABLE set by environment to 0.[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL_IB_HCA set to mlx5_0,mlx5_1,mlx5_4,mlx5_5[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [RO]; OOB ib0:10.128.36.85<0>[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so. [32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Using network IB[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO ncclCommInitRank comm 0xd4fd960 rank 40 nranks 128 cudaDev 0 nvmlDev 0 busId 1d000 commId 0xe8fafee45be30566 - Init START[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO RAS client listening socket at ::1<28028>[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Bootstrap timings total 1.738677 (create 0.001603, send 0.000102, recv 0.000083, ring 0.454196, delay 0.000001)[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL_CUMEM_ENABLE set by environment to 0.[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Setting affinity for GPU 0 to ffff[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO NCCL_NVLS_ENABLE set by environment to 0.[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO comm 0xd4fd960 rank 40 nRanks 128 nNodes 32 localRanks 4 localRank 0 MNNVL 0[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Trees [0] 41/-1/-1->40->43 [1] 41/-1/-1->40->43 [2] 41/-1/-1->40->43 [3] 41/-1/-1->40->43[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO P2P Chunksize set to 131072[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2650347 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 8[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2650344 [0] NCCL INFO [Proxy Service] Device 0 CPU core 7[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=1499103, ip=10.7.0.177)[0m NCCL INFO Channel 03/0 : 86[2] -> 82[2] [receive] via NET/IB/3[32m [repeated 350x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2650352 [0] NCCL INFO [Proxy Progress] Device 0 CPU core 3[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=1937040, ip=10.7.0.37)[0m lrdn2197:1937040:1937040 [2] NCCL INFO Channel 01/0 : 110[2] -> 106[2] [send] via NET/IB/3[32m [repeated 349x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Channel 03/0 : 40[0] -> 43[3] via P2P/IPC/read[32m [repeated 954x across cluster][0m
+[36m(RayWorkerWrapper pid=2649464, ip=10.6.0.133)[0m lrdn1933:2649464:2649464 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 0[32m [repeated 127x across cluster][0m
+[36m(RayWorkerWrapper pid=2177256)[0m lrdn0115:2177256:2177256 [0] NCCL INFO Channel 03/04 :   0   2   7   5   4   6  11   9   8  10  15  13  12  14  19  17  16  18  23  21  20  22  27  25  24  26  31  29[32m [repeated 4x across cluster][0m
+[36m(RayWorkerWrapper pid=1885533, ip=10.7.0.232)[0m lrdn2392:1885533:1885533 [2] NCCL INFO Channel 03/0 : 102[2] -> 98[[32m [repeated 3x across cluster][0m
+[36m(RayWorkerWrapper pid=205418, ip=10.7.0.151)[0m lrdn2311:205418:205418 [2] NCCL[32m [repeated 2x across cluster][0m
+Ray Cluster started with PID 2173016
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running
+Don't kill process 2173016, it is still running

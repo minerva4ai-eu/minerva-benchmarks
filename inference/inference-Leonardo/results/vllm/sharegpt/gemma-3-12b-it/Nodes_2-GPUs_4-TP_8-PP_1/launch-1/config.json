@@ -1,0 +1,14 @@
+{
+    "env_vars": {
+        "MODEL_PATH": "/leonardo_scratch/large/userinternal/rscheda0/models/gemma-3-12b-it",
+        "ENVIRONMENT_VLLM": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_vllm",
+        "PORT": "2950",
+        "LAUNCH_FOLDER": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/vllm/sharegpt/gemma-3-12b-it/Nodes_2-GPUs_4-TP_8-PP_1/launch-1",
+        "BENCHMARK_FILE": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py",
+        "DATASET": "sharegpt",
+        "DATASET_PATH": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+        "TP": "8",
+        "ADDITIONAL_ARGS": "",
+        "MODULES": ""
+    }
+}

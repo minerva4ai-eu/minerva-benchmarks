@@ -1,0 +1,5 @@
+{
+  "sharegpt": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/sonnet.txt",
+  "example_dataset": "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/sonnet.txt"
+}

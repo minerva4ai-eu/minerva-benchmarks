@@ -1,0 +1,15 @@
+LAUNCH_FOLDER: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/deepspeed/sonnet/Mistral-7B-Instruct-v0.3/Nodes_1-GPUs_4-TP_4-PP_1/launch-1}
+BENCHMARK_FILE: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py}
+DATASET: {sonnet}
+DATASET_PATH: {/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/datasets/sonnet.txt}
+MODEL: {Mistral-7B-Instruct-v0.3}
+MODEL_PATH: {/leonardo_scratch/large/userinternal/rscheda0/models/Mistral-7B-Instruct-v0.3}
+/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/bin/python
+Using TENSOR_PARALLEL: 4
+Running concurrency level 50 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 100 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 200 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 300 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 400 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 500 for MODEL: Mistral-7B-Instruct-v0.3
+Running concurrency level 1000 for MODEL: Mistral-7B-Instruct-v0.3
