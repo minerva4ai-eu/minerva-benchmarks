@@ -14,7 +14,7 @@ inference/inference-MN5/results/vllm/
 inference/inference-MN5/results/deepspeed/
 #inference/inference-MN5/benchmarks/datasets/
 #inference/inference-MN5/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json
-inference/inference-JZ/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json
+#inference/inference-JZ/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json
 
 # But do not ignore CSV files directly inside inference/results/
 # !inference/inference-MN5/results/*.csv
