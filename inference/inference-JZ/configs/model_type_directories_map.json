@@ -1,0 +1,5 @@
+{
+  "Text Generation": "/lustre/fsn1/projects/idris/sos/ssos029/bench_bsc_dataset",
+  "Embedding": "/lustre/fsn1/projects/idris/sos/ssos029/bench_bsc_dataset",
+  "Vision": "/path/to/vision/models"
+}

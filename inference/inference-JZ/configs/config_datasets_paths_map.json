@@ -1,0 +1,5 @@
+{
+  "sharegpt": "/lustre/fsn1/projects/idris/sos/ssos029/bench_bsc/inference/inference-JZ/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/lustre/fsn1/projects/idris/sos/ssos029/bench_bsc/inference/inference-JZ/benchmarks/datasets/sonnet.txt",
+  "example_dataset": "/path/to/example_dataset"
+}
