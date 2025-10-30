@@ -133,8 +133,16 @@ for framework in "${FRAMEWORKS[@]}"; do
               # DeepSpeed-MII
               echo "DeepSpeed-MII"
               
-              # If Model is Llama-3.1-405B.
+              # If Model is Llama-3.1-405B, avoid it.
               if [[ "$model" == "Llama-3.1-405B" ]]; then
+                continue
+              fi
+              # If Model is gemma-3-12b-it, avoid it.
+              if [[ "$model" == "gemma-3-12b-it" ]]; then
+                continue
+              fi
+              # If Model is Mistral-7B-Instruct-v0.3, avoid it.
+              if [[ "$model" == "Mistral-7B-Instruct-v0.3" ]]; then
                 continue
               fi
               # If iteration has more than 1 Node, avoid it.
@@ -142,7 +150,6 @@ for framework in "${FRAMEWORKS[@]}"; do
                 echo "Skipping deepspeed-mii $model with $NODES nodes (requires maximum 1 node)"
                 continue
               fi
-              REPEATS=1
 
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
