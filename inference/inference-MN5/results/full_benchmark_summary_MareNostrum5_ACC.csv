@@ -149,6 +149,11 @@ MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,1,1,1,32768,--cpu-offload-gb 0.5,58.13,58.13,289.36,442.43,3299.09,82.86,82.86,2763.18,18.43
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,1,4,1,1,1,32768,--cpu-offload-gb 0.5,58.11,58.13,275.1,421.24,667.96,56.89,56.89,2389.66,15.94
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,1,4,1,1,1,32768,--cpu-offload-gb 0.5,58.13,58.13,288.16,442.78,1371.63,81.13,81.14,2746.49,18.32
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,16,1,4096,--cpu-offload-gb 0.5,58.05,58.07,156.22,184.1,12572.39,54.39,54.39,4459.22,29.73
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,16,1,4096,--cpu-offload-gb 0.5,58.05,58.07,156.54,184.43,6057.76,53.87,53.87,4524.69,30.16
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,16,1,4096,--cpu-offload-gb 0.5,58.05,58.07,156.71,182.56,1349.55,53.96,53.96,4487.68,29.92
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,16,1,4096,--cpu-offload-gb 0.5,58.04,58.06,163.69,191.69,808.05,63.48,63.48,2142.78,14.29
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,16,1,4096,--cpu-offload-gb 0.5,58.04,58.06,158.33,181.87,322.46,48.19,48.19,4964.92,33.1
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,8,1,8192,--cpu-offload-gb 0.5,58.04,58.06,164.24,191.8,11020.71,45.73,45.73,5321.26,35.48
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,8,1,8192,--cpu-offload-gb 0.5,58.04,58.06,165.0,190.62,5249.02,44.88,44.88,5443.69,36.3
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,8,1,8192,--cpu-offload-gb 0.5,58.04,58.06,164.44,191.11,1167.13,45.45,45.45,5342.82,35.62
@@ -169,6 +174,11 @@ MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,4,4,1,8192,--cpu-offload-gb 0.5,58.06,58.08,190.23,234.49,1023.12,41.82,41.82,5863.34,39.09
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,1,4,4,4,1,8192,--cpu-offload-gb 0.5,58.05,58.08,201.64,288.67,488.13,41.35,41.35,3305.86,22.04
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,1,4,4,4,1,8192,--cpu-offload-gb 0.5,58.06,58.08,189.39,230.11,268.98,41.89,41.89,5735.96,38.24
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,16,1,8192,--cpu-offload-gb 0.5,58.05,58.07,157.24,180.56,12075.75,51.42,51.42,4707.8,31.39
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,16,1,8192,--cpu-offload-gb 0.5,58.05,58.07,157.84,181.87,5751.96,50.71,50.71,4806.24,32.04
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,16,1,8192,--cpu-offload-gb 0.5,58.05,58.07,157.74,181.1,1247.88,51.18,51.18,4749.18,31.66
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,16,1,8192,--cpu-offload-gb 0.5,58.04,58.06,164.88,207.74,729.99,59.2,59.2,2302.61,15.35
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,16,1,8192,--cpu-offload-gb 0.5,58.04,58.06,159.36,184.94,309.94,46.17,46.17,5180.31,34.54
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,1,4,1,1,1,8192,--cpu-offload-gb 0.5,58.14,58.14,288.23,446.63,23904.12,83.5,83.49,2730.84,18.21
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,1,4,1,1,1,8192,--cpu-offload-gb 0.5,58.14,58.14,288.19,443.63,11874.45,83.19,83.19,2751.9,18.35
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,1,1,1,8192,--cpu-offload-gb 0.5,58.14,58.14,288.03,442.69,3303.96,82.95,82.95,2759.85,18.41
@@ -179,6 +189,11 @@ MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,1,1,1,2048,--cpu-offload-gb 0.5,58.14,58.14,227.94,357.19,3370.01,84.33,84.32,2713.6,18.1
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,1,4,1,1,1,2048,--cpu-offload-gb 0.5,58.12,58.14,219.55,324.57,682.01,57.83,57.82,2350.53,15.68
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,1,4,1,1,1,2048,--cpu-offload-gb 0.5,58.14,58.14,227.61,354.77,1418.63,82.94,82.95,2683.83,17.9
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,16,1,32768,--cpu-offload-gb 0.5,58.04,58.06,151.31,176.6,13433.07,57.88,57.88,4207.26,28.05
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,16,1,32768,--cpu-offload-gb 0.5,58.04,58.06,151.87,177.58,6412.57,57.23,57.23,4276.96,28.51
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,16,1,32768,--cpu-offload-gb 0.5,58.04,58.06,152.02,178.94,1420.92,57.02,57.02,4264.34,28.43
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,16,1,32768,--cpu-offload-gb 0.5,58.03,58.05,158.85,184.64,871.51,68.01,68.01,2012.99,13.42
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,16,1,32768,--cpu-offload-gb 0.5,58.03,58.05,153.09,172.54,343.09,51.24,51.24,4698.62,31.32
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,1,4,4,4,1,32768,--cpu-offload-gb 0.5,58.05,58.08,185.9,234.4,10127.07,42.59,42.59,5716.61,38.11
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,1,4,4,4,1,32768,--cpu-offload-gb 0.5,58.05,58.08,187.02,235.86,4796.78,42.16,42.16,5812.79,38.75
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,4,4,1,32768,--cpu-offload-gb 0.5,58.05,58.08,187.18,231.82,1058.23,42.2,42.2,5775.54,38.5
@@ -194,6 +209,21 @@ MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,1,4,4,4,1,2048,--cpu-offload-gb 0.5,58.06,58.08,186.74,233.95,986.53,40.36,40.36,6055.77,40.37
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,1,4,4,4,1,2048,--cpu-offload-gb 0.5,58.05,58.08,198.62,286.23,468.91,39.84,39.84,3417.06,22.78
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,1,4,4,4,1,2048,--cpu-offload-gb 0.5,58.05,58.08,186.36,232.53,239.05,40.14,40.14,5970.14,39.8
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,16,1,2048,--cpu-offload-gb 0.5,58.05,58.07,155.07,177.21,12824.82,54.86,54.86,4418.39,29.46
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,16,1,2048,--cpu-offload-gb 0.5,58.05,58.07,155.35,176.21,6118.32,54.4,54.4,4486.15,29.91
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,16,1,2048,--cpu-offload-gb 0.5,58.05,58.07,155.26,176.4,1361.75,53.99,53.99,4481.22,29.87
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,16,1,2048,--cpu-offload-gb 0.5,58.04,58.06,162.87,193.14,772.54,62.95,62.95,2166.31,14.44
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,16,1,2048,--cpu-offload-gb 0.5,58.04,58.06,156.51,177.73,300.54,49.35,49.35,4874.51,32.5
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,16,1,16384,--cpu-offload-gb 0.5,58.05,58.07,163.69,193.28,12862.72,55.24,55.24,4396.01,29.31
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,16,1,16384,--cpu-offload-gb 0.5,58.05,58.07,164.28,192.86,6120.73,54.34,54.34,4481.63,29.88
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,16,1,16384,--cpu-offload-gb 0.5,58.05,58.07,164.22,191.77,1393.45,54.22,54.22,4443.64,29.63
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,16,1,16384,--cpu-offload-gb 0.5,58.04,58.06,171.51,200.28,809.82,63.65,63.65,2137.12,14.25
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,16,1,16384,--cpu-offload-gb 0.5,58.04,58.06,165.69,187.52,317.58,48.56,48.56,4925.88,32.84
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,165.62,191.06,11187.62,46.56,46.56,5203.57,34.69
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,166.02,194.03,5342.29,45.75,45.75,5319.01,35.47
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,165.61,193.24,1208.86,46.49,46.49,5195.72,34.65
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,176.15,216.35,601.81,52.78,52.78,2587.1,17.25
+MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,165.44,191.07,315.53,45.87,45.87,5202.21,34.68
 MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,1000,1,4,1,1,1,4096,--cpu-offload-gb 0.5,58.08,58.08,247.18,399.12,18813.85,65.79,75.93,2848.97,14.36
 MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,500,1,4,1,1,1,4096,--cpu-offload-gb 0.5,58.08,58.08,249.75,394.92,10364.68,67.15,77.37,2815.5,14.19
 MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,300,1,4,1,1,1,4096,--cpu-offload-gb 0.5,58.08,58.08,252.11,395.24,2635.77,66.45,76.53,2838.48,14.3
@@ -419,3 +449,97 @@ MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,vllm,benchmar
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,vllm,benchmark_serving.py,300,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,164.34,195.38,1247.15,41.4,43.88,4156.09,18.2
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,vllm,benchmark_serving.py,150,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,171.11,213.41,389.45,49.83,55.09,2434.99,10.68
 MareNostrum5,ACC,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,vllm,benchmark_serving.py,250,2,4,16,8,1,32768,--cpu-offload-gb 0.5,58.04,58.06,164.28,195.04,157.67,42.26,43.82,4018.65,17.59
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,1,1,1,4096,,16.02,63.19,155.54,578.93,0.0,0.0,147.7,1509.44,2.74
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,1,1,1,4096,,16.02,63.19,156.66,585.52,0.0,0.0,103.21,1497.77,2.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,1,1,1,4096,,16.02,63.19,157.09,597.12,0.0,0.0,104.4,1503.42,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,1,1,1,4096,,16.02,63.19,157.68,575.28,0.0,0.0,92.85,1503.52,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,1,1,1,4096,,16.02,63.19,157.31,580.31,0.0,0.0,102.12,1497.12,2.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,1,1,1,16384,,16.02,63.19,157.04,570.11,0.0,0.0,124.94,1483.81,2.68
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,1,1,1,16384,,16.02,63.19,160.07,573.9,0.0,0.0,104.63,1502.7,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,1,1,1,16384,,16.02,63.19,159.57,589.19,0.0,0.0,100.91,1490.63,2.7
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,1,1,1,16384,,16.02,63.19,160.59,581.04,0.0,0.0,93.11,1497.73,2.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,1,1,1,16384,,16.02,63.19,159.95,555.36,0.0,0.0,102.87,1492.79,2.7
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,1,1,1,32768,,16.02,63.19,159.5,588.95,0.0,0.0,120.67,1466.33,2.65
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,1,1,1,32768,,16.02,63.19,162.23,584.92,0.0,0.0,111.85,1503.3,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,1,1,1,32768,,16.02,63.19,161.84,593.71,0.0,0.0,106.84,1493.12,2.7
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,1,1,1,32768,,16.02,63.19,162.38,599.09,0.0,0.0,92.86,1503.86,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,1,1,1,32768,,16.02,63.19,162.49,619.97,0.0,0.0,102.19,1491.64,2.7
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,4096,,62.85,63.09,289.15,369.93,0.0,0.0,64.04,2559.86,4.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,4,4,1,4096,,62.85,63.09,307.0,377.01,0.0,0.0,86.1,2824.99,5.11
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,4,4,1,4096,,62.85,63.09,286.07,376.82,0.0,0.0,58.88,2481.33,4.47
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,4,4,1,4096,,62.85,63.09,309.12,389.42,0.0,0.0,49.08,2838.4,5.13
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,4,4,1,4096,,62.85,63.09,309.84,371.67,0.0,0.0,55.45,2858.82,5.17
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,8192,,62.85,63.09,302.61,394.58,0.0,0.0,71.88,2760.63,4.99
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,4,4,1,8192,,62.85,63.09,307.7,375.89,0.0,0.0,50.37,2831.12,5.12
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,4,4,1,8192,,62.85,63.09,294.09,376.02,0.0,0.0,62.85,2609.4,4.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,4,4,1,8192,,62.85,63.09,308.85,374.25,0.0,0.0,49.19,2830.62,5.12
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,4,4,1,8192,,62.85,63.09,285.93,371.68,0.0,0.0,56.67,2476.04,4.47
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,1,1,1,8192,,16.02,63.19,154.3,571.84,0.0,0.0,137.65,1454.24,2.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,1,1,1,8192,,16.02,63.19,156.14,567.31,0.0,0.0,101.24,1482.97,2.69
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,1,1,1,8192,,16.02,63.19,154.83,554.97,0.0,0.0,102.19,1457.38,2.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,1,1,1,8192,,16.02,63.19,157.63,607.0,0.0,0.0,92.64,1506.76,2.72
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,1,1,1,8192,,16.02,63.19,157.09,593.3,0.0,0.0,101.24,1494.72,2.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,1,1,1,2048,,16.02,63.19,152.78,574.64,0.0,0.0,100.98,1460.46,2.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,1,1,1,2048,,16.02,63.19,156.58,567.88,0.0,0.0,98.84,1482.36,2.68
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,1,1,1,2048,,16.02,63.19,156.68,573.48,0.0,0.0,105.8,1487.4,2.69
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,1,1,1,2048,,16.02,63.19,157.31,586.08,0.0,0.0,92.97,1500.51,2.71
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,1,1,1,2048,,16.02,63.19,157.38,567.67,0.0,0.0,100.99,1492.24,2.69
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,32768,,62.85,63.09,286.38,345.82,0.0,0.0,65.46,2342.41,4.24
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,4,4,1,32768,,62.85,63.09,293.7,348.65,0.0,0.0,64.85,2381.25,4.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,4,4,1,32768,,62.85,63.09,288.72,341.27,0.0,0.0,74.26,2298.5,4.16
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,4,4,1,32768,,62.85,63.09,295.62,344.64,0.0,0.0,58.33,2394.31,4.34
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,4,4,1,32768,,62.85,63.09,293.66,346.39,0.0,0.0,72.61,2370.43,4.29
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,16384,,62.85,63.09,271.61,347.78,0.0,0.0,74.22,2031.86,3.68
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,4,4,1,16384,,62.85,63.09,289.11,342.5,0.0,0.0,72.06,2339.25,4.23
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,4,4,1,16384,,62.85,63.09,288.98,339.77,0.0,0.0,71.26,2323.26,4.19
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,4,4,1,16384,,62.85,63.09,309.44,378.39,0.0,0.0,49.0,2833.93,5.13
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,4,4,1,16384,,62.85,63.09,281.11,349.82,0.0,0.0,71.78,2177.28,3.94
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,2048,,62.85,63.09,302.74,383.54,0.0,0.0,70.03,2825.12,5.11
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,500,1,4,4,4,1,2048,,62.85,63.09,307.67,395.7,0.0,0.0,50.4,2837.07,5.14
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,300,1,4,4,4,1,2048,,62.85,63.09,293.07,393.83,0.0,0.0,52.46,2571.88,4.66
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,150,1,4,4,4,1,2048,,62.85,63.09,308.72,394.06,0.0,0.0,48.61,2864.87,5.18
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sonnet,deepspeed,benchmark_serving.py,250,1,4,4,4,1,2048,,62.85,63.09,311.49,393.25,0.0,0.0,55.5,2860.83,5.17
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,1,1,1,4096,,16.02,63.2,176.12,633.41,0.0,0.0,371.84,1102.52,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,1,1,1,4096,,16.02,63.2,177.08,691.49,0.0,0.0,288.85,1098.33,0.3
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,1,1,1,4096,,16.02,63.2,181.07,687.88,0.0,0.0,250.68,1123.72,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,1,1,1,4096,,16.02,63.2,177.95,667.82,0.0,0.0,183.38,1112.75,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,1,1,1,16384,,16.03,63.24,176.59,656.8,0.0,0.0,324.88,1090.16,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,1,1,1,16384,,16.03,63.24,179.55,689.42,0.0,0.0,272.28,1113.9,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,1,1,1,16384,,16.03,63.24,182.81,682.41,0.0,0.0,259.14,1130.99,0.32
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,1,1,1,16384,,16.03,63.24,179.76,665.29,0.0,0.0,258.59,1115.88,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,1,1,1,32768,,16.02,63.21,141.09,410.04,0.0,0.0,178.86,982.01,0.27
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,1,1,1,32768,,16.02,63.21,143.35,426.7,0.0,0.0,274.92,1005.02,0.28
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,1,1,1,32768,,16.02,63.21,141.71,417.69,0.0,0.0,290.08,998.04,0.28
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,4096,,62.85,63.09,347.2,447.96,0.0,0.0,101.52,2207.11,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,4,4,1,4096,,62.85,63.09,348.76,450.79,0.0,0.0,88.8,2199.34,0.62
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,4,4,1,4096,,62.85,63.09,350.21,458.51,0.0,0.0,126.31,2307.01,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,4,4,1,4096,,62.85,63.09,353.86,452.0,0.0,0.0,122.92,2315.22,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,4,4,1,4096,,62.85,63.09,355.55,456.69,0.0,0.0,106.3,2304.08,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,8192,,62.86,63.1,336.06,450.69,0.0,0.0,82.29,2253.53,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,4,4,1,8192,,62.86,63.1,340.77,448.22,0.0,0.0,121.42,2254.76,0.61
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,4,4,1,8192,,62.86,63.1,346.84,457.1,0.0,0.0,129.81,2302.14,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,4,4,1,8192,,62.85,63.1,350.19,451.09,0.0,0.0,116.31,2316.25,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,4,4,1,8192,,62.86,63.1,346.12,454.53,0.0,0.0,133.66,2296.58,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,1,1,1,8192,,16.02,63.2,180.7,683.02,0.0,0.0,291.69,1097.07,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,1,1,1,8192,,16.02,63.2,181.56,665.81,0.0,0.0,222.92,1113.71,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,1,1,1,8192,,16.02,63.2,185.38,688.68,0.0,0.0,258.77,1133.4,0.32
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,1,1,1,8192,,16.02,63.2,183.3,657.99,0.0,0.0,170.61,1118.82,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,1,1,1,2048,,16.02,63.18,175.87,659.2,0.0,0.0,345.24,1116.38,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,1,1,1,2048,,16.02,63.18,176.03,647.69,0.0,0.0,220.28,1107.21,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,1,1,1,2048,,16.01,63.18,180.11,709.06,0.0,0.0,273.74,1130.57,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,1,1,1,2048,,16.02,63.18,177.59,683.19,0.0,0.0,266.38,1117.56,0.31
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,32768,,62.86,63.11,332.53,444.8,0.0,0.0,159.14,2240.47,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,4,4,1,32768,,62.86,63.11,336.62,451.23,0.0,0.0,130.26,2251.54,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,4,4,1,32768,,62.86,63.11,347.18,436.0,0.0,0.0,92.8,2266.27,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,4,4,1,32768,,62.85,63.11,348.78,433.95,0.0,0.0,122.25,2326.08,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,4,4,1,32768,,62.86,63.11,348.48,437.04,0.0,0.0,93.29,2297.29,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,16384,,62.85,63.1,348.28,468.35,0.0,0.0,108.83,2260.01,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,4,4,1,16384,,62.85,63.1,353.69,454.5,0.0,0.0,133.41,2283.6,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,4,4,1,16384,,62.85,63.1,362.19,458.25,0.0,0.0,126.39,2298.74,0.63
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,4,4,1,16384,,62.85,63.1,362.39,459.72,0.0,0.0,134.36,2316.32,0.65
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,4,4,1,16384,,62.85,63.1,362.58,470.91,0.0,0.0,114.19,2297.86,0.64
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,1000,1,4,4,4,1,2048,,62.85,63.1,338.69,441.86,0.0,0.0,113.25,2099.78,0.59
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,500,1,4,4,4,1,2048,,62.85,63.1,339.93,443.08,0.0,0.0,87.98,2084.03,0.58
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,300,1,4,4,4,1,2048,,62.85,63.1,345.91,447.56,0.0,0.0,119.58,2157.58,0.6
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,150,1,4,4,4,1,2048,,62.85,63.1,344.8,441.34,0.0,0.0,127.21,2186.0,0.61
+MareNostrum5,ACC,Llama-3.1-8B-Instruct,Text Generation,sharegpt,deepspeed,benchmark_serving.py,250,1,4,4,4,1,2048,,62.85,63.1,341.81,440.49,0.0,0.0,141.72,2181.29,0.61
