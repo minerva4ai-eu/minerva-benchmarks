@@ -1,0 +1,5 @@
+# List datasets here to avoid committing large files to the repository
+# The list will allow users to know which datasets are expected
+# Do not add '/*' otherwise we lost track of this .gitignore file
+sonnet.txt
+ShareGPT_V3_unfiltered_cleaned_split.json
