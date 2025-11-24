@@ -1,33 +1,34 @@
 #!/bin/bash
 # Script to launch a job for running a multiple benchmark 
-# Usage: source run_multiple_benchmark.sh <CLUSTER> <FRAMEWORK> <MODEL> <DATASET> <NODES_BATCH> <GPUS_PER_NODE_BATCH> <PIPELINE_PARALLEL_BATCH> <TENSOR_PARALLEL_BATCH> <ITERATIONS> <CPUS_PER_TASK> <NTASKS_PER_NODE>
-# Example: bash run_multiple_benchmark.sh CINECA-Leonardo deepspeed-MII Mistral-7B-Instruct-v0.3 sharegpt "1" "1 2" "1 2" "1 2" "2" "1" "1"
+# Usage: source run_multiple_benchmark.sh <CLUSTER> <PACKAGE_MANAGER> <FRAMEWORK> <MODEL> <DATASET> <NODES_BATCH> <GPUS_PER_NODE_BATCH> <PIPELINE_PARALLEL_BATCH> <TENSOR_PARALLEL_BATCH> <ITERATIONS> <CPUS_PER_TASK> <NTASKS_PER_NODE>
+# Example: bash run_multiple_benchmark.sh CINECA-Leonardo Conda deepspeed-MII Mistral-7B-Instruct-v0.3 sharegpt "1" "1 2" "1 2" "1 2" "2" "1" "1"
 
 CLUSTERS=("CINECA-Leonardo" "BSC-MN5" "IDRIS-JZ")
 
 #### DO NOT MODIFY BELOW THIS LINE
 
 #### ARGUMENTS ASSIGNMENT. To be modified if number of arguments changes
-if [ "$#" -ne 11 ]; then
-    echo "Usage: source run_single_benchmark.sh <> <>"
+if [ "$#" -ne 12 ]; then
+    echo "Usage: source run_single_benchmark.sh <CLUSTER> <PACKAGE_MANAGER> <FRAMEWORK> <MODEL> <DATASET> <NODES_BATCH> <GPUS_PER_NODE_BATCH> <PIPELINE_PARALLEL_BATCH> <TENSOR_PARALLEL_BATCH> <ITERATIONS> <CPUS_PER_TASK> <NTASKS_PER_NODE>"
     exit 1
 fi
 
 # BENCHMARK PARAMETERS
 CLUSTER=$1
-FRAMEWORK=$2
-MODEL=$3
-DATASET=$4
+PACKAGE_MANAGER=$2
+FRAMEWORK=$3
+MODEL=$4
+DATASET=$5
 
 # SBATCH PARAMETERS
-NODES_BATCH=$5
-GPUS_PER_NODE_BATCH=$6
-# For this two think about their limits. This should be related to the resources allocated
-PIPELINE_PARALLEL_BATCH=$7
-TENSOR_PARALLEL_BATCH=$8
-ITERATIONS=$9
-CPUS_PER_TASK=$10
-NTASKS_PER_NODE=$11
+NODES_BATCH=$6
+GPUS_PER_NODE_BATCH=$7
+# For these two think about their limits. This should be related to the resources allocated
+PIPELINE_PARALLEL_BATCH=$8
+TENSOR_PARALLEL_BATCH=$9
+ITERATIONS=${10}
+CPUS_PER_TASK=${11}
+NTASKS_PER_NODE=${12}
 
 PORT=2950 # DO WE NEED THIS OR CAN WE FIX IT?
 
@@ -39,7 +40,7 @@ fi
 
 TIME_ID=$(date +"%Y%m%d_%H%M")
 
-ENVIRONMENT_INPUTS="$FRAMEWORK $MODEL"
+ENVIRONMENT_INPUTS="$PACKAGE_MANAGER $FRAMEWORK $MODEL"
 echo " ================================ Setting environment for $FRAMEWORK benchmark on $CLUSTER ================================ "
 source ./$CLUSTER/source/set_env.sh $ENVIRONMENT_INPUTS
 
