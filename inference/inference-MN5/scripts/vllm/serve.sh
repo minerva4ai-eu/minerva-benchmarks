@@ -14,11 +14,7 @@ vllm serve "$MODEL_PATH" \
     --tensor-parallel-size "$TP" \
     --pipeline-parallel-size "$PP" \
     --max-model-len $MAX_MODEL_LENGTH \
-    $ADDITIONAL_ARGS \
-    --swap-space 2 \
-    --enable-chunked-prefill \
-    --enforce-eager \
-    --distributed-executor-backend=ray &
+    $ADDITIONAL_ARGS &
 
 #    --cpu-offload-gb 0.5 \
 
