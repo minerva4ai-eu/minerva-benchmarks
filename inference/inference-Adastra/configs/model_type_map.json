@@ -1,0 +1,10 @@
+{
+    "meta-llama/Llama-3.1-8B-Instruct": "Text Generation",
+    "Llama-3.1-8B-Instruct": "Text Generation",
+    "meta-llama/Llama-3.1-405B": "Text Generation",
+    "Llama-3.1-405B": "Text Generation",
+    "mistralai/Mistral-7B-Instruct-v0.3": "Text Generation",
+    "Mistral-7B-Instruct-v0.3": "Text Generation",
+    "google/gemma-3-12b-it": "Text Generation",
+    "gemma-3-12b-it": "Text Generation"
+}

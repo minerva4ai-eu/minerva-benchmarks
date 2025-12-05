@@ -1,0 +1,12 @@
+{
+    "env_vars": {
+        "MODEL_PATH": "",
+        "ENVIRONMENT_VLLM": "",
+        "PORT": "",
+        "FOLDER_NAME": "",
+        "BENCHMARK_FILE": "",
+        "DATASET": "",
+        "DATASET_PATH": "",
+        "MAX_MODEL_LENGTH": ""
+    }
+}

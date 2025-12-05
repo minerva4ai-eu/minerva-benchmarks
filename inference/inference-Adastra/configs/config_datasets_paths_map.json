@@ -1,0 +1,4 @@
+{
+  "sharegpt": "${SCRATCHDIR}/minerva-benchmarks/inference/inference-MN5/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "${SCRATCHDIR}/minerva-benchmarks/inference/inference-MN5/benchmarks/datasets/sonnet.txt"
+}
