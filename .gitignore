@@ -11,7 +11,7 @@ inference/inference-MN5/results-*/
 ._dbindex_
 ...
 .save
-vllm*
+/vllm*
 
 # Ignore everything inside inference/results/
 inference/inference-MN5/results/vllm/
