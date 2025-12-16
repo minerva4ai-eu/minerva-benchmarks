@@ -14,9 +14,9 @@ source scripts/utils.sh
 FRAMEWORKS=("vllm")    # Add other frameworks if needed
 DATASETS=("sonnet")  # Add more datasets if needed
 # "sonnet" "sharegpt"
-MODELS=("meta-llama/Llama-3.1-8B-Instruct" mistralai/Mistral-7B-Instruct-v0.3)
+MODELS=("meta-llama/Llama-3.1-8B-Instruct")
 # "meta-llama/Llama-3.1-8B-Instruct" "meta-llama/Llama-3.1-405B" "google/gemma-3-12b-it" "mistralai/Mistral-7B-Instruct-v0.3"
-NUMBER_OF_NODES=(1 2)
+NUMBER_OF_NODES=(1 2 4)
 MAX_MODEL_LENGTHS=(4096 16384 32768) # 4096 8192 16384 32768)
 REPEATS=2               # Number of runs per configuration
 #######################################################
