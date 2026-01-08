@@ -446,7 +446,6 @@ async def async_request_deepspeed_mii_not_working_stream(
     return output
 
 
-
 async def async_request_openai_completions(
     request_func_input: RequestFuncInput,
     pbar: Optional[tqdm] = None,
@@ -460,11 +459,7 @@ async def async_request_openai_completions(
         payload = {
             "model": request_func_input.model,
             "prompt": request_func_input.prompt,
-<<<<<<< HEAD
-            "temperature": 0.0,
-=======
             "temperature": 0.1,
->>>>>>> c9f2946 (Initial commit from GitLab)
             "best_of": request_func_input.best_of,
             "max_tokens": request_func_input.output_len,
             "logprobs": request_func_input.logprobs,
