@@ -1,14 +1,18 @@
 #!/bin/bash
+<<<<<<< HEAD
 set -a  # Automatically export all variables
 source .env
 set +a  # Stop automatically exporting
 
 # Load utility functions
 source scripts/utils.sh
+=======
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
 #######################################################
 # ENVIRONMENT VARIABLES TO CHANGE
 #######################################################
+<<<<<<< HEAD
 # SPECIFIC CASE FOR TESTING
 #######################################################
 FRAMEWORKS=("vllm" "deepspeed") # deepspeed") # vllm")    # Add other frameworks if needed
@@ -19,6 +23,28 @@ MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
 REPEATS=3                 # Number of runs per configuration
 #######################################################
 
+=======
+# RUN ALL BENCHMARKS
+#######################################################
+FRAMEWORKS=("vllm" "sglang" "deepspeed") # Add other frameworks if needed
+DATASETS=("sharegpt" "sonnet")  # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
+NUMBER_OF_NODES=(1 2 4)
+MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
+REPEATS=3               # Number of runs per configuration
+MACHINE="bsc-mn5-acc"
+MACHINE_TYPE="cuda" # "cuda" or "rocm"
+#######################################################
+# Set environment variables
+#######################################################
+set -a  # Automatically export all variables
+source .env-$MACHINE
+set +a  # Stop automatically exporting
+
+# Load utility functions
+source scripts/utils.sh
+#######################################################
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
 JOB_IDS=()
 CONFIG_INDEX=0
@@ -67,13 +93,18 @@ for framework in "${FRAMEWORKS[@]}"; do
               echo "FrameWork vLLM"
 
               # If Model is Llama-3.1-405B.
+<<<<<<< HEAD
               if [[ "$model" == "Llama-3.1-405B" ]]; then
+=======
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" ]]; then
+>>>>>>> c9f2946 (Initial commit from GitLab)
                 # Skip if model is Llama-3.1-405B and NODES < 4.
                 if [[ "$NODES" -lt 4 ]]; then
                   echo "Skipping $model with $NODES nodes (requires at least 4 nodes)"
                   continue
                 fi
                 # Set extra args for Llama-3.1-405B
+<<<<<<< HEAD
                 ADDITIONAL_ARGS="--cpu-offload-gb 0.5"
               fi
               # If Model is Llama-3.1-8B-Instruct.
@@ -82,6 +113,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 ADDITIONAL_ARGS="--cpu-offload-gb 0.5"
               fi
 
+=======
+                ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+              fi
+              ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+              
+>>>>>>> c9f2946 (Initial commit from GitLab)
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
                 echo "Setting up $LAUNCH_FOLDER"
@@ -90,7 +127,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                 cp scripts/vllm/run_cluster.sh "$LAUNCH_FOLDER"
                 cp scripts/vllm/vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
                 cp scripts/vllm/serve.sh "$LAUNCH_FOLDER"
+<<<<<<< HEAD
                 cp scripts/vllm/gpu_summary_monitor.py "$LAUNCH_FOLDER"
+=======
+                cp scripts/vllm/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
@@ -99,6 +142,11 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MODEL_PATH  # Make available to launched script
                 export ADDITIONAL_ARGS
                 export MODULES
+<<<<<<< HEAD
+=======
+                export MACHINE
+                export MACHINE_TYPE
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
                 REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
                 if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
@@ -117,7 +165,11 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --error=run-%j.err \
                     -A $ACCOUNT \
                     -q $QOS \
+<<<<<<< HEAD
                     vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
+=======
+                    vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
                 JOB_IDS+=("$JOB_ID")
@@ -134,7 +186,11 @@ for framework in "${FRAMEWORKS[@]}"; do
               echo "DeepSpeed-MII"
               
               # If Model is Llama-3.1-405B, avoid it.
+<<<<<<< HEAD
               if [[ "$model" == "Llama-3.1-405B" ]]; then
+=======
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" || "$model" == "Llama-3.70B-Instruct" ]]; then
+>>>>>>> c9f2946 (Initial commit from GitLab)
                 continue
               fi
               # If Model is gemma-3-12b-it, avoid it.
@@ -150,6 +206,10 @@ for framework in "${FRAMEWORKS[@]}"; do
                 echo "Skipping deepspeed-mii $model with $NODES nodes (requires maximum 1 node)"
                 continue
               fi
+<<<<<<< HEAD
+=======
+              ADDITIONAL_ARGS=""
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
@@ -158,7 +218,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                 
                 cp scripts/deepspeed/serve_deepspeed_mii.py "$LAUNCH_FOLDER"
                 cp scripts/deepspeed/deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
+<<<<<<< HEAD
                 cp scripts/deepspeed/gpu_summary_monitor.py "$LAUNCH_FOLDER"
+=======
+                cp scripts/deepspeed/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+>>>>>>> c9f2946 (Initial commit from GitLab)
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
@@ -167,7 +233,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MODEL_PATH  # Make available to launched script
                 export ADDITIONAL_ARGS
                 export MODULES
+<<<<<<< HEAD
                 
+=======
+                export MACHINE
+                export MACHINE_TYPE
+
+>>>>>>> c9f2946 (Initial commit from GitLab)
                 REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
                 if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
                   DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
@@ -195,6 +267,84 @@ for framework in "${FRAMEWORKS[@]}"; do
                 sleep 5
               done
             fi
+<<<<<<< HEAD
+=======
+
+            # SGLang
+            if [[ "$framework" == "sglang" ]]; then
+              # SGLang
+              echo "FrameWork SGLang"
+
+              # If Model is Llama-3.1-405B.
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" ]]; then
+                # Skip if model is Llama-3.1-405B and NODES < 4.
+                if [[ "$NODES" -lt 4 ]]; then
+                  echo "Skipping $model with $NODES nodes (requires at least 4 nodes)"
+                  continue
+                fi
+                ADDITIONAL_ARGS="" # --mem-fraction-static 0.80 --chunked-prefill-size 4096
+              fi
+              # If Model is 'gemma-3-12b-it'
+              if [[ "$model" == "gemma-3-12b-it" ]]; then
+                # Skip if model is 'gemma-3-12b-it' and NODES > 1.
+                if [[ "$NODES" -gt 1 ]]; then
+                  echo "Skipping $model with $NODES nodes (tp and pp cannot be set in SGLang Framework) for 'gemma-3-12b-it' model"
+                  continue
+                fi
+                ADDITIONAL_ARGS=""
+              fi
+              ADDITIONAL_ARGS=""
+              
+              for (( run_id=1; run_id<=REPEATS; run_id++ )); do
+                LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+                echo "Setting up $LAUNCH_FOLDER"
+                mkdir -p "$LAUNCH_FOLDER"
+                
+                cp scripts/sglang/sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
+                cp scripts/sglang/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/sglang/serve.sh "$LAUNCH_FOLDER"
+                cp scripts/sglang/wrapper_singularity.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+
+                cd "$LAUNCH_FOLDER" || exit 1
+
+                export NODES GPUS_PER_NODE GPU_NODE TENSOR_PARALLEL PIPELINE_PARALLEL MAX_MODEL_LENGTH TOTAL_CPUS
+                export FRAMEWORK="$framework" DATASET="$dataset" MODEL="$model" REPEAT_ID="$run_id"
+                export MODEL_PATH  # Make available to launched script
+                export ADDITIONAL_ARGS
+                export MODULES
+                export MACHINE
+                export MACHINE_TYPE
+
+                REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
+                if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
+                  DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
+                else
+                  DEPENDENCY=""
+                fi
+
+                JOB_ID=$(sbatch --parsable \
+                    --chdir=$(pwd) \
+                    --nodes=$NODES \
+                    --gres=gpu:$GPUS_PER_NODE \
+                    --cpus-per-task=$TOTAL_CPUS \
+                    --output=run-%j.out \
+                    --error=run-%j.err \
+                    -A $ACCOUNT \
+                    -q $QOS \
+                    sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
+
+                echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                JOB_IDS+=("$JOB_ID")
+                ((CONFIG_INDEX++))
+
+                cd - > /dev/null
+                sleep 5
+              done
+            fi
+
+>>>>>>> c9f2946 (Initial commit from GitLab)
           done
         done
       done
