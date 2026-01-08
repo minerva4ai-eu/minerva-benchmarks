@@ -7,6 +7,12 @@
         "BENCHMARK_FILE": "",
         "DATASET": "",
         "DATASET_PATH": "",
+<<<<<<< HEAD
         "MAX_MODEL_LENGTH": ""
+=======
+        "MAX_MODEL_LENGTH": "",
+        "MACHINE": "",
+        "MACHINE_TYPE": ""
+>>>>>>> c9f2946 (Initial commit from GitLab)
     }
 }

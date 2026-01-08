@@ -1,1 +1,2 @@
+inference/inference-MN5/results/*.json filter=lfs diff=lfs merge=lfs -text
 inference/inference-MN5/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json filter=lfs diff=lfs merge=lfs -text

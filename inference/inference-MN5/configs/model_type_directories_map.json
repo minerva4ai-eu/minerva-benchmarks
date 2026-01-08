@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "Text Generation": "/apps/ai-hub/models/text-models",
+=======
+  "Text Generation": "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry",
+>>>>>>> c9f2946 (Initial commit from GitLab)
   "Embedding": "/path/to/embedding/models",
   "Vision": "/path/to/vision/models"
 }
