@@ -1,0 +1,8 @@
+{
+    "Llama-3.1-8B-Instruct": "Text Generation",
+    "Llama-3.1-405B": "Text Generation",
+    "gemma-3-12b-it": "Text Generation",
+    "Mistral-7B-Instruct-v0.3": "Text Generation",
+    "gemma-3-1b-it": "Text Generation",
+    "Llama-3.3-70B-Instruct": "Text Generation"
+}
