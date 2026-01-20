@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Check for minimum number of required arguments
-if [ $# -lt 7 ]; then
-    echo "Usage: $0 head_node_address --head|--worker MODEL_PATH LAUNCH_FOLDER BENCHMARK_FILE DATASET DATASET_PATH [additional_args...]"
+if [ $# -lt 9 ]; then
+    echo "Usage: $0 head_node_address --head|--worker MODEL_PATH LAUNCH_FOLDER BENCHMARK_FILE DATASET DATASET_PATH MACHINE MACHINE_TYPE [additional_args...]"
     exit 1
 fi
 
@@ -14,7 +14,9 @@ LAUNCH_FOLDER="$4"
 BENCHMARK_FILE="$5"
 DATASET="$6"
 DATASET_PATH="$7"
-shift 7
+MACHINE="$8"
+MACHINE_TYPE="$9"
+shift 9
 
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
@@ -26,13 +28,23 @@ if [ "${NODE_TYPE}" != "--head" ] && [ "${NODE_TYPE}" != "--worker" ]; then
 fi
 
 
-module load $MODULES
-source activate $ENVIRONMENT_VLLM
-export PATH=$ENVIRONMENT_VLLM/bin:$PATH
-which python
+# Activate environment
+echo "ENVIRONMENT_VLLM: $ENVIRONMENT_VLLM"
+echo ""
+source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+echo "Run_cluster: PYTHON PATH:"
+which pip
+echo ""
+# ml miniforge
+# source activate $ENVIRONMENT_VLLM
+# export PATH=$ENVIRONMENT_VLLM/bin:$PATH
+# which pip
+
 
 export RAY_USAGE_STATS_ENABLED=1
 CUR_DIR=$(pwd)
+echo "run_cluster - MACHINE: $MACHINE"
+echo "run_cluster - MACHINE_TYPE: $MACHINE_TYPE"
 
 cat <<EOT > config.json
 {
@@ -48,12 +60,33 @@ cat <<EOT > config.json
         "PP": "${PIPELINE_PARALLEL}",
         "MAX_MODEL_LENGTH": "${MAX_MODEL_LENGTH}",
         "ADDITIONAL_ARGS": "${ADDITIONAL_ARGS[*]}",
-        "MODULES": "${MODULES}"
+        "MODULES": "${MODULES}",
+        "MACHINE": "${MACHINE}",
+        "MACHINE_TYPE": "${MACHINE_TYPE}"
     }
 }
 EOT
-
 echo "Configuration written to config.json"
+
+# cat <<EOT > config.sh
+# #!/bin/bash
+
+# export MODEL_PATH="${MODEL_PATH}"
+# export ENVIRONMENT_VLLM="${ENVIRONMENT_VLLM}"
+# export PORT="${PORT}"
+# export LAUNCH_FOLDER="${LAUNCH_FOLDER}"
+# export BENCHMARK_FILE="${BENCHMARK_FILE}"
+# export DATASET="${DATASET}"
+# export DATASET_PATH="${DATASET_PATH}"
+# export TP="${TENSOR_PARALLEL}"
+# export PP="${PIPELINE_PARALLEL}"
+# export ADDITIONAL_ARGS="${ADDITIONAL_ARGS[*]}"
+# export MAX_MODEL_LENGTH="${MAX_MODEL_LENGTH}"
+# export MODULES="${MODULES}"
+# export MACHINE="${MACHINE}"
+# export MACHINE_TYPE="${MACHINE_TYPE}"
+# EOT
+# echo "Configuration written to config.sh"
 
 # Command setup for head or worker node
 RAY_START_CMD="ray start"
@@ -73,6 +106,8 @@ if [ "${NODE_TYPE}" == "--head" ]; then
     # Submit the vLLM Model in the Ray Cluster
     echo "VLLM serve loading... Head Node Address: ${HEAD_NODE_ADDRESS}"
     ray job submit --runtime-env config.json -- bash $CUR_DIR/serve.sh $MODEL_PATH
+    # ray job submit -- bash $CUR_DIR/serve.sh $MODEL_PATH
+    
     echo "Ray Job submitted..."
 
     # Iterate until all jobs are finished

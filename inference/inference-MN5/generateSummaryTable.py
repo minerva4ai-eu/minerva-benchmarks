@@ -46,7 +46,7 @@ def parse_gpu_summary_json(json_path):
         return round(avg_mem_mb / 1024, 2), round(peak_mem_mb / 1024, 2), round(avg_power_w, 2), round(peak_power_w, 2)
     except Exception as e:
         print(f"⚠️ Failed to parse GPU summary JSON {json_path}: {e}")
-        return "", "", "", ""
+        return None, None, None, None
 
 def extract_metrics(filepath):
     try:
@@ -181,12 +181,16 @@ for root, dirs, files in os.walk(BASE_DIR_RESULTS):
             gpu_json_path = os.path.join(root, gpu_json_file)
             avg_mem_gb, peak_mem_gb, avg_power_w, peak_power_w = parse_gpu_summary_json(gpu_json_path)
 
+            # If we don't have data for the GPU, continue with the next benchmark
+            if avg_mem_gb is None and peak_mem_gb is None and avg_power_w is None and peak_power_w is None:
+                continue
+
             # Add GPU memory and power usage to metrics
             metrics["gpu_memory_usage_avg"] = avg_mem_gb
             metrics["gpu_memory_usage_peak"] = peak_mem_gb
             metrics["power_usage_avg"] = avg_power_w
             metrics["power_usage_peak"] = peak_power_w
-            
+        
         key = (*config, concurrency_level)
         # print("key:", key, "metrics:",metrics)
         if key not in data_index:

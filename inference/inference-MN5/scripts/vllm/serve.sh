@@ -1,12 +1,21 @@
 #!/bin/bash
 
-module load $MODULES
-source activate $ENVIRONMENT_VLLM
-export PATH=$ENVIRONMENT_VLLM/bin:$PATH
-which python
+# Activate environment
+echo "ENVIRONMENT_VLLM: $ENVIRONMENT_VLLM"
+echo ""
+source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+# ml miniforge
+# source activate $ENVIRONMENT_VLLM
+# export PATH=$ENVIRONMENT_VLLM/bin:$PATH
+# which python
 
 echo "serve.sh: LAUNCH_FOLDER: $LAUNCH_FOLDER"
 echo "serve.sh: ADDITIONAL_ARGS: ${ADDITIONAL_ARGS[*]}"
+echo "serve.sh: MACHINE: ${MACHINE}"
+echo "serve.sh: MACHINE_TYPE: ${MACHINE_TYPE}"
+echo "server.sh: PYTHON PATH:"
+which python
+echo ""
 
 # vLLM serve
 vllm serve "$MODEL_PATH" \
@@ -14,11 +23,9 @@ vllm serve "$MODEL_PATH" \
     --tensor-parallel-size "$TP" \
     --pipeline-parallel-size "$PP" \
     --max-model-len $MAX_MODEL_LENGTH \
-    $ADDITIONAL_ARGS \
-    --swap-space 2 \
-    --enable-chunked-prefill \
-    --enforce-eager \
-    --distributed-executor-backend=ray &
+    $ADDITIONAL_ARGS &
+
+#    --swap-space 2 --cpu-offload-gb 0.5 --enable-chunked-prefill --enforce-eager \
 
 #    --cpu-offload-gb 0.5 \
 
@@ -37,26 +44,7 @@ until curl -s http://localhost:$PORT/v1/models | grep -q '"object":"list"'; do
   sleep 5
 done
 
-
-echo "Starting sending requests to the Llama-405b model"
-
-# Requests (controlling the time of each request)
-time curl -X POST localhost:$PORT/v1/chat/completions -H "Content-Type: application/json" --data "{\"model\": \"$MODEL_PATH\",\"messages\": [{\"role\": \"user\", \"content\": \"say I have many shapes and I have a 3D cavity. I want to study the fit between possible shapes and the cavity. What is this problem? Has it been studied?\"}]}"
-
-sleep 60
-echo "Parallel requests"
-
-# Parallel requests
-curl -X POST localhost:$PORT/v1/chat/completions -H "Content-Type: application/json" --data "{\"model\": \"$MODEL_PATH\",\"messages\": [{\"role\": \"user\", \"content\": \"say I have many shapes and I have a 3D cavity. I want to study the fit between possible shapes and the cavity. What is this problem? Has it been studied?\"}]}" &
-curl -X POST localhost:$PORT/v1/chat/completions -H "Content-Type: application/json" --data "{\"model\": \"$MODEL_PATH\",\"messages\": [{\"role\": \"user\", \"content\": \"say I have many shapes and I have a 3D cavity. I want to study the fit between possible shapes and the cavity. What is this problem? Has it been studied?\"}]}" &
-curl -X POST localhost:$PORT/v1/chat/completions -H "Content-Type: application/json" --data "{\"model\": \"$MODEL_PATH\",\"messages\": [{\"role\": \"user\", \"content\": \"say I have many shapes and I have a 3D cavity. I want to study the fit between possible shapes and the cavity. What is this problem? Has it been studied?\"}]}" &
-
-sleep 30
-
-echo "Requests sent"
-
 sleep 10
-
 
 concurrencies=(150 250 300 500 1000)
 
@@ -70,13 +58,12 @@ for conc in "${concurrencies[@]}"; do
     #         # -l 1 -> loop every 1 second
     
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
-    # LOG_FILE="$LAUNCH_FOLDER/gpu_monitor_${conc}.log"
     
-    # python gpu_summary_monitor.py "$SUMMARY_FILE" 0.5 &
-    python gpu_summary_monitor.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
-
+    # Run in GPU monitor in background.
+    python gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
     GPU_MON_PID=$!
 
+    # Run benchmark stressing the vllm server.
     python $BENCHMARK_FILE --backend 'vllm' \
         --host 'localhost' \
         --port $PORT \

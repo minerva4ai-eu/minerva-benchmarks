@@ -10,10 +10,11 @@
 ###           Activate Environment             ###
 ##################################################
 # Activate virtual environment using vllm v0.5.4
-module load $MODULES
-source activate $ENVIRONMENT_VLLM
-export PATH=$ENVIRONMENT_VLLM/bin:$PATH
-which python
+source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+# ml miniforge
+# source activate $ENVIRONMENT_VLLM
+# export PATH=$ENVIRONMENT_VLLM/bin:$PATH
+# which pip
 
 ##################################################
 
@@ -39,6 +40,7 @@ echo "DATASET_PATH: {$DATASET_PATH}"
 export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 
 # NCCL variables
+# source activate-env-variables-per-supercomputer.sh
 export NCCL_NET=IB
 export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
 export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_4,mlx5_5
@@ -46,7 +48,10 @@ export NCCL_DEBUG=TRACE
 export NCCL_NVLS_ENABLE=0
 export NCCL_IB_DISABLE=0
 
-# RAY variables
+# RAY vasource activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+# echo "Run_cluster: PYTHON PATH:"
+# which pip
+# echo ""riables
 export RAY_OBJECT_STORE_ALLOW_SLOW_STORAGE=1
 export RAY_USAGE_STATS_ENABLED=1
 
@@ -78,7 +83,6 @@ export ip_head=$head_node_ip:$port
 
 # VLLM variables
 export VLLM_HOST_IP=$head_node_ip
-export VLLM_ALLOW_ENGINE_USE_RAY=1
 
 
 ##################################################
@@ -89,7 +93,7 @@ export VLLM_ALLOW_ENGINE_USE_RAY=1
 
 # Start the Head Node, wait until all ray cluster is initialized and start the vLLM serve
 echo "Starting HEAD at $head_node"
-srun -n 1 --nodes=1 --gres=gpu:$GPU_NODE -c $TOTAL_CPUS --cpu-bind=none  -w "$head_node" --export=ALL,VLLM_HOST_IP=$head_node_ip bash run_cluster.sh $head_node_ip --head $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $ADDITIONAL_ARGS &
+srun -n 1 --nodes=1 --gres=gpu:$GPU_NODE -c $TOTAL_CPUS --cpu-bind=none  -w "$head_node" --export=ALL,VLLM_HOST_IP=$head_node_ip bash run_cluster.sh $head_node_ip --head $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
 sleep 60
 SRUN_PID=$!
 
@@ -102,7 +106,7 @@ for ((i = 1; i <= worker_num; i++)); do
     local_node_ip=$(srun -n 1 -N 1 -c 1 -w "$node_i" hostname --ip-address)
     export VLLM_HOST_IP=$local_node_ip
     ip_local=$local_node_ip:$port
-    srun -n 1 --nodes=1 --gres=gpu:$GPU_NODE -c $TOTAL_CPUS --cpu-bind=none -w "$node_i" --export=ALL,VLLM_HOST_IP=$local_node_ip bash run_cluster.sh $head_node_ip --worker $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $ADDITIONAL_ARGS &
+    srun -n 1 --nodes=1 --gres=gpu:$GPU_NODE -c $TOTAL_CPUS --cpu-bind=none -w "$node_i" --export=ALL,VLLM_HOST_IP=$local_node_ip bash run_cluster.sh $head_node_ip --worker $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
     sleep 3
 done
 

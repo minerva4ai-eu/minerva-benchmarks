@@ -19,12 +19,11 @@ echo "DATASET_PATH: {$DATASET_PATH}"
 echo "MODEL: {$MODEL}"
 echo "MODEL_PATH: {$MODEL_PATH}"
 echo "GPUs used per Node: {$GPU_NODE}"
+echo "MACHINE: {$MACHINE}"
+echo "MACHINE_TYPE: {$MACHINE_TYPE}"
 
 # Activate environment
-module load $MODULES
-source activate $ENVIRONMENT_DEEPSPEED
-export PATH=$ENVIRONMENT_DEEPSPEED/bin:$PATH
-which python
+source activate-env-per-supercomputer.sh $ENVIRONMENT_DEEPSPEED
 
 echo "Using TENSOR_PARALLEL: $TENSOR_PARALLEL"
 
@@ -32,7 +31,6 @@ echo "Using TENSOR_PARALLEL: $TENSOR_PARALLEL"
 python $LAUNCH_FOLDER/serve_deepspeed_mii.py $TENSOR_PARALLEL &
 
 sleep 180
-
 
 concurrencies=(150 250 300 500 1000)
 
@@ -48,12 +46,12 @@ for conc in "${concurrencies[@]}"; do
 
     # # Launch GPU monitor in background
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
-    # LOG_FILE="$LAUNCH_FOLDER/gpu_monitor_${conc}.log"
     
-    # python gpu_summary_monitor.py "$SUMMARY_FILE" 0.5 &
-    python gpu_summary_monitor.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
+    # Run in GPU monitor in background.
+    python $LAUNCH_FOLDER/gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
     GPU_MON_PID=$!
 
+    # Run benchmark stressing the deepspeed-mii server.
     python $BENCHMARK_FILE --backend 'deepspeed-mii' \
         --host 'localhost' \
         --port $PORT \

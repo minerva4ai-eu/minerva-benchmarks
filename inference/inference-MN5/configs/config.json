@@ -7,6 +7,8 @@
         "BENCHMARK_FILE": "",
         "DATASET": "",
         "DATASET_PATH": "",
-        "MAX_MODEL_LENGTH": ""
+        "MAX_MODEL_LENGTH": "",
+        "MACHINE": "",
+        "MACHINE_TYPE": ""
     }
 }

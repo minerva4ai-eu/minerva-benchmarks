@@ -1,24 +1,28 @@
 #!/bin/bash
-set -a  # Automatically export all variables
-source .env
-set +a  # Stop automatically exporting
-
-# Load utility functions
-source scripts/utils.sh
 
 #######################################################
 # ENVIRONMENT VARIABLES TO CHANGE
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("vllm") #"vllm") # deepspeed")    # Add other frameworks if needed
-DATASETS=("sharegpt")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
+FRAMEWORKS=("sglang") #"vllm") # deepspeed")    # Add other frameworks if needed
+DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
 NUMBER_OF_NODES=(1)
-MAX_MODEL_LENGTHS=(4096) # 4096 8192 16384 32768)
+MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
+MACHINE="bsc-mn5-acc"
+MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
+# Set environment variables
+#######################################################
+set -a  # Automatically export all variables
+source .env-$MACHINE
+set +a  # Stop automatically exporting
 
+# Load utility functions
+source scripts/utils.sh
+#######################################################
 
 JOB_IDS=()
 CONFIG_INDEX=0
@@ -67,21 +71,17 @@ for framework in "${FRAMEWORKS[@]}"; do
               echo "FrameWork vLLM"
 
               # If Model is Llama-3.1-405B.
-              if [[ "$model" == "Llama-3.1-405B" ]]; then
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" ]]; then
                 # Skip if model is Llama-3.1-405B and NODES < 4.
                 if [[ "$NODES" -lt 4 ]]; then
                   echo "Skipping $model with $NODES nodes (requires at least 4 nodes)"
                   continue
                 fi
                 # Set extra args for Llama-3.1-405B
-                ADDITIONAL_ARGS="--cpu-offload-gb 0.5"
+                ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
               fi
-              # If Model is Llama-3.1-8B-Instruct.
-              if [[ "$model" == "Llama-3.1-8B-Instruct" ]]; then
-                # Set extra args for Llama-3.1-8B-Instruct
-                ADDITIONAL_ARGS="--cpu-offload-gb 0.5"
-              fi
-
+              ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+              
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
                 echo "Setting up $LAUNCH_FOLDER"
@@ -90,7 +90,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                 cp scripts/vllm/run_cluster.sh "$LAUNCH_FOLDER"
                 cp scripts/vllm/vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
                 cp scripts/vllm/serve.sh "$LAUNCH_FOLDER"
-                cp scripts/vllm/gpu_summary_monitor.py "$LAUNCH_FOLDER"
+                cp scripts/vllm/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
@@ -99,6 +101,8 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MODEL_PATH  # Make available to launched script
                 export ADDITIONAL_ARGS
                 export MODULES
+                export MACHINE
+                export MACHINE_TYPE
 
                 REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
                 if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
@@ -117,7 +121,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --error=run-%j.err \
                     -A $ACCOUNT \
                     -q $QOS \
-                    vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
+                    vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
                 JOB_IDS+=("$JOB_ID")
@@ -133,8 +137,16 @@ for framework in "${FRAMEWORKS[@]}"; do
               # DeepSpeed-MII
               echo "DeepSpeed-MII"
               
-              # If Model is Llama-3.1-405B.
-              if [[ "$model" == "Llama-3.1-405B" ]]; then
+              # If Model is Llama-3.1-405B, avoid it.
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" || "$model" == "Llama-3.70B-Instruct" ]]; then
+                continue
+              fi
+              # If Model is gemma-3-12b-it, avoid it.
+              if [[ "$model" == "gemma-3-12b-it" ]]; then
+                continue
+              fi
+              # If Model is Mistral-7B-Instruct-v0.3, avoid it.
+              if [[ "$model" == "Mistral-7B-Instruct-v0.3" ]]; then
                 continue
               fi
               # If iteration has more than 1 Node, avoid it.
@@ -142,7 +154,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                 echo "Skipping deepspeed-mii $model with $NODES nodes (requires maximum 1 node)"
                 continue
               fi
-              REPEATS=1
+              ADDITIONAL_ARGS=""
 
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
@@ -151,7 +163,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                 
                 cp scripts/deepspeed/serve_deepspeed_mii.py "$LAUNCH_FOLDER"
                 cp scripts/deepspeed/deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
-                cp scripts/deepspeed/gpu_summary_monitor.py "$LAUNCH_FOLDER"
+                cp scripts/deepspeed/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
@@ -160,7 +174,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MODEL_PATH  # Make available to launched script
                 export ADDITIONAL_ARGS
                 export MODULES
-                
+                export MACHINE
+                export MACHINE_TYPE
+
                 REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
                 if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
                   DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
@@ -188,6 +204,81 @@ for framework in "${FRAMEWORKS[@]}"; do
                 sleep 5
               done
             fi
+
+            # SGLang
+            if [[ "$framework" == "sglang" ]]; then
+              # SGLang
+              echo "FrameWork SGLang"
+
+              # If Model is Llama-3.1-405B.
+              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" ]]; then
+                # Skip if model is Llama-3.1-405B and NODES < 4.
+                if [[ "$NODES" -lt 4 ]]; then
+                  echo "Skipping $model with $NODES nodes (requires at least 4 nodes)"
+                  continue
+                fi
+                ADDITIONAL_ARGS="" # --mem-fraction-static 0.80 --chunked-prefill-size 4096
+              fi
+              # If Model is 'gemma-3-12b-it'
+              if [[ "$model" == "gemma-3-12b-it" ]]; then
+                # Skip if model is 'gemma-3-12b-it' and NODES > 1.
+                if [[ "$NODES" -gt 1 ]]; then
+                  echo "Skipping $model with $NODES nodes (tp and pp cannot be set in SGLang Framework) for 'gemma-3-12b-it' model"
+                  continue
+                fi
+                ADDITIONAL_ARGS=""
+              fi
+              ADDITIONAL_ARGS=""
+              
+              for (( run_id=1; run_id<=REPEATS; run_id++ )); do
+                LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+                echo "Setting up $LAUNCH_FOLDER"
+                mkdir -p "$LAUNCH_FOLDER"
+                
+                cp scripts/sglang/sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
+                cp scripts/sglang/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/sglang/serve.sh "$LAUNCH_FOLDER"
+                cp scripts/sglang/wrapper_singularity.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+
+                cd "$LAUNCH_FOLDER" || exit 1
+
+                export NODES GPUS_PER_NODE GPU_NODE TENSOR_PARALLEL PIPELINE_PARALLEL MAX_MODEL_LENGTH TOTAL_CPUS
+                export FRAMEWORK="$framework" DATASET="$dataset" MODEL="$model" REPEAT_ID="$run_id"
+                export MODEL_PATH  # Make available to launched script
+                export ADDITIONAL_ARGS
+                export MODULES
+                export MACHINE
+                export MACHINE_TYPE
+
+                REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
+                if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
+                  DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
+                else
+                  DEPENDENCY=""
+                fi
+
+                JOB_ID=$(sbatch --parsable \
+                    --chdir=$(pwd) \
+                    --nodes=$NODES \
+                    --gres=gpu:$GPUS_PER_NODE \
+                    --cpus-per-task=$TOTAL_CPUS \
+                    --output=run-%j.out \
+                    --error=run-%j.err \
+                    -A $ACCOUNT \
+                    -q $QOS \
+                    sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
+
+                echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                JOB_IDS+=("$JOB_ID")
+                ((CONFIG_INDEX++))
+
+                cd - > /dev/null
+                sleep 5
+              done
+            fi
+
           done
         done
       done
