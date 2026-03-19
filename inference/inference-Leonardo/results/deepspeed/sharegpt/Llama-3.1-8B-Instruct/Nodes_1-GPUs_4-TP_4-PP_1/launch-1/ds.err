@@ -1,278 +1,187 @@
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1/launch-1/serve_deepspeed_mii.py", line 1, in <module>
-Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1/launch-1/serve_deepspeed_mii.py", line 1, in <module>
     import os, sys, mii
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1/launch-1/serve_deepspeed_mii.py", line 1, in <module>
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/__init__.py", line 5, in <module>
-    import os, sys, mii
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/__init__.py", line 5, in <module>
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/__init__.py", line 5, in <module>
     from .api import client, serve, pipeline
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/api.py", line 8, in <module>
-    from .api import client, serve, pipeline
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/api.py", line 8, in <module>
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/api.py", line 8, in <module>
     from mii.backend import MIIClient  # , MIIServer
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/__init__.py", line 5, in <module>
-    from mii.backend import MIIClient  # , MIIServer
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/__init__.py", line 5, in <module>
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/__init__.py", line 5, in <module>
     from .client import MIIClient
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/client.py", line 10, in <module>
-    from .client import MIIClient
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/client.py", line 10, in <module>
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/backend/client.py", line 10, in <module>
     from mii.batching.data_classes import Response
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/__init__.py", line 6, in <module>
-    from mii.batching.data_classes import Response
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/__init__.py", line 6, in <module>
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/__init__.py", line 6, in <module>
     from .ragged_batching import MIIAsyncPipeline, MIIPipeline
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/ragged_batching.py", line 17, in <module>
-    from .ragged_batching import MIIAsyncPipeline, MIIPipeline
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/ragged_batching.py", line 17, in <module>
-    import torch
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    import torch
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/mii/batching/ragged_batching.py", line 20, in <module>
+    from deepspeed.accelerator import get_accelerator
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/deepspeed/__init__.py", line 25, in <module>
+    from . import ops
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/deepspeed/ops/__init__.py", line 15, in <module>
+    from ..git_version_info import compatible_ops as __compatible_ops__
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/deepspeed/git_version_info.py", line 29, in <module>
+    op_compatible = builder.is_compatible()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/fp_quantizer.py", line 35, in is_compatible
+    sys_cuda_major, _ = installed_cuda_version()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 53, in installed_cuda_version
+    output = subprocess.check_output([cuda_home + "/bin/nvcc", "-V"], universal_newlines=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/subprocess.py", line 1950, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: '/usr/local/cuda/bin/nvcc'
 Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch import Tensor
-    from torch._C import *  # noqa: F403
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
-Traceback (most recent call last):
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 39, in <module>
-    from backend_request_func import (ASYNC_REQUEST_FUNCS, RequestFuncInput,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/benchmarks/backend_request_func.py", line 12, in <module>
-    from transformers import (AutoTokenizer, PreTrainedTokenizer,
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/__init__.py", line 26, in <module>
-    from . import dependency_versions_check
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
-    from .utils.versions import require_version, require_version_core
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/__init__.py", line 27, in <module>
-    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/transformers/utils/chat_template_utils.py", line 39, in <module>
-    from torch import Tensor
-  File "/leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/__init__.py", line 416, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /leonardo_scratch/large/userinternal/rscheda0/benchmarks/inference/inference-Leonardo/env_ds/lib/python3.11/site-packages/torch/lib/libtorch_cuda.so: undefined symbol: ncclGroupSimulateEnd
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 816, in main
+    input_requests = sample_sharegpt_requests(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-Leonardo/benchmarks/benchmark_serving.py", line 97, in sample_sharegpt_requests
+    dataset = json.load(f)
+              ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

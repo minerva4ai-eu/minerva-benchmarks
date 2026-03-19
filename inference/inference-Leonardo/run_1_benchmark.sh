@@ -14,10 +14,9 @@ source scripts/utils.sh
 GPUS_PER_NODE=4
 FRAMEWORKS=("vllm" "deepspeed")    # Add other frameworks if needed
 DATASETS=("sharegpt") # "sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-405B") #("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # "Llama-3.1-405B" Add your models here
-NUMBER_OF_NODES=(16)
+MODELS=("Llama-3.1-8B-Instruct") #("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # "Llama-3.1-405B" Add your models here
+NUMBER_OF_NODES=(1)
 REPEATS=1                 # Number of runs per configuration
-GPUS_PER_NODE=4
 #######################################################
 
 
@@ -140,7 +139,7 @@ for framework in "${FRAMEWORKS[@]}"; do
             cp scripts/deepspeed/deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
             
             cd "$LAUNCH_FOLDER" || exit 1
-:w
+
 
             export NODES GPUS_PER_NODE TENSOR_PARALLEL PIPELINE_PARALLEL
             export FRAMEWORK="$framework" DATASET="$dataset" MODEL="$model" REPEAT_ID="$run_id"

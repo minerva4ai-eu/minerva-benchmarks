@@ -29,3 +29,6 @@ inference/inference-MN5/results/vllm/*
 
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
+#results/
+inference/inference-Leonardo/env_ds/
+inference/inference-Leonardo/env_vllm/

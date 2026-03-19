@@ -1,5 +1,5 @@
 {
-  "Text Generation": "/leonardo_scratch/large/userinternal/lcavall1/llama405_mlperf/model/",
+  "Text Generation": "/leonardo_work/MNRVA_bench/models/meta-llama/",
   "Embedding": "/path/to/embedding/models",
   "Vision": "/path/to/vision/models"
 }
