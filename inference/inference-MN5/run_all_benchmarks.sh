@@ -78,9 +78,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                   continue
                 fi
                 # Set extra args for Llama-3.1-405B
-                ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+                ADDITIONAL_ARGS="--disable-log-requests"
               fi
-              ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+              ADDITIONAL_ARGS="--disable-log-requests"
               
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
