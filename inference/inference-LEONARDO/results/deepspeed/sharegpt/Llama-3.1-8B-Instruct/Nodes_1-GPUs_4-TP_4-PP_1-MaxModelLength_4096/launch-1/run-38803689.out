@@ -1,0 +1,13 @@
+LAUNCH_FOLDER: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1}
+BENCHMARK_FILE: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+MODEL: {Llama-3.1-8B-Instruct}
+MODEL_PATH: {/leonardo_work/MNRVA_bench/models/Llama-3.1-8B-Instruct}
+GPUs used per Node: {4}
+MACHINE: {leonardo}
+MACHINE_TYPE: {cuda}
+Loading gcc/12.2.0
+  Loading requirement: zstd/1.5.6-uq5yyux binutils/2.42
+/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/bin/python
+Unknown machine: leonardo
