@@ -131,3 +131,7 @@ Running concurrency level 300 for MODEL: Llama-3.1-8B-Instruct
 [gpu_monitor] Summary written to /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/gpu_summary_300.txt
 Running concurrency level 500 for MODEL: Llama-3.1-8B-Instruct
 [gpu_monitor] Monitoring 4 GPUs every 0.1s. Writing summary to /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/gpu_summary_500.txt
+[gpu_monitor] Summary written to /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/gpu_summary_500.txt
+Running concurrency level 1000 for MODEL: Llama-3.1-8B-Instruct
+[gpu_monitor] Monitoring 4 GPUs every 0.1s. Writing summary to /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/gpu_summary_1000.txt
+[gpu_monitor] Summary written to /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/gpu_summary_1000.txt

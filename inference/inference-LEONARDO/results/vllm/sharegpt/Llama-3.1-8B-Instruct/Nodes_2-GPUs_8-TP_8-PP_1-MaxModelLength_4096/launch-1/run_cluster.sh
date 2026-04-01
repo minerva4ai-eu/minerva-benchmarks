@@ -56,7 +56,7 @@ cat <<EOT > config.json
         "BENCHMARK_FILE": "${BENCHMARK_FILE}",
         "DATASET": "${DATASET}",
         "DATASET_PATH": "${DATASET_PATH}",
-        "TP": "${TENSOR_PARALLEL}",
+        "TP": "4",
         "PP": "${PIPELINE_PARALLEL}",
         "MAX_MODEL_LENGTH": "${MAX_MODEL_LENGTH}",
         "ADDITIONAL_ARGS": "${ADDITIONAL_ARGS[*]}",

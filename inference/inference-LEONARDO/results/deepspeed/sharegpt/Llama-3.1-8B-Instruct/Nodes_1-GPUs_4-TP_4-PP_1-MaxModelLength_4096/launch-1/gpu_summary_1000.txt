@@ -5,35 +5,35 @@
       "id": 0,
       "avg_memory_mb": 595.38,
       "peak_memory_mb": 595.38,
-      "avg_power_w": 62.67,
-      "peak_power_w": 62.98
+      "avg_power_w": 64.5,
+      "peak_power_w": 64.67
     },
     {
       "id": 1,
       "avg_memory_mb": 595.38,
       "peak_memory_mb": 595.38,
-      "avg_power_w": 65.71,
-      "peak_power_w": 66.07
+      "avg_power_w": 64.41,
+      "peak_power_w": 64.46
     },
     {
       "id": 2,
       "avg_memory_mb": 595.38,
       "peak_memory_mb": 595.38,
-      "avg_power_w": 60.88,
-      "peak_power_w": 61.12
+      "avg_power_w": 60.89,
+      "peak_power_w": 60.95
     },
     {
       "id": 3,
       "avg_memory_mb": 595.38,
       "peak_memory_mb": 595.38,
-      "avg_power_w": 62.19,
-      "peak_power_w": 62.26
+      "avg_power_w": 61.05,
+      "peak_power_w": 61.31
     }
   ],
   "total": {
     "avg_memory_mb": 595.38,
     "peak_memory_mb": 595.38,
-    "avg_power_w": 62.86,
-    "peak_power_w": 63.11
+    "avg_power_w": 62.71,
+    "peak_power_w": 62.84
   }
 }
