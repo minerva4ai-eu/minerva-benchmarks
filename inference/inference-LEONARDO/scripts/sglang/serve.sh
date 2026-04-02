@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Singularity variables
-module load $SINGULARITY_MODULE
+#module load $SINGULARITY_MODULE
 source activate-env-variables-per-supercomputer.sh $ENVIRONMENT_SGLANG
 
 echo "serve.sh: LAUNCH_FOLDER: $LAUNCH_FOLDER"
@@ -11,8 +11,8 @@ echo "serve.sh: ADDITIONAL_ARGS: ${ADDITIONAL_ARGS[*]}"
 TMPDIR=$CUR_DIR/tmp
 mkdir $TMPDIR
 chmod -R 777 $TMPDIR
-export SINGULARITY_CACHEDIR=$TMPDIR
-export SINGULARITY_TMPDIR=$TMPDIR
+#export SINGULARITY_CACHEDIR=$TMPDIR
+#export SINGULARITY_TMPDIR=$TMPDIR
 
 # If the model is 'gemma-3-12b' -> pp and tp aren't implemented yet!
 if [[ "$MODEL_PATH" == *"gemma-3-12b-it"* ]]; then
@@ -101,7 +101,7 @@ sleep 10
 
 # Activate environment
 module purge
-source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+source activate-env-per-supercomputer.sh $ENVIRONMENT_SGLANG
 
 concurrencies=(150 250 300 500 1000)
 

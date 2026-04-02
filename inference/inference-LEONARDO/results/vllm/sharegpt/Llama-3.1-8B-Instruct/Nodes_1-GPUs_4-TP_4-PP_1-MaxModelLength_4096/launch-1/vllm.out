@@ -1,9 +1,0 @@
-/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_vllm/bin/python
-LAUNCH_FOLDER: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/vllm/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1}
-BENCHMARK_FILE: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py}
-DATASET: {sharegpt}
-DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
-Node: lrdn1855 - IP: 10.6.0.55
-Starting HEAD at lrdn1855
-Starting workers Nodes
-Ray Cluster started correctly

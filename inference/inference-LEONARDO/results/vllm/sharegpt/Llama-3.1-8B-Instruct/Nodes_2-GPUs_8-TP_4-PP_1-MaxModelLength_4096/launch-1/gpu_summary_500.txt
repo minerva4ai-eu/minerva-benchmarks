@@ -1,0 +1,39 @@
+{
+  "interval": 0.1,
+  "GPUs": [
+    {
+      "id": 0,
+      "avg_memory_mb": 59743.5,
+      "peak_memory_mb": 59743.5,
+      "avg_power_w": 180.65,
+      "peak_power_w": 325.3
+    },
+    {
+      "id": 1,
+      "avg_memory_mb": 59695.5,
+      "peak_memory_mb": 59695.5,
+      "avg_power_w": 178.91,
+      "peak_power_w": 320.9
+    },
+    {
+      "id": 2,
+      "avg_memory_mb": 59695.5,
+      "peak_memory_mb": 59695.5,
+      "avg_power_w": 181.19,
+      "peak_power_w": 328.32
+    },
+    {
+      "id": 3,
+      "avg_memory_mb": 59743.5,
+      "peak_memory_mb": 59743.5,
+      "avg_power_w": 179.67,
+      "peak_power_w": 323.37
+    }
+  ],
+  "total": {
+    "avg_memory_mb": 59719.5,
+    "peak_memory_mb": 59719.5,
+    "avg_power_w": 180.11,
+    "peak_power_w": 324.47
+  }
+}

@@ -5,11 +5,11 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("vllm") #"vllm") # deepspeed") #sglang    # Add other frameworks if needed
+FRAMEWORKS=("deepspeed") #"vllm") # deepspeed") #sglang    # Add other frameworks if needed
 DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
 MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
-NUMBER_OF_NODES=(2)
-MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
+NUMBER_OF_NODES=(1)
+MAX_MODEL_LENGTHS=(4096) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
 MACHINE="leonardo"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
@@ -48,7 +48,7 @@ for framework in "${FRAMEWORKS[@]}"; do
             # GENERAL PART (Common for all Frameworks).
             TOTAL_GPUS=$((NODES * GPU_NODE))
             TOTAL_CPUS=$((GPUS_PER_NODE * CPUS_PER_GPU))
-            TENSOR_PARALLEL=$TOTAL_GPUS
+            TENSOR_PARALLEL=$GPUS_PER_NODE
             PIPELINE_PARALLEL=1
 
             BASE_FOLDER="results/${framework}/${dataset}/${model}"
@@ -271,8 +271,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                   --error=sglang.err \
                   -A $ACCOUNT \
                   -q $QOS \
+                  --time=00:20:00 \
                   --exclusive \
-		              -p $PARTITION \
+                  -p $PARTITION \
                   sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
