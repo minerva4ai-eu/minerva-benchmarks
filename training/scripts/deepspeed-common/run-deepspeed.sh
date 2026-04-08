@@ -1,17 +1,26 @@
 #!/bin/bash
 
 #SBATCH --job-name=DEEPSPEED_DYNAMIC
+#SBATCH --time=24:00:00
+
+set -e
+set -o pipefail
+
+##################################################
+###           Activate Environment             ###
+##################################################
+# Activate virtual environment using conda
+module load $MODULES
+source activate $ENVIRONMENT_FINETUNING
+export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
+which python
+
+##################################################
 
 
 ##################################################
-###           Environment Setup                ###
+###        Environment Variables Setup         ###
 ##################################################
-if [ ! -z "$LOAD_MODULES" ]; then
-    eval "$LOAD_MODULES"
-fi
-
-source shared/runtime_environment.sh
-training_activate_runtime_environment
 
 function exists_in_list() {
     LIST=$1
@@ -28,6 +37,25 @@ function exists_in_list() {
 }
 
 # Get Arguments
+LAUNCH_FOLDER=$1
+DATASET=$2
+DATASET_PATH=$3
+ZERO_STAGE=$4
+# Validate ZERO_STAGE
+PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3")
+STAGES_WITH_HPZ=("zero2" "zero3")
+
+if [[ -z "$ZERO_STAGE" ]]; then
+    echo "Error: ZERO_STAGE is required. Please provide one of: ${PERMITTED_ZERO_STAGES[*]}"
+    exit 1
+fi
+
+if ! exists_in_list "${PERMITTED_ZERO_STAGES[*]}" " " "$ZERO_STAGE"; then
+    echo "Error: ZERO_STAGE must be one of: ${PERMITTED_ZERO_STAGES[*]}"
+    echo "Received: $ZERO_STAGE"
+    exit 1
+fi
+
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
 mkdir -p $OUTPUT_DIR
 
@@ -37,27 +65,22 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 
 
 # Export environment variables
-export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 export SLURM_CPU_BIND=none
-export JOB_ID=${SLURM_JOB_ID}
-export NNODES=${SLURM_NNODES}
+export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
+
+export NNODES=$SLURM_NNODES
 export NPROC_PER_NODE=$GPUS_PER_NODE
 export NUM_PROCS=$((NNODES * NPROC_PER_NODE))
-export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_NODELIST" | head -n 1)
 export MASTER_PORT=29500
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export NODE_RANK=$SLURM_PROCID
 
 head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$MASTER_ADDR" hostname --ip-address)
+export NCCL_DEBUG=INFO
 
-# ------------------------------------------------------------------
-# Generate DeepSpeed hostfile from SLURM node list
-# DeepSpeed requires a hostfile when num_nodes > 1
-# ------------------------------------------------------------------
-HOSTFILE="$OUTPUT_DIR/hostfile"
-scontrol show hostnames "${SLURM_NODELIST}" | while read -r hostname; do
-    echo "${hostname} slots=${GPUS_PER_NODE}" >> "$HOSTFILE"
-done
-echo "Generated DeepSpeed hostfile at: $HOSTFILE"
-cat "$HOSTFILE"
 
 deepspeed_config_path="configs/${ZERO_STAGE}.json"
 accelerate_config_path="configs/accelerate_config.yaml"
@@ -66,31 +89,28 @@ accelerate_config_path="configs/accelerate_config.yaml"
 sed -i "s/{{MASTER_IP}}/$head_node_ip/g" "$accelerate_config_path"
 sed -i "s/{{NUM_NODES}}/$NNODES/g" "$accelerate_config_path"
 sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
-sed -i "s/machine_rank: 0/machine_rank: $NODE_RANK/g" "$accelerate_config_path"
 
 # Update DeepSpeed config path in Accelerate config
 sed -i "s|{{path to ds_config.json}}|$deepspeed_config_path|g" "$accelerate_config_path"
 
 # Update hpZ partition size for parallelism of stage2 and stage3 configurations only, as stage1 does not use hpZ
-HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
-sed -i "s/\"zero_hpz_partition_size\": \"{{HPZ_PARTITION_SIZE}}\"/\"zero_hpz_partition_size\": $HPZ_PARTITION_SIZE/g" "$deepspeed_config_path"
-echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
+if exists_in_list "${STAGES_WITH_HPZ[*]}" " " "$ZERO_STAGE"; then
+    #HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
+    HPZ_PARTITION_SIZE=4
+    sed -i "s/\"zero_hpz_partition_size\": \"{{HPZ_PARTITION_SIZE}}\"/\"zero_hpz_partition_size\": $HPZ_PARTITION_SIZE/g" "$deepspeed_config_path"
+    echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
+fi
 
+gpu_plots_monitor_command="python -m gpu_plots"
 
-runtime_prefix="$(training_build_runtime_prefix)"
-echo "runtime prefix $runtime_prefix"
+SCALED_LR=$(python3 -c "import math; print(${LR} * math.sqrt(${NUM_PROCS} ))")
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
-
-train_command="${runtime_prefix:+$runtime_prefix} deepspeed \
-    --no_ssh \
-    --hostfile $HOSTFILE \
-    --num_nodes $SLURM_NNODES \
-    --num_gpus $GPUS_PER_NODE \
-    --node_rank \${SLURM_NODEID} \
-    --master_addr $MASTER_ADDR \
-    --master_port $MASTER_PORT \
-    $TRAIN_SCRIPT \
+train_command="accelerate launch \
+    --config_file $accelerate_config_path \
+    --machine_rank $SLURM_NODEID \
+    --rdzv_backend c10d \
+    finetune-deepspeed.py \
+      --minerva_dir $CURRENT_DIR \
       --model $MODEL_PATH \
       --data $DATASET_PATH \
       --output_dir $OUTPUT_DIR \
@@ -99,15 +119,15 @@ train_command="${runtime_prefix:+$runtime_prefix} deepspeed \
       ${EPOCHS:+--epochs "$EPOCHS"} \
       ${STEPS:+--max_steps "$STEPS"} \
       --precision $PRECISION \
-      --lr $LR \
+      --lr $SCALED_LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
-      --dataloader_num_workers 4 \
-      --dataset '$DATASET' \
+      --dataloader_num_workers 32 \
+      --dataset $DATASET \
       --warmup_ratio 0.1 \
-      --deepspeed_config_file  $deepspeed_config_path \
-      --logging_steps 1 "
+      --deepspeed_config_file  $deepspeed_config_path"
+
 # Launch Run
-srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &
     monitor_pid=\$!

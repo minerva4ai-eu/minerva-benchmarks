@@ -1,11 +1,31 @@
 import argparse
+import ast
+import json
+import os
+
+
+def count_parameters(model):
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return trainable_params, total_params, trainable_params / total_params * 100
+
+
+def save_summary_stats_json(summary, output_file):
+    with open(os.path.join(output_file), "w") as f:
+        json.dump(summary, f, indent=4)
+    # print(f"Training summary saved to {output_file}")
 
 
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        # TODO: Fill in description of argparser
-        description="ToDo"
+        description="Fine-tune LLaMA-8B with custom dataset"
+    )
+    parser.add_argument(
+        "--minerva_dir",
+        type=str,
+        required=True,
+        help="Path to Minerva Benchmarks (training/training_MN5)",
     )
     parser.add_argument(
         "--model", type=str, required=True, help="Path to pretrained model"
@@ -21,13 +41,10 @@ def parse_args():
     )
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument(
-        "--warmup_ratio",
-        type=float,
-        default=0.05,
-        help="Warmup ratio for learning rate",
+        "--warmup_ratio", type=float, default=0, help="Warmup ratio for learning rate"
     )
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
-    parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
+    parser.add_argument("--logging_steps", type=float, default=10, help="Logging Steps")
     parser.add_argument(
         "--enable_steps",
         type=bool,
@@ -46,7 +63,7 @@ def parse_args():
     parser.add_argument(
         "--dataloader_num_workers",
         type=int,
-        default=4,
+        default=10,
         help="Number of workers for dataloader",
     )
     # 🆕 Precision type argument
@@ -64,18 +81,38 @@ def parse_args():
         default=None,
         help="Path to DeepSpeed config file",
     )
-    # 🆕 Gradient checkpointing
-    parser.add_argument(
-        "--gradient_checkpointing",
-        action="store_true",
-        help="Enable gradient checkpointing to save memory",
-    )
-    parser.add_argument("--local_rank", type=int, default=-1)
-    parser.add_argument(
-        "--enable_compile",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
 
     return parser.parse_args()
+
+
+def parse_dataset_paths(data_arg):
+    """
+    Parses dataset path argument which can be:
+      - A single string path (→ do train/val split)
+      - A JSON string like '{"train": "...", "validation": "..."}'
+      - A Python dict string like "{'train': '...', 'validation': '...'}"
+
+    Returns:
+        (train_path, val_path, is_split)
+        is_split = True if both train and val are provided
+    """
+    train_path, val_path = None, None
+
+    # Try Python-style dict
+    try:
+        parsed = ast.literal_eval(data_arg)
+        if isinstance(parsed, dict) and "train" in parsed:
+            return parsed["train"], parsed.get("validation"), True
+    except (ValueError, SyntaxError):
+        pass
+
+    # Try JSON-style dict
+    try:
+        parsed = json.loads(data_arg)
+        if isinstance(parsed, dict) and "train" in parsed:
+            return parsed["train"], parsed.get("validation"), True
+    except json.JSONDecodeError:
+        pass
+
+    # Otherwise, single dataset path
+    return data_arg, None, False
