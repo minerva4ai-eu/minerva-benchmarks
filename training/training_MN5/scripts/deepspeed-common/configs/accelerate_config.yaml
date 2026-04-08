@@ -1,0 +1,55 @@
+# ============================================================================
+# Accelerate DeepSpeed Configuration
+# ============================================================================
+#
+# This config tells Accelerate to use DeepSpeed ZeRO for distributed training.
+# ALL DeepSpeed settings (ZeRO stage, mixed precision, gradient clipping, etc.)
+# must be in ds_config.json - NOT here.
+#
+# IMPORTANT: Placeholders {{...}} are replaced at runtime by slurm_wrap.sh
+# ============================================================================
+
+compute_environment: LOCAL_MACHINE
+debug: false
+
+# Distributed configuration (replaced at runtime)
+distributed_type: DEEPSPEED
+num_machines: {{NUM_NODES}}
+num_processes: {{NUM_GPUS}}
+machine_rank: 0
+
+# Master node configuration (replaced at runtime)
+main_process_ip: {{MASTER_IP}}
+main_process_port: 12345
+
+# ============================================================================
+# DeepSpeed Configuration
+# ============================================================================
+#
+# When using deepspeed_config_file, these settings MUST be in ds_config.json:
+#   - mixed_precision (bf16/fp16)
+#   - zero_stage
+#   - gradient_accumulation_steps
+#   - gradient_clipping
+#   - offload_optimizer_device / offload_param_device
+#
+# Only zero3_init_flag is allowed here when using deepspeed_config_file
+# ============================================================================
+
+deepspeed_config:
+#  # Full DeepSpeed config file (contains ALL ZeRO/training settings)
+  deepspeed_config_file: {{path to ds_config.json}}
+#  
+#  # This is the ONLY setting allowed alongside deepspeed_config_file:
+  zero3_init_flag: true  # Initialize model with ZeRO-3 parameter sharding
+#  
+#  # CRITICAL for SLURM multi-node with srun:
+#  # 'standard' means use torchrun/accelerate for multi-node coordination
+#  # NOT DeepSpeed's pdsh/ssh launcher which conflicts with srun
+  deepspeed_multinode_launcher: standard
+
+# General settings (not DeepSpeed-specific)
+use_cpu: false
+downcast_bf16: "no"
+same_network: true
+
