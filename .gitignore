@@ -26,3 +26,5 @@ inference/inference-MN5/results/vllm/*
 
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
+
+training/training_MN5/results/deepspeed/*
