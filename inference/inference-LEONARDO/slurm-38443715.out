@@ -1,0 +1,12 @@
+FrameWork SGLang
+Setting up /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_1-TP_1-PP_1-MaxModelLength_4096/launch-1
+sbatch: error: no partition specified, using default partition lrd_all_serial
+sbatch: error: no gres/tmpfs specified, using default: gres/tmpfs:10g
+sbatch: error: Batch job submission failed: Invalid account or account/partition combination specified
+Submitted job  for /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_1-TP_1-PP_1-MaxModelLength_4096/launch-1
+FrameWork SGLang
+Setting up /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1
+sbatch: error: no partition specified, using default partition lrd_all_serial
+sbatch: error: no gres/tmpfs specified, using default: gres/tmpfs:10g
+sbatch: error: Batch job submission failed: Invalid account or account/partition combination specified
+Submitted job  for /leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1

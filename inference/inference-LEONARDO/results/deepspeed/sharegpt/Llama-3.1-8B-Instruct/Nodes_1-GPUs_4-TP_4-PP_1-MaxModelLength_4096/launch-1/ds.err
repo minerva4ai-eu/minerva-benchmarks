@@ -1,0 +1,582 @@
+Using /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121 as PyTorch extensions root...
+Detected CUDA files, patching ldflags
+Emitting ninja build file /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121/inference_core_ops/build.ninja...
+/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py:1964: UserWarning: TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation. 
+If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST'].
+  warnings.warn(
+Building extension module inference_core_ops...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+Using /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121 as PyTorch extensions root...
+Using /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121 as PyTorch extensions root...
+Using /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121 as PyTorch extensions root...
+Loading extension module inference_core_ops...
+Loading extension module inference_core_ops...
+Loading extension module inference_core_ops...
+Loading extension module inference_core_ops...
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "<frozen runpy>", line 198, in _run_module_as_main
+[rank0]:   File "<frozen runpy>", line 88, in _run_code
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 105, in <module>
+[rank0]:     main()
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 98, in main
+[rank0]:     inference_pipeline = async_pipeline(args.model_config)
+[rank0]:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/api.py", line 243, in async_pipeline
+[rank0]:     inference_engine = load_model(model_config)
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/modeling/models.py", line 17, in load_model
+[rank0]:     inference_engine = build_hf_engine(
+[rank0]:                        ^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_factory.py", line 135, in build_hf_engine
+[rank0]:     return InferenceEngineV2(policy, engine_config)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_v2.py", line 83, in __init__
+[rank0]:     self._model = self._policy.build_model(self._config, self._base_mp_group)
+[rank0]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_policy_base.py", line 156, in build_model
+[rank0]:     self.model = self.instantiate_model(engine_config, mp_group)
+[rank0]:                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/llama_v2/policy.py", line 17, in instantiate_model
+[rank0]:     return Llama2InferenceModel(config=self._model_config, engine_config=engine_config, base_mp_group=mp_group)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 215, in __init__
+[rank0]:     self.make_norm_layer()
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 518, in make_norm_layer
+[rank0]:     self.norm = heuristics.instantiate_pre_norm(norm_config, self._engine_config)
+[rank0]:                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/heuristics.py", line 176, in instantiate_pre_norm
+[rank0]:     return DSPreNormRegistry.instantiate_config(config)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/module_registry.py", line 36, in instantiate_config
+[rank0]:     if not target_implementation.supports_config(config_bundle.config):
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/implementations/pre_norm/cuda_pre_rms.py", line 36, in supports_config
+[rank0]:     _ = CUDARMSPreNorm(config.channels, config.residual_dtype)
+[rank0]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/kernels/core_ops/cuda_rms_norm/rms_norm_base.py", line 36, in __init__
+[rank0]:     self.inf_module = InferenceCoreBuilder().load()
+[rank0]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 531, in load
+[rank0]:     return self.jit_load(verbose)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 578, in jit_load
+[rank0]:     op_module = load(name=self.name,
+[rank0]:                 ^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1314, in load
+[rank0]:     return _jit_compile(
+[rank0]:            ^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1746, in _jit_compile
+[rank0]:     return _import_module_from_library(name, build_directory, is_python_module)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2140, in _import_module_from_library
+[rank0]:     module = importlib.util.module_from_spec(spec)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "<frozen importlib._bootstrap>", line 573, in module_from_spec
+[rank0]:   File "<frozen importlib._bootstrap_external>", line 1233, in create_module
+[rank0]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank0]: ImportError: /leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/gcc-runtime-8.5.0-tm43bfw5tjxltzb4hh6avyvrxdzodtyb/lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121/inference_core_ops/inference_core_ops.so)
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "<frozen runpy>", line 198, in _run_module_as_main
+[rank3]:   File "<frozen runpy>", line 88, in _run_code
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 105, in <module>
+[rank3]:     main()
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 98, in main
+[rank3]:     inference_pipeline = async_pipeline(args.model_config)
+[rank3]:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/api.py", line 243, in async_pipeline
+[rank3]:     inference_engine = load_model(model_config)
+[rank3]:                        ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/modeling/models.py", line 17, in load_model
+[rank3]:     inference_engine = build_hf_engine(
+[rank3]:                        ^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_factory.py", line 135, in build_hf_engine
+[rank3]:     return InferenceEngineV2(policy, engine_config)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_v2.py", line 83, in __init__
+[rank3]:     self._model = self._policy.build_model(self._config, self._base_mp_group)
+[rank3]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_policy_base.py", line 156, in build_model
+[rank3]:     self.model = self.instantiate_model(engine_config, mp_group)
+[rank3]:                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/llama_v2/policy.py", line 17, in instantiate_model
+[rank3]:     return Llama2InferenceModel(config=self._model_config, engine_config=engine_config, base_mp_group=mp_group)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 215, in __init__
+[rank3]:     self.make_norm_layer()
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 518, in make_norm_layer
+[rank3]:     self.norm = heuristics.instantiate_pre_norm(norm_config, self._engine_config)
+[rank3]:                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/heuristics.py", line 176, in instantiate_pre_norm
+[rank3]:     return DSPreNormRegistry.instantiate_config(config)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/module_registry.py", line 36, in instantiate_config
+[rank3]:     if not target_implementation.supports_config(config_bundle.config):
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/implementations/pre_norm/cuda_pre_rms.py", line 36, in supports_config
+[rank3]:     _ = CUDARMSPreNorm(config.channels, config.residual_dtype)
+[rank3]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/kernels/core_ops/cuda_rms_norm/rms_norm_base.py", line 36, in __init__
+[rank3]:     self.inf_module = InferenceCoreBuilder().load()
+[rank3]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 531, in load
+[rank3]:     return self.jit_load(verbose)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 578, in jit_load
+[rank3]:     op_module = load(name=self.name,
+[rank3]:                 ^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1314, in load
+[rank3]:     return _jit_compile(
+[rank3]:            ^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1746, in _jit_compile
+[rank3]:     return _import_module_from_library(name, build_directory, is_python_module)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2140, in _import_module_from_library
+[rank3]:     module = importlib.util.module_from_spec(spec)
+[rank3]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "<frozen importlib._bootstrap>", line 573, in module_from_spec
+[rank3]:   File "<frozen importlib._bootstrap_external>", line 1233, in create_module
+[rank3]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank3]: ImportError: /leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/gcc-runtime-8.5.0-tm43bfw5tjxltzb4hh6avyvrxdzodtyb/lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121/inference_core_ops/inference_core_ops.so)
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "<frozen runpy>", line 198, in _run_module_as_main
+[rank1]:   File "<frozen runpy>", line 88, in _run_code
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 105, in <module>
+[rank1]:     main()
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 98, in main
+[rank1]:     inference_pipeline = async_pipeline(args.model_config)
+[rank1]:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/api.py", line 243, in async_pipeline
+[rank1]:     inference_engine = load_model(model_config)
+[rank1]:                        ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/modeling/models.py", line 17, in load_model
+[rank1]:     inference_engine = build_hf_engine(
+[rank1]:                        ^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_factory.py", line 135, in build_hf_engine
+[rank1]:     return InferenceEngineV2(policy, engine_config)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_v2.py", line 83, in __init__
+[rank1]:     self._model = self._policy.build_model(self._config, self._base_mp_group)
+[rank1]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_policy_base.py", line 156, in build_model
+[rank1]:     self.model = self.instantiate_model(engine_config, mp_group)
+[rank1]:                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/llama_v2/policy.py", line 17, in instantiate_model
+[rank1]:     return Llama2InferenceModel(config=self._model_config, engine_config=engine_config, base_mp_group=mp_group)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 215, in __init__
+[rank1]:     self.make_norm_layer()
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 518, in make_norm_layer
+[rank1]:     self.norm = heuristics.instantiate_pre_norm(norm_config, self._engine_config)
+[rank1]:                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/heuristics.py", line 176, in instantiate_pre_norm
+[rank1]:     return DSPreNormRegistry.instantiate_config(config)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/module_registry.py", line 36, in instantiate_config
+[rank1]:     if not target_implementation.supports_config(config_bundle.config):
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/implementations/pre_norm/cuda_pre_rms.py", line 36, in supports_config
+[rank1]:     _ = CUDARMSPreNorm(config.channels, config.residual_dtype)
+[rank1]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/kernels/core_ops/cuda_rms_norm/rms_norm_base.py", line 36, in __init__
+[rank1]:     self.inf_module = InferenceCoreBuilder().load()
+[rank1]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 531, in load
+[rank1]:     return self.jit_load(verbose)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 578, in jit_load
+[rank1]:     op_module = load(name=self.name,
+[rank1]:                 ^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1314, in load
+[rank1]:     return _jit_compile(
+[rank1]:            ^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1746, in _jit_compile
+[rank1]:     return _import_module_from_library(name, build_directory, is_python_module)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2140, in _import_module_from_library
+[rank1]:     module = importlib.util.module_from_spec(spec)
+[rank1]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "<frozen importlib._bootstrap>", line 573, in module_from_spec
+[rank1]:   File "<frozen importlib._bootstrap_external>", line 1233, in create_module
+[rank1]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank1]: ImportError: /leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/gcc-runtime-8.5.0-tm43bfw5tjxltzb4hh6avyvrxdzodtyb/lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121/inference_core_ops/inference_core_ops.so)
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "<frozen runpy>", line 198, in _run_module_as_main
+[rank2]:   File "<frozen runpy>", line 88, in _run_code
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 105, in <module>
+[rank2]:     main()
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/launch/multi_gpu_server.py", line 98, in main
+[rank2]:     inference_pipeline = async_pipeline(args.model_config)
+[rank2]:                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/api.py", line 243, in async_pipeline
+[rank2]:     inference_engine = load_model(model_config)
+[rank2]:                        ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/modeling/models.py", line 17, in load_model
+[rank2]:     inference_engine = build_hf_engine(
+[rank2]:                        ^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_factory.py", line 135, in build_hf_engine
+[rank2]:     return InferenceEngineV2(policy, engine_config)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/engine_v2.py", line 83, in __init__
+[rank2]:     self._model = self._policy.build_model(self._config, self._base_mp_group)
+[rank2]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_policy_base.py", line 156, in build_model
+[rank2]:     self.model = self.instantiate_model(engine_config, mp_group)
+[rank2]:                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/llama_v2/policy.py", line 17, in instantiate_model
+[rank2]:     return Llama2InferenceModel(config=self._model_config, engine_config=engine_config, base_mp_group=mp_group)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 215, in __init__
+[rank2]:     self.make_norm_layer()
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/model_implementations/inference_transformer_base.py", line 518, in make_norm_layer
+[rank2]:     self.norm = heuristics.instantiate_pre_norm(norm_config, self._engine_config)
+[rank2]:                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/heuristics.py", line 176, in instantiate_pre_norm
+[rank2]:     return DSPreNormRegistry.instantiate_config(config)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/module_registry.py", line 36, in instantiate_config
+[rank2]:     if not target_implementation.supports_config(config_bundle.config):
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/modules/implementations/pre_norm/cuda_pre_rms.py", line 36, in supports_config
+[rank2]:     _ = CUDARMSPreNorm(config.channels, config.residual_dtype)
+[rank2]:         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/inference/v2/kernels/core_ops/cuda_rms_norm/rms_norm_base.py", line 36, in __init__
+[rank2]:     self.inf_module = InferenceCoreBuilder().load()
+[rank2]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 531, in load
+[rank2]:     return self.jit_load(verbose)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 578, in jit_load
+[rank2]:     op_module = load(name=self.name,
+[rank2]:                 ^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1314, in load
+[rank2]:     return _jit_compile(
+[rank2]:            ^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1746, in _jit_compile
+[rank2]:     return _import_module_from_library(name, build_directory, is_python_module)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2140, in _import_module_from_library
+[rank2]:     module = importlib.util.module_from_spec(spec)
+[rank2]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "<frozen importlib._bootstrap>", line 573, in module_from_spec
+[rank2]:   File "<frozen importlib._bootstrap_external>", line 1233, in create_module
+[rank2]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank2]: ImportError: /leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/gcc-runtime-8.5.0-tm43bfw5tjxltzb4hh6avyvrxdzodtyb/lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /leonardo/home/userinternal/rscheda0/.cache/torch_extensions/py311_cu121/inference_core_ops/inference_core_ops.so)
+[rank0]:[W401 00:17:42.024557571 ProcessGroupNCCL.cpp:1250] Warning: WARNING: process group has NOT been destroyed before we destruct ProcessGroupNCCL. On normal program exit, the application should call destroy_process_group to ensure that any pending NCCL operations have finished in this process. In rare cases this process can exit before this point and block the progress of another member of the process group. This constraint has always been present,  but this warning has only been added since PyTorch 2.4 (function operator())
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/deepspeed/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_4-TP_4-PP_1-MaxModelLength_4096/launch-1/serve_deepspeed_mii.py", line 30, in <module>
+    client = mii.serve(
+             ^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/api.py", line 179, in serve
+    import_score_file(mii_config.deployment_name, DeploymentType.LOCAL).init()
+  File "/tmp/mii_cache/Llama-3.1-8B-Instruct/score.py", line 33, in init
+    mii.backend.MIIServer(mii_config)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/backend/server.py", line 50, in __init__
+    self._wait_until_server_is_live(processes, mii_config.model_conf.replica_configs)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/mii/backend/server.py", line 64, in _wait_until_server_is_live
+    raise RuntimeError(
+RuntimeError: server crashed for some reason, unable to proceed
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 104, in start_connection
+    raise first_exception
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 82, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 174, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 634, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 674, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('10.7.0.31', 8000)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/backend_request_func.py", line 346, in async_request_deepspeed_mii
+    async with session.post(url=request_func_input.api_url,
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 10.7.0.31:8000 ssl:default [Connect call failed ('10.7.0.31', 8000)]
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 104, in start_connection
+    raise first_exception
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 82, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 174, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 634, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 674, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('10.7.0.31', 8000)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/backend_request_func.py", line 346, in async_request_deepspeed_mii
+    async with session.post(url=request_func_input.api_url,
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 10.7.0.31:8000 ssl:default [Connect call failed ('10.7.0.31', 8000)]
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 104, in start_connection
+    raise first_exception
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 82, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 174, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 634, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 674, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('10.7.0.31', 8000)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/backend_request_func.py", line 346, in async_request_deepspeed_mii
+    async with session.post(url=request_func_input.api_url,
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 10.7.0.31:8000 ssl:default [Connect call failed ('10.7.0.31', 8000)]
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 104, in start_connection
+    raise first_exception
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 82, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 174, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 634, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 674, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('10.7.0.31', 8000)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/backend_request_func.py", line 346, in async_request_deepspeed_mii
+    async with session.post(url=request_func_input.api_url,
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 10.7.0.31:8000 ssl:default [Connect call failed ('10.7.0.31', 8000)]
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 1231, in <module>
+    main(args)
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 879, in main
+    benchmark_result = asyncio.run(
+                       ^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py", line 568, in benchmark
+    raise ValueError(
+ValueError: Initial test run failed - Please make sure benchmark arguments are correctly specified. Error: Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1115, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 104, in start_connection
+    raise first_exception
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 82, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohappyeyeballs/impl.py", line 174, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 634, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/python-3.11.7-ziwh63aulhhzxksf42k5u3gnim2rbpmp/lib/python3.11/asyncio/selector_events.py", line 674, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('10.7.0.31', 8000)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/backend_request_func.py", line 346, in async_request_deepspeed_mii
+    async with session.post(url=request_func_input.api_url,
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/client.py", line 703, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 548, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1056, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1400, in _create_direct_connection
+    raise last_exc
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1369, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/env_ds/lib/python3.11/site-packages/aiohttp/connector.py", line 1130, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 10.7.0.31:8000 ssl:default [Connect call failed ('10.7.0.31', 8000)]
+

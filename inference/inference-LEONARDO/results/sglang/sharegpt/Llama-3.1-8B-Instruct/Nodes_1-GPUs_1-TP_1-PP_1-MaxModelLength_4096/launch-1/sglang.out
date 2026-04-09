@@ -1,0 +1,71 @@
+LAUNCH_FOLDER: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_1-TP_1-PP_1-MaxModelLength_4096/launch-1}
+BENCHMARK_FILE: {/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/benchmarks/benchmark_serving.py}
+DATASET: {sharegpt}
+DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json}
+Loading cuda/12.2
+  Loading requirement: libiconv/1.17-nhc3mhm xz/5.4.6-xxxg42c
+    zlib-ng/2.1.6-jkgunjc libxml2/2.10.3-zbbe7lm
+Loading gcc/12.2.0
+  Loading requirement: zstd/1.5.6-uq5yyux binutils/2.42
+Node: lrdn2898 - IP: 10.9.0.18
+[INFO] Running SGLang inference
+[INFO] Model: /leonardo_work/MNRVA_bench/models/Llama-3.1-8B-Instruct
+[INFO] TP Size: 1
+[INFO] NODES: 1
+[INFO] NCCL_INIT_ADDR: 10.9.0.18:8080
+[INFO] CUR_DIR=/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO/results/sglang/sharegpt/Llama-3.1-8B-Instruct/Nodes_1-GPUs_1-TP_1-PP_1-MaxModelLength_4096/launch-1
+SGLang Server started with PID 4163183
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running
+Don't kill process 4163183, it is still running

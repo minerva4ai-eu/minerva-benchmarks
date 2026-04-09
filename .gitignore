@@ -1,4 +1,5 @@
 __pycache__/
+
 *.pyc
 *.pyo
 *.pyd
@@ -33,7 +34,13 @@ inference/inference-MN5/benchmarks-vllm-10122025/*
 inference/inference-Leonardo/env_ds/
 inference/inference-Leonardo/env_vllm/
 
+
 # Training - Leonardo
 training/training_MN5/envs/
 training/training_MN5/datasets/
 training/training_MN5/results/
+# Inference - Leonardo
+inference/inference-LEONARDO/env_ds/*
+inference/inference-LEONARDO/env_vllm/*
+inference/inference-LEONARDO/env_sglang/*
+
