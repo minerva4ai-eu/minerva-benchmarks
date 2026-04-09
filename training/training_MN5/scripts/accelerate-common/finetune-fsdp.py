@@ -261,7 +261,7 @@ def main():
     tokens_per_gpu_all_epochs = getattr(trainer.state, "total_tokens_per_gpu_custom", trainer.total_tokens_this_gpu)
     tokens_global_all_epochs = getattr(trainer.state, "total_tokens_global_custom", trainer.total_tokens_global)
 
-    if training_args.max_steps:
+    if training_args.max_steps and training_args.max_steps > 0:
         avg_step_time_sec = total_training_time_secs / training_args.max_steps
         avg_step_time_hours = avg_step_time_sec / 3600
     else:

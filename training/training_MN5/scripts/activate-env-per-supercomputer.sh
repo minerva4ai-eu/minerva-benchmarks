@@ -25,8 +25,14 @@ case "$MACHINE" in
         ;;
 
     leonardo)
-        export COMPILER=nvhpc
-        export CUDA_HOME=/cineca/prod/CUDA/12.1
+        # Load CUDA module
+        module load $MODULES
+        # Activate miniforge3 conda environment
+        eval "$(/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda shell.bash hook)"
+        conda activate $ENVIRONMENT
+        export PATH=$ENVIRONMENT/bin:$PATH
+        export CUDA_HOME=$CUDA_ROOT
+        which python
         ;;
 
     *)

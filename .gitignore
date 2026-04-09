@@ -32,3 +32,8 @@ inference/inference-MN5/benchmarks-vllm-10122025/*
 #results/
 inference/inference-Leonardo/env_ds/
 inference/inference-Leonardo/env_vllm/
+
+# Training - Leonardo
+training/training_MN5/envs/
+training/training_MN5/datasets/
+training/training_MN5/results/

@@ -11,7 +11,7 @@ MODELS=("gemma-3-1b-it" "Llama-3.1-8B-Instruct" "Mistral-7B-Instruct-v0.3" "Llam
 NUMBER_OF_NODES=(1 4)
 TYPE_PARALLELISM=("fsdp" "ddp" "none")
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
+MACHINE="leonardo"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
@@ -156,6 +156,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                             --output=run-%j.out \
                             --error=run-%j.err \
                             -A $ACCOUNT \
+                            -p $PARTITION_NAME \
                             -q $QOS \
                             run-$parallelism.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH")
 
@@ -234,12 +235,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                             --chdir=$(pwd) \
                             --nodes=$NODES \
                             --gres=gpu:$GPUS_PER_NODE \
-                            --cpus-per-task=80 \
+                            --cpus-per-task=$TOTAL_CPUS \
                             --tasks-per-node=1 \
                             $DEPENDENCY \
                             --output=run-%j.out \
                             --error=run-%j.err \
                             -A $ACCOUNT \
+                            -p $PARTITION_NAME \
                             -q $QOS \
                             run-$parallelism.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH")
 
