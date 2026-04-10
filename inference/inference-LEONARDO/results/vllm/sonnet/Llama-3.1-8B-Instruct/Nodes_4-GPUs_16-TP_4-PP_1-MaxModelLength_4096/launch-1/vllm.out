@@ -6126,3 +6126,5 @@ No jobs are currently running.
 Worker Node activated 10.10.0.47:6379
 Worker Node activated 10.10.0.47:6379
 Worker Node activated 10.10.0.47:6379
+Ray Cluster started with PID 3494250
+Process 3494250 has finished, exiting script

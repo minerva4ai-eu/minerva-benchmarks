@@ -36,3 +36,8 @@ inference/inference-Leonardo/env_vllm/
 inference/inference-LEONARDO/env_ds/*
 inference/inference-LEONARDO/env_vllm/*
 inference/inference-LEONARDO/env_sglang/*
+inference/inference-LEONARDO/benchmarks/datasets/
+
+inference/inference-LEONARDO/results/
+inference/inference-LEONARDO/results/deepspeed/
+!inference/inference-LEONARDO/results/*.csv

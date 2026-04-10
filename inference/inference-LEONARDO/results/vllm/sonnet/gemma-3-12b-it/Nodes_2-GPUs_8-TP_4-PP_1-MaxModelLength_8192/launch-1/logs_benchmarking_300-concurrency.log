@@ -5,3 +5,24 @@ Initial test run completed. Starting main benchmark run...
 Traffic request rate: inf
 Burstiness factor: 1.0 (Poisson process)
 Maximum request concurrency: 300
+============ Serving Benchmark Result ============
+Successful requests:                     1000      
+Benchmark duration (s):                  57.86     
+Total input tokens:                      513112    
+Total generated tokens:                  149992    
+Request throughput (req/s):              17.28     
+Output token throughput (tok/s):         2592.32   
+Total Token throughput (tok/s):          11460.47  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          2439.47   
+Median TTFT (ms):                        720.49    
+P99 TTFT (ms):                           15219.20  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          93.42     
+Median TPOT (ms):                        94.91     
+P99 TPOT (ms):                           95.68     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           93.42     
+Median ITL (ms):                         90.88     
+P99 ITL (ms):                            347.68    
+==================================================
