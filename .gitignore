@@ -8,10 +8,18 @@ inference/inference-MN5/scripts/ray-serve/
 inference/inference-MN5/envs/
 inference/inference-MN5/results-*/
 
+inference/inference-Adastra/scripts/ray-serve/
+inference/inference-Adastra/envs/
+inference/inference-Adastra/results-*/
+
 
 # Ignore everything inside inference/results/
 inference/inference-MN5/results/vllm/
 inference/inference-MN5/results/deepspeed/
+
+# Ignore everything inside inference/results/
+inference/inference-Adastra/results/vllm/
+inference/inference-Adastra/results/deepspeed/
 
 # But do not ignore CSV files directly inside inference/results/
 # !inference/inference-MN5/results/*.csv
@@ -26,5 +34,13 @@ inference/inference-MN5/results/vllm/*
 
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
+
+inference/inference-Adastra/results/deepspeed/*
+inference/inference-Adastra/results/sglang/*
+inference/inference-Adastra/results/vllm/*
+
+inference/inference-Adastra/analytics-*/
+inference/inference-Adastra/benchmarks-vllm-10122025/*
+
 
 ._dbindex_
