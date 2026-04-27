@@ -4,8 +4,8 @@ import sys
 import time
 
 import torch
-from custom_train import CustomTrainer
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
+from shared.custom_train import TokenTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
     AutoModelForCausalLM,
@@ -27,6 +27,7 @@ from training.training_MN5.configs.config_datasets_handlers_map import (
 
 MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
+
 
 def is_main_process():
     # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
@@ -129,27 +130,6 @@ def main():
         persistent_workers=True,
     )
 
-    # # Dataset
-    # dataset = DatasetHandlerClass(path=data, tokenizer=tokenizer, max_length=MAX_LENGTH)
-
-    # # Split into 90% train / 10% eval
-    # train_size = int(0.9 * len(dataset))
-    # eval_size = len(dataset) - train_size
-    # train_dataset, eval_dataset = random_split(dataset, [train_size, eval_size])
-
-    # train_dataloader = DataLoader(
-    #     train_dataset,
-    #     batch_size=args.batch_size,
-    #     shuffle=True,
-    #     collate_fn=dataset.collate_fn,
-    # )
-    # eval_dataloader = DataLoader(
-    #     eval_dataset,
-    #     batch_size=args.batch_size,
-    #     shuffle=False,
-    #     collate_fn=dataset.collate_fn,
-    # )
-
     # Model
     # --- Precision selection ---
     if args.precision == "fp16":
@@ -196,7 +176,18 @@ def main():
 
     monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
-    trainer = CustomTrainer(
+    # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
+    # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
+    #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
+
+    _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
+    peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
+    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
+    print(
+        f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
+    )
+
+    trainer = TokenTrackingTrainer(
         model=model,
         args=training_args,
         train_dataloader=train_dataloader,
@@ -204,6 +195,7 @@ def main():
         eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         callbacks=[monitor],
+        peak_gpu_tflops=peak_gpu_tflops,
     )
 
     # Start GPU monitor
@@ -230,32 +222,59 @@ def main():
     avg_epoch_time_sec, avg_epoch_time_hours = None, None
     avg_step_time_sec, avg_step_time_hours = None, None
 
-    if log_history:
-        # Average training loss over last logged steps
-        train_losses = [x["loss"] for x in log_history if "loss" in x]
-        avg_training_loss = (
-            sum(train_losses) / len(train_losses) if train_losses else None
-        )
+    total_training_time_secs = getattr(
+        trainer.state, "total_training_seconds_custom", total_finetune_time
+    )
+    tokens_per_gpu_all_epochs = getattr(
+        trainer.state, "total_tokens_per_gpu_custom", trainer.total_tokens_this_gpu
+    )
+    tokens_global_all_epochs = getattr(
+        trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
+    )
 
-        eval_losses = [x["eval_loss"] for x in log_history if "eval_loss" in x]
-        avg_validation_loss = (
-            sum(eval_losses) / len(eval_losses) if eval_losses else None
-        )
-        # Extract all train_runtime entries (only 1, that is the total training time).
-        epoch_times = [
-            log["train_runtime"] for log in log_history if "train_runtime" in log
-        ]
-        total_training_time_secs = sum(epoch_times) if epoch_times else None
+    avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
+    # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
+    avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
+    # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
 
-        # Compute average runtime per epoch (seconds)
-        # Determine if training is step-based or epoch-based
-        if args.max_steps is not None and args.max_steps > 0:
-            avg_step_time_sec = total_training_time_secs / args.max_steps
-            avg_step_time_hours = avg_step_time_sec / 3600
-        else:
-            avg_epoch_time_sec = total_training_time_secs / args.epochs
-            avg_epoch_time_hours = avg_epoch_time_sec / 3600
+    if training_args.max_steps:
+        avg_step_time_sec = total_training_time_secs / training_args.max_steps
+        avg_step_time_hours = avg_step_time_sec / 3600
+    else:
+        avg_epoch_time_sec = total_training_time_secs / training_args.num_train_epochs
+        avg_epoch_time_hours = avg_epoch_time_sec / 3600
+        avg_step_time_sec = avg_epoch_time_sec / len(train_dataloader)  # approximate
+        avg_step_time_hours = avg_step_time_sec / 3600
 
+    # ---- Compute derived metrics ----
+    effective_batch_size = (
+        training_args.per_device_train_batch_size
+        * training_args.gradient_accumulation_steps
+    )
+
+    samples_per_sec = (
+        effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
+    )
+    training_throughput_tokens_per_sec_per_gpu = (
+        tokens_per_gpu_all_epochs / total_training_time_secs
+        if total_training_time_secs
+        else None
+    )
+    training_throughput_tokens_per_sec_global = (
+        tokens_global_all_epochs / total_training_time_secs
+        if total_training_time_secs
+        else None
+    )
+    avg_gpu_power_watts = (
+        sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
+        if gpu_stats_during["power"]
+        else None
+    )
+    tokens_per_sec_per_watt_global = (
+        training_throughput_tokens_per_sec_global / avg_gpu_power_watts
+        if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
+        else None
+    )
     save_summary_stats_json(
         summary={
             "nodes": int(os.environ.get("SLURM_NNODES", 1)),
@@ -273,17 +292,31 @@ def main():
             "trainable_parameters_percentage": trainable_pct,
             "learning_rate": training_args.learning_rate,
             "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
-            / len(gpu_stats_during["mem"]),
-            "peak_gpu_memory_gb": max(gpu_stats_during["mem"]),
+            / len(gpu_stats_during["mem"])
+            if gpu_stats_during["mem"]
+            else None,
+            "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
+            if gpu_stats_during["mem"]
+            else None,
             "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
-            / len(gpu_stats_during["util"]),
-            "peak_gpu_utilization_percent": max(gpu_stats_during["util"]),
-            "avg_gpu_power_watts": sum(gpu_stats_during["power"])
-            / len(gpu_stats_during["power"]),
-            "peak_gpu_power_watts": max(gpu_stats_during["power"]),
+            / len(gpu_stats_during["util"])
+            if gpu_stats_during["util"]
+            else None,
+            "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
+            if gpu_stats_during["util"]
+            else None,
+            "avg_gpu_power_watts": avg_gpu_power_watts,
+            "peak_gpu_power_watts": max(gpu_stats_during["power"])
+            if gpu_stats_during["power"]
+            else None,
             "total_execution_time_hours": total_training_time_secs / 3600,
-            "training_throughput_tokens_per_sec": (len(dataset) * MAX_LENGTH)
-            / total_training_time_secs,
+            "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
+            "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
+            "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
+            "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
+            "samples_per_sec": samples_per_sec,
+            "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
+            "total_tokens_global_all_epochs": tokens_global_all_epochs,
             "avg_training_loss": avg_training_loss,
             "avg_validation_loss": avg_validation_loss,
             "total_training_time_hours": total_training_time_secs / 3600,
@@ -291,6 +324,8 @@ def main():
             "avg_epoch_training_time_hours": avg_epoch_time_hours,
             "avg_step_training_time_sec": avg_step_time_sec,
             "avg_step_training_time_hours": avg_step_time_hours,
+            "avg_gpu_flops": avg_gpu_flops,
+            "avg_gpu_mfu": avg_gpu_mfu,
         },
         output_file=os.path.join(output_dir, "training_summary_0.json"),
     )

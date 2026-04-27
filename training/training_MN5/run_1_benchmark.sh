@@ -101,17 +101,17 @@ for framework in "${FRAMEWORKS[@]}"; do
                       echo "PyTorch Framework"
 
                       # Skip invalid configs - FSDP with less than 2 nodes
-                      if [[ "$parallelism" == "fsdp" && "$NODES" -lt 2 ]]; then
-                        echo "Skipping FSDP on single-node (requires >1 node)"
+                      if [[ "$parallelism" == "fsdp" && "$GPU_NODE" -lt 2 ]]; then
+                        echo "Skipping FSDP on single-GPU (requires >1 GPUs)"
                         continue
                       fi
                       # Skip invalid configs - DDP with less than 2 nodes
-                      if [[ "$parallelism" == "ddp" && "$NODES" -lt 2 ]]; then
-                        echo "Skipping DDP on single-node (requires >1 node)"
+                      if [[ "$parallelism" == "ddp" && "$GPU_NODE" -lt 2 ]]; then
+                        echo "Skipping DDP on single-GPU (requires >1 GPU)"
                         continue
                       fi
                       # Skip invalid configs - None parallelism with more than 1 node
-                      if [[ "$parallelism" == "none" && "$NODES" -gt 1 ]]; then
+                      if [[ "$parallelism" == "none" && "$GPU_NODE" -gt 1 ]]; then
                         echo "Skipping None Parallelism on multiple-node (requires only 1 node)"
                         continue
                       fi
@@ -120,10 +120,10 @@ for framework in "${FRAMEWORKS[@]}"; do
                         LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
                         echo "Setting up $LAUNCH_FOLDER"
                         mkdir -p "$LAUNCH_FOLDER"
-
+                        
+                        cp -R scripts/shared "$LAUNCH_FOLDER"
                         cp scripts/torchrun-common/run-$parallelism.sh "$LAUNCH_FOLDER"
                         cp scripts/torchrun-common/finetune-$parallelism.py "$LAUNCH_FOLDER"
-                        cp scripts/torchrun-common/custom_train.py "$LAUNCH_FOLDER"
                         cp scripts/torchrun-common/gpu_monitor.py "$LAUNCH_FOLDER"
                         cp scripts/gpu_plots.py "$LAUNCH_FOLDER"
                         cp scripts/torchrun-common/utils.py "$LAUNCH_FOLDER"
@@ -178,17 +178,17 @@ for framework in "${FRAMEWORKS[@]}"; do
                     if [[ "$framework" == "accelerate" ]]; then
                       echo "Accelerate Framework"
                       # Skip invalid configs - FSDP with less than 2 nodes
-                      if [[ "$parallelism" == "fsdp" && "$NODES" -lt 2 ]]; then
-                        echo "Skipping FSDP on single-node (requires >1 node)"
+                      if [[ "$parallelism" == "fsdp" && "$GPU_NODE" -lt 2 ]]; then
+                        echo "Skipping FSDP on single-GPU (requires >1 GPUs)"
                         continue
                       fi
                       # Skip invalid configs - DDP with less than 2 nodes
-                      if [[ "$parallelism" == "ddp" && "$NODES" -lt 2 ]]; then
-                        echo "Skipping DDP on single-node (requires >1 node)"
+                      if [[ "$parallelism" == "ddp" && "$GPU_NODE" -lt 2 ]]; then
+                        echo "Skipping DDP on single-GPU (requires >1 GPU)"
                         continue
                       fi
                       # Skip invalid configs - None parallelism with more than 1 node
-                      if [[ "$parallelism" == "none" && "$NODES" -gt 1 ]]; then
+                      if [[ "$parallelism" == "none" && "$GPU_NODE" -gt 1 ]]; then
                         echo "Skipping None Parallelism on multiple-node (requires only 1 node)"
                         continue
                       fi
@@ -204,9 +204,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                         mkdir -p "$LAUNCH_FOLDER"
 
                         # Copy necessary scripts
+                        cp -R scripts/shared "$LAUNCH_FOLDER"
                         cp scripts/accelerate-common/run-$parallelism.sh "$LAUNCH_FOLDER"
                         cp scripts/accelerate-common/finetune-$parallelism.py "$LAUNCH_FOLDER"
-                        cp scripts/accelerate-common/custom_train.py "$LAUNCH_FOLDER"
                         cp scripts/accelerate-common/gpu_monitor.py "$LAUNCH_FOLDER"
                         cp scripts/gpu_plots.py "$LAUNCH_FOLDER"
                         cp scripts/accelerate-common/utils.py "$LAUNCH_FOLDER"
@@ -279,10 +279,10 @@ for framework in "${FRAMEWORKS[@]}"; do
                         mkdir -p "$LAUNCH_FOLDER"
 
                         # Copy necessary scripts
+                        cp -R scripts/shared "$LAUNCH_FOLDER"
                         cp scripts/deepspeed-common/run-deepspeed.sh "$LAUNCH_FOLDER"
                         cp scripts/deepspeed-common/finetune-deepspeed.py "$LAUNCH_FOLDER"
                         cp -R scripts/deepspeed-common/configs "$LAUNCH_FOLDER"
-                        cp scripts/deepspeed-common/custom_train.py "$LAUNCH_FOLDER"
                         cp scripts/deepspeed-common/gpu_monitor.py "$LAUNCH_FOLDER"
                         cp scripts/gpu_plots.py "$LAUNCH_FOLDER"
                         cp scripts/deepspeed-common/utils.py "$LAUNCH_FOLDER"
