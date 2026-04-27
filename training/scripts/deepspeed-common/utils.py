@@ -3,12 +3,24 @@ import ast
 import json
 import os
 
+import torch.distributed as dist
 
-def print_rank(rank, msg):
-    """Prints the message with the rank number"""
-    if int(os.environ["RANK"]) == rank:
-        print(f"[ RANK {rank} ]: {msg}")
-        return
+
+def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
+    """Prints the message with the rank number.
+    Usage:
+        print_rank("msg")       -> all ranks
+        print_rank(0, "msg")    -> rank 0 only
+    """
+    if isinstance(rank_or_msg, str):
+        rank = None
+        msg = rank_or_msg
+    else:
+        rank = rank_or_msg
+
+    local_rank = dist.get_rank()
+    if rank is None or local_rank == rank:
+        print(f"[ RANK {local_rank} ]: {msg}")
 
 
 def count_parameters(model):
@@ -21,8 +33,6 @@ def save_summary_stats_json(summary, output_file):
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
     # print(f"Training summary saved to {output_file}")
-
-
 
 
 # --- Argument Parsing ---
@@ -53,7 +63,7 @@ def parse_args():
         "--warmup_ratio", type=float, default=0, help="Warmup ratio for learning rate"
     )
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
-    parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
+    parser.add_argument("--logging_steps", type=float, default=10, help="Logging Steps")
     parser.add_argument(
         "--enable_steps",
         type=bool,

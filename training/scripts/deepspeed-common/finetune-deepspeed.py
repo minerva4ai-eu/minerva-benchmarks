@@ -4,8 +4,8 @@ import time
 
 import torch
 import torch.distributed as dist
-from custom_train import TokenTrackingTrainer
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
+from shared.custom_train import TokenTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
     AutoModelForCausalLM,
@@ -134,9 +134,6 @@ def main():
     # Model
     # --- Precision selection ---
     if args.precision == "fp16":
-        # Conservative loading with full precision
-        # letting DeepSpeed handle the mixed precision
-        # Avoid weight precision loss for master weights (no upscaling)
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
@@ -175,7 +172,7 @@ def main():
 
     print_rank(rank, f"Loading Model... dtype: {dtype}")
     parallelism_type = os.environ["PARALLELISM"]
-    if "zero3" in parallelism_type:
+    if ("zero3" in parallelism_type) or ("zero2" in parallelism_type):
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=dtype,
@@ -207,11 +204,6 @@ def main():
 
     monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
-    # accelerator = Accelerator()
-
-    # train_dataloader, eval_dataloader = accelerator.prepare(
-    #    train_dataloader, eval_dataloader
-    # )
     # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
     # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
     #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
