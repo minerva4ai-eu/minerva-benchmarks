@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=DEEPSPEED_DYNAMIC
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 
 set -e
 set -o pipefail
@@ -17,6 +17,32 @@ which python
 
 ##################################################
 
+
+# --- Pre-stage model to node-local scratch to avoid GPFS I/O contention ---
+#if [[ -n "$TMPDIR" ]]; then
+#    echo "Node-local scratch detected at $TMPDIR"
+#else
+#    echo "Error: No node-local scratch directory found. Please ensure \$TMPDIR is set."
+#    exit 1
+#fi
+#LOCAL_MODEL_PATH="${TMPDIR}/model_$(basename $MODEL_PATH)"
+#
+#echo "Pre-staging model from $MODEL_PATH to $LOCAL_MODEL_PATH ..."
+#srun --ntasks="$SLURM_NNODES" \
+#     --ntasks-per-node=1 \
+#     --export=ALL \
+#     bash -c "
+#         if [ ! -d '$LOCAL_MODEL_PATH' ]; then
+#             cp -r '$MODEL_PATH' '$LOCAL_MODEL_PATH'
+#             echo \"Node \$(hostname): model staged to $LOCAL_MODEL_PATH\"
+#         else
+#             echo \"Node \$(hostname): model already cached at $LOCAL_MODEL_PATH\"
+#         fi
+#     "
+#echo "Model pre-staging complete."
+#
+## Override MODEL_PATH to point to local copy
+#MODEL_PATH="$LOCAL_MODEL_PATH"
 
 ##################################################
 ###        Environment Variables Setup         ###
@@ -42,8 +68,8 @@ DATASET=$2
 DATASET_PATH=$3
 ZERO_STAGE=$4
 # Validate ZERO_STAGE
-PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3")
-STAGES_WITH_HPZ=("zero2" "zero3")
+PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3" "zero3-offload")
+STAGES_WITH_HPZ=("zero2" "zero3" "zero3-offload")
 
 if [[ -z "$ZERO_STAGE" ]]; then
     echo "Error: ZERO_STAGE is required. Please provide one of: ${PERMITTED_ZERO_STAGES[*]}"
