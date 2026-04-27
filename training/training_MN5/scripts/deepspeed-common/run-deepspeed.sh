@@ -67,7 +67,7 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 # Export environment variables
 # export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 export SLURM_CPU_BIND=none
-export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
+export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
 
 export NNODES=$SLURM_NNODES
 export NPROC_PER_NODE=$GPUS_PER_NODE
@@ -89,14 +89,15 @@ accelerate_config_path="configs/accelerate_config.yaml"
 sed -i "s/{{MASTER_IP}}/$head_node_ip/g" "$accelerate_config_path"
 sed -i "s/{{NUM_NODES}}/$NNODES/g" "$accelerate_config_path"
 sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
+sed -i "s/machine_rank: 0/machine_rank: $NODE_RANK/g" "$accelerate_config_path"
 
 # Update DeepSpeed config path in Accelerate config
 sed -i "s|{{path to ds_config.json}}|$deepspeed_config_path|g" "$accelerate_config_path"
 
 # Update hpZ partition size for parallelism of stage2 and stage3 configurations only, as stage1 does not use hpZ
 if exists_in_list "${STAGES_WITH_HPZ[*]}" " " "$ZERO_STAGE"; then
-    #HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
-    HPZ_PARTITION_SIZE=4
+    HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
+    #HPZ_PARTITION_SIZE=4
     sed -i "s/\"zero_hpz_partition_size\": \"{{HPZ_PARTITION_SIZE}}\"/\"zero_hpz_partition_size\": $HPZ_PARTITION_SIZE/g" "$deepspeed_config_path"
     echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
 fi
@@ -124,10 +125,12 @@ train_command="accelerate launch \
       --dataloader_num_workers 32 \
       --dataset $DATASET \
       --warmup_ratio 0.1 \
-      --deepspeed_config_file  $deepspeed_config_path"
+      --deepspeed_config_file  $deepspeed_config_path \
+      --logging_steps 1 \
+      --gradient_checkpointing"
 
 # Launch Run
-srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &
     monitor_pid=\$!

@@ -82,3 +82,19 @@ get_model_parallelism_config() {
   local json=$(jq -r --arg m "$model" --arg p "$parallelism" '.[$m][$p]' "$config_file")
   echo "$json"
 }
+
+# --- Utility to get model parallelism for training from model_parallelism_config.json ---
+get_gpu_peak_tflops() {
+  local gpu_name="$1"
+  local key="$2"
+  local config_file="$3"
+  
+  if [ ! -f "$config_file" ]; then
+    echo "Config file $config_file not found!"
+    exit 1
+  fi
+
+  # Extract values with jq
+  local json=$(jq -r --arg g "$gpu_name" --arg k "$key" '.[$g][$k]' "$config_file")
+  echo "$json"
+}

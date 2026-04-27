@@ -1,11 +1,10 @@
 import os
 import sys
 import time
-from typing import Dict, Optional
 
 import torch
 import torch.distributed as dist
-from custom_train import CustomTrainer
+from custom_train import TokenTrackingTrainer
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from torch.utils.data import DataLoader, random_split
 from transformers import (
@@ -17,6 +16,7 @@ from utils import (
     count_parameters,
     parse_args,
     parse_dataset_paths,
+    print_rank,
     save_summary_stats_json,
 )
 
@@ -30,213 +30,25 @@ MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
 
 
-def print_rank(rank, msg):
-    """Prints the message with the rank number"""
-    if dist.get_rank() == rank:
-        print(f"[ RANK {rank} ]: {msg}")
-        return
-
-
-class TokenTrackingTrainer(CustomTrainer):
-    """
-    Trainer subclass that:
-      - Tracks tokens per GPU during training
-      - Reduces tokens globally across FSDP/DDP ranks
-      - Computes throughput at end of training
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.total_tokens_this_gpu = 0
-        self.total_tokens_global = None
-
-        print_rank(
-            0,
-            f"Initialized TokenTrackingTrainer on rank {dist.get_rank() if dist.is_available() and dist.is_initialized() else 0}",
-        )
-        print_rank(0, f"Trainer args: \n{self.args}")
-        print_rank(0, f"Model architecure: \n{kwargs['model']}")
-
-        self.step_start_time = None  # ← Add this
-        self.last_log_timestamp = None
-
-    # Add this new method:
-    def log(self, logs: Dict[str, float], start_time: Optional[float] = None) -> None:
-        """
-        Override log to add custom metrics before logging.
-        """
-        # Add custom metrics to logs
-        if self.state.global_step > 0:
-            # Tokens per second (instantaneous)
-            if hasattr(self, "step_start_time") and self.step_start_time:
-                step_time = time.time() - self.step_start_time
-                tokens_this_log_interval = self.total_tokens_this_gpu - getattr(
-                    self, "_last_logged_tokens", 0
-                )
-
-                # Calculate token throughput for this step and reduce across GPUs
-                # Throughput might be higher than actual due to overlapping steps, but gives a sense of instantaneous performance
-                tokens_per_sec_step_device = (
-                    tokens_this_log_interval / step_time if step_time > 0 else 0
-                )
-                self._last_logged_tokens = self.total_tokens_this_gpu
-
-                device = torch.device("cuda")
-                local = torch.tensor(tokens_per_sec_step_device, device=device)
-
-                if dist.is_available() and dist.is_initialized():
-                    dist.all_reduce(local, op=dist.ReduceOp.AVG)
-
-                logs["_tokens_per_sec_step"] = local.item()
-            # Cumulative tokens processed
-            logs[
-                f"_total_1M_tokens_gpu{dist.get_rank() if dist.is_available() and dist.is_initialized() else 0}"
-            ] = f"{(self.total_tokens_this_gpu / 1e6):.5f}"  # in millions for readability
-
-            device = torch.device("cuda")
-            local = torch.tensor(self.total_tokens_this_gpu, device=device)
-            if dist.is_available() and dist.is_initialized():
-                dist.all_reduce(local, op=dist.ReduceOp.AVG)
-            logs["_avg_total_1M_tokens_gpu"] = (
-                f"{(local.item() / 1e3):.5f}"  # in millions for readability
-            )
-
-            # GPU memory usage (if available)
-            if torch.cuda.is_available():
-                logs["_gpu_mem_allocated_gb"] = (
-                    f"{torch.cuda.memory_allocated() / 1e9:.2f}"
-                )
-                logs["_gpu_mem_reserved_gb"] = (
-                    f"{torch.cuda.memory_reserved() / 1e9:.2f}"
-                )
-
-            # Batch size info
-            # logs["effective_batch_size"] = (
-            #    self.args.per_device_train_batch_size
-            #    * self.args.gradient_accumulation_steps
-            #    * self.args.world_size
-            # )
-
-        # Reset step timer
-        self.step_start_time = time.time()
-
-        # Call parent log method
-        super().log(logs)
-
-        # Optional: Print to console with custom format
-        # if self.is_world_process_zero():
-        #    print(f"\n[Step {self.state.global_step}] Custom Metrics:")
-        #    for key, value in logs.items():
-        #        if key.startswith("tokens_") or key.startswith("gpu_"):
-        #            print(f"  {key}: {value:.4f}")
-
-    # ************************************
-    # CORRECT SIGNATURE FOR HF Trainer
-    # ************************************
-    def training_step(self, model, inputs, num_items_in_batch=None):
-        """
-        HuggingFace Trainer calls this as:
-            training_step(model, inputs, num_items_in_batch)
-        """
-
-        # ------------------------------
-        # TOKEN COUNTING (per step)
-        # ------------------------------
-        try:
-            if "input_ids" in inputs and inputs["input_ids"] is not None:
-                tokens_in_batch = int(inputs["input_ids"].numel())
-            elif "labels" in inputs and inputs["labels"] is not None:
-                tokens_in_batch = int(inputs["labels"].numel())
-            else:
-                tokens_in_batch = 0
-
-            # account for gradient accumulation (HF normalizes loss for that)
-            tokens_in_batch *= max(1, self.args.gradient_accumulation_steps)
-
-            # add to running counter
-            self.total_tokens_this_gpu += tokens_in_batch
-
-        except Exception:
-            pass  # never break training due to token count errors
-
-        # ------------------------------
-        # PERFORM FORWARD + BACKWARD
-        # (HF's built-in implementation)
-        # ------------------------------
-        return super().training_step(model, inputs)
-
-    # ************************************
-    # GLOBAL TOKEN ALL-REDUCE AFTER TRAIN
-    # ************************************
-    def _finalize_token_counts(self):
-        try:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            local = torch.tensor(self.total_tokens_this_gpu, device=device)
-
-            if dist.is_available() and dist.is_initialized():
-                dist.all_reduce(local, op=dist.ReduceOp.SUM)
-
-            self.total_tokens_global = int(local.item())
-
-        except Exception:
-            self.total_tokens_global = int(self.total_tokens_this_gpu)
-
-    # ************************************
-    # WRAP TRAINING WITH TIMING + FINAL REDUCTION
-    # ************************************
-    def train(self, *args, **kwargs):
-        # reset counters in case reused
-        self.total_tokens_this_gpu = 0
-        self.total_tokens_global = None
-
-        start_time = time.time()
-        output = super().train(*args, **kwargs)
-        end_time = time.time()
-
-        # all-reduce token counters
-        self._finalize_token_counts()
-        elapsed = end_time - start_time
-
-        # store into trainer.state for later consumption
-        try:
-            setattr(self.state, "total_training_seconds_custom", float(elapsed))
-            setattr(
-                self.state,
-                "total_tokens_per_gpu_custom",
-                int(self.total_tokens_this_gpu),
-            )
-            setattr(
-                self.state, "total_tokens_global_custom", int(self.total_tokens_global)
-            )
-        except Exception:
-            pass
-
-        # print summary on rank 0
-        if self.is_world_process_zero():
-            print("\n=== TOKEN / THROUGHPUT SUMMARY (TokenTrackingTrainer) ===")
-            print(f"Total tokens per GPU (ALL epochs): {self.total_tokens_this_gpu:,}")
-            print(f"Total tokens GLOBAL (ALL epochs): {self.total_tokens_global:,}")
-
-            if elapsed > 0:
-                print(f"Total training time (s): {elapsed:.2f}")
-                print(
-                    f"Tokens/sec per GPU: {self.total_tokens_this_gpu / elapsed:,.2f}"
-                )
-                print(f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:,.2f}")
-            print("==========================================================\n")
-
-        return output
-
-
 def is_main_process():
     # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
-    rank = int(os.environ.get("RANK", 0))
+    rank = int(os.environ["RANK"])
     return rank == 0
 
 
 # --- Main ---
 def main():
+    # Get rank
+    if dist.is_initialized():
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
+    else:
+        rank = int(os.environ["RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
+        # world_size = int(os.environ.get("GPU_NODE", 1)) * int(
+        #    os.environ.get("SLURM_NNODES", 1)
+        # )
+
     if args.dataset not in DATASET_HANDLER_MAP:
         raise ValueError(f"Dataset {args.dataset} not supported.")
     zero_stage = os.environ["PARALLELISM"]
@@ -247,32 +59,27 @@ def main():
     data = args.data
     output_dir = args.output_dir
 
-    if is_main_process:
+    if is_main_process():
         os.makedirs(output_dir, exist_ok=True)
         print(f"Loading tokenizer... {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print("Tokenizer Loaded")
-
-    # Get rank
-    rank = int(os.environ.get("RANK", 0))
-    world_size = int(os.environ.get("GPU_NODE", 1)) * int(
-        os.environ.get("SLURM_NNODES", 1)
-    )
+    print_rank(rank, "Tokenizer Loaded")
 
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
     train_path, val_path, is_split = parse_dataset_paths(data)
 
-    print(
-        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}"
+    print_rank(
+        rank,
+        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}",
     )
-    print(f"  Train path: {train_path}")
+    print_rank(rank, f"  Train path: {train_path}")
     if val_path:
-        print(f"  Validation path: {val_path}")
+        print_rank(rank, f"  Validation path: {val_path}")
 
     # If we have explicit train/validation files
     # Load datasets
@@ -330,7 +137,7 @@ def main():
         # Conservative loading with full precision
         # letting DeepSpeed handle the mixed precision
         # Avoid weight precision loss for master weights (no upscaling)
-        dtype = torch.float32
+        dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
     else:
@@ -352,6 +159,7 @@ def main():
         save_total_limit=1,
         fp16=True if args.precision == "fp16" else False,
         bf16=True if args.precision == "bf16" else False,
+        disable_tqdm=False,
         logging_steps=args.logging_steps,
         logging_dir=f"{output_dir}/logs",
         report_to="none",
@@ -360,17 +168,37 @@ def main():
         dataloader_num_workers=args.dataloader_num_workers,
         load_best_model_at_end=False,
         remove_unused_columns=False,  # keep all columns as our collator expects
-        include_tokens_per_second=True,
-        include_num_input_tokens_seen=True,
+        include_tokens_per_second=False,
+        include_num_input_tokens_seen=False,
         warmup_ratio=args.warmup_ratio,
     )
 
-    print(f"Loading Model... dtype: {dtype}")
+    print_rank(rank, f"Loading Model... dtype: {dtype}")
+    parallelism_type = os.environ["PARALLELISM"]
+    if "zero3" in parallelism_type:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            device_map="auto",
+            low_cpu_mem_usage=True,
+        )
+    print_rank(rank, "Model Loaded")
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=dtype, low_cpu_mem_usage=True
-    )
-    print("Model Loaded")
+    ######
+    print_rank(0, ":::::::::")
+    for i in model.named_parameters():
+        print_rank(0, f"{i[0]} -> {i[1].device}")
+    print_rank(0, ":::::::::")
+
+    if args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+        print_rank(rank, "Gradient checkpointing enabled!")
 
     # Conditionally add either epochs or max_steps
     training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
@@ -384,6 +212,18 @@ def main():
     # train_dataloader, eval_dataloader = accelerator.prepare(
     #    train_dataloader, eval_dataloader
     # )
+    # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
+    # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
+    #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
+
+    _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
+    peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
+    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
+    print_rank(
+        0,
+        f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
+    )
+
     trainer = TokenTrackingTrainer(
         model=model,
         args=training_args,
@@ -392,6 +232,7 @@ def main():
         eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         callbacks=[monitor],
+        peak_gpu_tflops=peak_gpu_tflops,
     )
 
     # Start GPU monitor
@@ -425,6 +266,11 @@ def main():
     tokens_global_all_epochs = getattr(
         trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
     )
+
+    avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
+    # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
+    avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
+    # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
 
     if training_args.max_steps:
         avg_step_time_sec = total_training_time_secs / training_args.max_steps
@@ -514,6 +360,8 @@ def main():
             "avg_epoch_training_time_hours": avg_epoch_time_hours,
             "avg_step_training_time_sec": avg_step_time_sec,
             "avg_step_training_time_hours": avg_step_time_hours,
+            "avg_gpu_flops": avg_gpu_flops,
+            "avg_gpu_mfu": avg_gpu_mfu,
         },
         output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
     )
