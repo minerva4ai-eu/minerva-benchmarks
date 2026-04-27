@@ -41,7 +41,7 @@ deepspeed_config:
   deepspeed_config_file: {{path to ds_config.json}}
 #  
 #  # This is the ONLY setting allowed alongside deepspeed_config_file:
-  zero3_init_flag: true  # Initialize model with ZeRO-3 parameter sharding
+#  zero3_init_flag: true  # Initialize model with ZeRO-3 parameter sharding
 #  
 #  # CRITICAL for SLURM multi-node with srun:
 #  # 'standard' means use torchrun/accelerate for multi-node coordination

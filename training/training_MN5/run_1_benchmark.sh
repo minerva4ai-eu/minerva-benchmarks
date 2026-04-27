@@ -63,6 +63,15 @@ for framework in "${FRAMEWORKS[@]}"; do
 
             for batch in "${BATCH_SIZES[@]}"; do
               for precision in "${PRECISIONS[@]}"; do
+                GPU_ARCHS_CONFIG="configs/gpu_archs.json"
+                if [[ "$precision" == "fp32" ]]; then
+                  export GPU_PEAK_TFLOPS=$(get_gpu_peak_tflops "$GPU_NAME" "theoretical_peak_fp32_tflops" "$GPU_ARCHS_CONFIG")
+                elif [[ "$precision" == "fp16" ]]; then
+                  export GPU_PEAK_TFLOPS=$(get_gpu_peak_tflops "$GPU_NAME" "theoretical_peak_fp16_tensor_tflops" "$GPU_ARCHS_CONFIG")
+                elif [[ "$precision" == "bf16" ]]; then
+                  export GPU_PEAK_TFLOPS=$(get_gpu_peak_tflops "$GPU_NAME" "theoretical_peak_bf16_tensor_tflops" "$GPU_ARCHS_CONFIG")
+                fi
+
                 for grad_accum in "${GRAD_ACCUMS[@]}"; do
                   for MAX_MODEL_LENGTH in "${MAX_MODEL_LENGTHS[@]}"; do
                     
@@ -246,11 +255,81 @@ for framework in "${FRAMEWORKS[@]}"; do
                       done
                     fi
 
-
                     # ----------------------------
                     #  Framework: DeepSpeed
                     # ----------------------------
                     # Keep your original deepspeed blocks here unchanged
+                    if [[ "$framework" == "deepspeed" ]]; then
+                      echo "Deepspeed Framework"
+
+                      if [[ "$GPU_NODE" -eq 1 ]]; then
+                        echo "Skipping Deepspeed with 1 GPU (requires >1 GPU)"
+                        continue
+                      fi
+
+                      # Skip Gemma batch_size=1 when using more than 1 GPU
+                      #if [[ "$model" == "gemma-3-1b-it" && "$batch" -eq 1 && "$GPU_NODE" -gt 1 ]]; then
+                      #  echo "Skipping Gemma (batch_size=1) with ${GPU_NODE} GPUs."
+                      #  continue
+                      #fi
+
+                      for (( run_id=1; run_id<=REPEATS; run_id++ )); do
+                        LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+                        echo "Setting up $LAUNCH_FOLDER"
+                        mkdir -p "$LAUNCH_FOLDER"
+
+                        # Copy necessary scripts
+                        cp scripts/deepspeed-common/run-deepspeed.sh "$LAUNCH_FOLDER"
+                        cp scripts/deepspeed-common/finetune-deepspeed.py "$LAUNCH_FOLDER"
+                        cp -R scripts/deepspeed-common/configs "$LAUNCH_FOLDER"
+                        cp scripts/deepspeed-common/custom_train.py "$LAUNCH_FOLDER"
+                        cp scripts/deepspeed-common/gpu_monitor.py "$LAUNCH_FOLDER"
+                        cp scripts/gpu_plots.py "$LAUNCH_FOLDER"
+                        cp scripts/deepspeed-common/utils.py "$LAUNCH_FOLDER"
+                        cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
+                        cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+
+                        cd "$LAUNCH_FOLDER" || exit 1
+
+                        export CURRENT_DIR NODES GPUS_PER_NODE GPU_NODE MAX_MODEL_LENGTH TOTAL_CPUS EPOCHS STEPS LR
+                        export FRAMEWORK="$framework" DATASET="$dataset" MODEL="$model" REPEAT_ID="$run_id"
+                        export MODEL_PATH DATASET_PATH
+                        export PARALLELISM="$parallelism"
+                        export PRECISION="$precision"
+                        export BATCH_SIZE="$batch"
+                        export GRAD_ACCUM="$grad_accum"
+                        export MODULES
+                        export MACHINE
+                        export MACHINE_TYPE
+                        
+                        REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
+                        if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
+                          DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
+                        else
+                          DEPENDENCY=""
+                        fi
+
+                        JOB_ID=$(sbatch --parsable \
+                            --chdir=$(pwd) \
+                            --nodes=$NODES \
+                            --gres=gpu:$GPUS_PER_NODE \
+                            --cpus-per-task=80 \
+                            --tasks-per-node=1 \
+                            $DEPENDENCY \
+                            --output=run-%j.out \
+                            --error=run-%j.err \
+                            -A $ACCOUNT \
+                            -q $QOS \
+                            run-deepspeed.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH" "$parallelism")
+
+                        echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                        JOB_IDS+=("$JOB_ID")
+                        ((CONFIG_INDEX++))
+
+                        cd - > /dev/null
+                        sleep 5
+                      done
+                    fi
 
 
                   done
