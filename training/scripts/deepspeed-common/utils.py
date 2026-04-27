@@ -4,6 +4,13 @@ import json
 import os
 
 
+def print_rank(rank, msg):
+    """Prints the message with the rank number"""
+    if int(os.environ["RANK"]) == rank:
+        print(f"[ RANK {rank} ]: {msg}")
+        return
+
+
 def count_parameters(model):
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -14,6 +21,8 @@ def save_summary_stats_json(summary, output_file):
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
     # print(f"Training summary saved to {output_file}")
+
+
 
 
 # --- Argument Parsing ---
@@ -44,7 +53,7 @@ def parse_args():
         "--warmup_ratio", type=float, default=0, help="Warmup ratio for learning rate"
     )
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
-    parser.add_argument("--logging_steps", type=float, default=10, help="Logging Steps")
+    parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
     parser.add_argument(
         "--enable_steps",
         type=bool,
@@ -80,6 +89,12 @@ def parse_args():
         type=str,
         default=None,
         help="Path to DeepSpeed config file",
+    )
+    # 🆕 Gradient checkpointing
+    parser.add_argument(
+        "--gradient_checkpointing",
+        action="store_true",
+        help="Enable gradient checkpointing to save memory",
     )
 
     return parser.parse_args()
