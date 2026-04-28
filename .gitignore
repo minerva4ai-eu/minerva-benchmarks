@@ -8,7 +8,7 @@ inference/inference-MN5/scripts/ray-serve/
 inference/inference-MN5/envs/
 inference/inference-MN5/results-*/
 
-inference/inference-Adastra/scripts/ray-serve/
+inference/inference-Adastra/datasets
 inference/inference-Adastra/envs/
 inference/inference-Adastra/results-*/
 
@@ -38,9 +38,5 @@ inference/inference-MN5/benchmarks-vllm-10122025/*
 inference/inference-Adastra/results/deepspeed/*
 inference/inference-Adastra/results/sglang/*
 inference/inference-Adastra/results/vllm/*
-
-inference/inference-Adastra/analytics-*/
-inference/inference-Adastra/benchmarks-vllm-10122025/*
-
 
 ._dbindex_
