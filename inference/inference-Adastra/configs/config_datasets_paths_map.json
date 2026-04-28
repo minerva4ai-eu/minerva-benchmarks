@@ -1,5 +1,5 @@
 {
-  "sharegpt": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/git/inference/inference-MN5/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
-  "sonnet": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/git/inference/inference-MN5/benchmarks/datasets/sonnet.txt",
+  "sharegpt": "/lus/work/BCINES/dci/SHARED/Datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/lus/work/BCINES/dci/SHARED/Datasets/sonnet.txt",
   "example_dataset": "/path/to/example_dataset"
 }

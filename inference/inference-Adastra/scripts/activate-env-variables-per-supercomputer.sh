@@ -36,7 +36,40 @@ case "$MACHINE" in
         export COMPILER=nvhpc
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
+        
+    cines-adastra-mi250)
+        # RCCL
+        export NCCL_SOCKET_IFNAME=hsn
+        export NCCL_NET_GDR_LEVEL=3
+        export FI_CXI_ATS=0
 
+        export TORCH_BLAS_PREFER_HIPBLASLT=1
+        export HIP_FORCE_DEV_KERNARG=1
+        export HSA_ENABLE_SDMA=0
+        export HSA_FORCE_FINE_GRAIN_PCIE=1
+
+        export VLLM_WORKER_MULTIPROC_METHOD=spawn
+        # GPU visibility
+        export HIP_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
+        ;;
+
+    cines-adastra-mi300)
+        # RCCL
+        export NCCL_SOCKET_IFNAME=hsn
+        export NCCL_NET_GDR_LEVEL=3
+        export FI_CXI_RDZV_THRESHOLD=0 
+        export FI_CXI_ATS=0
+
+        export TORCH_BLAS_PREFER_HIPBLASLT=1
+        export HIP_FORCE_DEV_KERNARG=1
+
+        export VLLM_WORKER_MULTIPROC_METHOD=spawn
+        export HSA_ENABLE_SDMA=0
+        export HSA_XNACK=1
+        # GPU visibility (4 APU)
+        export HIP_VISIBLE_DEVICES="0,1,2,3"
+        ;;
+        
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

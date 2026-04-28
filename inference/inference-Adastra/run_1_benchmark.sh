@@ -5,14 +5,14 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("sglang") #"vllm") # deepspeed")    # Add other frameworks if needed
-DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
-NUMBER_OF_NODES=(1)
+FRAMEWORKS=("vllm") # "sglang") # deepspeed")    # Add other frameworks if needed
+DATASETS=("sonnet") # ("sharegpt" "sonnet")  # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct") # ("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct "Llama-3.1-405B") # Add your models here
+NUMBER_OF_NODES=(2)
 MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
-MACHINE_TYPE="cuda" # "cuda" or "rocm"
+MACHINE="cines-adastra-mi250"  # cines-adastra-mi250 | cines-adastra-mi300
+MACHINE_TYPE="rocm" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
 #######################################################
@@ -22,6 +22,20 @@ set +a  # Stop automatically exporting
 
 # Load utility functions
 source scripts/utils.sh
+
+# SLURM args specific to machine
+case "$MACHINE" in
+    cines-adastra-mi250 | cines-adastra-mi300)
+        SLURM_GPU_ARG="--gpus-per-node=$GPUS_PER_NODE"
+        SLURM_CONSTRAINT="--constraint=$PARTITION_NAME"
+        SLURM_QOS="--exclusive"
+        ;;
+    *)
+        SLURM_GPU_ARG="--gres=gpu:$GPUS_PER_NODE"
+        SLURM_CONSTRAINT=""
+        SLURM_QOS="-q $QOS"
+        ;;
+esac
 #######################################################
 
 JOB_IDS=()
@@ -34,12 +48,10 @@ for framework in "${FRAMEWORKS[@]}"; do
     for model in "${MODELS[@]}"; do
       for NODES in "${NUMBER_OF_NODES[@]}"; do
         # Define which GPU configs to try
-        if [[ "$NODES" -eq 1 ]]; then
-          GPU_CONFIGS=(1 $GPUS_PER_NODE)   # both 1-GPU and Max-GPU
-        else
-          GPU_CONFIGS=($GPUS_PER_NODE)  # use default
-        fi
-        # GPU_CONFIGS=($GPUS_PER_NODE)  # use default
+        # if [[ "$NODES" -eq 1 ]]; then
+        #   GPU_CONFIGS=(1 $GPUS_PER_NODE)   # both 1-GPU and Max-GPU
+        # else
+        GPU_CONFIGS=($GPUS_PER_NODE)  # use default
 
         for GPU_NODE in "${GPU_CONFIGS[@]}"; do
           for MAX_MODEL_LENGTH in "${MAX_MODEL_LENGTHS[@]}"; do
@@ -114,13 +126,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
                     --nodes=$NODES \
-                    --gres=gpu:$GPUS_PER_NODE \
+                    $SLURM_GPU_ARG \
                     --cpus-per-task=$TOTAL_CPUS \
-                    $DEPENDENCY \
+                    $SLURM_CONSTRAINT \
+                    $SLURM_QOS \
                     --output=run-%j.out \
-                    --error=run-%j.err \
+                    --error=run-%j.out \
                     -A $ACCOUNT \
-                    -q $QOS \
                     vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -187,13 +199,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
                     --nodes=$NODES \
-                    --gres=gpu:$GPUS_PER_NODE \
+                    $SLURM_GPU_ARG \
                     --cpus-per-task=$TOTAL_CPUS \
-                    $DEPENDENCY \
+                    $SLURM_CONSTRAINT \
+                    $SLURM_QOS \
                     --output=run-%j.out \
-                    --error=run-%j.err \
+                    --error=run-%j.out \
                     -A $ACCOUNT \
-                    -q $QOS \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -217,7 +229,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                   echo "Skipping $model with $NODES nodes (requires at least 4 nodes)"
                   continue
                 fi
-                ADDITIONAL_ARGS="" # --mem-fraction-static 0.80 --chunked-prefill-size 4096
+                ADDITIONAL_ARGS=""
               fi
               # If Model is 'gemma-3-12b-it'
               if [[ "$model" == "gemma-3-12b-it" ]]; then
@@ -262,12 +274,14 @@ for framework in "${FRAMEWORKS[@]}"; do
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
                     --nodes=$NODES \
-                    --gres=gpu:$GPUS_PER_NODE \
+                    $SLURM_GPU_ARG \
                     --cpus-per-task=$TOTAL_CPUS \
+                    $SLURM_CONSTRAINT \
+                    $SLURM_QOS \
+                    $DEPENDENCY \
                     --output=run-%j.out \
-                    --error=run-%j.err \
+                    --error=run-%j.out \
                     -A $ACCOUNT \
-                    -q $QOS \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"

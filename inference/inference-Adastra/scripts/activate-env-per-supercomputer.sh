@@ -29,6 +29,11 @@ case "$MACHINE" in
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
 
+    cines-adastra-mi250 | cines-adastra-mi300)
+        source $ENVIRONMENT/bin/activate.poverlay
+        which python
+        ;;
+        
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

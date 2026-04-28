@@ -18,7 +18,7 @@ MACHINE="$8"
 MACHINE_TYPE="$9"
 shift 9
 
-# Additional arguments are passed directly to the Docker command
+# Additional arguments are passed directly to the command
 ADDITIONAL_ARGS=("$@")
 
 # Validate node type
@@ -27,21 +27,17 @@ if [ "${NODE_TYPE}" != "--head" ] && [ "${NODE_TYPE}" != "--worker" ]; then
     exit 1
 fi
 
-
 # Activate environment
 echo "ENVIRONMENT_VLLM: $ENVIRONMENT_VLLM"
 echo ""
 source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
-echo "Run_cluster: PYTHON PATH:"
-which pip
+echo "run_cluster: PYTHON PATH:"
+which python
 echo ""
-# ml miniforge
-# source activate $ENVIRONMENT_VLLM
-# export PATH=$ENVIRONMENT_VLLM/bin:$PATH
-# which pip
 
 
 export RAY_USAGE_STATS_ENABLED=1
+
 CUR_DIR=$(pwd)
 echo "run_cluster - MACHINE: $MACHINE"
 echo "run_cluster - MACHINE_TYPE: $MACHINE_TYPE"
@@ -68,41 +64,21 @@ cat <<EOT > config.json
 EOT
 echo "Configuration written to config.json"
 
-# cat <<EOT > config.sh
-# #!/bin/bash
-
-# export MODEL_PATH="${MODEL_PATH}"
-# export ENVIRONMENT_VLLM="${ENVIRONMENT_VLLM}"
-# export PORT="${PORT}"
-# export LAUNCH_FOLDER="${LAUNCH_FOLDER}"
-# export BENCHMARK_FILE="${BENCHMARK_FILE}"
-# export DATASET="${DATASET}"
-# export DATASET_PATH="${DATASET_PATH}"
-# export TP="${TENSOR_PARALLEL}"
-# export PP="${PIPELINE_PARALLEL}"
-# export ADDITIONAL_ARGS="${ADDITIONAL_ARGS[*]}"
-# export MAX_MODEL_LENGTH="${MAX_MODEL_LENGTH}"
-# export MODULES="${MODULES}"
-# export MACHINE="${MACHINE}"
-# export MACHINE_TYPE="${MACHINE_TYPE}"
-# EOT
-# echo "Configuration written to config.sh"
-
 # Command setup for head or worker node
 RAY_START_CMD="ray start"
 if [ "${NODE_TYPE}" == "--head" ]; then
     # Head Node Ray start Cluster
-    RAY_START_CMD+=" --head --port=6379 --num-cpus $TOTAL_CPUS --num-gpus $GPU_NODE --node-ip-address=${HEAD_NODE_ADDRESS}"
+    RAY_START_CMD+=" --head --port=6379 --node-ip-address=${HEAD_NODE_ADDRESS}"
     ${RAY_START_CMD}
-    
+
     sleep 90
 
     # Ray status
     echo "Ray Status"
     ray status
-    
+
     sleep 2
-    
+
     # Submit the vLLM Model in the Ray Cluster
     echo "VLLM serve loading... Head Node Address: ${HEAD_NODE_ADDRESS}"
     ray job submit --runtime-env config.json -- bash $CUR_DIR/serve.sh $MODEL_PATH
@@ -124,16 +100,14 @@ if [ "${NODE_TYPE}" == "--head" ]; then
             break
         fi
 
-        # Sleep for some interval before checking again
         sleep 10
     done
 
 else
     # Worker Node Ray start command
-    RAY_START_CMD+=" --block --address=${HEAD_NODE_ADDRESS}:6379 --num-cpus $TOTAL_CPUS --num-gpus $GPU_NODE"
+    RAY_START_CMD+=" --block --address=${HEAD_NODE_ADDRESS}:6379"
     ${RAY_START_CMD}
     echo "Worker Node activated ${HEAD_NODE_ADDRESS}:6379"
 fi
-
 
 exit 0
