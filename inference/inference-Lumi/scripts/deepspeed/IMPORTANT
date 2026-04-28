@@ -1,0 +1,18 @@
+Only the following models are supported to run with deepspeed-mii:
+
+* meta-llama/Llama-3.1-8B-Instruct
+
+✅ These models are compatible and optimized for use with deepspeed-mii.
+
+
+The following models are not supported and will NOT run using deepspeed-mii:
+
+* meta-llama/Llama-3.1-405B
+* google/gemma-3-12b-it
+* mistralai/Mistral-7B-Instruct-v0.3 --> Out Of Memory (OOM) Errors
+
+❌ Attempting to run these models with deepspeed-mii will result in errors or failure.
+
+Please ensure you're using supported models to avoid compatibility issues.
+
+
