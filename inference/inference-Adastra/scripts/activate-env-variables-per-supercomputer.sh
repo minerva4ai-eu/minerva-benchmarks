@@ -40,8 +40,9 @@ case "$MACHINE" in
     cines-adastra-mi250)
         # RCCL
         export NCCL_SOCKET_IFNAME=hsn
-        export NCCL_NET_GDR_LEVEL=3
-        export FI_CXI_ATS=0
+        export NCCL_NET_GDR_LEVEL=PHB
+        # export FI_CXI_RDZV_THRESHOLD=0 
+        # export FI_CXI_ATS=0
 
         export TORCH_BLAS_PREFER_HIPBLASLT=1
         export HIP_FORCE_DEV_KERNARG=1
@@ -56,9 +57,9 @@ case "$MACHINE" in
     cines-adastra-mi300)
         # RCCL
         export NCCL_SOCKET_IFNAME=hsn
-        export NCCL_NET_GDR_LEVEL=3
-        export FI_CXI_RDZV_THRESHOLD=0 
-        export FI_CXI_ATS=0
+        export NCCL_NET_GDR_LEVEL=PHB
+        # export FI_CXI_RDZV_THRESHOLD=0 
+        # export FI_CXI_ATS=0
 
         export TORCH_BLAS_PREFER_HIPBLASLT=1
         export HIP_FORCE_DEV_KERNARG=1
