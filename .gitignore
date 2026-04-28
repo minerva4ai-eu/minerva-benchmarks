@@ -9,6 +9,7 @@ inference/inference-MN5/envs/
 inference/inference-MN5/results-*/
 
 inference/inference-Adastra/datasets
+inference/inference-Adastra/benchmarks/datasets/
 inference/inference-Adastra/envs/
 inference/inference-Adastra/results-*/
 
