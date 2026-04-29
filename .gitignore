@@ -40,4 +40,6 @@ inference/inference-Adastra/results/deepspeed/*
 inference/inference-Adastra/results/sglang/*
 inference/inference-Adastra/results/vllm/*
 
+training/training_Adastra/results
+
 ._dbindex_
