@@ -1,3 +1,4 @@
+import gc
 import os
 import sys
 import time
@@ -48,6 +49,8 @@ def main():
         # world_size = int(os.environ.get("GPU_NODE", 1)) * int(
         #    os.environ.get("SLURM_NNODES", 1)
         # )
+
+    torch.cuda.empty_cache()
 
     if args.dataset not in DATASET_HANDLER_MAP:
         raise ValueError(f"Dataset {args.dataset} not supported.")
@@ -139,9 +142,30 @@ def main():
         if args.precision == "bf16"
         else torch.float32
     )
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=dtype, use_cache=False, device_map=None
-    )
+
+    # Setup FSDP configuration
+
+    fsdp_config = {
+        "activation_checkpointing": True,
+        "use_orig_params": True,
+        "cpu_ram_efficient_loading": True,
+        "sync_module_states": True,
+        "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
+        "forward_prefetch": False,
+        "limit_all_gathers": True,
+        "backward_prefetch": "backward_post",
+    }
+
+    if args.max_comm_comp_overlap:
+        fsdp_config["forward_prefetch"] = True
+        fsdp_config["limit_all_gathers"] = False
+        fsdp_config["backward_prefetch"] = "backward_pre"
+        print_rank(
+            rank,
+            "Enabled maximum communication-computation overlap in FSDP config: "
+            + "forward_prefetch=True, limit_all_gathers=False. "
+            + "Note: Monitor GPU memory usage as this may increase it.",
+        )
 
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -159,172 +183,210 @@ def main():
         logging_dir=f"{output_dir}/logs",
         report_to="none",
         fsdp="full_shard auto_wrap",
-        fsdp_config={"activation_checkpointing": True, "use_orig_params": True},
+        fsdp_config=fsdp_config,
         eval_steps=None,
         ddp_timeout=1800,
     )
 
-    training_args.num_train_epochs = args.epochs if args.epochs else 1
-    if args.max_steps is not None:
-        training_args.max_steps = int(args.max_steps)
+    trainable_params, total_params, trainable_pct = 0, 0, 0
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            use_cache=False,
+            device_map=None,
+        )
 
-    monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
+        training_args.num_train_epochs = args.epochs if args.epochs else 1
+        if args.max_steps is not None:
+            training_args.max_steps = int(args.max_steps)
 
-    # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
-    # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
-    #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
-    _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
-    peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
-    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    print_rank(
-        0,
-        f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
-    )
+        # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
+        # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
+        #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
 
-    trainer = TokenTrackingTrainer(
-        model=model,
-        args=training_args,
-        train_dataloader=train_dataloader,
-        eval_dataloader=eval_dataloader,
-        eval_dataset=eval_dataset,
-        tokenizer=tokenizer,
-        callbacks=[monitor],
-        peak_gpu_tflops=peak_gpu_tflops,
-    )
+        _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
+        peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
+        gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
+        print_rank(
+            0,
+            f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
+        )
 
-    # Start GPU monitor
-    gpu_stats_during, stop_flag = start_gpu_monitor(
-        interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
-    )
+        trainer = TokenTrackingTrainer(
+            model=model,
+            args=training_args,
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
+            eval_dataset=eval_dataset,
+            tokenizer=tokenizer,
+            callbacks=[monitor],
+            peak_gpu_tflops=peak_gpu_tflops,
+        )
 
-    # Train Model
-    start_time = time.time()
-    trainer.train()
-    total_finetune_time = time.time() - start_time
+        # Start GPU monitor
+        gpu_stats_during, stop_flag = start_gpu_monitor(
+            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
+        )
+        # Train Model
+        start_time = time.time()
+        trainer.train()
+        total_finetune_time = time.time() - start_time
 
-    # Stop GPU monitor
-    stop_flag["stop"] = True
-    time.sleep(2)  # give it a moment to exit cleanly
+        # Stop GPU monitor
+        stop_flag["stop"] = True
+        time.sleep(2)  # give it a moment to exit cleanly
 
-    trainable_params, total_params, trainable_pct = count_parameters(model)
+        trainable_params, total_params, trainable_pct = count_parameters(model)
 
-    # ---- Compute metrics ----
-    log_history = trainer.state.log_history
-    avg_training_loss = avg_validation_loss = None
-    avg_epoch_time_sec = avg_epoch_time_hours = None
-    avg_step_time_sec = avg_step_time_hours = None
+        # ---- Compute metrics ----
+        log_history = trainer.state.log_history
+        avg_training_loss = avg_validation_loss = None
+        avg_epoch_time_sec = avg_epoch_time_hours = None
+        avg_step_time_sec = avg_step_time_hours = None
 
-    total_training_time_secs = getattr(
-        trainer.state, "total_training_seconds_custom", total_finetune_time
-    )
-    tokens_per_gpu_all_epochs = getattr(
-        trainer.state, "total_tokens_per_gpu_custom", trainer.total_tokens_this_gpu
-    )
-    tokens_global_all_epochs = getattr(
-        trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
-    )
+        total_training_time_secs = getattr(
+            trainer.state, "total_training_seconds_custom", total_finetune_time
+        )
+        tokens_per_gpu_all_epochs = getattr(
+            trainer.state, "total_tokens_per_gpu_custom", trainer.total_tokens_this_gpu
+        )
+        tokens_global_all_epochs = getattr(
+            trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
+        )
 
-    avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
-    # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
-    avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
-    # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
+        avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
+        # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
+        avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
+        # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
 
-    if training_args.max_steps:
-        avg_step_time_sec = total_training_time_secs / training_args.max_steps
-        avg_step_time_hours = avg_step_time_sec / 3600
-    else:
-        avg_epoch_time_sec = total_training_time_secs / training_args.num_train_epochs
-        avg_epoch_time_hours = avg_epoch_time_sec / 3600
-        avg_step_time_sec = avg_epoch_time_sec / len(train_dataloader)  # approximate
-        avg_step_time_hours = avg_step_time_sec / 3600
+        if training_args.max_steps:
+            avg_step_time_sec = total_training_time_secs / training_args.max_steps
+            avg_step_time_hours = avg_step_time_sec / 3600
+        else:
+            avg_epoch_time_sec = (
+                total_training_time_secs / training_args.num_train_epochs
+            )
+            avg_epoch_time_hours = avg_epoch_time_sec / 3600
+            avg_step_time_sec = avg_epoch_time_sec / len(
+                train_dataloader
+            )  # approximate
+            avg_step_time_hours = avg_step_time_sec / 3600
 
-    # ---- Compute derived metrics ----
-    effective_batch_size = (
-        training_args.per_device_train_batch_size
-        * training_args.gradient_accumulation_steps
-        * world_size
-    )
+        # ---- Compute derived metrics ----
+        effective_batch_size = (
+            training_args.per_device_train_batch_size
+            * training_args.gradient_accumulation_steps
+            * world_size
+        )
 
-    samples_per_sec = (
-        effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
-    )
-    training_throughput_tokens_per_sec_per_gpu = (
-        tokens_per_gpu_all_epochs / total_training_time_secs
-        if total_training_time_secs
-        else None
-    )
-    training_throughput_tokens_per_sec_global = (
-        tokens_global_all_epochs / total_training_time_secs
-        if total_training_time_secs
-        else None
-    )
-    avg_gpu_power_watts = (
-        sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
-        if gpu_stats_during["power"]
-        else None
-    )
-    tokens_per_sec_per_watt_global = (
-        training_throughput_tokens_per_sec_global / avg_gpu_power_watts
-        if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
-        else None
-    )
-
-    save_summary_stats_json(
-        summary={
-            "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-            "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
-            "total_gpus": world_size,
-            "model": model_name,
-            "dataset": data,
-            "framework": "accelerate",
-            "parallelism_type": "fsdp",
-            "batch_size": training_args.per_device_train_batch_size,
-            "gradient_accumulation": training_args.gradient_accumulation_steps,
-            "trainable_parameters": trainable_params,
-            "total_trainable_parameters": total_params,
-            "trainable_parameters_percentage": trainable_pct,
-            "learning_rate": training_args.learning_rate,
-            "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
-            / len(gpu_stats_during["mem"])
-            if gpu_stats_during["mem"]
-            else None,
-            "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
-            if gpu_stats_during["mem"]
-            else None,
-            "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
-            / len(gpu_stats_during["util"])
-            if gpu_stats_during["util"]
-            else None,
-            "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
-            if gpu_stats_during["util"]
-            else None,
-            "avg_gpu_power_watts": avg_gpu_power_watts,
-            "peak_gpu_power_watts": max(gpu_stats_during["power"])
+        samples_per_sec = (
+            effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
+        )
+        training_throughput_tokens_per_sec_per_gpu = (
+            tokens_per_gpu_all_epochs / total_training_time_secs
+            if total_training_time_secs
+            else None
+        )
+        training_throughput_tokens_per_sec_global = (
+            tokens_global_all_epochs / total_training_time_secs
+            if total_training_time_secs
+            else None
+        )
+        avg_gpu_power_watts = (
+            sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
             if gpu_stats_during["power"]
-            else None,
-            "total_execution_time_hours": total_training_time_secs / 3600,
-            "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
-            "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
-            "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
-            "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
-            "samples_per_sec": samples_per_sec,
-            "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
-            "total_tokens_global_all_epochs": tokens_global_all_epochs,
-            "avg_training_loss": avg_training_loss,
-            "avg_validation_loss": avg_validation_loss,
-            "total_training_time_hours": total_training_time_secs / 3600,
-            "avg_epoch_training_time_sec": avg_epoch_time_sec,
-            "avg_epoch_training_time_hours": avg_epoch_time_hours,
-            "avg_step_training_time_sec": avg_step_time_sec,
-            "avg_step_training_time_hours": avg_step_time_hours,
-            "avg_gpu_flops": avg_gpu_flops,
-            "avg_gpu_mfu": avg_gpu_mfu,
-        },
-        output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
-    )
+            else None
+        )
+        tokens_per_sec_per_watt_global = (
+            training_throughput_tokens_per_sec_global / avg_gpu_power_watts
+            if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
+            else None
+        )
 
-    print_rank("Fine-tuning complete.")
+        save_summary_stats_json(
+            summary={
+                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
+                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
+                "total_gpus": world_size,
+                "model": model_name,
+                "dataset": data,
+                "framework": "accelerate",
+                "parallelism_type": "fsdp",
+                "batch_size": training_args.per_device_train_batch_size,
+                "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "trainable_parameters": trainable_params,
+                "total_trainable_parameters": total_params,
+                "trainable_parameters_percentage": trainable_pct,
+                "learning_rate": training_args.learning_rate,
+                "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
+                / len(gpu_stats_during["mem"])
+                if gpu_stats_during["mem"]
+                else None,
+                "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
+                if gpu_stats_during["mem"]
+                else None,
+                "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
+                / len(gpu_stats_during["util"])
+                if gpu_stats_during["util"]
+                else None,
+                "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
+                if gpu_stats_during["util"]
+                else None,
+                "avg_gpu_power_watts": avg_gpu_power_watts,
+                "peak_gpu_power_watts": max(gpu_stats_during["power"])
+                if gpu_stats_during["power"]
+                else None,
+                "total_execution_time_hours": total_training_time_secs / 3600,
+                "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
+                "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
+                "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
+                "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
+                "samples_per_sec": samples_per_sec,
+                "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
+                "total_tokens_global_all_epochs": tokens_global_all_epochs,
+                "avg_training_loss": avg_training_loss,
+                "avg_validation_loss": avg_validation_loss,
+                "total_training_time_hours": total_training_time_secs / 3600,
+                "avg_epoch_training_time_sec": avg_epoch_time_sec,
+                "avg_epoch_training_time_hours": avg_epoch_time_hours,
+                "avg_step_training_time_sec": avg_step_time_sec,
+                "avg_step_training_time_hours": avg_step_time_hours,
+                "avg_gpu_flops": avg_gpu_flops,
+                "avg_gpu_mfu": avg_gpu_mfu,
+            },
+            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+        )
+        del trainer, model
+        gc.collect()  # frees Python objects + their GPU tensor wrappers
+        torch.cuda.empty_cache()  # returns freed CUDA memory back to the OS/driver
+        print_rank(rank, "Fine-tuning completed successfully.")
+    except Exception as e:
+        save_summary_stats_json(
+            summary={
+                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
+                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
+                "total_gpus": world_size,
+                "model": model_name,
+                "dataset": data,
+                "framework": "accelerate",
+                "parallelism_type": "fsdp",
+                "batch_size": training_args.per_device_train_batch_size,
+                "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "trainable_parameters": trainable_params,
+                "total_trainable_parameters": total_params,
+                "trainable_parameters_percentage": trainable_pct,
+                "learning_rate": training_args.learning_rate,
+                "error": str(e),
+            },
+            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+        )
+
+        print_rank(rank, "Fine-tuning failed to complete!")
+        raise e
 
 
 if __name__ == "__main__":

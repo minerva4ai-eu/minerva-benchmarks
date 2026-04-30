@@ -16,7 +16,6 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     else:
         rank = rank_or_msg
 
-    # local_rank = dist.get_rank()
     local_rank = os.environ["RANK"]
     if rank is None or local_rank == rank:
         print(f"[ RANK {local_rank} ]: {msg}")
