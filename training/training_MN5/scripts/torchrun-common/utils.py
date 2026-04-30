@@ -3,8 +3,6 @@ import ast
 import json
 import os
 
-import torch.distributed as dist
-
 
 def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     """Prints the message with the rank number.
@@ -18,7 +16,7 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     else:
         rank = rank_or_msg
 
-    local_rank = dist.get_rank()
+    local_rank = os.environ["RANK"]
     if rank is None or local_rank == rank:
         print(f"[ RANK {local_rank} ]: {msg}")
 
@@ -60,7 +58,7 @@ def parse_args():
     )
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
-    parser.add_argument("--logging_steps", type=float, default=10, help="Logging Steps")
+    parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
     parser.add_argument(
         "--enable_steps",
         type=bool,
@@ -79,10 +77,9 @@ def parse_args():
     parser.add_argument(
         "--dataloader_num_workers",
         type=int,
-        default=10,
+        default=4,
         help="Number of workers for dataloader",
     )
-    # 🆕 Precision type argument
     parser.add_argument(
         "--precision",
         type=str,
