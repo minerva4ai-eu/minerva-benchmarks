@@ -98,3 +98,17 @@ get_gpu_peak_tflops() {
   local json=$(jq -r --arg g "$gpu_name" --arg k "$key" '.[$g][$k]' "$config_file")
   echo "$json"
 }
+
+exists_in_list() {
+    LIST=$1
+    DELIMITER=$2
+    VALUE=$3
+    LIST_WHITESPACES=$(echo "$LIST" | tr "$DELIMITER" ' ')
+    
+    for x in $LIST_WHITESPACES; do
+        if [ "$x" = "$VALUE" ]; then
+            return 0
+        fi
+    done
+    return 1
+}

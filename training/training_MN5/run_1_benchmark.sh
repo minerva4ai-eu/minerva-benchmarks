@@ -5,14 +5,16 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("accelerate")   # ("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
-DATASETS=("alpaca") #("alpaca" "squadv2")      # ("alpaca" "squad") # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") #Llama-3.1-8B-Instruct") # Llama-3.1-8B-Instruct") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
-NUMBER_OF_NODES=(4) #(1 4 8)
-TYPE_PARALLELISM=("fsdp" "ddp" "none")
+DATASETS=("alpaca")      # ("alpaca" "squad") # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct" ) # "Mistral-7B-Instruct-v0.3" "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct") # Llama-3.3-70B-Instruct (Llama-3.1-8B") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
+NUMBER_OF_NODES=(1 2)
+FRAMEWORKS=("torchrun" "deepspeed")   # ("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
+TYPE_PARALLELISM=("fsdp") #"zero3")
+
 REPEATS=1                 # Number of runs per configuration
 MACHINE="bsc-mn5-acc"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
+GPU_NAME=$GPU_NAME
 #######################################################
 # Set environment variables
 #######################################################
@@ -261,7 +263,13 @@ for framework in "${FRAMEWORKS[@]}"; do
                     # Keep your original deepspeed blocks here unchanged
                     if [[ "$framework" == "deepspeed" ]]; then
                       echo "Deepspeed Framework"
+                      PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3" "zero3-offload")
 
+                      if ! exists_in_list "${PERMITTED_ZERO_STAGES[*]}" " " "$parallelism"; then
+                          echo "Error: TYPE_PARALLELISM must be one of: ${PERMITTED_ZERO_STAGES[*]}"
+                          echo "Received: '$parallelism'"
+                          continue
+                      fi
                       if [[ "$GPU_NODE" -eq 1 ]]; then
                         echo "Skipping Deepspeed with 1 GPU (requires >1 GPU)"
                         continue

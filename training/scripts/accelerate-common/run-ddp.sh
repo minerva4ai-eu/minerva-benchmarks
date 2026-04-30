@@ -23,7 +23,9 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 
 
 # Export environment variables
-export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+# export SLURM_CPU_BIND=none
+# export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
 
 
 # Torchrun args
@@ -49,10 +51,12 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $NNODES \
-      $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data $DATASET_PATH \
-        --output_dir $OUTPUT_DIR \
+    --precision $PRECISION \
+      finetune-ddp.py \
+        --minerva_dir "${CURRENT_DIR}" \
+        --model "${MODEL_PATH}" \
+        --data '${DATASET_PATH}' \
+        --output_dir "${OUTPUT_DIR}" \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs "$EPOCHS"} \

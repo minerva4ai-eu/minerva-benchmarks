@@ -23,16 +23,9 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 
 
 # Export environment variables
-export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
-export SLURM_CPU_BIND=none
-####################################################
-
-##################################################
-###             Torchrun Setup                 ###
-##################################################
-runtime_prefix="$(training_build_runtime_prefix)"
-echo "runtime prefix $runtime_prefix"
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+# export SLURM_CPU_BIND=none
+# export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
 
 
 # Torchrun args
@@ -43,6 +36,31 @@ export NUM_PROCS=$((NNODES * NPROC_PER_NODE))
 export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
+gpu_plots_monitor_command="python -m gpu_plots"
+train_command="accelerate launch \
+    --multi-gpu \
+    --machine_rank $SLURM_NODEID \
+    --rdzv_backend c10d \
+    --main_process_ip $MASTER_ADDR \
+    --main_process_port $MASTER_PORT \
+    --num_processes $NUM_PROCS \
+    --num_machines $NNODES \
+    --precision $PRECISION \
+      finetune-fsdp.py \
+        --minerva_dir $CURRENT_DIR \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
+        --batch_size $BATCH_SIZE \
+        --max_length $MAX_MODEL_LENGTH \
+        ${EPOCHS:+--epochs "$EPOCHS"} \
+        ${STEPS:+--max_steps "$STEPS"} \
+        --precision $PRECISION \
+        --lr $LR \
+        --gradient_accumulation_steps $GRAD_ACCUM \
+        --dataloader_num_workers 2 \
+        --dataset $DATASET"
+
 
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"
