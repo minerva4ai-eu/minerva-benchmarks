@@ -36,7 +36,7 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 # Export environment variables
 # export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 # export SLURM_CPU_BIND=none
-# export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
+# export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
 
 
 # Torchrun args
@@ -58,11 +58,12 @@ train_command="accelerate launch \
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $NNODES \
+    --precision $PRECISION \
       finetune-fsdp.py \
-        --minerva_dir "${CURRENT_DIR}" \
-        --model "${MODEL_PATH}" \
-        --data '${DATASET_PATH}' \
-        --output_dir "${OUTPUT_DIR}" \
+        --minerva_dir $CURRENT_DIR \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs "$EPOCHS"} \
@@ -71,7 +72,7 @@ train_command="accelerate launch \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 2 \
-        --dataset '$DATASET'"
+        --dataset $DATASET"
 
 
 echo "NODE_RANK: {$NODE_RANK}"

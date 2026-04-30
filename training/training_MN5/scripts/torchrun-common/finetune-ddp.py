@@ -62,12 +62,12 @@ def main():
 
     if is_main_process():
         os.makedirs(output_dir, exist_ok=True)
-    print_rank(f"Loading tokenizer... {model_name}")
+    print_rank(rank, f"Loading tokenizer... {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print_rank("Tokenizer Loaded")
+    print_rank(rank, "Tokenizer Loaded")
 
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
@@ -78,9 +78,9 @@ def main():
         rank,
         f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}",
     )
-    print_rank(f"  Train path: {train_path}")
+    print_rank(rank, f"  Train path: {train_path}")
     if val_path:
-        print_rank(f"  Validation path: {val_path}")
+        print_rank(rank, f"  Validation path: {val_path}")
 
     # If we have explicit train/validation files
     # Load datasets
@@ -141,14 +141,14 @@ def main():
     else:
         dtype = torch.float32
 
-    print_rank(f"Loading Model... dtype: {dtype}")
+    print_rank(rank, f"Loading Model... dtype: {dtype}")
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=dtype,
         low_cpu_mem_usage=True,
         device_map=None,  # Trainer will put model on device
     )
-    print_rank("Model Loaded")
+    print_rank(rank, "Model Loaded")
 
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -336,7 +336,7 @@ def main():
         output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
     )
 
-    print_rank("Fine-tuning complete.")
+    print_rank(rank, "Fine-tuning complete.")
 
 
 if __name__ == "__main__":
