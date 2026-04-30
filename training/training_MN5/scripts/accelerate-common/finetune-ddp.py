@@ -62,12 +62,12 @@ def main():
 
     if is_main_process():
         os.makedirs(output_dir, exist_ok=True)
-    print_rank(f"Loading tokenizer... {model_name}")
+    print_rank(rank, f"Loading tokenizer... {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print_rank("Tokenizer Loaded")
+    print_rank(rank, "Tokenizer Loaded")
 
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
@@ -78,9 +78,9 @@ def main():
         rank,
         f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}",
     )
-    print_rank(f"  Train path: {train_path}")
+    print_rank(rank, f"  Train path: {train_path}")
     if val_path:
-        print_rank(f"  Validation path: {val_path}")
+        print_rank(rank, f"  Validation path: {val_path}")
 
     # If we have explicit train/validation files
     # Load datasets

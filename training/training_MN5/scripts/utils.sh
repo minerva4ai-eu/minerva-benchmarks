@@ -22,10 +22,10 @@ get_dataset_path() {
   local entry
   entry=$(jq -c --arg ds "$dataset" '.[$ds]' "$json_file")
 
-  if [ "$entry" == "null" ] || [ -z "$entry" ]; then
-    echo "❌ Dataset '$dataset' not found in $json_file" >&2
-    exit 1
-  fi
+  #if [ "$entry" == "null" ] || [ -z "$entry" ]; then
+  #  echo "❌ Dataset '$dataset' not found in $json_file" >&2
+  #  exit 1
+  #fi
 
   # Output the entry as-is (compact JSON)
   echo "$entry"
@@ -97,4 +97,18 @@ get_gpu_peak_tflops() {
   # Extract values with jq
   local json=$(jq -r --arg g "$gpu_name" --arg k "$key" '.[$g][$k]' "$config_file")
   echo "$json"
+}
+
+exists_in_list() {
+    LIST=$1
+    DELIMITER=$2
+    VALUE=$3
+    LIST_WHITESPACES=$(echo "$LIST" | tr "$DELIMITER" ' ')
+    
+    for x in $LIST_WHITESPACES; do
+        if [ "$x" = "$VALUE" ]; then
+            return 0
+        fi
+    done
+    return 1
 }
