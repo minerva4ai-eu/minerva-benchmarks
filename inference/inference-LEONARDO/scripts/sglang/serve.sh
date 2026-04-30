@@ -26,37 +26,48 @@ if [[ "$MODEL_PATH" == *"gemma-3-12b-it"* ]]; then
     #$CUR_DIR/wrapper_singularity.sh
     # $SINGULARITY_EXEC_COMMAND \
     #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
-    sglang serve \
-        --attention-backend triton \
+      sglang serve \
         --model-path "$MODEL_PATH" \
+        --attention-backend triton \
+        --pp-size 1 \
+        --tp-size 4 \
         --context-length "$MAX_MODEL_LENGTH" \
         --port "$PORT" \
-        --grammar-backend "xgrammar" \
-        --dist-init-addr "$NCCL_INIT_ADDR" \
-        --model-impl transformers \
-        $ADDITIONAL_ARGS \
         --nnodes $NODES \
+        --dist-init-addr "$NCCL_INIT_ADDR" \
         --node-rank "$SLURM_NODEID" &
+
 elif [[ "$MODEL_PATH" == *"Llama-3.1-405B"* || "$MODEL_PATH" == *"Llama-3.1-405B-Instruct"* ]]; then
     # Run with --pp-size and --tp
     #$CUR_DIR/wrapper_singularity.sh
     # $SINGULARITY_EXEC_COMMAND \
     #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
-    sglang serve \
-        --attention-backend triton \
+    # sglang serve \
+    #     --attention-backend triton \
+    #     --model-path "$MODEL_PATH" \
+    #     --pp-size "$PIPELINE_PARALLEL" \
+    #     --tp-size "$TENSOR_PARALLEL" \
+    #     --context-length "$MAX_MODEL_LENGTH" \
+    #     --port "$PORT" \
+    #     --grammar-backend "xgrammar" \
+    #     --dist-init-addr "$NCCL_INIT_ADDR" \
+    #     --mem-fraction-static 0.80 --chunked-prefill-size 4096 \
+    #     $ADDITIONAL_ARGS \
+    #     --nnodes $NODES \
+  #     --node-rank "$SLURM_NODEID" &
+      sglang serve \
         --model-path "$MODEL_PATH" \
-        --pp-size "$PIPELINE_PARALLEL" \
-        --tp-size "$TENSOR_PARALLEL" \
+        --attention-backend triton \
+        --pp-size 1 \
+        --tp-size 4 \
         --context-length "$MAX_MODEL_LENGTH" \
         --port "$PORT" \
-        --grammar-backend "xgrammar" \
-        --dist-init-addr "$NCCL_INIT_ADDR" \
-        --mem-fraction-static 0.80 --chunked-prefill-size 4096 \
-        $ADDITIONAL_ARGS \
         --nnodes $NODES \
+        --dist-init-addr "$NCCL_INIT_ADDR" \
         --node-rank "$SLURM_NODEID" &
         
-elif [[ "$MODEL_PATH" == *"Mistral-7B-Instruct-v0.3"* ]]; then
+#elif [[ "$MODEL_PATH" == *"Mistral-7B-Instruct-v0.3"* ]]; then
+else
     # Run with --pp-size and --tp
     #$CUR_DIR/wrapper_singularity.sh
     #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
@@ -64,7 +75,7 @@ elif [[ "$MODEL_PATH" == *"Mistral-7B-Instruct-v0.3"* ]]; then
         --model-path "$MODEL_PATH" \
         --attention-backend triton \
         --pp-size 1 \
-        --tp-size 4 \
+        --tp-size $NODES \
         --context-length "$MAX_MODEL_LENGTH" \
         --port "$PORT" \
         --nnodes $NODES \
@@ -116,7 +127,6 @@ sleep 10
 # Activate environment
 module purge
 source activate-env-per-supercomputer.sh $ENVIRONMENT_SGLANG
-echo "ci siamoooooooooooooooooooo"
 # # Get current hostnames and Head Node
 # nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
 # nodes_array=($nodes)

@@ -40,4 +40,6 @@ inference/inference-LEONARDO/benchmarks/datasets/
 
 inference/inference-LEONARDO/results/
 inference/inference-LEONARDO/results/deepspeed/
+inference/inference-LEONARDO/results/vllm/
+inference/inference-LEONARDO/results/sglang/
 !inference/inference-LEONARDO/results/*.csv
