@@ -796,7 +796,7 @@ def main(args: argparse.Namespace):
                               trust_remote_code=args.trust_remote_code)
     else:
         tokenizer = get_tokenizer(tokenizer_id,
-                              tokenizer_mode=tokenizer_mode,
+                              #tokenizer_mode=tokenizer_mode,
                               trust_remote_code=args.trust_remote_code)
         
     if args.dataset is not None:

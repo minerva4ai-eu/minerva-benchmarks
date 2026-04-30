@@ -35,13 +35,13 @@ case "$MACHINE" in
         
         #export COMPILER=nvhpc
         #export CUDA_HOME=/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/cuda-12.2.0-o6rr2unwsp4e4av6ukobro6plj7ceeos
-        module load cuda/12.3
+        module load cuda/12.6
         module load gcc/12.2.0
         
         source $ENVIRONMENT/bin/activate
         # Prepend GCC 12 runtime so libstdc++.so.6 has GLIBCXX_3.4.29 (required by deepspeed JIT ops)
         export LD_LIBRARY_PATH=$EBROOTGCC/lib64:$LD_LIBRARY_PATH
-        #export LD_LIBRARY_PATH=$ENVIRONMENT/lib/python3.11/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$ENVIRONMENT/lib/python3.11/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
         which python
         ;;
 

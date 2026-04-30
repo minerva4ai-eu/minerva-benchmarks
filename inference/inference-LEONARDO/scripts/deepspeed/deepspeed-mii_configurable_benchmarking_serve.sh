@@ -30,11 +30,15 @@ echo "Using TENSOR_PARALLEL: $TENSOR_PARALLEL"
 # Deploy the DeepSpeed-MII server.
 python $LAUNCH_FOLDER/serve_deepspeed_mii.py $TENSOR_PARALLEL &
 
-sleep 360
-nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
-nodes_array=($nodes)
-head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
+# Wait until the gRPC model backend (port 50051) is ready — this confirms the model
+# is fully loaded, not just the REST gateway which starts earlier.
+echo "Waiting for DeepSpeed-MII gRPC backend to be ready on port 50051..."
+until python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 50051)); s.close()" 2>/dev/null; do
+    sleep 5
+done
+echo "Server is ready."
+
+head_node_ip=localhost
 
 concurrencies=(150 250 300 500 1000)
 
@@ -57,7 +61,7 @@ for conc in "${concurrencies[@]}"; do
 
     # Run benchmark stressing the deepspeed-mii server.
     python $BENCHMARK_FILE --backend 'deepspeed-mii' \
-        --host $head_node_ip \
+        --host localhost \
         --port $PORT \
         --model $MODEL_PATH \
         --dataset-name $DATASET \

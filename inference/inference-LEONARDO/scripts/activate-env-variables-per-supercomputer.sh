@@ -39,14 +39,20 @@ case "$MACHINE" in
         export NCCL_DEBUG=TRACE
         export NCCL_NVLS_ENABLE=0
         export NCCL_IB_DISABLE=0
+        export FLASHINFER_WORKSPACE_BASE=/leonardo_work/MNRVA_bench/minerva-benchmarks/inference/inference-LEONARDO
         #export COMPILER=nvhpc
         #export CUDA_HOME=/cineca/prod/CUDA/12.1
         #export CUDA_HOME=/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/gcc-8.5.0/cuda-12.2.0-o6rr2unwsp4e4av6ukobro6plj7ceeos
-        module load cuda/12.3
+        module load cuda/12.6
         module load gcc/12.2.0
         #export CUDA_VISIBLE_DEVICES="0,1,2,3"
-        # Prepend pip-installed nvidia libs so they take priority over system CUDA 12.1
-        #export LD_LIBRARY_PATH=$EBROOTGCC/lib64:$LD_LIBRARY_PATH
+        # Prepend gcc/12.2.0 libstdc++ so it takes priority over system gcc-8.5.0 at runtime
+        # ($EBROOTGCC is empty on Leonardo, so find the path dynamically via gcc itself)
+        _gcc_libstdcxx=$(gcc -print-file-name=libstdc++.so.6 2>/dev/null)
+        if [ -n "$_gcc_libstdcxx" ] && [ "$_gcc_libstdcxx" != "libstdc++.so.6" ]; then
+            export LD_LIBRARY_PATH=$(dirname "$_gcc_libstdcxx"):$LD_LIBRARY_PATH
+        fi
+        unset _gcc_libstdcxx
         #export LD_LIBRARY_PATH=$ENVIRONMENT/lib/python3.11/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
         ;;
 
