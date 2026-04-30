@@ -36,7 +36,7 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 # Export environment variables
 # export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 export SLURM_CPU_BIND=none
-export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
+export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
 ####################################################
 
 ##################################################
@@ -77,7 +77,7 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 2 \
+        --dataloader_num_workers 4 \
         --dataset $DATASET
     
     kill -SIGTERM \"\$monitor_pid\"
