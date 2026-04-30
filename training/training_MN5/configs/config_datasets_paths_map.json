@@ -1,6 +1,6 @@
 {
-  "sharegpt": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/git/inference-MN5/benchmarks/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
-  "sonnet": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/git/inference-MN5/benchmarks/datasets/sonnet.txt",
+  "sharegpt": "/gpfs/scratch/shared/ai-hub/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/gpfs/scratch/shared/ai-hub/datasets/sonnet/sonnet.txt",
   "alpaca": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json",
   "squadv2": {
     "train": "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/squad_v2/squad_v2/train-00000-of-00001.parquet",
