@@ -5,7 +5,7 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("accelerate")   # ("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
+FRAMEWORKS=("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
 DATASETS=("alpaca") #("alpaca" "squadv2")      # ("alpaca" "squad") # Add more datasets if needed
 MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") #Llama-3.1-8B-Instruct") # Llama-3.1-8B-Instruct") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
 NUMBER_OF_NODES=(4) #(1 4 8)
@@ -31,7 +31,23 @@ CONFIG_INDEX=0
 CURRENT_DIR=$(pwd)
 TOTAL_CONFIGS=$(( ${#DATASETS[@]} * ${#FRAMEWORKS[@]} * ${#NUMBER_OF_NODES[@]} * ${#MODELS[@]} * REPEATS ))
 
+# Keep only frameworks with available launch scripts; warn and skip missing ones.
+AVAILABLE_FRAMEWORKS=()
 for framework in "${FRAMEWORKS[@]}"; do
+  if [[ -d "scripts/${framework}-common" ]] && compgen -G "scripts/${framework}-common/run-*.sh" > /dev/null && compgen -G "scripts/${framework}-common/finetune-*.py" > /dev/null; then
+    AVAILABLE_FRAMEWORKS+=("$framework")
+  else
+    echo "⚠️ Framework '$framework' is unavailable (missing run/finetune scripts under scripts/${framework}-common). Skipping it."
+  fi
+done
+
+if [[ ${#AVAILABLE_FRAMEWORKS[@]} -eq 0 ]]; then
+  echo "❌ No available frameworks found in FRAMEWORKS=( ${FRAMEWORKS[*]} )."
+  echo "Expected folders like scripts/<framework>-common with run-<parallelism>.sh and finetune-<parallelism>.py."
+  exit 1
+fi
+
+for framework in "${AVAILABLE_FRAMEWORKS[@]}"; do
   for dataset in "${DATASETS[@]}"; do
     for model in "${MODELS[@]}"; do
       for NODES in "${NUMBER_OF_NODES[@]}"; do
