@@ -25,6 +25,24 @@
             "max_model_length": [2048]
         },
         "zero3": {
+            "batch_size": [4],
+            "grad_accum": [4],
+            "precision": ["bf16"],
+            "lr": 2e-5,
+            "steps": 50,
+            "max_model_length": [2048]
+        }
+    },
+    "Mixtral-8x7B-v0.1": {
+        "fsdp": {
+            "batch_size": [1],
+            "precision": ["bf16"],
+            "grad_accum": [4],
+            "lr": 2e-5,
+            "steps": 50,
+            "max_model_length": [1024]
+        },
+        "zero3": {
             "batch_size": [4, 8, 16],
             "grad_accum": [16],
             "precision": ["bf16"],
@@ -37,13 +55,13 @@
         "fsdp": {
             "batch_size": [1],
             "precision": ["bf16"],
-            "grad_accum": [1],
+            "grad_accum": [4],
             "lr": 2e-5,
             "steps": 50,
             "max_model_length": [1024]
         },
         "zero3": {
-            "batch_size": [4],
+            "batch_size": [1],
             "grad_accum": [4],
             "precision": ["bf16"],
             "lr": 2e-5,

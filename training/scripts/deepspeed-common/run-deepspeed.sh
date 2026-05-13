@@ -149,7 +149,7 @@ train_command="accelerate launch \
       --lr $SCALED_LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
       --dataloader_num_workers 32 \
-      --dataset $DATASET \
+      --dataset '$DATASET' \
       --warmup_ratio 0.1 \
       --deepspeed_config_file  $deepspeed_config_path \
       --logging_steps 1 \

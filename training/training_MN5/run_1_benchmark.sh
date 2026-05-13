@@ -1,15 +1,34 @@
 #!/bin/bash
 
 #######################################################
+# COLORS
+#######################################################
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+#######################################################
 # ENVIRONMENT VARIABLES TO CHANGE
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-DATASETS=("alpaca")      # ("alpaca" "squad") # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct" ) # "Mistral-7B-Instruct-v0.3" "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct") # Llama-3.3-70B-Instruct (Llama-3.1-8B") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
-NUMBER_OF_NODES=(1 2)
-FRAMEWORKS=("torchrun" "deepspeed")   # ("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
-TYPE_PARALLELISM=("fsdp") #"zero3")
+#DATASETS=("alpaca" "squadv2")      # ("alpaca" "squadv2") # Add more datasets if needed
+#MODELS=("Llama-3.1-8B-Instruct" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct") # "Mistral-7B-Instruct-v0.3" "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct") # Llama-3.3-70B-Instruct (Llama-3.1-8B") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
+DATASETS=("alpaca")      # ("alpaca" "squadv2") # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct") # "Mixtral-8x7B-v0.1" "Mistral-7B-Instruct-v0.3" "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct") # Llama-3.3-70B-Instruct (Llama-3.1-8B") # "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "gemma-3-1b-it") # Add your models here
+NUMBER_OF_NODES=(2)
+
+
+declare -A FRAMEWORK_PARALLELISM
+#["torchrun"] : "fsdp ddp none"
+#FRAMEWORK_PARALLELISM["torchrun"]="fsdp"
+#["accelerate"]: "fsdp ddp none"
+#FRAMEWORK_PARALLELISM["accelerate"]="fsdp"
+#["deepspeed"] :"zero1 zero2 zero3 zero3-offload"
+FRAMEWORK_PARALLELISM["deepspeed"]="zero3"
 
 REPEATS=1                 # Number of runs per configuration
 MACHINE="bsc-mn5-acc"
@@ -33,8 +52,14 @@ CONFIG_INDEX=0
 CURRENT_DIR=$(pwd)
 TOTAL_CONFIGS=$(( ${#DATASETS[@]} * ${#FRAMEWORKS[@]} * ${#NUMBER_OF_NODES[@]} * ${#MODELS[@]} * REPEATS ))
 
-for framework in "${FRAMEWORKS[@]}"; do
+for framework in "${!FRAMEWORK_PARALLELISM[@]}"; do
+  IFS=' ' read -r -a PARALLELISMS <<< "${FRAMEWORK_PARALLELISM[$framework]}"
   for dataset in "${DATASETS[@]}"; do
+    DATASET_PATH=$(get_dataset_path "$dataset" "configs/config_datasets_paths_map.json")
+    if [ -z "$DATASET_PATH" ] || [ "$DATASET_PATH" == "null" ]; then
+      echo -e "${YELLOW}⚠️  No dataset path found for '$dataset' in configs/config_datasets_paths_map.json - skipping.${NC}"
+      continue
+    fi
     for model in "${MODELS[@]}"; do
       for NODES in "${NUMBER_OF_NODES[@]}"; do
         # Define which GPU configs to try
@@ -46,11 +71,11 @@ for framework in "${FRAMEWORKS[@]}"; do
         # GPU_CONFIGS=($GPUS_PER_NODE)  # use default
 
         for GPU_NODE in "${GPU_CONFIGS[@]}"; do
-          for parallelism in "${TYPE_PARALLELISM[@]}"; do
+          for parallelism in "${PARALLELISMS[@]}"; do
             CONFIG_JSON=$(get_model_parallelism_config "$model" "$parallelism" "configs/model_parallelism_config.json")
 
             if [ -z "$CONFIG_JSON" ] || [ "$CONFIG_JSON" == "null" ]; then
-              echo "⚠️ No specific config for $model / $parallelism - continue with next configuration."
+              echo -e "${YELLOW}⚠️  No specific config for $model / $parallelism - continue with next configuration.${NC}"
               continue
             else
               # Read values from JSON
@@ -90,37 +115,35 @@ for framework in "${FRAMEWORKS[@]}"; do
                     MODEL_PATH="${MODEL_DIRECTORY}/${model}"
 
                     if [ -z "$MODEL_DIRECTORY" ]; then
-                      echo "Unknown model type '$MODEL_TYPE' or missing directory mapping. Exiting."
+                      echo -e "${RED}Unknown model type '$MODEL_TYPE' or missing directory mapping. Exiting.${NC}"
                       exit 1
                     fi
-
-                    DATASET_PATH=$(get_dataset_path "$dataset" "configs/config_datasets_paths_map.json")
 
                     # ----------------------------
                     #  Framework: PyTorch
                     # ----------------------------
                     if [[ "$framework" == "torchrun" ]]; then
-                      echo "PyTorch Framework"
+                      echo -e "${BLUE}${BOLD}PyTorch Framework${NC}"
 
                       # Skip invalid configs - FSDP with less than 2 nodes
                       if [[ "$parallelism" == "fsdp" && "$GPU_NODE" -lt 2 ]]; then
-                        echo "Skipping FSDP on single-GPU (requires >1 GPUs)"
+                        echo -e "${YELLOW}Skipping FSDP on single-GPU (requires >1 GPUs)${NC}"
                         continue
                       fi
                       # Skip invalid configs - DDP with less than 2 nodes
                       if [[ "$parallelism" == "ddp" && "$GPU_NODE" -lt 2 ]]; then
-                        echo "Skipping DDP on single-GPU (requires >1 GPU)"
+                        echo -e "${YELLOW}Skipping DDP on single-GPU (requires >1 GPU)${NC}"
                         continue
                       fi
                       # Skip invalid configs - None parallelism with more than 1 node
                       if [[ "$parallelism" == "none" && "$GPU_NODE" -gt 1 ]]; then
-                        echo "Skipping None Parallelism on multiple-node (requires only 1 node)"
+                        echo -e "${YELLOW}Skipping None Parallelism on multiple-node (requires only 1 node)${NC}"
                         continue
                       fi
           
                       for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                         LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
-                        echo "Setting up $LAUNCH_FOLDER"
+                        echo -e "${CYAN}Setting up $LAUNCH_FOLDER${NC}"
                         mkdir -p "$LAUNCH_FOLDER"
                         
                         cp -R scripts/shared "$LAUNCH_FOLDER"
@@ -165,7 +188,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                             -q $QOS \
                             run-$parallelism.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH")
 
-                        echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                        echo -e "${GREEN}Submitted job ${BOLD}$JOB_ID ${NC}${GREEN}for $LAUNCH_FOLDER${NC}"
                         JOB_IDS+=("$JOB_ID")
                         ((CONFIG_INDEX++))
 
@@ -178,31 +201,31 @@ for framework in "${FRAMEWORKS[@]}"; do
                     #  Framework: Accelerate
                     # ----------------------------
                     if [[ "$framework" == "accelerate" ]]; then
-                      echo "Accelerate Framework"
+                      echo -e "${BLUE}${BOLD}Accelerate Framework${NC}"
                       # Skip invalid configs - FSDP with less than 2 nodes
                       if [[ "$parallelism" == "fsdp" && "$GPU_NODE" -lt 2 ]]; then
-                        echo "Skipping FSDP on single-GPU (requires >1 GPUs)"
+                        echo -e "${YELLOW}Skipping FSDP on single-GPU (requires >1 GPUs)${NC}"
                         continue
                       fi
                       # Skip invalid configs - DDP with less than 2 nodes
                       if [[ "$parallelism" == "ddp" && "$GPU_NODE" -lt 2 ]]; then
-                        echo "Skipping DDP on single-GPU (requires >1 GPU)"
+                        echo -e "${YELLOW}Skipping DDP on single-GPU (requires >1 GPU)${NC}"
                         continue
                       fi
                       # Skip invalid configs - None parallelism with more than 1 node
                       if [[ "$parallelism" == "none" && "$GPU_NODE" -gt 1 ]]; then
-                        echo "Skipping None Parallelism on multiple-node (requires only 1 node)"
+                        echo -e "${YELLOW}Skipping None Parallelism on multiple-node (requires only 1 node)${NC}"
                         continue
                       fi
                       # Skip Gemma batch_size=1 when using more than 1 GPU
                       if [[ "$model" == "gemma-3-1b-it" && "$batch" -eq 1 && "$GPU_NODE" -gt 1 ]]; then
-                        echo "Skipping Gemma (batch_size=1) with ${GPU_NODE} GPUs."
+                        echo -e "${YELLOW}Skipping Gemma (batch_size=1) with ${GPU_NODE} GPUs.${NC}"
                         continue
                       fi
 
                       for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                         LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
-                        echo "Setting up $LAUNCH_FOLDER"
+                        echo -e "${CYAN}Setting up $LAUNCH_FOLDER${NC}"
                         mkdir -p "$LAUNCH_FOLDER"
 
                         # Copy necessary scripts
@@ -248,7 +271,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                             -q $QOS \
                             run-$parallelism.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH")
 
-                        echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                        echo -e "${GREEN}Submitted job ${BOLD}$JOB_ID${NC}${GREEN} for $LAUNCH_FOLDER${NC}"
                         JOB_IDS+=("$JOB_ID")
                         ((CONFIG_INDEX++))
 
@@ -262,16 +285,16 @@ for framework in "${FRAMEWORKS[@]}"; do
                     # ----------------------------
                     # Keep your original deepspeed blocks here unchanged
                     if [[ "$framework" == "deepspeed" ]]; then
-                      echo "Deepspeed Framework"
+                      echo -e "${BLUE}${BOLD}Deepspeed Framework${NC}"
                       PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3" "zero3-offload")
 
                       if ! exists_in_list "${PERMITTED_ZERO_STAGES[*]}" " " "$parallelism"; then
-                          echo "Error: TYPE_PARALLELISM must be one of: ${PERMITTED_ZERO_STAGES[*]}"
-                          echo "Received: '$parallelism'"
+                          echo -e "${RED}Error: TYPE_PARALLELISM must be one of: ${PERMITTED_ZERO_STAGES[*]}${NC}"
+                          echo -e "${RED}Received: '$parallelism'${NC}"
                           continue
                       fi
                       if [[ "$GPU_NODE" -eq 1 ]]; then
-                        echo "Skipping Deepspeed with 1 GPU (requires >1 GPU)"
+                        echo -e "${YELLOW}Skipping Deepspeed with 1 GPU (requires >1 GPU)${NC}"
                         continue
                       fi
 
@@ -283,7 +306,7 @@ for framework in "${FRAMEWORKS[@]}"; do
 
                       for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                         LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
-                        echo "Setting up $LAUNCH_FOLDER"
+                        echo -e "${CYAN}Setting up $LAUNCH_FOLDER${NC}"
                         mkdir -p "$LAUNCH_FOLDER"
 
                         # Copy necessary scripts
@@ -330,7 +353,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                             -q $QOS \
                             run-deepspeed.sh "$LAUNCH_FOLDER" "$DATASET" "$DATASET_PATH" "$parallelism")
 
-                        echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
+                        echo -e "${GREEN}Submitted job ${BOLD}$JOB_ID${NC}${GREEN} for $LAUNCH_FOLDER${NC}"
                         JOB_IDS+=("$JOB_ID")
                         ((CONFIG_INDEX++))
 

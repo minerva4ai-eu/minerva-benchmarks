@@ -5,10 +5,12 @@ import time
 
 import torch
 import torch.distributed as dist
+from accelerate import init_empty_weights
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import TokenTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
+    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     TrainingArguments,
@@ -32,6 +34,51 @@ MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
 
 
+def get_fsdp_layer_to_wrap(model_name_or_path: str):
+    """
+    Returns the string representation of the Transformer layer class
+    based on the model architecture for FSDP wrapping.
+    """
+    model_name = model_name_or_path.lower()
+
+    if "llama" in model_name:
+        # Works for Llama-2, Llama-3, Llama-3.1, etc.
+        return "LlamaDecoderLayer"
+
+    elif "mistral" in model_name or "mixtral" in model_name:
+        return "MistralDecoderLayer"
+
+    elif "qwen" in model_name:
+        # Qwen2 and Qwen2.5 use this naming convention
+        return "Qwen2DecoderLayer"
+
+    elif "falcon" in model_name:
+        return "FalconLayer"
+
+    elif "phi-3" in model_name:
+        return "Phi3DecoderLayer"
+
+    elif "gemma" in model_name:
+        return "GemmaDecoderLayer"
+
+    elif "bert" in model_name:
+        return "BertLayer"
+
+    else:
+        # Fallback: Many HuggingFace models follow this pattern
+        # but it's safer to raise an error if you're unsure
+        raise ValueError(
+            f"Could not automatically determine FSDP layer for {model_name}. "
+            "Please manually specify the decoder layer class."
+        )
+
+
+def is_main_process():
+    # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
+    rank = int(os.environ.get("RANK", 0))
+    return rank == 0
+
+
 # --- Main ---
 def main():
     # Get rank
@@ -45,6 +92,8 @@ def main():
         #    os.environ.get("SLURM_NNODES", 1)
         # )
 
+    torch.cuda.empty_cache()
+
     if args.dataset not in DATASET_HANDLER_MAP:
         raise ValueError(f"Dataset {args.dataset} not supported.")
 
@@ -55,6 +104,8 @@ def main():
     data = args.data
     output_dir = args.output_dir
 
+    if is_main_process():
+        os.makedirs(output_dir, exist_ok=True)
     print_rank(rank, f"Loading tokenizer... {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
@@ -127,7 +178,24 @@ def main():
         persistent_workers=True,
     )
 
-    # Model
+    # Setup FSDP configuration
+
+    fsdp_config = {
+        "activation_checkpointing": True,
+        "fsdp_activation_checkpointing_kwargs": {"use_reentrant": True},
+        "use_orig_params": True,
+        "cpu_ram_efficient_loading": False,
+        "sync_module_states": True,
+        "fsdp_offload_params": False,
+        "fsdp_cpu_ram_efficient_loading": False,
+        "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
+        "forward_prefetch": False,
+        "limit_all_gathers": True,
+        "backward_prefetch": "backward_post",
+        # "transformer_layer_cls_to_wrap": get_fsdp_layer_to_wrap(model_name),
+    }
+
+    # Model dtype
     # --- Precision selection ---
     if args.precision == "fp16":
         dtype = torch.float16
@@ -136,36 +204,42 @@ def main():
     else:
         dtype = torch.float32
 
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        logging_steps=args.logging_steps,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=args.precision == "fp16",
-        bf16=args.precision == "bf16",
-        optim="adamw_torch",
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        fsdp="full_shard auto_wrap",
-        fsdp_config={"activation_checkpointing": True, "use_orig_params": True},
-        eval_steps=None,
-        ddp_timeout=1800,
-    )
+    if args.max_comm_comp_overlap:
+        fsdp_config["forward_prefetch"] = True
+        fsdp_config["limit_all_gathers"] = False
+        fsdp_config["backward_prefetch"] = "backward_pre"
+        print_rank(
+            rank,
+            "Enabled maximum communication-computation overlap in FSDP config: "
+            + "forward_prefetch=True, limit_all_gathers=False. "
+            + "Note: Monitor GPU memory usage as this may increase it.",
+        )
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
-        print_rank(rank, f"Loading Model... dtype: {dtype}")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            use_cache=False,
-            device_map=None,
+        training_args = TrainingArguments(
+            output_dir=output_dir,
+            overwrite_output_dir=True,
+            per_device_train_batch_size=BATCH_SIZE,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            #gradient_checkpointing=True,
+            #gradient_checkpointing_kwargs={"use_reentrant": False},
+            learning_rate=args.lr,
+            weight_decay=args.weight_decay,
+            logging_steps=args.logging_steps,
+            save_strategy="no",
+            save_total_limit=1,
+            fp16=args.precision == "fp16",
+            bf16=args.precision == "bf16",
+            optim="adamw_torch",
+            logging_dir=f"{output_dir}/logs",
+            report_to="none",
+            fsdp="full_shard auto_wrap",
+            fsdp_config=fsdp_config,
+            eval_steps=None,
+            ddp_timeout=1800,
         )
+
         print_rank(rank, "Model Loaded")
         training_args.num_train_epochs = args.epochs if args.epochs else 1
         if args.max_steps is not None:
@@ -184,7 +258,26 @@ def main():
             0,
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
+        config = AutoConfig.from_pretrained(model_name)
 
+        with init_empty_weights():
+            # El modelo se crea instantáneamente con consumo de memoria cero
+            model = AutoModelForCausalLM.from_config(config)
+
+            if hasattr(model.config, "use_cache"):
+                print_rank(0, "Disabling model's cache")
+                model.config.use_cache = False
+            
+            model.gradient_checkpointing_enable()
+
+        if False:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                use_cache=False,
+                device_map=None,
+            )
         trainer = TokenTrackingTrainer(
             model=model,
             args=training_args,

@@ -54,6 +54,7 @@ NPROC_PER_NODE=$GPUS_PER_NODE
 MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 MASTER_PORT=29500
 
+source activate-env-variables-per-supercomputer.sh
 
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "

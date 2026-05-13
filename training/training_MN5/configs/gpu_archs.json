@@ -1,5 +1,6 @@
 {
     "NVIDIA H100 SXM": {
+        "vram_gb": 64,
         "theoretical_peak_fp64_tflops": 34,
         "theoretical_peak_fp64_tensor_tflops": 67,
         "theoretical_peak_fp32_tflops": 67,
@@ -9,26 +10,8 @@
         "theoretical_peak_fp8_tensor_tflops": 1979,
         "theoretical_peak_int8_tensor_tops": 1979
     },
-    "NVIDIA H100 PCIE": {
-        "theoretical_peak_fp64_tflops": 30,
-        "theoretical_peak_fp64_tensor_tflops": 60,
-        "theoretical_peak_fp32_tflops": 60,
-        "theoretical_peak_tf32_tensor_tflops": 418,
-        "theoretical_peak_fp16_tensor_tflops": 835,
-        "theoretical_peak_bf16_tensor_tflops": 835,
-        "theoretical_peak_fp8_tensor_tflops": 1671,
-        "theoretical_peak_int8_tensor_tops": 1671
-    },
     "NVIDIA A100 SXM": {
-        "theoretical_peak_fp64_tflops": 9.7,
-        "theoretical_peak_fp64_tensor_tflops": 19.5,
-        "theoretical_peak_fp32_tflops": 19.5,
-        "theoretical_peak_tf32_tensor_tflops": 156,
-        "theoretical_peak_fp16_tensor_tflops": 312,
-        "theoretical_peak_bf16_tensor_tflops": 312,
-        "theoretical_peak_int8_tensor_tops": 624
-    },
-    "NVIDIA A100 PCIE": {
+        "vram_gb": 64,
         "theoretical_peak_fp64_tflops": 9.7,
         "theoretical_peak_fp64_tensor_tflops": 19.5,
         "theoretical_peak_fp32_tflops": 19.5,
