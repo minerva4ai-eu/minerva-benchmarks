@@ -31,6 +31,45 @@ MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
 
 
+def get_fsdp_layer_to_wrap(model_name_or_path: str):
+    """
+    Returns the string representation of the Transformer layer class
+    based on the model architecture for FSDP wrapping.
+    """
+    model_name = model_name_or_path.lower()
+
+    if "llama" in model_name:
+        # Works for Llama-2, Llama-3, Llama-3.1, etc.
+        return "LlamaDecoderLayer"
+
+    elif "mistral" in model_name or "mixtral" in model_name:
+        return "MistralDecoderLayer"
+
+    elif "qwen" in model_name:
+        # Qwen2 and Qwen2.5 use this naming convention
+        return "Qwen2DecoderLayer"
+
+    elif "falcon" in model_name:
+        return "FalconLayer"
+
+    elif "phi-3" in model_name:
+        return "Phi3DecoderLayer"
+
+    elif "gemma" in model_name:
+        return "GemmaDecoderLayer"
+
+    elif "bert" in model_name:
+        return "BertLayer"
+
+    else:
+        # Fallback: Many HuggingFace models follow this pattern
+        # but it's safer to raise an error if you're unsure
+        raise ValueError(
+            f"Could not automatically determine FSDP layer for {model_name}. "
+            "Please manually specify the decoder layer class."
+        )
+
+
 def is_main_process():
     # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
     rank = int(os.environ.get("RANK", 0))
@@ -119,19 +158,23 @@ def main():
         train_dataset,
         batch_size=BATCH_SIZE,
         shuffle=True,
-        num_workers=args.dataloader_num_workers,
+        # num_workers=args.dataloader_num_workers,
+        num_workers=0,
         pin_memory=True,
         collate_fn=collate_fn_train,
-        persistent_workers=True,
+        # persistent_workers=True,
+        persistent_workers=False,
     )
     eval_dataloader = DataLoader(
         eval_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
-        num_workers=args.dataloader_num_workers,
+        # num_workers=args.dataloader_num_workers,
+        num_workers=0,
         pin_memory=True,
         collate_fn=collate_fn_eval,
-        persistent_workers=True,
+        # persistent_workers=True,
+        persistent_workers=False,
     )
 
     # Model dtype
@@ -147,13 +190,17 @@ def main():
 
     fsdp_config = {
         "activation_checkpointing": True,
-        "use_orig_params": True,
+        "fsdp_activation_checkpointing_kwargs": {"use_reentrant": False},
+        "use_orig_params": False,
         "cpu_ram_efficient_loading": True,
         "sync_module_states": True,
+        "fsdp_offload_params": False,
+        "fsdp_cpu_ram_efficient_loading": True,
         "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
         "forward_prefetch": False,
         "limit_all_gathers": True,
         "backward_prefetch": "backward_post",
+        "transformer_layer_cls_to_wrap": get_fsdp_layer_to_wrap(model_name),
     }
 
     if args.max_comm_comp_overlap:
@@ -167,37 +214,37 @@ def main():
             + "Note: Monitor GPU memory usage as this may increase it.",
         )
 
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        logging_steps=args.logging_steps,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=args.precision == "fp16",
-        bf16=args.precision == "bf16",
-        optim="adamw_torch",
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        fsdp="full_shard auto_wrap",
-        fsdp_config=fsdp_config,
-        eval_steps=None,
-        ddp_timeout=1800,
-    )
-
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
+        training_args = TrainingArguments(
+            output_dir=output_dir,
+            overwrite_output_dir=True,
+            per_device_train_batch_size=BATCH_SIZE,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            # gradient_checkpointing=True,
+            learning_rate=args.lr,
+            weight_decay=args.weight_decay,
+            logging_steps=args.logging_steps,
+            save_strategy="no",
+            save_total_limit=1,
+            fp16=args.precision == "fp16",
+            bf16=args.precision == "bf16",
+            optim="adamw_torch",
+            logging_dir=f"{output_dir}/logs",
+            report_to="none",
+            fsdp="full_shard auto_wrap",
+            fsdp_config=fsdp_config,
+            eval_steps=None,
+            ddp_timeout=1800,
+        )
+
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
+            dtype=dtype,
             use_cache=False,
             device_map=None,
         )
-
+        print_rank(rank, "Model Loaded")
         training_args.num_train_epochs = args.epochs if args.epochs else 1
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
