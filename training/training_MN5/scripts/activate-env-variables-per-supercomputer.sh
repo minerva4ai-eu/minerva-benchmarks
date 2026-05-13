@@ -22,7 +22,7 @@ case "$MACHINE" in
         export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
         # PYTORCH
-        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:128
         export CUDA_LAUNCH_BLOCKING=1
         ;;
 
