@@ -87,6 +87,16 @@ def parse_args():
         choices=["fp32", "fp16", "bf16"],
         help="Precision type for model weights (fp32, fp16, bf16)",
     )
+    parser.add_argument(
+        "--max_comm_comp_overlap",
+        default=False,
+        action="store_true",
+        help=(
+            "Whether to enable maximum communication-computation overlap in FSDP. "
+            + "Sets 'forward_prefetch' to True and 'limit_all_gathers' to False in FSDP config."
+            + "Note: This may increase GPU memory usage, so use with caution on memory-constrained setups."
+        ),
+    )
 
     return parser.parse_args()
 

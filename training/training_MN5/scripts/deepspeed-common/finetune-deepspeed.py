@@ -48,7 +48,7 @@ def main():
         # world_size = int(os.environ.get("GPU_NODE", 1)) * int(
         #    os.environ.get("SLURM_NNODES", 1)
         # )
-
+    print(f"Rank {rank}/{world_size} started...")
     if args.dataset not in DATASET_HANDLER_MAP:
         raise ValueError(f"Dataset {args.dataset} not supported.")
     zero_stage = os.environ["PARALLELISM"]
@@ -176,7 +176,6 @@ def main():
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=dtype,
-            device_map="auto",
             low_cpu_mem_usage=True,
         )
         print_rank(rank, "Model Loaded")
@@ -220,6 +219,12 @@ def main():
             callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
         )
+
+        print_rank(rank, "Trainer initialized and model has been wrapped!")
+        print_rank(rank, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(rank, f"{i[0]} -> {i[1].device}")
+        print_rank(rank, ":::::::::")
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
