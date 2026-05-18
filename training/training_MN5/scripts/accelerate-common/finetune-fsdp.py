@@ -7,7 +7,7 @@ import torch
 import torch.distributed as dist
 from accelerate import init_empty_weights
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import TokenTrackingTrainer
+from shared.custom_train import PerformanceTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
     AutoConfig,
@@ -270,15 +270,13 @@ def main():
             
             model.gradient_checkpointing_enable()
 
-        if False:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                use_cache=False,
-                device_map=None,
-            )
-        trainer = TokenTrackingTrainer(
+        print_rank(rank, "Model Loaded")
+        print_rank(0, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(0, f"{i[0]} -> {i[1].device}")
+        print_rank(0, ":::::::::")
+
+        trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
             train_dataloader=train_dataloader,
@@ -288,6 +286,12 @@ def main():
             callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
         )
+
+        print_rank(rank, "Trainer initialized and model has been wrapped!")
+        print_rank(rank, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(rank, f"{i[0]} -> {i[1].device}")
+        print_rank(rank, ":::::::::")
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
