@@ -6,7 +6,7 @@ import time
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import TokenTrackingTrainer
+from shared.custom_train import PerformanceTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
     AutoModelForCausalLM,
@@ -197,7 +197,7 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        trainer = TokenTrackingTrainer(
+        trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
             train_dataloader=train_dataloader,
