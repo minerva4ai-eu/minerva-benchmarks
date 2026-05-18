@@ -5,7 +5,7 @@ import time
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import TokenTrackingTrainer
+from shared.custom_train import PerformanceTrackingTrainer
 from torch.utils.data import DataLoader, random_split
 from transformers import (
     AutoModelForCausalLM,
@@ -140,38 +140,35 @@ def main():
     else:
         dtype = torch.float32
 
-    # # --- Device setup ---
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    training_args = TrainingArguments(
-        deepspeed=args.deepspeed_config_file,
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,  # effective batch size
-        learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=True if args.precision == "fp16" else False,
-        bf16=True if args.precision == "bf16" else False,
-        disable_tqdm=False,
-        logging_steps=args.logging_steps,
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        eval_strategy="no",
-        eval_steps=None,
-        dataloader_num_workers=args.dataloader_num_workers,
-        load_best_model_at_end=False,
-        remove_unused_columns=False,  # keep all columns as our collator expects
-        include_tokens_per_second=False,
-        include_num_input_tokens_seen=False,
-        warmup_ratio=args.warmup_ratio,
-    )
-
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
+        training_args = TrainingArguments(
+            deepspeed=args.deepspeed_config_file,
+            output_dir=output_dir,
+            overwrite_output_dir=True,
+            per_device_train_batch_size=args.batch_size,
+            per_device_eval_batch_size=args.batch_size,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,  # effective batch size
+            learning_rate=args.lr,
+            weight_decay=args.weight_decay,
+            save_strategy="no",
+            save_total_limit=1,
+            fp16=True if args.precision == "fp16" else False,
+            bf16=True if args.precision == "bf16" else False,
+            disable_tqdm=False,
+            logging_steps=args.logging_steps,
+            logging_dir=f"{output_dir}/logs",
+            report_to="none",
+            eval_strategy="no",
+            eval_steps=None,
+            dataloader_num_workers=args.dataloader_num_workers,
+            load_best_model_at_end=False,
+            remove_unused_columns=False,  # keep all columns as our collator expects
+            include_tokens_per_second=False,
+            include_num_input_tokens_seen=False,
+            warmup_ratio=args.warmup_ratio,
+        )
+
         print_rank(rank, f"Loading Model... dtype: {dtype}")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -209,7 +206,7 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        trainer = TokenTrackingTrainer(
+        trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
             train_dataloader=train_dataloader,

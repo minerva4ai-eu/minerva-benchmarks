@@ -3,8 +3,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.old
-*.venv
-*.sif
 
 # Folders
 inference/scripts/ray-serve/
@@ -27,4 +25,8 @@ inference/results/vllm/*
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
 
-training/training_MN5/results/deepspeed/*
+training/training_MN5/results/*
+
+training/training_MN5/.torchcompile_cache/*
+
+*configs-hydra/
