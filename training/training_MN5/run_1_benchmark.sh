@@ -13,6 +13,7 @@ TYPE_PARALLELISM=("fsdp" "ddp" "none")
 REPEATS=1                 # Number of runs per configuration
 MACHINE="leonardo"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
+RESULTS_BASE_DIR="/leonardo_work/MNRVA_bench/davide_results"
 #######################################################
 # Set environment variables
 #######################################################
@@ -86,7 +87,7 @@ for framework in "${AVAILABLE_FRAMEWORKS[@]}"; do
                     TOTAL_GPUS=$((NODES * GPU_NODE))
                     TOTAL_CPUS=$((GPUS_PER_NODE * CPUS_PER_GPU))
 
-                    BASE_FOLDER="results/${framework}/${dataset}/${model}"
+                    BASE_FOLDER="${RESULTS_BASE_DIR}/${framework}/${dataset}/${model}"
                     RUN_FOLDER="Nodes_${NODES}-GPUs_${TOTAL_GPUS}-Parallelism_${parallelism}-Precision_${precision}-BS_${batch}-GAS_${grad_accum}-MaxModelLength_${MAX_MODEL_LENGTH}"
                     FULL_FOLDER="${BASE_FOLDER}/${RUN_FOLDER}"
 
@@ -124,7 +125,7 @@ for framework in "${AVAILABLE_FRAMEWORKS[@]}"; do
                       fi
           
                       for (( run_id=1; run_id<=REPEATS; run_id++ )); do
-                        LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+                        LAUNCH_FOLDER="${FULL_FOLDER}/launch-${run_id}"
                         echo "Setting up $LAUNCH_FOLDER"
                         mkdir -p "$LAUNCH_FOLDER"
 
@@ -207,7 +208,7 @@ for framework in "${AVAILABLE_FRAMEWORKS[@]}"; do
                       fi
 
                       for (( run_id=1; run_id<=REPEATS; run_id++ )); do
-                        LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+                        LAUNCH_FOLDER="${FULL_FOLDER}/launch-${run_id}"
                         echo "Setting up $LAUNCH_FOLDER"
                         mkdir -p "$LAUNCH_FOLDER"
 

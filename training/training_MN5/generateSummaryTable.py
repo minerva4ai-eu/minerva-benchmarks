@@ -9,10 +9,11 @@ from dotenv import load_dotenv
 # -------------------------
 # Load environment & config
 # -------------------------
-load_dotenv(".env")
-
-BASE_DIR = os.getcwd()
-BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
+SCRIPT_DIR = Path(__file__).resolve().parent
+load_dotenv(SCRIPT_DIR / ".env")
+load_dotenv(SCRIPT_DIR / ".env-leonardo")
+BASE_DIR = str(SCRIPT_DIR)
+BASE_DIR_RESULTS = "/leonardo_work/MNRVA_bench/davide_results"
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
@@ -26,9 +27,7 @@ if os.path.exists(MODEL_TYPE_MAP_PATH):
         MODEL_TYPE_MAP = {}
 
 SUMMARY_FILENAME = "output/training_summary_0.json"
-OUTPUT_FILE = (
-    f"results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
-)
+OUTPUT_FILE = f"/leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 
 # -------------------------
 # Desired CSV columns (training)
@@ -85,6 +84,8 @@ def parse_run_path(launch_path: Path):
     Return a dict with fields for metadata.
     """
     parts = launch_path.parts
+    # Default unknowns
+    framework = ""
     # Default unknowns
     dataset_name = ""
     model_name = ""
@@ -310,7 +311,8 @@ def read_and_average_all_json_summaries(launch_dir: Path):
     Average numeric 'Avg.*' metrics across GPUs, take max for 'Peak.*' metrics,
     and combine everything into one summary dict.
     """
-    json_files = list(launch_dir.glob("output/training_summary_*.json"))
+    # Support both flat output files and per-job output folders (output/<job_id>/...).
+    json_files = list(launch_dir.glob("output/**/training_summary_*.json"))
     if not json_files:
         return {}
 
@@ -371,6 +373,10 @@ def main():
     config_groups = defaultdict(list)
     for launch_dir in base_results.rglob("launch-*"):
         if launch_dir.is_dir():
+            launch_dir_str = str(launch_dir).replace("\\", "/")
+            # Ignore accidental nested copies like .../launch-1/results/.../launch-1
+            if "/launch-1/results/" in launch_dir_str:
+                continue
             config_groups[launch_dir.parent].append(launch_dir)
 
     if not config_groups:

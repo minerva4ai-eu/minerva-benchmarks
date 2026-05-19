@@ -332,3 +332,141 @@ if training_args.max_steps and training_args.max_steps > 0:
 Why: `-1` is truthy in Python, so the old condition wrongly computed per-step time as `total_time / -1`.
 
 After this fix, future runs produce correct timing metrics in the JSON summaries and final CSV.
+
+---
+
+## Results: Fine-Tuning Campaign on Leonardo (2026-05-15)
+
+All aggregated results are in:
+
+- `training/training_MN5/results/full_benchmark_training_summary_Leonardo_boost_usr_prod.csv`
+
+### Report-ready summary (4 nodes x 4 GPUs = 16 GPUs, bf16, FSDP)
+
+| Framework | Dataset | Successful configs | Best batch size | Best throughput (tokens/sec) | Exec time (hours) | Avg GPU mem (GB) | Peak GPU mem (GB) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| accelerate | alpaca | 3/3 | 16 | 141449.21 | 7.293 | 60.29 | 61.46 |
+| accelerate | sharegpt | 1/3 | 16 | 6257.87 | 3.611 | 31.55 | 31.76 |
+| accelerate | sonnet | 3/3 | 16 | 4092.14 | 0.112 | 26.98 | 31.77 |
+| torchrun | alpaca | 3/3 | 16 | 73325.10 | 14.062 | 48.35 | 63.98 |
+| torchrun | sharegpt | 0/3 | - | - | - | - | - |
+| torchrun | sonnet | 0/3 | - | - | - | - | - |
+
+### Key takeaway
+
+Best observed run was **accelerate + FSDP + alpaca + batch size 16** with **141449.21 tokens/sec** on 16xA100.
+
+### How results were generated for presentation
+
+```bash
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+eval "$(/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda shell.bash hook)"
+conda activate ./envs/fine-tune-dev
+set -a
+source .env-leonardo
+set +a
+python generateSummaryTable.py
+```
+
+---
+
+## Operational notes from the Leonardo run
+
+These points were important to complete the full benchmark campaign reliably.
+
+1. Always launch from `training/training_MN5` so relative paths (`scripts/...`, `.env-leonardo`) resolve correctly.
+2. Keep `MACHINE="leonardo"` in runner scripts so Leonardo-specific env and SLURM settings are loaded.
+3. Use `-p $PARTITION_NAME`, `-A $ACCOUNT`, `-q $QOS` in every `sbatch` submission.
+4. Keep `--cpus-per-task=$TOTAL_CPUS` for Accelerate jobs on Leonardo (32 CPUs/node effective in this setup), not a hardcoded MN5 value.
+5. Expect some OOM/failed combinations (mainly sharegpt/sonnet on torchrun); these are already flagged in the summary as `Contains failed runs (OOM/Error)`.
+
+### Troubleshooting note
+
+If a SLURM output shows:
+
+```text
+activate-env-per-supercomputer.sh: No such file or directory
+```
+
+the job is being launched from a directory that does not contain the copied helper scripts. Re-run via `run_1_benchmark.sh` / `run_all_benchmarks.sh` from `training/training_MN5` so launch folders are created and populated correctly.
+
+---
+
+## Migration from cin_staff to mnrva_bench (2026-05-19)
+
+### Reason
+The cin_staff disk quota was saturating during benchmark runs, causing "Disk quota exceeded" errors. The solution was to migrate all outputs to the mnrva_bench account with dedicated storage at `/leonardo_work/MNRVA_bench/davide_results`.
+
+### Account & Output Path Changes
+
+**Before (cin_staff account):**
+- Account: `cin_staff` (from SLURM submissions)
+- Results: `training/training_MN5/results/` (relative path, stored in cin_staff workspace)
+
+**After (mnrva_bench account):**
+- Account: `mnrva_bench` (updated SLURM submissions)
+- Results: `/leonardo_work/MNRVA_bench/davide_results/` (absolute path, dedicated quota)
+
+### Files Modified
+
+#### 1. Run Scripts
+- `training/training_MN5/run_1_benchmark.sh`
+- `training/training_MN5/run_all_benchmarks.sh`
+
+Changes:
+```bash
+# Added new variable
+RESULTS_BASE_DIR="/leonardo_work/MNRVA_bench/davide_results"
+
+# Updated BASE_FOLDER
+# OLD: BASE_FOLDER="results/${framework}/${dataset}/${model}"
+# NEW: BASE_FOLDER="${RESULTS_BASE_DIR}/${framework}/${dataset}/${model}"
+
+# Updated LAUNCH_FOLDER (now uses absolute path)
+# OLD: LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
+# NEW: LAUNCH_FOLDER="${FULL_FOLDER}/launch-${run_id}"
+```
+
+#### 2. Summary Generation Scripts
+- `training/training_MN5/generateSummaryTable.py`
+- `training/training_MN5/generateSummaryTablev2.py`
+
+Changes:
+```python
+# Updated path resolution to use script directory
+SCRIPT_DIR = Path(__file__).resolve().parent
+load_dotenv(SCRIPT_DIR / ".env")
+load_dotenv(SCRIPT_DIR / ".env-leonardo")
+BASE_DIR = str(SCRIPT_DIR)
+
+# Results directory now points to mnrva_bench
+BASE_DIR_RESULTS = "/leonardo_work/MNRVA_bench/davide_results"
+
+# Output CSV path updated
+OUTPUT_FILE = f"/leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
+
+# Fixed framework initialization bug in parse_run_path()
+framework = ""  # Initialize before use
+```
+
+### Data Migration
+- **Existing results**: 202MB of previous benchmark runs (21 launch folders) migrated from `training/training_MN5/results/` to `/leonardo_work/MNRVA_bench/davide_results/`
+- **Summary CSVs**: Regenerated from migrated data without loss
+
+### Verification
+```bash
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks
+training/training_MN5/envs/fine-tune-dev/bin/python training/training_MN5/generateSummaryTable.py
+# Output: ✅ Training summary CSV written to: /leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_Leonardo_boost_usr_prod.csv
+# 📊 Config folders processed: 18
+```
+
+### New Workflow
+```bash
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+bash run_1_benchmark.sh
+# Results now automatically written to: /leonardo_work/MNRVA_bench/davide_results/
+```
+
+No changes needed to workflow scripts - migration is transparent to end users.
+

@@ -8,7 +8,21 @@ from . import DatasetHandler
 class SonnetHandler(DatasetHandler):
     def __init__(self, path, tokenizer, max_length=1024):
         with open(path, "r", encoding="utf-8") as f:
-            self.data = json.load(f)
+            raw_text = f.read()
+
+        # Support both instruction-style JSON datasets and plain text corpora.
+        try:
+            parsed = json.loads(raw_text)
+            if isinstance(parsed, list):
+                self.data = parsed
+            else:
+                self.data = []
+        except json.JSONDecodeError:
+            lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+            self.data = [
+                {"instruction": "", "input": "", "output": line}
+                for line in lines
+            ]
         self.tokenizer = tokenizer
         self.max_length = max_length
 
