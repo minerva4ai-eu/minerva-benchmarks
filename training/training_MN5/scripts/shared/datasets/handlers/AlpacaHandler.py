@@ -3,32 +3,46 @@ import json
 import torch
 
 from . import DatasetHandler
+from . import utils as u
 
 
 class AlpacaHandler(DatasetHandler):
-    def __init__(self, path, tokenizer, max_length=1024):
+    def __init__(self, path, tokenizer, max_length=1024, pad_maxlength=True):
         path = path.replace('"', "")
         with open(path, "r", encoding="utf-8") as f:
             self.data = json.load(f)
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.pad_maxlength = pad_maxlength
 
     def __len__(self):
         return len(self.data)
 
+    @u.perf_timed("__getitem__")
     def __getitem__(self, idx):
         item = self.data[idx]
         prompt = item.get("instruction", "")
         if item.get("input"):
             prompt = prompt + "\n\n" + item["input"]
         prompt = prompt + "\n\n### Response:\n" + item.get("output", "")
-        enc = self.tokenizer(
-            prompt, truncation=True, max_length=self.max_length, return_tensors="pt"
-        )
+
+        if self.pad_maxlength:
+            enc = self.tokenizer(
+                prompt,
+                truncation=True,
+                max_length=self.max_length,
+                padding="max_length",
+                return_tensors="pt",
+            )
+
+        else:
+            enc = self.tokenizer(
+                prompt, truncation=True, max_length=self.max_length, return_tensors="pt"
+            )
         return enc.input_ids.squeeze(0), enc.attention_mask.squeeze(0)
 
-    @staticmethod
-    def collate_fn(batch):
+    @u.perf_timed("collate_fn")
+    def collate_fn(self, batch):
         input_ids_list, attn_list = zip(*batch)
         lengths = [b.size(0) for b in input_ids_list]
         max_len = max(lengths)
@@ -44,14 +58,14 @@ class AlpacaHandler(DatasetHandler):
             "labels": input_ids.clone(),
         }
 
-    @staticmethod
-    def data_collator(batch):
-        # batch is a list of tuples from __getitem__ if using Dataset of tuples
-        # but since our Dataset returns tensors, HF will pass the dict if used with map-style datasets.
-        # To be safe: if batch is list of dicts, handle that, otherwise handle list of tuples
-        if isinstance(batch[0], dict):
-            input_ids = [b["input_ids"] for b in batch]
-            attn = [b["attention_mask"] for b in batch]
-            return AlpacaHandler.collate_fn(list(zip(input_ids, attn)))
-        else:
-            return AlpacaHandler.collate_fn(batch)
+    # @staticmethod
+    # def data_collator(batch):
+    #    # batch is a list of tuples from __getitem__ if using Dataset of tuples
+    #    # but since our Dataset returns tensors, HF will pass the dict if used with map-style datasets.
+    #    # To be safe: if batch is list of dicts, handle that, otherwise handle list of tuples
+    #    if isinstance(batch[0], dict):
+    #        input_ids = [b["input_ids"] for b in batch]
+    #        attn = [b["attention_mask"] for b in batch]
+    #        return AlpacaHandler.collate_fn(list(zip(input_ids, attn)))
+    #    else:
+    #        return AlpacaHandler.collate_fn(batch)
