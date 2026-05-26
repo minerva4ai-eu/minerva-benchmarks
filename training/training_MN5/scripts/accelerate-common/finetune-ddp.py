@@ -1,31 +1,25 @@
-# finetune_llama8b.py
+import gc
 import os
-import sys
 import time
 
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingTrainer
-from torch.utils.data import DataLoader, random_split
+from shared.data import load_dataset
+from shared.utils import (
+    count_parameters,
+    print_rank,
+    save_summary_stats_json,
+)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     TrainingArguments,
 )
-from utils import (
-    count_parameters,
-    parse_args,
-    parse_dataset_paths,
-    print_rank,
-    save_summary_stats_json,
-)
+from utils import parse_args
 
 args = parse_args()
-sys.path.append(os.path.join(args.minerva_dir, "..", ".."))
-from training.training_MN5.configs.config_datasets_handlers_map import (
-    DATASET_HANDLER_MAP,
-)
 
 MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
@@ -50,11 +44,7 @@ def main():
         #    os.environ.get("SLURM_NNODES", 1)
         # )
 
-    if args.dataset not in DATASET_HANDLER_MAP:
-        raise ValueError(f"Dataset {args.dataset} not supported.")
-
-    # Get Dataset Handler
-    DatasetHandlerClass = DATASET_HANDLER_MAP[args.dataset]
+    torch.cuda.empty_cache()
 
     model_name = args.model
     data = args.data
@@ -72,67 +62,13 @@ def main():
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
-    train_path, val_path, is_split = parse_dataset_paths(data)
-
-    print_rank(
-        rank,
-        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}",
-    )
-    print_rank(rank, f"  Train path: {train_path}")
-    if val_path:
-        print_rank(rank, f"  Validation path: {val_path}")
-
-    # If we have explicit train/validation files
-    # Load datasets
-    if is_split and val_path:
-        train_dataset = DatasetHandlerClass(
-            path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        eval_dataset = DatasetHandlerClass(
-            path=val_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        dataset_for_collate = train_dataset
-    else:
-        dataset = DatasetHandlerClass(
-            path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        train_size = int(0.9 * len(dataset))
-        eval_size = len(dataset) - train_size
-        train_dataset, eval_dataset = random_split(dataset, [train_size, eval_size])
-        dataset_for_collate = dataset
-
-    def resolve_collate(ds_obj, fallback):
-        if hasattr(ds_obj, "collate_fn"):
-            return getattr(ds_obj, "collate_fn")
-        if hasattr(ds_obj, "dataset") and hasattr(ds_obj.dataset, "collate_fn"):
-            return getattr(ds_obj.dataset, "collate_fn")
-        if fallback is not None and hasattr(fallback, "collate_fn"):
-            return getattr(fallback, "collate_fn")
-        return None
-
-    collate_fn_train = resolve_collate(train_dataset, dataset_for_collate)
-    collate_fn_eval = resolve_collate(eval_dataset, dataset_for_collate)
-
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        num_workers=args.dataloader_num_workers,
-        pin_memory=True,
-        collate_fn=collate_fn_train,
-        persistent_workers=True,
-    )
-    eval_dataloader = DataLoader(
-        eval_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=False,
-        num_workers=args.dataloader_num_workers,
-        pin_memory=True,
-        collate_fn=collate_fn_eval,
-        persistent_workers=True,
+    train_dataset, eval_dataset, collate_fn, _ = load_dataset(
+        dataset_name=args.dataset,
+        dataset_path=args.data,
+        tokenizer=tokenizer,
+        max_length=MAX_LENGTH,
     )
 
-    # Model
     # --- Precision selection ---
     if args.precision == "fp16":
         dtype = torch.float16
@@ -141,44 +77,53 @@ def main():
     else:
         dtype = torch.float32
 
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        overwrite_output_dir=True,
-        # num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,  # effective batch size
-        learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        logging_steps=args.logging_steps,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=True if args.precision == "fp16" else False,
-        bf16=True if args.precision == "bf16" else False,
-        optim="adamw_torch",
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        # evaluation_strategy="epoch",
-        eval_strategy="epoch",
-        eval_steps=None,
-        ddp_timeout=1800,
-        dataloader_num_workers=args.dataloader_num_workers,
-        load_best_model_at_end=False,
-        remove_unused_columns=False,  # keep all columns as our collator expects
-    )
-
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
-        print_rank(rank, f"Loading Model... dtype: {dtype}")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
-            device_map=None,  # Trainer will put model on device
-        )
-        print_rank(rank, "Model Loaded")
+        # train_dataloader = DataLoader(
+        #    train_dataset,
+        #    batch_size=BATCH_SIZE,
+        #    shuffle=True,
+        #    num_workers=args.dataloader_num_workers,
+        #    pin_memory=True,
+        #    collate_fn=collate_fn_train,
+        #    persistent_workers=True,
+        # )
+        # eval_dataloader = DataLoader(
+        #    eval_dataset,
+        #    batch_size=BATCH_SIZE,
+        #    shuffle=False,
+        #    num_workers=args.dataloader_num_workers,
+        #    pin_memory=True,
+        #    collate_fn=collate_fn_eval,
+        #    persistent_workers=True,
+        # )
 
-        # Conditionally add either epochs or max_steps
+        training_args = TrainingArguments(
+            output_dir=output_dir,
+            overwrite_output_dir=True,
+            per_device_train_batch_size=BATCH_SIZE,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            learning_rate=args.lr,
+            weight_decay=args.weight_decay,
+            logging_steps=args.logging_steps,
+            save_strategy="no",
+            save_total_limit=1,
+            fp16=args.precision == "fp16",
+            bf16=args.precision == "bf16",
+            optim="adamw_torch",
+            logging_dir=f"{output_dir}/logs",
+            report_to="none",
+            eval_steps=None,
+            ddp_timeout=1800,
+            # Dataloader is created automatically from trainer
+            dataloader_drop_last=True,
+            dataloader_num_workers=args.dataloader_num_workers,
+            data_seed=32,
+            dataloader_persistent_workers=args.dataloader_num_workers > 1,
+            dataloader_pin_memory=True,
+            dataloader_prefetch_factor=4,
+        )
+
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
@@ -197,12 +142,22 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
+        print_rank(f"Loading Model... dtype: {dtype}")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            device_map=None,  # Trainer will put model on device
+            attn_implementation="flash_attention_2",
+        )
+        print_rank("Model Loaded")
+
         trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
-            train_dataloader=train_dataloader,
-            eval_dataloader=eval_dataloader,
+            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
+            data_collator=collate_fn,
             tokenizer=tokenizer,
             callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
@@ -253,9 +208,7 @@ def main():
                 total_training_time_secs / training_args.num_train_epochs
             )
             avg_epoch_time_hours = avg_epoch_time_sec / 3600
-            avg_step_time_sec = avg_epoch_time_sec / len(
-                train_dataloader
-            )  # approximate
+            avg_step_time_sec = avg_epoch_time_sec / len(train_dataset)  # approximate
             avg_step_time_hours = avg_step_time_sec / 3600
 
         # ---- Compute derived metrics ----
@@ -342,6 +295,10 @@ def main():
             },
             output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
         )
+
+        del trainer, model
+        gc.collect()  # frees Python objects + their GPU tensor wrappers
+        torch.cuda.empty_cache()  # returns freed CUDA memory back to the OS/driver
         print_rank(rank, "Fine-tuning completed successfully.")
     except Exception as e:
         save_summary_stats_json(
