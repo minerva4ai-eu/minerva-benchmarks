@@ -1,7 +1,7 @@
 # Leonardo Setup Guide — Fine-Tuning Benchmarks
 
 **Date:** 2025-03-31  
-**System:** CINECA Leonardo (NVIDIA A100 80GB, 4 GPUs/node, 32 CPUs/node)  
+**System:** CINECA Leonardo (NVIDIA A100 64GB, 4 GPUs/node, 32 CPUs/node)  
 **Account:** `mnrva_bench`  
 **Partition:** `boost_usr_prod`  
 **Base path:** `/leonardo_work/cin_staff/dgentile/minerva-benchmarks`
@@ -52,7 +52,7 @@ Key differences from MN5:
 - `GPUS_PER_NODE=4` (MN5 has 4 as well, but partition/account differ)
 - `CPUS_PER_GPU=8` (MN5 has 20, since it has 80 CPUs/node)
 - `PARTITION_NAME="boost_usr_prod"` (Leonardo-specific)
-- `QOS=boost_qos_lprod`
+- `QOS=boost_qos_lprod` (Leonardo-specific)
 
 ---
 

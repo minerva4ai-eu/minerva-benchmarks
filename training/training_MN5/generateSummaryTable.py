@@ -84,12 +84,43 @@ def parse_run_path(launch_path: Path):
     Return a dict with fields for metadata.
     """
     parts = launch_path.parts
-    # Default unknowns
     framework = ""
-    # Default unknowns
     dataset_name = ""
     model_name = ""
     config_str = ""
+
+    base_results = Path(BASE_DIR_RESULTS)
+    try:
+        relative_parts = launch_path.relative_to(base_results).parts
+        if len(relative_parts) >= 4:
+            framework = relative_parts[0]
+            dataset_name = relative_parts[1]
+            model_name = relative_parts[2]
+            config_str = relative_parts[3]
+    except ValueError:
+        pass
+
+    if framework and dataset_name and model_name and config_str:
+        conf = {}
+        for chunk in config_str.split("-"):
+            if "_" in chunk:
+                k, v = chunk.split("_", 1)
+                conf[k.lower()] = v
+
+        return {
+            "Framework": framework,
+            "Dataset": dataset_name,
+            "Model": model_name,
+            "Number of Nodes": conf.get("nodes", ""),
+            "GPUs per Node": GPUS_PER_NODE,
+            "Total GPUs used": conf.get("gpus", ""),
+            "TypeParallelism": conf.get("parallelism", ""),
+            "Precision Type": conf.get("precision", ""),
+            "Batch Size": conf.get("bs", ""),
+            "Accumulation Gradients": conf.get("gas", ""),
+            "Max Length": conf.get("maxmodellength", ""),
+        }
+
     # Try to extract
     # parts example: ('.', 'results', 'torchrun', 'alpaca', 'Llama-3.1-8B-Instruct', 'Nodes_4-GPUs_16-...', 'launch-1')
     try:
@@ -458,10 +489,16 @@ def main():
         # Add text fields
         combined.update(text_fields)
 
-        # If any run failed, mark it
+        # Preserve whether failures were OOM-related or generic.
         comments = [m.get("Comment", "") for m in all_metrics]
-        if any("oom" in c.lower() or "error" in c.lower() for c in comments):
-            combined["Comment"] = "Contains failed runs (OOM/Error)"
+        has_oom = any("oom" in c.lower() for c in comments)
+        has_error = any("error" in c.lower() for c in comments)
+        if has_oom and has_error:
+            combined["Comment"] = "Contains OOM and non-OOM failed runs"
+        elif has_oom:
+            combined["Comment"] = "Contains OOM failed runs"
+        elif has_error:
+            combined["Comment"] = "Contains non-OOM failed runs"
 
         # 4️⃣ Build CSV row
         row = {c: "" for c in COLUMNS}
