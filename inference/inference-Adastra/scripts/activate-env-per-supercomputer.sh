@@ -30,7 +30,7 @@ case "$MACHINE" in
         ;;
 
     cines-adastra-mi250 | cines-adastra-mi300)
-        source $ENVIRONMENT/bin/activate.poverlay
+        source $ENVIRONMENT/bin/activate
         which python
         ;;
         

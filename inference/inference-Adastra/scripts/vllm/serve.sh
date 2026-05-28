@@ -22,8 +22,6 @@ vllm serve "$MODEL_PATH" \
     --tensor-parallel-size "$TP" \
     --pipeline-parallel-size "$PP" \
     --max-model-len $MAX_MODEL_LENGTH \
-    --enforce-eager \
-    --gpu-memory-utilization 0.90 \
     --distributed-executor-backend "ray" \
     $ADDITIONAL_ARGS &
 
@@ -52,9 +50,8 @@ for conc in "${concurrencies[@]}"; do
     GPU_MON_PID=$!
 
     # Run benchmark
-    vllm bench serve \
-        --backend vllm \
-        --host localhost \
+    python $BENCHMARK_FILE --backend 'vllm' \
+        --host 'localhost' \
         --port $PORT \
         --model $MODEL_PATH \
         --dataset-name $DATASET \

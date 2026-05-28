@@ -32,6 +32,17 @@ print(f"[gpu_monitor] Monitoring {device_count} GPUs every {poll_interval}s. Wri
 # Touch file early so it exists even if killed early
 open(summary_file, "w").close()
 
+
+def parse_power(power_info):
+    """MI250X uses average_socket_power, MI300A uses current_socket_power."""
+    for field in ("average_socket_power", "current_socket_power"):
+        try:
+            return float(power_info.get(field))
+        except (ValueError, TypeError):
+            continue
+    return 0.0
+
+
 try:
     while not stop:
         for i in range(device_count):
@@ -39,11 +50,7 @@ try:
             mem_used = mem_info / 1024**2  # bytes -> MB
 
             power_info = amdsmi_get_power_info(handles[i])
-            raw_power = power_info.get('average_socket_power', 0.0)
-            try:
-                power = float(raw_power)
-            except (ValueError, TypeError):
-                power = 0.0
+            power = parse_power(power_info)
 
             mem_sum[i] += mem_used
             power_sum[i] += power

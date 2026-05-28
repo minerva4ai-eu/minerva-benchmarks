@@ -796,7 +796,7 @@ def main(args: argparse.Namespace):
                               trust_remote_code=args.trust_remote_code)
     else:
         tokenizer = get_tokenizer(tokenizer_id,
-                              tokenizer_mode=tokenizer_mode,
+                              tokenizer_mode="auto",
                               trust_remote_code=args.trust_remote_code)
         
     if args.dataset is not None:
@@ -835,9 +835,6 @@ def main(args: argparse.Namespace):
                               for prompt, prompt_formatted, prompt_len,
                               output_len, _ in input_requests]
         else:
-            assert (
-                tokenizer.chat_template or tokenizer.default_chat_template
-            ), "Tokenizer/model must have chat template for sonnet dataset."
             input_requests = sample_sonnet_requests(
                 dataset_path=args.dataset_path,
                 num_requests=args.num_prompts,
