@@ -5,12 +5,12 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("torchrun") # "accelerate" "deepspeed"
-DATASETS=("alpaca")
-MODELS=("Mistral-7B-Instruct-v0.3") # "gemma-3-1b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct"
-NUMBER_OF_NODES=(4)
-TYPE_PARALLELISM=("fsdp") # "ddp" "fsdp"
-REPEATS=1
+FRAMEWORKS=("torchrun")   # ("torchrun" "accelerate" "deepspeed")    # Add other frameworks if needed
+DATASETS=("alpaca" "squadv2") # Add more datasets if needed
+MODELS=("gemma-3-1b-it" "Llama-3.1-8B-Instruct" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct") #"gemma-3-1b-it") # Add your models here
+NUMBER_OF_NODES=(1 4)
+TYPE_PARALLELISM=("fsdp" "ddp" "none")
+REPEATS=1                 # Number of runs per configuration
 MACHINE="cines-adastra-mi300"
 MACHINE_TYPE="rocm"
 #######################################################

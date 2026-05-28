@@ -1,21 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=PYTORCH_DYNAMIC
+#SBATCH --job-name=torch.fsdp
 #SBATCH --time=24:00:00
 
 
 ##################################################
 ###           Activate Environment             ###
 ##################################################
-# Activate virtual environment using conda
 source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-# module load $MODULES
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
-
-##################################################
-
 
 ##################################################
 ###        Environment Variables Setup         ###
@@ -32,26 +24,23 @@ mkdir -p $OUTPUT_DIR
 echo "LAUNCH_FOLDER: {$LAUNCH_FOLDER}, DATASET: {$DATASET}, DATASET_PATH: {$DATASET_PATH}"
 echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NODE: {$GPUS_PER_NODE}, MODEL_PATH: {$MODEL_PATH}, PARALLELISM: {$PARALLELISM}, PRECISION: {$PRECISION} BATCH_SIZE: {$BATCH_SIZE}, GRAD_ACCUM: {$GRAD_ACCUM}"
 
+# Machine-specific env variables (RCCL, ROCR, etc.)
+source activate-env-variables-per-supercomputer.sh
 
-# Export environment variables
-# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 export SLURM_CPU_BIND=none
-export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
-###################################################
 
 ##################################################
 ###             Torchrun Setup                 ###
 ##################################################
-gpu_plots_monitor_command="python -m gpu_plots"
-
+gpu_plots_monitor_command="python -m system_plots"
 
 # Torchrun args
 JOB_ID=${SLURM_JOB_ID}
 NNODES=${SLURM_NNODES}
 NPROC_PER_NODE=$GPUS_PER_NODE
+echo "HOSTNAME: $(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)"
 MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 MASTER_PORT=29500
-
 
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
@@ -62,19 +51,18 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Optional: give the monitor time to initialize
     sleep 5
 
-    # Run training in foreground (this blocks until done)
     torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
       finetune-fsdp.py \
-        --minerva_dir "${CURRENT_DIR}" \
-        --model "${MODEL_PATH}" \
+        --minerva_dir '${CURRENT_DIR}' \
+        --model '${MODEL_PATH}' \
         --data '${DATASET_PATH}' \
-        --output_dir "${OUTPUT_DIR}/$SLURM_JOB_ID" \
+        --output_dir '${OUTPUT_DIR}/$SLURM_JOB_ID' \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
+        ${EPOCHS:+--epochs '$EPOCHS'} \
+        ${STEPS:+--max_steps '$STEPS'} \
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
@@ -87,25 +75,4 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     wait \"\$monitor_pid\"
 "
 
-# srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL \
-#   torchrun \
-#     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-#     --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-#     finetune-fsdp.py \
-#       --minerva_dir "${CURRENT_DIR}" \
-#       --model "${MODEL_PATH}" \
-#       --data "${DATASET_PATH}" \
-#       --output_dir "${OUTPUT_DIR}" \
-#       --batch_size $BATCH_SIZE \
-#       --max_length $MAX_MODEL_LENGTH \
-#       ${EPOCHS:+--epochs "$EPOCHS"} \
-#       ${STEPS:+--max_steps "$STEPS"} \
-#       --precision $PRECISION \
-#       --lr $LR \
-#       --gradient_accumulation_steps $GRAD_ACCUM \
-#       --dataloader_num_workers 2 \
-#       --dataset $DATASET
-
-
 echo "FSDP Job Completed."
-

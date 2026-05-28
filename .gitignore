@@ -11,35 +11,22 @@ inference/inference-MN5/results-*/
 inference/inference-Adastra/datasets
 inference/inference-Adastra/benchmarks/datasets/
 inference/inference-Adastra/envs/
-inference/inference-Adastra/results-*/
 
 
 # Ignore everything inside inference/results/
 inference/inference-MN5/results/vllm/
 inference/inference-MN5/results/deepspeed/
+inference/inference-MN5/results/sglang/*
 
 # Ignore everything inside inference/results/
-inference/inference-Adastra/results/vllm/
-inference/inference-Adastra/results/deepspeed/
-
-# But do not ignore CSV files directly inside inference/results/
-# !inference/inference-MN5/results/*.csv
-
-results/deepspeed/*
-results/vllm/*
-results/sglang/*
-
-inference/inference-MN5/results/deepspeed/*
-inference/inference-MN5/results/sglang/*
-inference/inference-MN5/results/vllm/*
+inference/inference-Adastra/results*/vllm/
+inference/inference-Adastra/results*/deepspeed/
+inference/inference-Adastra/results*/sglang/
 
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
 
-inference/inference-Adastra/results/deepspeed/*
-inference/inference-Adastra/results/sglang/*
-inference/inference-Adastra/results/vllm/*
 
-training/training_Adastra/results
+training/training_Adastra/results*
 
 ._dbindex_

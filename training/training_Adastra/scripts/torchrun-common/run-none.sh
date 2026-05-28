@@ -1,21 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=PYTORCH_DYNAMIC
+#SBATCH --job-name=torch.none
 #SBATCH --time=24:00:00
 
 
 ##################################################
 ###           Activate Environment             ###
 ##################################################
-# Activate virtual environment using conda
+# Activate virtual environment
 source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-# module load $MODULES
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
-
-##################################################
-
 
 ##################################################
 ###        Environment Variables Setup         ###
@@ -32,12 +25,10 @@ mkdir -p $OUTPUT_DIR
 echo "LAUNCH_FOLDER: {$LAUNCH_FOLDER}, DATASET: {$DATASET}, DATASET_PATH: {$DATASET_PATH}"
 echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NODE: {$GPUS_PER_NODE}, MODEL_PATH: {$MODEL_PATH}, PARALLELISM: {$PARALLELISM}, PRECISION: {$PRECISION} BATCH_SIZE: {$BATCH_SIZE}, GRAD_ACCUM: {$GRAD_ACCUM}"
 
+# Machine-specific env variables (RCCL, ROCR, etc.)
+source activate-env-variables-per-supercomputer.sh
 
-# Export environment variables
-# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 export SLURM_CPU_BIND=none
-export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128,expandable_segments:True
-###################################################
 
 ##################################################
 ###           Training Execution              ###
@@ -47,7 +38,7 @@ gpu_plots_monitor_command="python -m gpu_plots"
 
 # Start GPU monitoring in background
 $gpu_plots_monitor_command &
-monitor_pid=\$!
+monitor_pid=$!
 
 # Optional: give the monitor time to initialize
 sleep 5
@@ -69,10 +60,10 @@ python finetune-none.py \
     --dataset $DATASET
 
 # Kill the GPU monitoring running in background 
-kill -SIGTERM \"\$monitor_pid\"
+kill -SIGTERM "$monitor_pid"
 
 # Wait for the monitor to clean up and exit
-wait \"\$monitor_pid\
+wait "$monitor_pid"
 
 
 echo "✅ Single Node job completed."
