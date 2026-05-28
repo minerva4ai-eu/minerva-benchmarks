@@ -28,6 +28,6 @@ inference/inference-MN5/benchmarks-vllm-10122025/*
 
 
 training/training_Adastra/results*/torchrun
-training/training_Adastra/results*/torchrun
+training/training_Adastra/results*/accelerate
 
 ._dbindex_
