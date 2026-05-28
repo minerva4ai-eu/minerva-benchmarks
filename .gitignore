@@ -27,6 +27,7 @@ inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
 
 
-training/training_Adastra/results*
+training/training_Adastra/results*/torchrun
+training/training_Adastra/results*/torchrun
 
 ._dbindex_
