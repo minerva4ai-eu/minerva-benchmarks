@@ -1,0 +1,22 @@
+# Base configuration for benchmark experiments
+defaults:
+  - /model: 
+    - llama3_8b
+    - mistral_7b
+  - /framework: 
+    - torchrun
+    - deepspeed
+  - /dataset: 
+    - alpaca
+    - squadv2
+  - _self_
+
+machine:
+  name: ??? # self given name, must coincide with .env-{machine.name} file
+  name_pattern: ???
+  modules: ??? # space separated modules to load
+  python_environment: ??? # path to python virtual environment
+
+experiment:
+  name: "benchmark_run"
+  output_dir: "results/"
