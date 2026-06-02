@@ -1,0 +1,45 @@
+defaults:
+  - base_training
+  - _self_
+
+name: mistral-7b
+path: "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Mistral-7B-Instruct-v0.3"
+
+# transformer dims
+total_params_billions: 7.24
+architecture_type: dense
+num_layers:           32
+hidden_dim:           4096
+ffn_intermediate_dim: 14336
+num_attention_heads:  32
+num_kv_heads:         8        # GQA — same ratio as Llama 3
+head_dim:             128      # 4096 / 32
+
+# attention
+attention_type:       gqa
+#sliding_window:       null     # v0.1 had 4096, v0.3 removes it
+
+# positional encoding
+#rope_theta:           1000000.0   # v0.3 increased from 10000 → 1M for longer context
+#max_position_embeddings: 32768
+
+# tokenizer
+vocab_size:           32770       # v0.3 expanded from 32000 → 32770
+tokenizer_type:       sentencepiece
+
+# normalization
+#norm_type:            rms_norm
+#norm_eps:             1.0e-5
+#activation_function:  silu     # SwiGLU
+
+# GPU requirements — constraint metadata
+#min_gpus: 1
+max_gpus_scale: 64
+frameworks_supported:
+  - torchrun
+  - accelerate
+  - deepspeed
+parallelism_supported:
+  - fsdp
+  - zero2
+  - zero3

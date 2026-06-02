@@ -1,0 +1,38 @@
+gpu:
+  name: MN5_4xH100-SXM
+  accelerator_type: cuda 
+  vram_gb: 64
+  theoretical_peak_fp64_tflops: 34
+  theoretical_peak_fp64_tensor_tflops: 67
+  theoretical_peak_fp32_tflops: 67
+  theoretical_peak_tf32_tensor_tflops: 495
+  theoretical_peak_fp16_tensor_tflops: 989
+  theoretical_peak_bf16_tensor_tflops: 989
+  theoretical_peak_fp8_tensor_tflops: 1979
+  theoretical_peak_int8_tensor_tops: 1979
+
+comm:
+  internode_comm: nvlink4
+  internode_comm_bandwidth_GBs: 900
+  intranode_comm: infiniband
+  intranode_comm_bandwidth_GBs: 100
+
+node:
+  gpus_per_node: 4
+
+slurm:
+  account: bsc99
+  qos: acc_bench
+  gpus_per_node: 4
+  cpus_per_gpu: 20
+  chdir: ??
+  nodes: 1
+  gres: gpu:${node.gpus_per_node}
+  cpus_per_task: 80
+  tasks_per_node: 1
+  output: run-%j.out
+  error: run-%j.err
+  extra_args:
+    - "--exclusive"
+  single_gpu_also_valid: True   # enables GPU_CONFIGS: (1, gpus_per_node) logic
+

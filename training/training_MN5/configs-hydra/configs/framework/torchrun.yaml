@@ -1,0 +1,15 @@
+name: torchrun
+
+parallelism:
+  none: { min_gpus: 1, max_gpus: 1 }
+  ddp: { min_gpus: 2 }
+  fsdp: { min_gpus: 2 }
+
+scripts:
+  run: scripts/torchrun-common/run-${parallelism}.sh
+  finetune: scripts/torchrun-common/finetune-${parallelism}.py
+  shared:
+    - scripts/torchrun-common/gpu_monitor.py
+    - scripts/torchrun-common/utils.py
+    - scripts/gpu_plots.py
+    - scripts/activate-env-per-supercomputer.sh
