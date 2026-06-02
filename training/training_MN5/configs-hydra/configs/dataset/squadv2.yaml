@@ -1,0 +1,6 @@
+name: squadv2
+path: "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/squad_v2/squad_v2"
+task: ""
+train: "train-00000-of-00001.parquet"
+validation: "validation-00000-of-00001.parquet"
+max_seq_len: 1024
