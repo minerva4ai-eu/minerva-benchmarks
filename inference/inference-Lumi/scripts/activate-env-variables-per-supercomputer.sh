@@ -40,16 +40,14 @@ case "$MACHINE" in
     cines-adastra-mi250)
         # RCCL
         export NCCL_SOCKET_IFNAME=hsn
-        export NCCL_NET_GDR_LEVEL=3
-        export FI_CXI_RDZV_THRESHOLD=0 
-        export FI_CXI_ATS=0
+        export NCCL_NET_GDR_LEVEL=PHB
 
-        export TORCH_BLAS_PREFER_HIPBLASLT=1
-        export HIP_FORCE_DEV_KERNARG=1
         export HSA_ENABLE_SDMA=0
-        export HSA_FORCE_FINE_GRAIN_PCIE=1
 
-        export VLLM_WORKER_MULTIPROC_METHOD=spawn
+        export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
+        export VLLM_ROCM_USE_AITER=0
+        export SGLANG_USE_AITER=0
+
         # GPU visibility
         export HIP_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
         ;;
@@ -57,16 +55,12 @@ case "$MACHINE" in
     cines-adastra-mi300)
         # RCCL
         export NCCL_SOCKET_IFNAME=hsn
-        export NCCL_NET_GDR_LEVEL=3
-        export FI_CXI_RDZV_THRESHOLD=0 
-        export FI_CXI_ATS=0
+        export NCCL_NET_GDR_LEVEL=PHB
 
-        export TORCH_BLAS_PREFER_HIPBLASLT=1
-        export HIP_FORCE_DEV_KERNARG=1
-
-        export VLLM_WORKER_MULTIPROC_METHOD=spawn
         export HSA_ENABLE_SDMA=0
-        export HSA_XNACK=1
+
+        export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
+
         # GPU visibility (4 APU)
         export HIP_VISIBLE_DEVICES="0,1,2,3"
         ;;

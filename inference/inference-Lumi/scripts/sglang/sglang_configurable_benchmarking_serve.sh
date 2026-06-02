@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=SGLANG_DYNAMIC
+#SBATCH --job-name=sglang.serve
 #SBATCH --tasks-per-node=1
 #SBATCH --time=24:00:00
 
@@ -38,11 +38,11 @@ source activate-env-variables-per-supercomputer.sh
 nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
 nodes_array=($nodes)
 head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
+head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname -I | awk '{print $1}')
 
 # Get the IP addresses for each node
 for node in "${nodes_array[@]}"; do
-    node_ip=$(srun --nodes=1 --ntasks=1 -w "$node" hostname --ip-address)
+    node_ip=$(srun --nodes=1 --ntasks=1 -w "$node" hostname -I | awk '{print $1}')
     echo "Node: $node - IP: $node_ip"
 done
 
@@ -68,7 +68,7 @@ echo "[INFO] CUR_DIR=$CUR_DIR"
 
 # Launch the model server on each node using SLURM
 srun -n $NODES --nodes=$NODES --gres=gpu:$GPU_NODE -c $TOTAL_CPUS --cpu-bind=none \
-    --export=ALL,MODEL_PATH=$MODEL_PATH,TENSOR_PARALLEL=$TENSOR_PARALLEL,NCCL_INIT_ADDR=$NCCL_INIT_ADDR,NODES=$NODES,PORT=$PORT,PIPELINE_PARALLEL=$PIPELINE_PARALLEL,MAX_MODEL_LENGTH=$MAX_MODEL_LENGTH,ADDITIONAL_ARGS=$ADDITIONAL_ARGS,CUR_DIR=$CUR_DIR,LAUNCH_FOLDER=$LAUNCH_FOLDER,BENCHMARK_FILE=$BENCHMARK_FILE,DATASET=$DATASET,DATASET_PATH=$DATASET_PATH,ENVIRONMENT_VLLM=$ENVIRONMENT_VLLM,ENVIRONMENT_SGLANG=$ENVIRONMENT_SGLANG,SINGULARITY_MODULE=$SINGULARITY_MODULE,SGLANG_IMAGE="$SGLANG_IMAGE" \
+    --export=ALL,MODEL_PATH=$MODEL_PATH,TENSOR_PARALLEL=$TENSOR_PARALLEL,NCCL_INIT_ADDR=$NCCL_INIT_ADDR,NODES=$NODES,PORT=$PORT,PIPELINE_PARALLEL=$PIPELINE_PARALLEL,MAX_MODEL_LENGTH=$MAX_MODEL_LENGTH,ADDITIONAL_ARGS=$ADDITIONAL_ARGS,CUR_DIR=$CUR_DIR,LAUNCH_FOLDER=$LAUNCH_FOLDER,BENCHMARK_FILE=$BENCHMARK_FILE,DATASET=$DATASET,DATASET_PATH=$DATASET_PATH,ENVIRONMENT_VLLM=$ENVIRONMENT_VLLM,ENVIRONMENT_SGLANG=$ENVIRONMENT_SGLANG \
     bash $CUR_DIR/serve.sh &
 
 SRUN_PID=$!

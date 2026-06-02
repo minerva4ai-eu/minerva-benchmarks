@@ -4,11 +4,10 @@ import signal
 import json
 from amdsmi import *
 
-# Usage: python gpu_summary_monitor.py <summary_file.json> [poll_interval]
+# Usage: python gpu_summary_monitor-rocm.py <summary_file.json> [poll_interval]
 
 summary_file = sys.argv[1]
 poll_interval = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
-fixed_mem = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0  # valeur fixe en % de mémoire utilisée
 
 amdsmi_init()
 handles = amdsmi_get_processor_handles()
@@ -36,9 +35,15 @@ open(summary_file, "w").close()
 try:
     while not stop:
         for i in range(device_count):
-            info = amdsmi_get_power_info(handles[i])
-            mem_used = fixed_mem * 131072 # MB
-            power = info.get('current_socket_power') # W
+            mem_info = amdsmi_get_gpu_memory_usage(handles[i], AmdSmiMemoryType.VRAM)
+            mem_used = mem_info / 1024**2  # bytes -> MB
+
+            power_info = amdsmi_get_power_info(handles[i])
+            raw_power = power_info.get('average_socket_power', 0.0)
+            try:
+                power = float(raw_power)
+            except (ValueError, TypeError):
+                power = 0.0
 
             mem_sum[i] += mem_used
             power_sum[i] += power

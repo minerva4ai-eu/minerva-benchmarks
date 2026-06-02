@@ -5,13 +5,13 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("vllm") # "sglang") # deepspeed")    # Add other frameworks if needed
+FRAMEWORKS=("vllm") # ("vllm" "sglang")    # Add other frameworks if needed
 DATASETS=("sonnet") # ("sharegpt" "sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") # ("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct "Llama-3.1-405B") # Add your models here
-NUMBER_OF_NODES=(2)
-MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
+MODELS=("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # ("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "Llama-3.1-405B") # Add your models here
+NUMBER_OF_NODES=(1)
+MAX_MODEL_LENGTHS=(16384) # (4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="cines-adastra-mi250"  # cines-adastra-mi250 | cines-adastra-mi300
+MACHINE="cines-adastra-mi300"  # cines-adastra-mi250 | cines-adastra-mi300
 MACHINE_TYPE="rocm" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
@@ -90,9 +90,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                   continue
                 fi
                 # Set extra args for Llama-3.1-405B
-                ADDITIONAL_ARGS="--disable-log-requests"
+                ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
               fi
-              ADDITIONAL_ARGS="--disable-log-requests"
+              ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
               
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
@@ -116,11 +116,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MACHINE
                 export MACHINE_TYPE
 
-                REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
-                if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
-                  DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
+                MAX_PARALLEL=$MAX_JOBS
+                RUNNING=${#JOB_IDS[@]}
+                if [ "$RUNNING" -ge "$MAX_PARALLEL" ]; then
+                    DEPENDENCY="--dependency=afterany:${JOB_IDS[-$MAX_PARALLEL]}"
                 else
-                  DEPENDENCY=""
+                    DEPENDENCY=""
                 fi
 
                 JOB_ID=$(sbatch --parsable \
@@ -130,83 +131,11 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --cpus-per-task=$TOTAL_CPUS \
                     $SLURM_CONSTRAINT \
                     $SLURM_QOS \
+                    $DEPENDENCY \
                     --output=run-%j.out \
                     --error=run-%j.out \
                     -A $ACCOUNT \
                     vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
-
-                echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
-                JOB_IDS+=("$JOB_ID")
-                ((CONFIG_INDEX++))
-
-                cd - > /dev/null
-                sleep 5
-              done
-            fi
-
-            # DeepSpeed-MII 
-            if [[ "$framework" == "deepspeed" ]]; then
-              # DeepSpeed-MII
-              echo "DeepSpeed-MII"
-              
-              # If Model is Llama-3.1-405B, avoid it.
-              if [[ "$model" == "Llama-3.1-405B" || "$model" == "Llama-3.1-405B-Instruct" || "$model" == "Llama-3.70B-Instruct" ]]; then
-                continue
-              fi
-              # If Model is gemma-3-12b-it, avoid it.
-              if [[ "$model" == "gemma-3-12b-it" ]]; then
-                continue
-              fi
-              # If Model is Mistral-7B-Instruct-v0.3, avoid it.
-              if [[ "$model" == "Mistral-7B-Instruct-v0.3" ]]; then
-                continue
-              fi
-              # If iteration has more than 1 Node, avoid it.
-              if [[ "$NODES" != 1 ]]; then
-                echo "Skipping deepspeed-mii $model with $NODES nodes (requires maximum 1 node)"
-                continue
-              fi
-              ADDITIONAL_ARGS=""
-
-              for (( run_id=1; run_id<=REPEATS; run_id++ )); do
-                LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
-                echo "Setting up $LAUNCH_FOLDER"
-                mkdir -p "$LAUNCH_FOLDER"
-                
-                cp scripts/deepspeed/serve_deepspeed_mii.py "$LAUNCH_FOLDER"
-                cp scripts/deepspeed/deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
-                cp scripts/deepspeed/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
-                cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
-                cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
-
-                cd "$LAUNCH_FOLDER" || exit 1
-
-                export NODES GPUS_PER_NODE GPU_NODE TENSOR_PARALLEL PIPELINE_PARALLEL MAX_MODEL_LENGTH TOTAL_CPUS
-                export FRAMEWORK="$framework" DATASET="$dataset" MODEL="$model" REPEAT_ID="$run_id"
-                export MODEL_PATH  # Make available to launched script
-                export ADDITIONAL_ARGS
-                export MODULES
-                export MACHINE
-                export MACHINE_TYPE
-
-                REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
-                if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
-                  DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
-                else
-                  DEPENDENCY=""
-                fi
-
-                JOB_ID=$(sbatch --parsable \
-                    --chdir=$(pwd) \
-                    --nodes=$NODES \
-                    $SLURM_GPU_ARG \
-                    --cpus-per-task=$TOTAL_CPUS \
-                    $SLURM_CONSTRAINT \
-                    $SLURM_QOS \
-                    --output=run-%j.out \
-                    --error=run-%j.out \
-                    -A $ACCOUNT \
-                    deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
                 JOB_IDS+=("$JOB_ID")
@@ -264,11 +193,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MACHINE
                 export MACHINE_TYPE
 
-                REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
-                if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
-                  DEPENDENCY="--dependency=afterany:${JOB_IDS[-1]}"
+                MAX_PARALLEL=$MAX_JOBS
+                RUNNING=${#JOB_IDS[@]}
+                if [ "$RUNNING" -ge "$MAX_PARALLEL" ]; then
+                    DEPENDENCY="--dependency=afterany:${JOB_IDS[-$MAX_PARALLEL]}"
                 else
-                  DEPENDENCY=""
+                    DEPENDENCY=""
                 fi
 
                 JOB_ID=$(sbatch --parsable \
