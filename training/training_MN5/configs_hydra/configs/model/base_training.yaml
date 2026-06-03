@@ -1,0 +1,8 @@
+training:
+  batch_size: 1
+  grad_accum: 1
+  precision: "bf16"
+  steps: 50
+  lr: 2e-5
+  optimizer: "adamw"
+  gradient_checkpointing: False

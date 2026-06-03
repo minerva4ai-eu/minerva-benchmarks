@@ -4,16 +4,15 @@ from copy import deepcopy
 from itertools import product
 
 from constraints import rules
+from dataclasses_hydra import BenchmarkConfig, register_configs
 
 # sweep/generator.py
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
-from hydra_dataclasses import register_configs
-from hydra_dataclasses.benchmark import BenchmarkConfig
 from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
-from constraints.rules import ALL_RULES
+
 # Color Codes
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -39,19 +38,18 @@ RESET = "\033[0m"
 #
 # Example:
 #
-#   MODELS = ["llama3_8b", "mistral_7b"]
+#   MODELS = ["llama3_8b", "mistral_7b", "llama3_70b"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2"]
 #   ...
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "mistral_7b"]
+MODELS = ["llama3_8b", "mistral_7b", "llama3_70b"]
 FRAMEWORKS = ["torchrun", "accelerate", "deepspeed"]
 DATASETS = ["alpaca", "squadv2"]
 
-####### ########
-REPEATS = 1
+################################################################
 
 
 console = Console()
@@ -85,16 +83,6 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
 
     with initialize_config_dir(config_dir=config_path, version_base="1.1"):
         raw_total = 0
-
-        def init_benchmark_compo(c) -> BenchmarkConfig:
-            compo = compose(c)
-            return compo
-
-        init_cfg = init_benchmark_compo(config_name)
-        print(OmegaConf.to_yaml(init_cfg))
-        print(
-            f"Loaded base configuration from {os.path.abspath(f'{config_name}.yaml')}"
-        )
         for model, framework, dataset in product(MODELS, FRAMEWORKS, DATASETS):
             print(
                 f"Iteration on: \
@@ -102,7 +90,7 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                 \n\t· framework:{framework} \
                 \n\t· dataset:{dataset}"
             )
-            cfg = compose(
+            cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
                     f"model={model}",
@@ -110,54 +98,74 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                     f"dataset={dataset}",
                 ],
             )
-            for parallelism, spex in init_cfg.framework.parallelism.items():
+            print(
+                f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
+                + f"\n\t· model: {model}"
+                + f"\n\t· framework: {framework}"
+                + f"\n\t· dataset: {dataset}"
+            )
+            if framework not in cfg.model.frameworks_supported:
+                continue
+
+            for parallelism in cfg.model.parallelism_supported:
                 tmp_cfg = deepcopy(cfg)
-                target_parallelism = OmegaConf.create(DictConfig({parallelism: spex}))
+
+                if parallelism not in cfg.framework.parallelism.keys():
+                    continue
+                # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+                # print(f"parallelism: \n{parallelism}")
+                parallelism_spex = cfg.framework.parallelism[parallelism]
+
+                target_parallelism = OmegaConf.create(
+                    DictConfig({parallelism: parallelism_spex})
+                )
                 # print(f"target_parallelism: \n{target_parallelism}")
                 # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
                 tmp_cfg.framework.parallelism = target_parallelism
-                print(f"\tCreating configuration for parallelism {parallelism}:")
+                # print(f"\tCreating configuration for parallelism {parallelism}:")
                 # print(OmegaConf.to_yaml(cfg))
 
                 for (
                     bs,
                     grad_acc,
                     precision,
+                    lr,
+                    optimizer,
                     steps,
                 ) in product(
-                    
-                    cfg.model.training.batch_size,
-                    cfg.model.training.grad_accum,
-                    cfg.model.training.precision,
-                    cfg.model.training.steps,
+                    cfg.trainings.batch_sizes,
+                    cfg.trainings.grad_accums,
+                    cfg.trainings.precisions,
+                    cfg.trainings.lr,
+                    cfg.trainings.optimizer,
+                    cfg.trainings.steps,
                 ):
                     tmp_cfg.model.training.batch_size = bs
                     tmp_cfg.model.training.grad_accum = grad_acc
                     tmp_cfg.model.training.precision = precision
+                    tmp_cfg.model.training.lr = lr
+                    tmp_cfg.model.training.optimizer = optimizer
                     tmp_cfg.model.training.steps = steps
 
                     gpus_per_node = expand_arch_gpu_configs(tmp_cfg)
 
                     # Get min number of nodes to run based on model and hpc architecture
-                    min_nodes, breakdown = rules.MinNodesMemoryRule()._min_gpus_required(
-                        tmp_cfg
-                    )
+                    min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
                     nodes = rules.MinNodesMemoryRule()._nodes_candidates(
                         tmp_cfg.arch.slurm.gpus_per_node,
                         max_gpus_scale=tmp_cfg.model.max_gpus_scale,
                     )
                     nodes_to_run = [n for n in nodes if n >= min_nodes]
-                
+
                     for nodes in nodes_to_run:
-                        
                         tmp_cfg.arch.slurm.nodes = nodes
-                        
+
                         parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
-                        
+
                         tmp_cfg.arch.slurm.chdir = os.path.join(
                             tmp_cfg.experiment.output_dir, parameters_combo
                         )
-                        
+
                         yaml_filename = (
                             f"{parallelism}--"
                             + f"bs{bs}-"
@@ -175,18 +183,28 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                             if g == 1 and nodes == 1 and parallelism == "none":
                                 tmp_cfg.arch.slurm.gpus_per_node = 1
                                 tmp_cfg.arch.slurm.gres = "gpu:1"
-                            
-                            print(f"\t· nodes:{nodes} | bs:{bs} | grad_accum:{grad_acc} | precision:{precision} | steps:{steps}")
+                            msg = f"\t· parallelism: {parallelism} | nodes:{nodes} | bs:{bs} | grad_accum:{grad_acc} | precision:{precision} | steps:{steps}"
 
                             outpath_yaml = os.path.join(run_path, yaml_filename)
-                            passed, fails = rules.is_valid(tmp_cfg)
+                            passed, results_msg = rules.is_valid(tmp_cfg)
                             if not passed:
-                                skipped.append(outpath_yaml)
-                                print(f"\t\t{RED}❌ Failed:{RESET}")
-                                for f in fails:
-                                    print(f"\t\t{YELLOW}  {f.rule_name} -> {f.reason}{RESET}")
+                                skipped.append([tmp_cfg, results_msg])
+                                msg += f"-> {RED}❌ Failed:{RESET}"
+                                raw_total += 1
+                                for f in results_msg:
+                                    msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                                print(msg)
                                 continue
-                            print(f"\t\t{GREEN}✅ Passed!{RESET}")
+                            msg += f" --> {GREEN}✅ Passed!{RESET}"
+                            for s in results_msg:
+                                if s.reason == "":
+                                    continue
+                                msg += (
+                                    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
+                                )
+
+                            print(msg)
+                            raw_total += 1
                             valid.append(outpath_yaml)
                             OmegaConf.save(tmp_cfg, outpath_yaml)
 
@@ -242,5 +260,5 @@ if __name__ == "__main__":
     generate_valid_combos(
         config_path=os.path.abspath(args.config_path),
         config_name=args.config_name,
-        outpath="/home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/configs-hydra/benchmarks_to_run",
+        outpath="/home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/configs_hydra/benchmarks_to_run",
     )

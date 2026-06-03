@@ -1,10 +1,10 @@
 from hydra.core.config_store import ConfigStore
 
 from .arch import HPCArchitecture
-from .benchmark import BenchmarkConfig
+from .benchmark import BenchmarkConfig, TrainArgsConfig
 from .dataset import DatasetConfig
 from .framework import FrameworkConfig
-from .model import ModelConfig, TrainArgsConfig
+from .model import ModelConfig
 
 
 def register_configs():
@@ -15,9 +15,11 @@ def register_configs():
 
     # group schemas — each YAML must conform to these
     # model YAMLs
-    cs.store(group="training", name="base", node=TrainArgsConfig)
+    cs.store(group="trainings", name="combinations", node=TrainArgsConfig)
+
     cs.store(group="model", name="llama3_8b", node=ModelConfig)
-    cs.store(group="model", name="llama3_8b", node=ModelConfig)
+    cs.store(group="model", name="mistral_7b", node=ModelConfig)
+    cs.store(group="model", name="llama3_70b", node=ModelConfig)
 
     # framework YAMLs
     cs.store(group="framework", name="accelerate", node=FrameworkConfig)

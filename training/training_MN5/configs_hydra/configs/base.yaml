@@ -1,14 +1,9 @@
 # Base configuration for benchmark experiments
 defaults:
-  - /model: 
-    - llama3_8b
-    - mistral_7b
-  - /framework: 
-    - torchrun
-    - deepspeed
-  - /dataset: 
-    - alpaca
-    - squadv2
+  - trainings: combinations
+  - model: base_training
+  - framework: base
+  - dataset: base
   - _self_
 
 machine:
@@ -16,6 +11,7 @@ machine:
   name_pattern: ???
   modules: ??? # space separated modules to load
   python_environment: ??? # path to python virtual environment
+  singularity_container: ???
 
 experiment:
   name: "benchmark_run"

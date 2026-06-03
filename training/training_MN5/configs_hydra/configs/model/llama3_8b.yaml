@@ -2,7 +2,6 @@ defaults:
   - base_training
   - _self_
 
-# conf/model/llama3_8b.yaml
 name: llama3-8b
 path: /path/to/llama3-8b
 

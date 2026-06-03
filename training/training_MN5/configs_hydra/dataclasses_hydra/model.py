@@ -4,50 +4,11 @@ from typing import List, Optional
 
 from omegaconf import MISSING
 
-VALID_PRECISIONS = {"fp32", "bf16", "fp16", "fp8"}
-VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
-
 
 class ArchitectureType(str, Enum):
     DENSE = "dense"
     MOE = "moe"
     SSM = "ssm"
-
-
-@dataclass
-class TrainArgsConfig:
-    """Holds lists — generator expands these into individual combos."""
-
-    batch_sizes: List[int] = field(default_factory=lambda: [1, 4, 8])
-    precisions: List[str] = field(default_factory=lambda: ["bf16"])
-    grad_accums: List[int] = field(default_factory=lambda: [1])
-    max_model_lengths: List[int] = field(default_factory=lambda: [512])
-    lr: float = field(default=1e-4)
-    optimizer: str = field(default="adamw")
-    gradient_checkpointing: bool = field(default=False)
-    steps: Optional[List[int]] = None
-    epochs: Optional[List[int]] = None
-
-    def __post_init__(self):
-        bad_precisions = set(self.precisions) - VALID_PRECISIONS
-        if bad_precisions:
-            raise ValueError(
-                f"Unknown precisions: {bad_precisions}. Valid: {VALID_PRECISIONS}"
-            )
-
-        if self.optimizer not in VALID_OPTIMIZERS:
-            raise ValueError(
-                f"Unknown optimizer: '{self.optimizer}'. Valid: {VALID_OPTIMIZERS}"
-            )
-
-        if not self.batch_sizes or any(b < 1 for b in self.batch_sizes):
-            raise ValueError("batch_sizes must be non-empty list of ints ≥ 1")
-
-        if self.steps is None and self.epochs is None:
-            raise ValueError("Training config must specify either 'steps' or 'epochs'")
-
-        if self.lr <= 0:
-            raise ValueError(f"lr must be > 0, got {self.lr}")
 
 
 @dataclass
@@ -68,7 +29,7 @@ class ModelTrainingComboConfig:
 @dataclass
 class ModelConfig:
     # model specific train args
-    train_args: TrainArgsConfig
+    training: ModelTrainingComboConfig
 
     name: str = MISSING  # MISSING = must be provided, no default
     path: str = MISSING
