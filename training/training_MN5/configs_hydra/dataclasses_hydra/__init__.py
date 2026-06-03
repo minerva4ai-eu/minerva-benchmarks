@@ -5,12 +5,14 @@ from .benchmark import BenchmarkConfig, TrainArgsConfig
 from .dataset import DatasetConfig
 from .framework import FrameworkConfig
 from .model import ModelConfig
+from .slurm import SlurmConfig
 
 
 def register_configs():
     cs = ConfigStore.instance()
 
     # root schema — Hydra validates every composed config against this
+    # cs.store(name="base", node=BenchmarkConfig)
     cs.store(name="base_MN5", node=BenchmarkConfig)
 
     # group schemas — each YAML must conform to these
@@ -28,6 +30,10 @@ def register_configs():
 
     # arch YAMLs
     cs.store(group="arch", name="MN5", node=HPCArchitecture)
+
+    # slurm YAMLS
+    cs.store(group="slurm", name="base", node=SlurmConfig)
+    cs.store(group="slurm", name="MN5", node=SlurmConfig)
 
     # dataset YAMLs
     cs.store(group="dataset", name="alpaca", node=DatasetConfig)

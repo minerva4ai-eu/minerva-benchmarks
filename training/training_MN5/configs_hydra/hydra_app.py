@@ -64,12 +64,12 @@ def expand_arch_gpu_configs(cfg: DictConfig) -> list[int]:
         )
     p_name = _p[0]
     if (
-        cfg.arch.slurm.get("single_gpu_also_valid")
-        and (cfg.arch.slurm.nodes == 1)
+        cfg.get("single_gpu_also_valid")
+        and (cfg.slurm.sbatch.nodes == 1)
         and (cfg.framework.parallelism[p_name]["min_gpus"] == 1)
     ):
-        return [1, cfg.arch.slurm.gpus_per_node]
-    return [cfg.arch.slurm.gpus_per_node]
+        return [1, cfg.slurm.sbatch.gpus_per_node]
+    return [cfg.slurm.sbatch.gpus_per_node]
 
 
 def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> list:
@@ -123,7 +123,7 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                 # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
                 tmp_cfg.framework.parallelism = target_parallelism
                 # print(f"\tCreating configuration for parallelism {parallelism}:")
-                # print(OmegaConf.to_yaml(cfg))
+                print(OmegaConf.to_yaml(cfg))
 
                 for (
                     bs,
@@ -152,17 +152,17 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                     # Get min number of nodes to run based on model and hpc architecture
                     min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
                     nodes = rules.MinNodesMemoryRule()._nodes_candidates(
-                        tmp_cfg.arch.slurm.gpus_per_node,
+                        tmp_cfg.slurm.sbatch.gpus_per_node,
                         max_gpus_scale=tmp_cfg.model.max_gpus_scale,
                     )
                     nodes_to_run = [n for n in nodes if n >= min_nodes]
 
                     for nodes in nodes_to_run:
-                        tmp_cfg.arch.slurm.nodes = nodes
+                        tmp_cfg.slurm.sbatch.nodes = nodes
 
                         parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
 
-                        tmp_cfg.arch.slurm.chdir = os.path.join(
+                        tmp_cfg.slurm.sbatch.chdir = os.path.join(
                             tmp_cfg.experiment.output_dir, parameters_combo
                         )
 
@@ -181,8 +181,8 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
                         os.makedirs(run_path, exist_ok=True)
                         for g in gpus_per_node:
                             if g == 1 and nodes == 1 and parallelism == "none":
-                                tmp_cfg.arch.slurm.gpus_per_node = 1
-                                tmp_cfg.arch.slurm.gres = "gpu:1"
+                                tmp_cfg.slurm.sbatch.gpus_per_node = 1
+                                tmp_cfg.slurm.sbatch.gres = "gpu:1"
                             msg = f"\t· parallelism: {parallelism} | nodes:{nodes} | bs:{bs} | grad_accum:{grad_acc} | precision:{precision} | steps:{steps}"
 
                             outpath_yaml = os.path.join(run_path, yaml_filename)
@@ -212,7 +212,11 @@ def generate_valid_combos(config_path: str, config_name: str, outpath: str) -> l
     return valid
 
 
-def _print_summary(total, valid, skipped):
+def _print_summary(
+    total: int,
+    valid: list[BenchmarkConfig],
+    skipped: list[tuple[BenchmarkConfig, rules.RuleResult]],
+):
     table = Table(title="Sweep Summary")
     table.add_column("Status")
     table.add_column("Count")
@@ -220,14 +224,7 @@ def _print_summary(total, valid, skipped):
     table.add_row("[green]Valid[/green]", str(len(valid)))
     table.add_row("[yellow]Skipped[/yellow]", str(len(skipped)))
     console.print(table)
-    if skipped:
-        console.print("\n[yellow]Skipped reasons:[/yellow]")
-        for combo, failures in skipped[:10]:  # show first 10
-            for f in failures:
-                console.print(
-                    f"  • {combo.model.name}/{combo.framework.name}"
-                    f"/{combo.arch.name}: {f.reason}"
-                )
+    # ToDo: Write summary file for failed or skipped configurations
 
 
 def get_parser():

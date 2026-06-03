@@ -4,6 +4,7 @@ defaults:
   - model: base_training
   - framework: base
   - dataset: base
+  #- slurm: base
   - _self_
 
 machine:
@@ -12,7 +13,9 @@ machine:
   modules: ??? # space separated modules to load
   python_environment: ??? # path to python virtual environment
   singularity_container: ???
+  single_gpu_also_valid: True
 
 experiment:
   name: "benchmark_run"
   output_dir: "results/"
+  repeat: 1

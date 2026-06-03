@@ -1,15 +1,16 @@
 import math
 
+from dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig
 
 from .base import ConstraintRule, RuleResult
-import math
+
 
 class ParallelismGPUFloor(ConstraintRule):
     """ZeRO/FSDP/DDP require >1 GPU. 'none' requires exactly 1."""
 
-    def check(self, c: DictConfig) -> RuleResult:
-        gpus = c.arch.slurm.nodes * c.arch.slurm.gpus_per_node
+    def check(self, c: BenchmarkConfig) -> RuleResult:
+        gpus = c.slurm.sbatch.nodes * c.slurm.sbatch.gpus_per_node
 
         _p = list(c.framework.parallelism.keys())
         if len(_p) > 1:
@@ -18,8 +19,8 @@ class ParallelismGPUFloor(ConstraintRule):
             )
         p = c.framework.parallelism[_p[0]]
 
-        min_gpus = p.get("min_gpus", 1)
-        max_gpus = p.get("max_gpus", 1024)
+        min_gpus = p.min_gpus
+        max_gpus = p.max_gpus if p.max_gpus else 1024
         if gpus < min_gpus:
             return RuleResult(
                 False,
@@ -47,9 +48,10 @@ class FrameworkParallelismValidityRule(ConstraintRule):
     def check(self, c: DictConfig) -> RuleResult:
         supported_parallelisms, framework_parallelism = (
             c.model.parallelism_supported,
-            list(c.framework.parallelism.keys())[0])
-        #print(f"supported_parallelisms {supported_parallelisms}")
-        #print(f"framework_parallelism {framework_parallelism}")
+            list(c.framework.parallelism.keys())[0],
+        )
+        # print(f"supported_parallelisms {supported_parallelisms}")
+        # print(f"framework_parallelism {framework_parallelism}")
         if framework_parallelism not in supported_parallelisms:
             return RuleResult(
                 False,
@@ -70,8 +72,8 @@ PARALLELISM_DIVISOR = {
     # M = P×4 (params) + P×4 (grads) + P×8 (Adam states) + activations
     #     = P×16 + activations
     # Zero 1 shards only optimizer states
-    # M = P×4 (params, replicated) 
-    #    + P×4 (grads, replicated) 
+    # M = P×4 (params, replicated)
+    #    + P×4 (grads, replicated)
     #    + P×8/n (optimizer, sharded)
     #    + activations
     #    = P×8 + P×8/n + activations
@@ -88,8 +90,8 @@ PARALLELISM_DIVISOR = {
     # divisor = (P×16 + act) / (P×4 + P×12/n + act)
     #    ≈ 16 / (4 + 12/n)          [for large P]
     #    = 4n / (n + 3)
-    "zero1": lambda n: 2*n / (n + 1),
-    "zero2": lambda n: 4*n / (n + 3),
+    "zero1": lambda n: 2 * n / (n + 1),
+    "zero2": lambda n: 4 * n / (n + 3),
     "zero3": lambda n: n,
 }
 
@@ -107,7 +109,7 @@ class MinNodesMemoryRule(ConstraintRule):
                 f"Model needs ~{breakdown['total_gb']} GB total or ~{breakdown['per_gpu_gb']} GB per gpu; no feasible config found up to {self._gpu_candidates(c.arch.node.gpus_per_node)[-1]} GPUs",
             )
 
-        actual_gpus = c.arch.node.gpus_per_node * c.arch.slurm.nodes
+        actual_gpus = c.arch.node.gpus_per_node * c.slurm.sbatch.nodes
         if actual_gpus < min_gpus:
             min_nodes = math.ceil(min_gpus / c.arch.node.gpus_per_node)
             return RuleResult(
@@ -117,21 +119,25 @@ class MinNodesMemoryRule(ConstraintRule):
                 f"{breakdown}",
             )
         return RuleResult(True, "min_nodes_memory", str(breakdown))
+
     def _min_nodes_required(self, c: DictConfig) -> int:
-        min_gpus, _ = self._min_gpus_required(c) 
+        min_gpus, _ = self._min_gpus_required(c)
         return math.ceil(min_gpus / c.arch.node.gpus_per_node)
-         
 
     def _min_gpus_required(self, c: DictConfig) -> tuple[int, dict]:
         arch_type = c.model.get("architecture_type", "dense")
         precision = c.model.training.precision
         optimizer = c.model.get("optimizer", "adamw")
-        assert isinstance(c.framework.parallelism, DictConfig) and (len(c.framework.parallelism) == 1) , f"c.framework.parallelism is expected to be dict of length 1, instead received: {c.framework.parallelism}"
+        assert isinstance(c.framework.parallelism, DictConfig) and (
+            len(c.framework.parallelism) == 1
+        ), (
+            f"c.framework.parallelism is expected to be dict of length 1, instead received: {c.framework.parallelism}"
+        )
         parallelism = list(c.framework.parallelism.keys())[0]
         batch = c.model.training.batch_size
         seq_len = c.dataset.max_seq_len
         gpu_vram = c.arch.gpu.vram_gb * 1e9 * self.SAFETY_MARGIN
-        
+
         bpp = BYTES_PER_PARAM[precision]
         opt_bytes = OPTIMIZER_BYTES.get(optimizer, 8)
 
@@ -161,7 +167,7 @@ class MinNodesMemoryRule(ConstraintRule):
         per_gpu = n = -1
         for n in self._gpu_candidates(gpus_per_node):
             per_gpu = M_total / divisor_fn(n)
-            #print(f"mtotal: {M_total} | per_gpu: {per_gpu} | gpu_vram: {gpu_vram}" )
+            # print(f"mtotal: {M_total} | per_gpu: {per_gpu} | gpu_vram: {gpu_vram}" )
             if per_gpu <= gpu_vram:
                 return n, {
                     "params_gb": round(M_params / 1e9, 2),
@@ -176,16 +182,16 @@ class MinNodesMemoryRule(ConstraintRule):
                 }
 
         return -1, {
-                    "params_gb": round(M_params / 1e9, 2),
-                    "gradients_gb": round(M_gradients / 1e9, 2),
-                    "optimizer_gb": round(M_optimizer / 1e9, 2),
-                    "activations_gb": round(M_activations / 1e9, 2),
-                    "total_gb": round(M_total / 1e9, 2),
-                    "per_gpu_gb": round(per_gpu / 1e9, 2),
-                    "gpu_usable_gb": round(gpu_vram / 1e9, 2),
-                    "min_gpus": n,
-                    "arch_type": arch_type,
-                }
+            "params_gb": round(M_params / 1e9, 2),
+            "gradients_gb": round(M_gradients / 1e9, 2),
+            "optimizer_gb": round(M_optimizer / 1e9, 2),
+            "activations_gb": round(M_activations / 1e9, 2),
+            "total_gb": round(M_total / 1e9, 2),
+            "per_gpu_gb": round(per_gpu / 1e9, 2),
+            "gpu_usable_gb": round(gpu_vram / 1e9, 2),
+            "min_gpus": n,
+            "arch_type": arch_type,
+        }
 
     def _activation_memory(self, c, arch_type, batch, seq_len, bpp) -> int:
         m = c.model
@@ -234,16 +240,18 @@ class MinNodesMemoryRule(ConstraintRule):
                 candidates.append(n)
             n *= 2
         return sorted(candidates)
-    
+
     @staticmethod
     def _nodes_candidates(
         gpus_per_node: int, max_gpus_scale: int = MAX_GPUS_SCALE
     ) -> list[int]:
-        
+
         candidates, n = [1], 2
-        assert max_gpus_scale % gpus_per_node == 0, "_nodes_candidates: max_gpus_scale must be multiple of gpus_per_node"
+        assert max_gpus_scale % gpus_per_node == 0, (
+            "_nodes_candidates: max_gpus_scale must be multiple of gpus_per_node"
+        )
         max_nodes_scale = max_gpus_scale / gpus_per_node
-        while n <= max_nodes_scale  :
+        while n <= max_nodes_scale:
             if n not in candidates:
                 candidates.append(n)
             n *= 2
@@ -254,7 +262,7 @@ class MinNodesMemoryRule(ConstraintRule):
 ALL_RULES = [
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
-    MinNodesMemoryRule()
+    MinNodesMemoryRule(),
 ]
 
 
@@ -268,5 +276,5 @@ def is_valid(combo: DictConfig) -> tuple[bool, list[RuleResult]]:
     passed = all(scores)
     if passed:
         return passed, checks
-    fails = [f for f, p in zip(checks, scores) if not p] 
+    fails = [f for f, p in zip(checks, scores) if not p]
     return passed, fails

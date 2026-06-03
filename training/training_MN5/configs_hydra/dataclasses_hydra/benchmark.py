@@ -7,6 +7,7 @@ from dataclasses_hydra import arch as a
 from dataclasses_hydra import dataset as d
 from dataclasses_hydra import framework as f
 from dataclasses_hydra import model as m
+from dataclasses_hydra import slurm as s
 
 VALID_PRECISIONS = {"fp32", "bf16", "fp16", "fp8"}
 VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
@@ -68,6 +69,7 @@ class MachineConfig:
     modules: str = MISSING  # space separated modules to load
     python_environment: str = MISSING
     singularity_container: str = MISSING
+    single_gpu_also_valid: bool = MISSING
 
 
 @dataclass
@@ -86,3 +88,4 @@ class BenchmarkConfig(DictConfig):
     framework: f.FrameworkConfig
     machine: MachineConfig
     experiment: ExperimentConfig
+    slurm: s.SlurmConfig

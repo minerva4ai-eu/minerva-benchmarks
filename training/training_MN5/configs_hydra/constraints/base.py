@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from omegaconf import DictConfig
+from dataclasses_hydra.benchmark import BenchmarkConfig
 
 
 @dataclass
@@ -13,5 +13,5 @@ class RuleResult:
 
 class ConstraintRule(ABC):
     @abstractmethod
-    def check(self, c: DictConfig) -> RuleResult:
+    def check(self, c: BenchmarkConfig) -> RuleResult:
         raise NotImplementedError
