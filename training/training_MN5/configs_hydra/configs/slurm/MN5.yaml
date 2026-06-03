@@ -1,0 +1,23 @@
+account: bsc99
+qos: acc_bench
+
+
+sbatch:
+  gpus_per_node: 4
+  cpus_per_gpu: 20
+  chdir: ??
+  nodes: 1
+  gres: gpu:${node.gpus_per_node}
+  cpus_per_task: 80
+  tasks_per_node: 1
+  output: run-%j.out
+  error: run-%j.err
+  extra_args:
+    - "--exclusive"
+
+srun:
+  gpus_per_node: 4
+  cpus_per_gpu: 20
+  nodes: 1
+  cpus_per_task: 80
+  tasks_per_node: 1
