@@ -1,7 +1,7 @@
 # Base configuration for benchmark experiments
 defaults:
-  - /base
-  - /arch: MN5
+  - base
+  - arch: MN5
   - _self_
 
 machine:
