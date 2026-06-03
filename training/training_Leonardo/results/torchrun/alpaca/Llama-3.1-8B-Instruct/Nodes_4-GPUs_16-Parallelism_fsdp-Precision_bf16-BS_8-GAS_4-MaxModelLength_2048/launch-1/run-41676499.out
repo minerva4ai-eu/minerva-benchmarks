@@ -1,0 +1,131 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+LAUNCH_FOLDER: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_8-GAS_4-MaxModelLength_2048/launch-1}, DATASET: {alpaca}, DATASET_PATH: {"/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 2048, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {fsdp}, PRECISION: {bf16} BATCH_SIZE: {8}, GRAD_ACCUM: {4}
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Tokenizer Loaded
+Tokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+📂 Dataset input type: single dataset
+📂 Dataset input type: single dataset  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+Tokenizer Loaded
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+Tokenizer LoadedTokenizer Loaded
+Tokenizer LoadedTokenizer Loaded
+
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+
+Tokenizer Loaded
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+📂 Dataset input type: single dataset  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"📂 Dataset input type: single dataset  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,332] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,332] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,332] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,332] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+{'loss': 1.557, 'grad_norm': 0.783933162689209, 'learning_rate': 1.995879120879121e-05, 'epoch': 0.01}
+{'loss': 0.4944, 'grad_norm': 0.605988085269928, 'learning_rate': 1.9913003663003664e-05, 'epoch': 0.01}
+{'loss': 0.4743, 'grad_norm': 0.49022001028060913, 'learning_rate': 1.9867216117216118e-05, 'epoch': 0.02}
+{'loss': 0.4664, 'grad_norm': 0.5542895793914795, 'learning_rate': 1.9821428571428575e-05, 'epoch': 0.03}
+{'loss': 0.4506, 'grad_norm': 0.6418979167938232, 'learning_rate': 1.977564102564103e-05, 'epoch': 0.03}
+{'loss': 0.4396, 'grad_norm': 0.6135627031326294, 'learning_rate': 1.9729853479853482e-05, 'epoch': 0.04}
+{'loss': 0.4267, 'grad_norm': 0.8126473426818848, 'learning_rate': 1.9684065934065936e-05, 'epoch': 0.05}
+{'loss': 0.4123, 'grad_norm': 0.6493487358093262, 'learning_rate': 1.963827838827839e-05, 'epoch': 0.05}
+{'loss': 0.3908, 'grad_norm': 0.5711331963539124, 'learning_rate': 1.9592490842490843e-05, 'epoch': 0.06}
+{'loss': 0.3831, 'grad_norm': 0.48888474702835083, 'learning_rate': 1.9546703296703297e-05, 'epoch': 0.07}
+{'loss': 0.3776, 'grad_norm': 0.49466946721076965, 'learning_rate': 1.950091575091575e-05, 'epoch': 0.08}
+{'loss': 0.3576, 'grad_norm': 0.5997816920280457, 'learning_rate': 1.9455128205128208e-05, 'epoch': 0.08}
+{'loss': 0.35, 'grad_norm': 0.5560696125030518, 'learning_rate': 1.940934065934066e-05, 'epoch': 0.09}
+{'loss': 0.337, 'grad_norm': 0.4965415894985199, 'learning_rate': 1.9363553113553115e-05, 'epoch': 0.1}
+{'loss': 0.3255, 'grad_norm': 0.48150956630706787, 'learning_rate': 1.931776556776557e-05, 'epoch': 0.1}
+{'loss': 0.3132, 'grad_norm': 0.5550554394721985, 'learning_rate': 1.9271978021978022e-05, 'epoch': 0.11}
+{'loss': 0.3059, 'grad_norm': 0.5847558975219727, 'learning_rate': 1.922619047619048e-05, 'epoch': 0.12}
+{'loss': 0.2844, 'grad_norm': 0.6096398234367371, 'learning_rate': 1.9180402930402933e-05, 'epoch': 0.12}
+{'loss': 0.279, 'grad_norm': 0.5479050278663635, 'learning_rate': 1.9134615384615387e-05, 'epoch': 0.13}
+{'loss': 0.267, 'grad_norm': 0.5891246795654297, 'learning_rate': 1.908882783882784e-05, 'epoch': 0.14}
+{'loss': 0.2543, 'grad_norm': 0.6264228820800781, 'learning_rate': 1.9043040293040294e-05, 'epoch': 0.14}
+{'loss': 0.2469, 'grad_norm': 0.6347704529762268, 'learning_rate': 1.8997252747252748e-05, 'epoch': 0.15}
+{'loss': 0.2316, 'grad_norm': 0.5682611465454102, 'learning_rate': 1.89514652014652e-05, 'epoch': 0.16}
+{'loss': 0.2285, 'grad_norm': 0.6215972900390625, 'learning_rate': 1.8905677655677655e-05, 'epoch': 0.16}
+{'loss': 0.218, 'grad_norm': 0.6281661987304688, 'learning_rate': 1.8859890109890112e-05, 'epoch': 0.17}
+{'loss': 0.2148, 'grad_norm': 0.5904545783996582, 'learning_rate': 1.8814102564102566e-05, 'epoch': 0.18}
+{'loss': 0.203, 'grad_norm': 0.5605520009994507, 'learning_rate': 1.876831501831502e-05, 'epoch': 0.19}
+{'loss': 0.1924, 'grad_norm': 0.6246078014373779, 'learning_rate': 1.8722527472527473e-05, 'epoch': 0.19}
+{'loss': 0.1883, 'grad_norm': 0.5609117746353149, 'learning_rate': 1.8676739926739927e-05, 'epoch': 0.2}
+{'loss': 0.1738, 'grad_norm': 0.5548898577690125, 'learning_rate': 1.8630952380952384e-05, 'epoch': 0.21}
+{'loss': 0.171, 'grad_norm': 0.5706283450126648, 'learning_rate': 1.8585164835164838e-05, 'epoch': 0.21}
+{'loss': 0.1672, 'grad_norm': 0.5879704356193542, 'learning_rate': 1.853937728937729e-05, 'epoch': 0.22}
+{'loss': 0.1543, 'grad_norm': 0.5394397974014282, 'learning_rate': 1.8493589743589745e-05, 'epoch': 0.23}
+{'loss': 0.1535, 'grad_norm': 0.5549882650375366, 'learning_rate': 1.8447802197802202e-05, 'epoch': 0.23}
+{'loss': 0.1447, 'grad_norm': 0.6117520928382874, 'learning_rate': 1.8402014652014652e-05, 'epoch': 0.24}
+{'loss': 0.1399, 'grad_norm': 0.5670803785324097, 'learning_rate': 1.8356227106227106e-05, 'epoch': 0.25}
+{'loss': 0.132, 'grad_norm': 0.525301992893219, 'learning_rate': 1.831043956043956e-05, 'epoch': 0.25}
+{'loss': 0.1309, 'grad_norm': 0.5695500373840332, 'learning_rate': 1.8264652014652017e-05, 'epoch': 0.26}
+{'loss': 0.1186, 'grad_norm': 0.5750250816345215, 'learning_rate': 1.821886446886447e-05, 'epoch': 0.27}
+{'loss': 0.1141, 'grad_norm': 0.5076542496681213, 'learning_rate': 1.8173076923076924e-05, 'epoch': 0.27}
+{'loss': 0.1143, 'grad_norm': 0.5073720216751099, 'learning_rate': 1.8127289377289378e-05, 'epoch': 0.28}
+{'loss': 0.1087, 'grad_norm': 0.4887015223503113, 'learning_rate': 1.8081501831501835e-05, 'epoch': 0.29}
+{'loss': 0.1013, 'grad_norm': 0.49475958943367004, 'learning_rate': 1.803571428571429e-05, 'epoch': 0.3}
+{'loss': 0.0984, 'grad_norm': 0.5813714265823364, 'learning_rate': 1.7989926739926742e-05, 'epoch': 0.3}
+{'loss': 0.0981, 'grad_norm': 0.4862440824508667, 'learning_rate': 1.7944139194139196e-05, 'epoch': 0.31}
+{'loss': 0.0923, 'grad_norm': 0.5161203742027283, 'learning_rate': 1.789835164835165e-05, 'epoch': 0.32}
+{'loss': 0.0906, 'grad_norm': 0.4652847945690155, 'learning_rate': 1.7852564102564107e-05, 'epoch': 0.32}
+FSDP Job Completed.

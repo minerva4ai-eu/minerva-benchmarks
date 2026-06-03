@@ -1,0 +1,3 @@
+slurmstepd: error: *** JOB 40940846 ON lrdn1314 CANCELLED AT 2026-05-11T10:01:34 DUE TO NODE FAILURE, SEE SLURMCTLD LOG FOR DETAILS ***
+slurmstepd: error: *** JOB 40940846 STEPD TERMINATED ON lrdn1314 AT 2026-05-11T10:06:34 DUE TO JOB NOT ENDING WITH SIGNALS ***
+slurmstepd: error: Container 27048 in cgroup plugin has 1 processes, giving up after 319 sec

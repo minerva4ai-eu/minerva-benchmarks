@@ -1,0 +1,74 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+LAUNCH_FOLDER: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1}, DATASET: {sonnet}, DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/sonnet.txt}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 2048, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {fsdp}, PRECISION: {bf16} BATCH_SIZE: {4}, GRAD_ACCUM: {4}
+NODE_RANK: {0}
+NNODES: {4}
+NUM_PROCS: {16}
+MASTER_ADDR: {lrdn0028}
+MASTER_PORT: {29500}
+train_command: {accelerate launch     --multi-gpu     --machine_rank 0     --rdzv_backend c10d     --main_process_ip lrdn0028     --main_process_port 29500     --num_processes 16     --num_machines 4       finetune-fsdp.py         --minerva_dir /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5         --model /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct         --data '/leonardo_work/MNRVA_bench/datasets/sonnet.txt'         --output_dir /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/output/41837848         --batch_size 4         --max_length 2048         --epochs 3                  --precision bf16         --lr 0.00002         --gradient_accumulation_steps 4         --dataloader_num_workers 2         --dataset 'sonnet'}
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Tokenizer Loaded
+Tokenizer Loaded
+Tokenizer Loaded
+Tokenizer Loaded
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+Tokenizer Loaded
+Tokenizer Loaded
+Tokenizer Loaded
+Tokenizer Loaded
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset
+📂 Dataset input type: single dataset  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt📂 Dataset input type: single dataset
+
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+Tokenizer Loaded
+Tokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+Tokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+Tokenizer Loaded
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+FSDP Job Completed.

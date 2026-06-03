@@ -1,0 +1,13 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+LAUNCH_FOLDER: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/mnr_test/smoke_20260515_122437}, DATASET: {alpaca}, DATASET_PATH: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 512, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {none}, PRECISION: {bf16} BATCH_SIZE: {1}, GRAD_ACCUM: {1}
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Tokenizer Loaded
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json
+Single dataset detected — applying 90/10 train/val split.
+Split dataset into 46584 train and 5176 eval samples.
+Loading Model... dtype: torch.bfloat16
+Model Loaded
+[2026-05-15 12:27:58,249] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+✅ Single Node job completed.

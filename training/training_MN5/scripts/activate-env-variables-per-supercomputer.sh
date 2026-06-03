@@ -27,18 +27,8 @@ case "$MACHINE" in
         ;;
 
     leonardo)
-        # NCCL variables for Leonardo InfiniBand
-        export NCCL_NET=IB
-        export NCCL_DEBUG=TRACE
-        export NCCL_NVLS_ENABLE=0
-        export NCCL_IB_DISABLE=0
-
-        # CUDA DEVICES
-        export CUDA_VISIBLE_DEVICES="0,1,2,3"
-
-        # PYTORCH
-        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-        export CUDA_LAUNCH_BLOCKING=1
+        export COMPILER=nvhpc
+        export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
 
     *)

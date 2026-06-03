@@ -1,0 +1,550 @@
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    main()    
+    main()
+main()
+    main()
+    main()    
+main()
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+        main()
+main()
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)    
+dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)    
+dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+        dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+
+                            ^ ^ ^^ ^^ ^ ^^ ^^ ^ ^^ ^^ ^^ ^^ ^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+                          ^ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    ^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+^dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)^
+^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    main()
+        main()
+main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)^
+^    ^dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)^
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+                       ^ ^ ^ ^ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/SonnetHandler.py", line 11, in __init__
+    self.data = json.load(f)
+    self.data = json.load(f)    
+self.data = json.load(f)
+                                 ^  ^  ^ ^  ^  ^  ^  ^^ ^^ ^^^^^^^^
+^^^^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+^^^^^^
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+    self.data = json.load(f)
+                ^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+        self.data = json.load(f)self.data = json.load(f)
+    
+self.data = json.load(f)
+                                            ^  ^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+    self.data = json.load(f)
+                ^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+    self.data = json.load(f)
+        self.data = json.load(f)self.data = json.load(f)
+
+    self.data = json.load(f)
+                                            ^ ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+    self.data = json.load(f)
+        self.data = json.load(f)self.data = json.load(f)
+
+                ^^  ^  ^  ^  ^   ^  ^   ^  ^  ^  ^  
+        ^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+                ^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+    self.data = json.load(f)
+                ^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 293, in load
+        return loads(fp.read(),return loads(fp.read(),
+
+            return loads(fp.read(),return loads(fp.read(),return loads(fp.read(),
+
+
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+            return loads(fp.read(),return loads(fp.read(),return loads(fp.read(),
+
+
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+    return loads(fp.read(),
+                             ^  ^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+^
+            return loads(fp.read(),return loads(fp.read(),return loads(fp.read(),
+
+
+                                ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+    return loads(fp.read(),
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+           ^^^^^^^^^^^^^^^^
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+    return loads(fp.read(),
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+           ^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+           ^^^    ^^return _default_decoder.decode(s)^
+        return _default_decoder.decode(s)return _default_decoder.decode(s)
+
+^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^ ^ ^^^^^^ ^^ ^ ^ ^^ ^ ^ ^ ^ ^^
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                ^ ^ ^ ^ ^ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+^^^^^^^^^^^^^^^^^^^^
+^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+    return _default_decoder.decode(s)
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    return _default_decoder.decode(s)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+        obj, end = self.raw_decode(s, idx=_w(s, 0).end())obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+                                      ^ ^ ^^ ^ ^ ^^^ ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+^^^^^^^
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+                                        ^ ^^^ ^^ ^^ ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            obj, end = self.raw_decode(s, idx=_w(s, 0).end())obj, end = self.raw_decode(s, idx=_w(s, 0).end())obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+
+
+                                          ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())    
+obj, end = self.raw_decode(s, idx=_w(s, 0).end())    
+obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+                              ^ ^ ^ ^ ^  ^  ^  ^^ ^^ ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+        raise JSONDecodeError("Expecting value", s, err.value) from Noneraise JSONDecodeError("Expecting value", s, err.value) from None
+
+^^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+^^^
+^^
+json.decoderjson.decoder..JSONDecodeErrorJSONDecodeError: : Expecting value: line 1 column 1 (char 0)Expecting value: line 1 column 1 (char 0)
+
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)json.decoder
+.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+        raise JSONDecodeError("Expecting value", s, err.value) from Noneraise JSONDecodeError("Expecting value", s, err.value) from None
+
+    json.decoder.raise JSONDecodeError("Expecting value", s, err.value) from Nonejson.decoderJSONDecodeError.
+: JSONDecodeErrorExpecting value: line 1 column 1 (char 0): 
+Expecting value: line 1 column 1 (char 0)
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+W0518 14:11:59.663000 1188691 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 1188750 closing signal SIGTERM
+W0518 14:11:59.685000 150716 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 150771 closing signal SIGTERM
+W0518 14:11:59.686000 150716 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 150773 closing signal SIGTERM
+E0518 14:11:59.728000 1188691 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 1188749) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+E0518 14:11:59.750000 150716 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 150770) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn0037.leonardo.local
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 1188751)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn0037.leonardo.local
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 1188752)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn0037-net1-3.leonardo.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 1188749)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1945-net6-3.leonardo.local
+  rank      : 14 (local_rank: 2)
+  exitcode  : 1 (pid: 150772)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1945-net6-3.leonardo.local
+  rank      : 12 (local_rank: 0)
+  exitcode  : 1 (pid: 150770)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+E0518 14:11:59.781000 264923 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 264977) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1873-net6-3.leonardo.local
+  rank      : 5 (local_rank: 1)
+  exitcode  : 1 (pid: 264978)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1873.leonardo.local
+  rank      : 6 (local_rank: 2)
+  exitcode  : 1 (pid: 264979)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1873.leonardo.local
+  rank      : 7 (local_rank: 3)
+  exitcode  : 1 (pid: 264980)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-18_14:11:59
+  host      : lrdn1873.leonardo.local
+  rank      : 4 (local_rank: 0)
+  exitcode  : 1 (pid: 264977)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+E0518 14:12:00.083000 317174 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 317228) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-18_14:12:00
+  host      : lrdn1887-net6-3.leonardo.local
+  rank      : 9 (local_rank: 1)
+  exitcode  : 1 (pid: 317229)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-05-18_14:12:00
+  host      : lrdn1887-net6-3.leonardo.local
+  rank      : 10 (local_rank: 2)
+  exitcode  : 1 (pid: 317230)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-05-18_14:12:00
+  host      : lrdn1887.leonardo.local
+  rank      : 11 (local_rank: 3)
+  exitcode  : 1 (pid: 317231)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-18_14:12:00
+  host      : lrdn1887.leonardo.local
+  rank      : 8 (local_rank: 0)
+  exitcode  : 1 (pid: 317228)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

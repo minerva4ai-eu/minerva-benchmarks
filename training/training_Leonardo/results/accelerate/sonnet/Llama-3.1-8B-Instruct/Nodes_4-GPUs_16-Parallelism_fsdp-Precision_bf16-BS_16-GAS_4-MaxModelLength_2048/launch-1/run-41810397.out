@@ -1,0 +1,3 @@
+Usage: source /var/spool/slurmd/job41810397/slurm_script <environment>
+LAUNCH_FOLDER: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1}, DATASET: {sonnet}, DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/sonnet.txt}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 2048, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {fsdp}, PRECISION: {bf16} BATCH_SIZE: {16}, GRAD_ACCUM: {4}

@@ -1,0 +1,106 @@
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 259, in <module>
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 259, in <module>
+    monitor_gpus(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 250, in monitor_gpus
+    gpus_metrics.to_csv(output_file)
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/core/generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/csvs.py", line 251, in save
+    with get_handle(
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 151, in __exit__
+    self.close()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 138, in close
+    handle.close()
+OSError: [Errno 122] Disk quota exceeded
+    monitor_gpus(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 250, in monitor_gpus
+    gpus_metrics.to_csv(output_file)
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/core/generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/csvs.py", line 251, in save
+    with get_handle(
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 151, in __exit__
+    self.close()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 138, in close
+    handle.close()
+OSError: [Errno 122] Disk quota exceeded
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 259, in <module>
+    monitor_gpus(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 250, in monitor_gpus
+    gpus_metrics.to_csv(output_file)
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/core/generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/csvs.py", line 251, in save
+    with get_handle(
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 151, in __exit__
+    self.close()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 138, in close
+    handle.close()
+OSError: [Errno 122] Disk quota exceeded
+  File "<frozen runpy>", line 88, in _run_code
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 259, in <module>
+    monitor_gpus(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_16-GAS_4-MaxModelLength_2048/launch-1/gpu_plots.py", line 250, in monitor_gpus
+    gpus_metrics.to_csv(output_file)
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/core/generic.py", line 3988, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/format.py", line 1025, in to_csv
+    csv_formatter.save()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/formats/csvs.py", line 251, in save
+    with get_handle(
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 151, in __exit__
+    self.close()
+  File "/leonardo/home/userinternal/dgentile/.local/lib/python3.11/site-packages/pandas/io/common.py", line 138, in close
+    handle.close()
+OSError: [Errno 122] Disk quota exceeded
+W0516 08:42:49.648000 1517968 site-packages/torch/distributed/run.py:793] 
+W0516 08:42:49.648000 1517968 site-packages/torch/distributed/run.py:793] *****************************************
+W0516 08:42:49.648000 1517968 site-packages/torch/distributed/run.py:793] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0516 08:42:49.648000 1517968 site-packages/torch/distributed/run.py:793] *****************************************
+W0516 08:42:49.648000 137015 site-packages/torch/distributed/run.py:793] 
+W0516 08:42:49.648000 137015 site-packages/torch/distributed/run.py:793] *****************************************
+W0516 08:42:49.648000 137015 site-packages/torch/distributed/run.py:793] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0516 08:42:49.648000 137015 site-packages/torch/distributed/run.py:793] *****************************************
+W0516 08:42:49.648000 1597699 site-packages/torch/distributed/run.py:793] 
+W0516 08:42:49.648000 1597699 site-packages/torch/distributed/run.py:793] *****************************************
+srun: error: lrdn0967: task 3: Exited with exit code 1
+srun: error: lrdn0963: task 0: Exited with exit code 1
+srun: error: lrdn0966: task 2: Exited with exit code 1
+srun: error: lrdn0964: task 1: Exited with exit code 1

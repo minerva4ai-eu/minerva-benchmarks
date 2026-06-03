@@ -1,0 +1,3 @@
+slurmstepd: error: container_p_join: open failed for /slurm_tmpfs/41676567/.ns: No such file or directory
+slurmstepd: error: container_g_join failed: 41676567
+slurmstepd: error: *** JOB 41676567 ON lrdn2391 CANCELLED AT 2026-05-17T13:58:08 ***

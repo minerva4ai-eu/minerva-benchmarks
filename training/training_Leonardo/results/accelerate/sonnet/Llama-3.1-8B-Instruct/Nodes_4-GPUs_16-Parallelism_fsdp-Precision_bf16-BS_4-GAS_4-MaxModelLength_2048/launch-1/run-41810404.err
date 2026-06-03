@@ -1,0 +1,16 @@
+/usr/bin/bash: line 2: python: command not found
+/usr/bin/bash: line 2: python: command not found
+/usr/bin/bash: line 2: python: command not found
+/usr/bin/bash: line 2: python: command not found
+/usr/bin/bash: line 9: accelerate: command not found
+srun: error: lrdn2049: task 0: Exited with exit code 127
+/usr/bin/bash: line 11: kill: (707364) - No such process
+/usr/bin/bash: line 9: accelerate: command not found
+/usr/bin/bash: line 11: kill: (474043) - No such process
+/usr/bin/bash: line 9: accelerate: command not found
+/usr/bin/bash: line 11: kill: (1472970) - No such process
+/usr/bin/bash: line 9: accelerate: command not found
+srun: error: lrdn2051: task 1: Exited with exit code 127
+/usr/bin/bash: line 11: kill: (157854) - No such process
+srun: error: lrdn2057: task 3: Exited with exit code 127
+srun: error: lrdn2052: task 2: Exited with exit code 127

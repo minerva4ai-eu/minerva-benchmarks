@@ -1,0 +1,41 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.29s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.31s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.24s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.05it/s]
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/mnr_test/smoke_20260515_122437/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `CustomTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+  0%|          | 0/2 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/mnr_test/smoke_20260515_122437/finetune-none.py", line 302, in <module>
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/mnr_test/smoke_20260515_122437/finetune-none.py", line 216, in main
+    trainer.train()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/transformers/trainer.py", line 2325, in train
+    return inner_training_loop(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/transformers/trainer.py", line 2740, in _inner_training_loop
+    self.optimizer.step()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/optimizer.py", line 179, in step
+    self.optimizer.step(closure)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/lr_scheduler.py", line 137, in wrapper
+    return func.__get__(opt, opt.__class__)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/adamw.py", line 220, in step
+    adamw(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/optimizer.py", line 154, in maybe_fallback
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/adamw.py", line 782, in adamw
+    func(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/optim/adamw.py", line 606, in _multi_tensor_adamw
+    exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 112.00 MiB. GPU 0 has a total capacity of 63.42 GiB of which 98.50 MiB is free. Including non-PyTorch memory, this process has 63.32 GiB memory in use. Of the allocated memory 62.64 GiB is allocated by PyTorch, and 6.73 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+  0%|          | 0/2 [02:59<?, ?it/s]
+/var/spool/slurmd/job41691836/slurm_script: line 72: kill: "$monitor_pid": arguments must be process or job IDs
+/var/spool/slurmd/job41691836/slurm_script: line 76: wait: `"$monitor_pid': not a pid or valid job spec

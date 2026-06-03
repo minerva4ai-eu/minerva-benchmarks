@@ -1,0 +1,21 @@
+2026-05-18 13:12:08,743 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054895 seconds
+2026-05-18 13:12:13,873 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052009 seconds
+2026-05-18 13:12:18,939 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.062008 seconds
+2026-05-18 13:12:23,998 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.055103 seconds
+2026-05-18 13:12:29,055 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.053992 seconds
+2026-05-18 13:12:34,114 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.055197 seconds
+2026-05-18 13:12:39,171 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.053258 seconds
+2026-05-18 13:12:44,232 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.058191 seconds
+2026-05-18 13:12:49,289 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052072 seconds
+2026-05-18 13:12:54,344 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051724 seconds
+2026-05-18 13:12:59,400 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052456 seconds
+2026-05-18 13:13:04,476 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.073034 seconds
+2026-05-18 13:13:09,535 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.053980 seconds
+2026-05-18 13:13:14,593 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.053487 seconds
+2026-05-18 13:13:19,648 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051677 seconds
+2026-05-18 13:13:24,710 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.057696 seconds
+2026-05-18 13:13:29,782 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.068274 seconds
+2026-05-18 13:13:34,840 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054029 seconds
+2026-05-18 13:13:39,897 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052768 seconds
+2026-05-18 13:13:44,476 |  INFO | __main__ : Received SIGTERM. Preparing to stop monitoring...
+2026-05-18 13:13:44,476 |  INFO | __main__ : Ploting metrics...

@@ -1,0 +1,24 @@
+2026-05-16 09:23:16,733 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054558 seconds
+2026-05-16 09:23:21,820 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.068457 seconds
+2026-05-16 09:23:26,881 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052084 seconds
+2026-05-16 09:23:31,940 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054881 seconds
+2026-05-16 09:23:36,999 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054832 seconds
+2026-05-16 09:23:42,068 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.063440 seconds
+2026-05-16 09:23:47,130 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.057502 seconds
+2026-05-16 09:23:52,189 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.050937 seconds
+2026-05-16 09:23:57,251 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054464 seconds
+2026-05-16 09:24:02,316 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.055816 seconds
+2026-05-16 09:24:07,395 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.061880 seconds
+2026-05-16 09:24:12,460 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052581 seconds
+2026-05-16 09:24:17,529 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052602 seconds
+2026-05-16 09:24:22,608 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.064703 seconds
+2026-05-16 09:24:27,691 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.069539 seconds
+2026-05-16 09:24:32,759 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052003 seconds
+2026-05-16 09:24:37,819 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052282 seconds
+2026-05-16 09:24:42,891 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.052144 seconds
+2026-05-16 09:24:47,953 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.054155 seconds
+2026-05-16 09:24:53,031 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.071491 seconds
+2026-05-16 09:24:58,097 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.053254 seconds
+2026-05-16 09:25:03,153 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051538 seconds
+2026-05-16 09:25:08,109 |  INFO | __main__ : Received SIGTERM. Preparing to stop monitoring...
+2026-05-16 09:25:08,112 |  INFO | __main__ : Ploting metrics...

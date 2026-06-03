@@ -1,0 +1,50 @@
+{
+    "Llama-3.1-8B-Instruct": {
+        "fsdp": {
+            "batch_size": [4, 8, 16],
+            "precision": ["bf16"],
+            "grad_accum": [4],
+            "lr": 2e-5,
+            "epochs": 3,
+            "max_model_length": [2048]
+        }
+    },
+    "Llama-3.3-70B-Instruct": {
+        "fsdp": {
+            "batch_size": [1],
+            "precision": ["bf16"],
+            "grad_accum": [1],
+            "lr": 2e-5,
+            "steps": 100,
+            "max_model_length": [1024]
+        }
+    },
+    "gemma-3-1b-it": {
+        "ddp": {
+            "batch_size": [4, 8, 16],
+            "precision": ["bf16"],
+            "grad_accum": [16],
+            "lr": 2e-5,
+            "epochs": 1,
+            "max_model_length": [2048]
+        },
+        "none": {
+            "batch_size": [1, 4, 8, 16],
+            "precision": ["bf16"],
+            "grad_accum": [16],
+            "lr": 2e-5,
+            "epochs": 1,
+            "max_model_length": [2048]
+        }
+    },
+    "Mistral-7B-Instruct-v0.3": {
+        "fsdp": {
+            "batch_size": [8, 16],
+            "precision": ["bf16"],
+            "grad_accum": [16],
+            "lr": 2e-5,
+            "epochs": 1,
+            "max_model_length": [8192, 16384]
+        }
+    }
+}

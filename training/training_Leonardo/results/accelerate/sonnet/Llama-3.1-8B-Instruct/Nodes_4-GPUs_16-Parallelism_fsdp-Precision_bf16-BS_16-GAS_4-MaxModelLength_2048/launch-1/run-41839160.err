@@ -1,0 +1,1 @@
+activate-env-per-supercomputer.sh: line 34: CUDA_ROOT: unbound variable

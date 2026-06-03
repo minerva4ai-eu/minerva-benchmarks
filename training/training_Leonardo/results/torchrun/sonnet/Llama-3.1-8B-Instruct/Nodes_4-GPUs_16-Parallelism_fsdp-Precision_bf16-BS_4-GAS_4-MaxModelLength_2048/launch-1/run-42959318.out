@@ -1,0 +1,119 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+LAUNCH_FOLDER: {/leonardo_work/MNRVA_bench/davide_results/torchrun/sonnet/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1}, DATASET: {sonnet}, DATASET_PATH: {/leonardo_work/MNRVA_bench/datasets/sonnet.txt}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 2048, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {fsdp}, PRECISION: {bf16} BATCH_SIZE: {4}, GRAD_ACCUM: {4}
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+
+
+Tokenizer Loaded
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt📂 Dataset input type: single dataset
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+Tokenizer LoadedTokenizer Loaded
+
+Tokenizer LoadedTokenizer Loaded
+
+📂 Dataset input type: single dataset
+📂 Dataset input type: single dataset  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset
+📂 Dataset input type: single dataset  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+
+
+Tokenizer Loaded
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+
+📂 Dataset input type: single dataset
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+
+  Train path: /leonardo_work/MNRVA_bench/datasets/sonnet.txt
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-30 12:51:52,720] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+{'loss': 2.1266, 'grad_norm': 5.415869235992432, 'learning_rate': 1.8e-05, 'epoch': 0.34}
+{'loss': 0.5111, 'grad_norm': 1.7034260034561157, 'learning_rate': 1.577777777777778e-05, 'epoch': 0.68}
+{'loss': 0.4514, 'grad_norm': 3.580094814300537, 'learning_rate': 1.3555555555555557e-05, 'epoch': 1.0}
+{'loss': 0.433, 'grad_norm': 1.5135148763656616, 'learning_rate': 1.1333333333333334e-05, 'epoch': 1.34}
+{'loss': 0.4235, 'grad_norm': 1.5396064519882202, 'learning_rate': 9.111111111111112e-06, 'epoch': 1.68}
+{'loss': 0.4146, 'grad_norm': 2.719651699066162, 'learning_rate': 6.88888888888889e-06, 'epoch': 2.0}
+{'loss': 0.4061, 'grad_norm': 1.0377418994903564, 'learning_rate': 4.666666666666667e-06, 'epoch': 2.34}
+{'loss': 0.4016, 'grad_norm': 1.0198733806610107, 'learning_rate': 2.4444444444444447e-06, 'epoch': 2.68}
+{'loss': 0.4013, 'grad_norm': 2.750333309173584, 'learning_rate': 2.2222222222222224e-07, 'epoch': 3.0}
+{'train_runtime': 315.1604, 'train_samples_per_second': 4.436, 'train_steps_per_second': 0.286, 'train_loss': 0.618801498413086, 'epoch': 3.0}
+
+=== TOKEN / THROUGHPUT SUMMARY (TokenTrackingTrainer) ===
+Total tokens per GPU (ALL epochs): 96,752
+Total tokens GLOBAL (ALL epochs): 1,541,880
+Total training time (s): 403.58
+Tokens/sec per GPU: 239.74
+Tokens/sec GLOBAL: 3,820.54
+==========================================================
+
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+Fine-tuning complete.
+FSDP Job Completed.

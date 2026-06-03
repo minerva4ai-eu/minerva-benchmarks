@@ -1,0 +1,170 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+LAUNCH_FOLDER: {/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/torchrun/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1}, DATASET: {alpaca}, DATASET_PATH: {"/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"}
+LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: 2048, GPUS_PER_NODE: {4}, MODEL_PATH: {/leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct}, PARALLELISM: {fsdp}, PRECISION: {bf16} BATCH_SIZE: {4}, GRAD_ACCUM: {4}
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-InstructLoading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Loading tokenizer... /leonardo_work/cin_staff/dgentile/models_registry/Llama-3.1-8B-Instruct
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+
+
+Tokenizer LoadedTokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+📂 Dataset input type: single dataset
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+Tokenizer LoadedTokenizer Loaded
+Tokenizer Loaded
+Tokenizer Loaded
+
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+📂 Dataset input type: single dataset
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+Tokenizer LoadedTokenizer LoadedTokenizer LoadedTokenizer Loaded
+
+
+
+📂 Dataset input type: single dataset
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+📂 Dataset input type: single dataset📂 Dataset input type: single dataset📂 Dataset input type: single dataset
+
+
+  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"  Train path: "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+
+
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2026-05-15 19:21:39,331] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+{'loss': 1.5476, 'grad_norm': 1.2091095447540283, 'learning_rate': 1.9979395604395606e-05, 'epoch': 0.0}
+{'loss': 0.6155, 'grad_norm': 0.7985384464263916, 'learning_rate': 1.9956501831501833e-05, 'epoch': 0.01}
+{'loss': 0.6202, 'grad_norm': 0.7515778541564941, 'learning_rate': 1.993360805860806e-05, 'epoch': 0.01}
+{'loss': 0.6202, 'grad_norm': 0.7638189792633057, 'learning_rate': 1.9910714285714287e-05, 'epoch': 0.01}
+{'loss': 0.6086, 'grad_norm': 0.8712984323501587, 'learning_rate': 1.9887820512820513e-05, 'epoch': 0.02}
+{'loss': 0.5848, 'grad_norm': 0.9162473082542419, 'learning_rate': 1.9864926739926744e-05, 'epoch': 0.02}
+{'loss': 0.5709, 'grad_norm': 0.7927292585372925, 'learning_rate': 1.984203296703297e-05, 'epoch': 0.02}
+{'loss': 0.5616, 'grad_norm': 0.9137470722198486, 'learning_rate': 1.9819139194139197e-05, 'epoch': 0.03}
+{'loss': 0.5472, 'grad_norm': 0.7100420594215393, 'learning_rate': 1.9796245421245424e-05, 'epoch': 0.03}
+{'loss': 0.5554, 'grad_norm': 0.8493431806564331, 'learning_rate': 1.977335164835165e-05, 'epoch': 0.03}
+{'loss': 0.5416, 'grad_norm': 0.8089858293533325, 'learning_rate': 1.9750457875457878e-05, 'epoch': 0.04}
+{'loss': 0.5412, 'grad_norm': 0.8482473492622375, 'learning_rate': 1.9727564102564105e-05, 'epoch': 0.04}
+{'loss': 0.5214, 'grad_norm': 0.9956034421920776, 'learning_rate': 1.970467032967033e-05, 'epoch': 0.04}
+{'loss': 0.5234, 'grad_norm': 0.9465188980102539, 'learning_rate': 1.968177655677656e-05, 'epoch': 0.05}
+{'loss': 0.5018, 'grad_norm': 0.9691922068595886, 'learning_rate': 1.9658882783882785e-05, 'epoch': 0.05}
+{'loss': 0.489, 'grad_norm': 0.8318039774894714, 'learning_rate': 1.9635989010989012e-05, 'epoch': 0.05}
+{'loss': 0.4849, 'grad_norm': 0.8499266505241394, 'learning_rate': 1.961309523809524e-05, 'epoch': 0.06}
+{'loss': 0.4761, 'grad_norm': 1.0008710622787476, 'learning_rate': 1.9590201465201466e-05, 'epoch': 0.06}
+{'loss': 0.4739, 'grad_norm': 0.9365525245666504, 'learning_rate': 1.9567307692307693e-05, 'epoch': 0.07}
+{'loss': 0.4625, 'grad_norm': 0.7889300584793091, 'learning_rate': 1.954441391941392e-05, 'epoch': 0.07}
+{'loss': 0.446, 'grad_norm': 0.904965877532959, 'learning_rate': 1.9521520146520146e-05, 'epoch': 0.07}
+{'loss': 0.4402, 'grad_norm': 0.7926507592201233, 'learning_rate': 1.9498626373626376e-05, 'epoch': 0.08}
+{'loss': 0.4421, 'grad_norm': 0.8861324191093445, 'learning_rate': 1.9475732600732603e-05, 'epoch': 0.08}
+{'loss': 0.4346, 'grad_norm': 0.944984495639801, 'learning_rate': 1.945283882783883e-05, 'epoch': 0.08}
+{'loss': 0.4282, 'grad_norm': 0.9952148795127869, 'learning_rate': 1.9429945054945057e-05, 'epoch': 0.09}
+{'loss': 0.4208, 'grad_norm': 0.8630738258361816, 'learning_rate': 1.9407051282051284e-05, 'epoch': 0.09}
+{'loss': 0.3968, 'grad_norm': 0.8272132873535156, 'learning_rate': 1.938415750915751e-05, 'epoch': 0.09}
+{'loss': 0.3947, 'grad_norm': 0.8889135122299194, 'learning_rate': 1.9361263736263737e-05, 'epoch': 0.1}
+{'loss': 0.3942, 'grad_norm': 0.8797718286514282, 'learning_rate': 1.9338369963369964e-05, 'epoch': 0.1}
+{'loss': 0.3893, 'grad_norm': 0.8605615496635437, 'learning_rate': 1.931547619047619e-05, 'epoch': 0.1}
+{'loss': 0.3738, 'grad_norm': 0.893290638923645, 'learning_rate': 1.9292582417582418e-05, 'epoch': 0.11}
+{'loss': 0.3663, 'grad_norm': 1.032647967338562, 'learning_rate': 1.9269688644688648e-05, 'epoch': 0.11}
+{'loss': 0.3584, 'grad_norm': 0.8295218348503113, 'learning_rate': 1.9246794871794875e-05, 'epoch': 0.11}
+{'loss': 0.3491, 'grad_norm': 0.8620227575302124, 'learning_rate': 1.9223901098901102e-05, 'epoch': 0.12}
+{'loss': 0.3594, 'grad_norm': 0.8275675177574158, 'learning_rate': 1.920100732600733e-05, 'epoch': 0.12}
+{'loss': 0.3447, 'grad_norm': 0.8697206377983093, 'learning_rate': 1.9178113553113556e-05, 'epoch': 0.12}
+{'loss': 0.3407, 'grad_norm': 0.844072699546814, 'learning_rate': 1.9155219780219782e-05, 'epoch': 0.13}
+{'loss': 0.3316, 'grad_norm': 0.9732171297073364, 'learning_rate': 1.913232600732601e-05, 'epoch': 0.13}
+{'loss': 0.3167, 'grad_norm': 0.8410309553146362, 'learning_rate': 1.9109432234432236e-05, 'epoch': 0.13}
+{'loss': 0.3055, 'grad_norm': 0.8629330396652222, 'learning_rate': 1.9086538461538463e-05, 'epoch': 0.14}
+{'loss': 0.3137, 'grad_norm': 0.8783373832702637, 'learning_rate': 1.906364468864469e-05, 'epoch': 0.14}
+{'loss': 0.2971, 'grad_norm': 0.8963460326194763, 'learning_rate': 1.9040750915750917e-05, 'epoch': 0.14}
+{'loss': 0.2963, 'grad_norm': 0.897219181060791, 'learning_rate': 1.9017857142857143e-05, 'epoch': 0.15}
+{'loss': 0.296, 'grad_norm': 0.9907211065292358, 'learning_rate': 1.899496336996337e-05, 'epoch': 0.15}
+{'loss': 0.2846, 'grad_norm': 0.8147503137588501, 'learning_rate': 1.8972069597069597e-05, 'epoch': 0.15}
+{'loss': 0.2829, 'grad_norm': 0.9489485025405884, 'learning_rate': 1.8949175824175824e-05, 'epoch': 0.16}
+{'loss': 0.283, 'grad_norm': 0.982390284538269, 'learning_rate': 1.892628205128205e-05, 'epoch': 0.16}
+{'loss': 0.2727, 'grad_norm': 0.8736523985862732, 'learning_rate': 1.890338827838828e-05, 'epoch': 0.16}
+{'loss': 0.2662, 'grad_norm': 0.9006186723709106, 'learning_rate': 1.8880494505494508e-05, 'epoch': 0.17}
+{'loss': 0.2594, 'grad_norm': 0.7908318638801575, 'learning_rate': 1.8857600732600735e-05, 'epoch': 0.17}
+{'loss': 0.2532, 'grad_norm': 0.8720682859420776, 'learning_rate': 1.883470695970696e-05, 'epoch': 0.18}
+{'loss': 0.2524, 'grad_norm': 0.9490328431129456, 'learning_rate': 1.8811813186813188e-05, 'epoch': 0.18}
+{'loss': 0.2452, 'grad_norm': 0.8278685808181763, 'learning_rate': 1.8788919413919415e-05, 'epoch': 0.18}
+{'loss': 0.242, 'grad_norm': 0.8181285858154297, 'learning_rate': 1.8766025641025642e-05, 'epoch': 0.19}
+{'loss': 0.2403, 'grad_norm': 0.8851894736289978, 'learning_rate': 1.874313186813187e-05, 'epoch': 0.19}
+{'loss': 0.228, 'grad_norm': 0.8521938323974609, 'learning_rate': 1.8720238095238096e-05, 'epoch': 0.19}
+{'loss': 0.221, 'grad_norm': 0.9500765800476074, 'learning_rate': 1.8697344322344322e-05, 'epoch': 0.2}
+{'loss': 0.2212, 'grad_norm': 0.935590386390686, 'learning_rate': 1.8674450549450553e-05, 'epoch': 0.2}
+{'loss': 0.2152, 'grad_norm': 0.9294439554214478, 'learning_rate': 1.865155677655678e-05, 'epoch': 0.2}
+{'loss': 0.2115, 'grad_norm': 0.7848367691040039, 'learning_rate': 1.8628663003663006e-05, 'epoch': 0.21}
+{'loss': 0.214, 'grad_norm': 0.8510489463806152, 'learning_rate': 1.8605769230769233e-05, 'epoch': 0.21}
+{'loss': 0.2042, 'grad_norm': 0.8542741537094116, 'learning_rate': 1.858287545787546e-05, 'epoch': 0.21}
+{'loss': 0.1975, 'grad_norm': 0.7855823636054993, 'learning_rate': 1.8559981684981687e-05, 'epoch': 0.22}
+{'loss': 0.1997, 'grad_norm': 0.9662519097328186, 'learning_rate': 1.8537087912087914e-05, 'epoch': 0.22}
+{'loss': 0.1887, 'grad_norm': 0.7536104321479797, 'learning_rate': 1.851419413919414e-05, 'epoch': 0.22}
+{'loss': 0.184, 'grad_norm': 0.9171800017356873, 'learning_rate': 1.8491300366300367e-05, 'epoch': 0.23}
+{'loss': 0.1854, 'grad_norm': 0.8363520503044128, 'learning_rate': 1.8468406593406598e-05, 'epoch': 0.23}
+{'loss': 0.1832, 'grad_norm': 0.8581569790840149, 'learning_rate': 1.8445512820512824e-05, 'epoch': 0.23}
+{'loss': 0.175, 'grad_norm': 0.7657245993614197, 'learning_rate': 1.8422619047619048e-05, 'epoch': 0.24}
+{'loss': 0.1669, 'grad_norm': 0.844402015209198, 'learning_rate': 1.8399725274725275e-05, 'epoch': 0.24}
+{'loss': 0.1679, 'grad_norm': 0.8846450448036194, 'learning_rate': 1.83768315018315e-05, 'epoch': 0.24}
+{'loss': 0.1674, 'grad_norm': 0.7712909579277039, 'learning_rate': 1.835393772893773e-05, 'epoch': 0.25}
+{'loss': 0.1609, 'grad_norm': 0.7779411673545837, 'learning_rate': 1.8331043956043955e-05, 'epoch': 0.25}
+{'loss': 0.1597, 'grad_norm': 0.7634145021438599, 'learning_rate': 1.8308150183150185e-05, 'epoch': 0.25}
+{'loss': 0.165, 'grad_norm': 0.8691588044166565, 'learning_rate': 1.8285256410256412e-05, 'epoch': 0.26}
+{'loss': 0.1548, 'grad_norm': 0.8121983408927917, 'learning_rate': 1.826236263736264e-05, 'epoch': 0.26}
+{'loss': 0.1482, 'grad_norm': 0.7613230347633362, 'learning_rate': 1.8239468864468866e-05, 'epoch': 0.26}
+{'loss': 0.1446, 'grad_norm': 0.7859001755714417, 'learning_rate': 1.8216575091575093e-05, 'epoch': 0.27}
+{'loss': 0.1461, 'grad_norm': 0.7812328338623047, 'learning_rate': 1.819368131868132e-05, 'epoch': 0.27}
+{'loss': 0.1448, 'grad_norm': 0.8343344926834106, 'learning_rate': 1.8170787545787546e-05, 'epoch': 0.27}
+{'loss': 0.1449, 'grad_norm': 0.7539144158363342, 'learning_rate': 1.8147893772893773e-05, 'epoch': 0.28}
+{'loss': 0.1367, 'grad_norm': 0.7674195170402527, 'learning_rate': 1.8125e-05, 'epoch': 0.28}
+{'loss': 0.135, 'grad_norm': 0.6870951056480408, 'learning_rate': 1.810210622710623e-05, 'epoch': 0.29}
+{'loss': 0.1331, 'grad_norm': 0.8117870688438416, 'learning_rate': 1.8079212454212457e-05, 'epoch': 0.29}
+{'loss': 0.1308, 'grad_norm': 0.7710029482841492, 'learning_rate': 1.8056318681318684e-05, 'epoch': 0.29}
+{'loss': 0.1285, 'grad_norm': 0.7309790849685669, 'learning_rate': 1.803342490842491e-05, 'epoch': 0.3}
+FSDP Job Completed.

@@ -1,0 +1,128 @@
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/gpu_plots.py:232: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  gpus_metrics = pd.concat(
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/gpu_plots.py:232: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  gpus_metrics = pd.concat(
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/gpu_plots.py:232: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  gpus_metrics = pd.concat(
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/gpu_plots.py:232: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  gpus_metrics = pd.concat(
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.00it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.30s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:01,  1.01it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+
+
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.04s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]
+
+[W401 10:57:23.173983682 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.145901400 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.145905191 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.145903669 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.145905823 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.178274493 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.178276399 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.178278742 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.103752473 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.103755002 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.103756731 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.103757966 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.178279412 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.181547895 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.181686191 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+[W401 10:57:23.182060282 CUDAAllocatorConfig.h:28] Warning: expandable_segments not supported on this platform (function operator())
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+WARNING:accelerate.utils.other:Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/alpaca/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/debug/custom_train.py:8: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `TokenTrackingTrainer.__init__`. Use `processing_class` instead.
+  super().__init__(*args, **kwargs)
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 128009, 'pad_token_id': 128009}.
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/accelerator.py:1962: UserWarning: Upcasted low precision parameters in LlamaForCausalLM because mixed precision turned on in FSDP. Affects: model.embed_tokens.weight, model.norm.weight, lm_head.weight.
+  warnings.warn(
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/accelerator.py:1962: UserWarning: Upcasted low precision parameters in LlamaDecoderLayer because mixed precision turned on in FSDP. Affects: self_attn.q_proj.weight, self_attn.k_proj.weight, self_attn.v_proj.weight, self_attn.o_proj.weight, mlp.gate_proj.weight, mlp.up_proj.weight, mlp.down_proj.weight, input_layernorm.weight, post_attention_layernorm.weight.
+  warnings.warn(
+/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/accelerator.py:1968: UserWarning: FSDP upcast of low precision parameters may affect the precision of model checkpoints.
+  warnings.warn(
+  0%|          | 0/5 [00:00<?, ?it/s] 20%|██        | 1/5 [00:15<01:00, 15.22s/it] 40%|████      | 2/5 [00:20<00:27,  9.28s/it] 60%|██████    | 3/5 [00:25<00:14,  7.35s/it] 80%|████████  | 4/5 [00:30<00:06,  6.42s/it]100%|██████████| 5/5 [00:35<00:00,  5.84s/it]                                             100%|██████████| 5/5 [00:35<00:00,  5.84s/it]100%|██████████| 5/5 [00:35<00:00,  7.06s/it]

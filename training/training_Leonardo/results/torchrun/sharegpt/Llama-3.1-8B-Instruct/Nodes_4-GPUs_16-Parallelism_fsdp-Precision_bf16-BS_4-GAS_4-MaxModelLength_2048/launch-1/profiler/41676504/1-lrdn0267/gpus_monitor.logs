@@ -1,0 +1,4 @@
+2026-05-16 09:10:39,233 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.060497 seconds
+2026-05-16 09:10:44,311 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051589 seconds
+2026-05-16 09:10:49,366 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051623 seconds
+2026-05-16 09:10:54,421 |  INFO | __main__ : ⏱️ Function 'get_gpu_metrics' executed in 0.051663 seconds

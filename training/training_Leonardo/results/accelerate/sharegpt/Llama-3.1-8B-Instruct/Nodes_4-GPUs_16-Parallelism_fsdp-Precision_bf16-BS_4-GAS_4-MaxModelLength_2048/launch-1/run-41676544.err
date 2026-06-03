@@ -1,0 +1,625 @@
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^ ^ ^ ^ ^ ^ ^ ^^ ^ ^
+^^^^^FileNotFoundError^^^^^^^^^^: ^^[Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'^
+^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+    with open(path, "r", encoding="utf-8") as f:
+    main()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+    main()
+    main()
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+              ^^^^^^    ^with open(path, "r", encoding="utf-8") as f:^
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^ ^ ^ ^ ^ ^ ^ ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Traceback (most recent call last):
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    main()
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+Traceback (most recent call last):
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^    ^^dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)^
+^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^Traceback (most recent call last):
+^^^^^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 326, in <module>
+        dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()    
+main()
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    main()
+                                     ^^ ^^^ ^^ ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+^^^^^
+^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+^^^^^^  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+    main()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/results/accelerate/sharegpt/Llama-3.1-8B-Instruct/Nodes_4-GPUs_16-Parallelism_fsdp-Precision_bf16-BS_4-GAS_4-MaxModelLength_2048/launch-1/finetune-fsdp.py", line 177, in main
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+                           ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+    dataset = DatasetHandlerClass(path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH)
+    with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:with open(path, "r", encoding="utf-8") as f:
+
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^ ^  ^   ^  ^ ^  ^ ^  ^  ^^ ^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/../../training/training_MN5/datasets/handlers/ShareGPTHandler.py", line 10, in __init__
+^^^^^^^^^FileNotFoundError^^^^^^^^^^^^
+
+: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+    with open(path, "r", encoding="utf-8") as f:
+FileNotFoundErrorFileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    with open(path, "r", encoding="utf-8") as f:
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+    with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:    
+with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^ ^  ^^  ^  ^  ^ ^  ^  ^  ^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^FileNotFoundError^^^^^^^^^^^^^^^: ^^[Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'^^^^
+^^^
+
+FileNotFoundErrorFileNotFoundError: : [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'[Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+
+    with open(path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '"/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"'
+E0517 13:55:13.390000 1334758 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 1334814) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2491-net7-3.leonardo.local
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 1334815)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2491-net7-3.leonardo.local
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 1334816)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2491.leonardo.local
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 1334817)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2491-net7-3.leonardo.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 1334814)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+[W517 13:55:13.731813704 TCPStore.cpp:131] [c10d] recvVector failed on SocketImpl(fd=20, addr=[lrdn2492.leonardo.local]:35448, remote=[lrdn2491-net7-3.leonardo.local]:29500): failed to recv, got 0 bytes
+Exception raised from recvBytes at ../torch/csrc/distributed/c10d/Utils.hpp:670 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1456be8df446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fec818 (0x1456f9fb0818 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: <unknown function> + 0x5fece49 (0x1456f9fb0e49 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: <unknown function> + 0x5fefd67 (0x1456f9fb3d67 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::compareSet(std::string const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&) + 0x254 (0x1456f9fad5e4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7c7a4 (0x1457099a57a4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x1457090f5ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x55739257ef36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x55739255c97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x5573925ad038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: <unknown function> + 0x2276c2 (0x5573925ad6c2 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: <unknown function> + 0x226f90 (0x5573925acf90 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: <unknown function> + 0x2f862f (0x55739267e62f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: <unknown function> + 0x2c5954 (0x55739264b954 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x81ca (0x1457188631ca in /lib64/libpthread.so.0)
+frame #20: clone + 0x43 (0x145717d45e73 in /lib64/libc.so.6)
+
+W0517 13:55:13.792000 167382 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 167440 closing signal SIGTERM
+W0517 13:55:13.793000 167382 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 167443 closing signal SIGTERM
+W0517 13:55:13.821000 167382 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1331] The node 'lrdn2492.leonardo.local_167382_0' has failed to send a keep-alive heartbeat to the rendezvous 'none' due to an error of type RendezvousConnectionError.
+W0517 13:55:13.825000 69529 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 69585 closing signal SIGTERM
+W0517 13:55:13.825000 301832 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 301889 closing signal SIGTERM
+[W517 13:55:13.873991613 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2494-net7-3.leonardo.local]:50688, remote=[lrdn2491-net7-3.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x147cb3b00446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x147cef1d1b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: c10d::TCPStore::doWait(c10::ArrayRef<std::string>, std::chrono::duration<long, std::ratio<1l, 1000l> >) + 0x27e (0x147cef1cf56e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: c10d::TCPStore::doGet(std::string const&) + 0x2a (0x147cef1cf9ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::get(std::string const&) + 0x7a (0x147cef1d083a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7cbec (0x147cfebc6bec in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x147cfe316ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x561f92db0f36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x561f92d8e97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x561f92ddf038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x561f92d9fec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x561f92dc07df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyEval_EvalFrameDefault + 0x45c7 (0x561f92d9fec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyFunction_Vectorcall + 0x17f (0x561f92dc07df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: _PyObject_FastCallDictTstate + 0x63 (0x561f92d93573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: _PyObject_Call_Prepend + 0xe9 (0x561f92dc81f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: <unknown function> + 0x2df369 (0x561f92e97369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+[W517 13:55:13.873433542 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2493-net7-3.leonardo.local]:46146, remote=[lrdn2491.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1521c6ee0446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x1522025b1b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #17: PyObject_Call + 0xbe (0x561f92dca58e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: _PyEval_EvalFrameDefault + 0x45c7 (0x561f92d9fec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x29ac5d (0x561f92e52c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #2: c10d::TCPStore::doWait(c10::ArrayRef<std::string>, std::chrono::duration<long, std::ratio<1l, 1000l> >) + 0x27e (0x1522025af56e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: c10d::TCPStore::doGet(std::string const&) + 0x2a (0x1522025af9ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::get(std::string const&) + 0x7a (0x1522025b083a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7cbec (0x152211fa6bec in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #20: PyEval_EvalCode + 0x9f (0x561f92e5239f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2b831a (0x561f92e7031a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: <unknown function> + 0x2b3f93 (0x561f92e6bf93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: <unknown function> + 0x2c9540 (0x561f92e81540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: _PyRun_SimpleFileObject + 0x1bc (0x561f92e80ecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: _PyRun_AnyFileObject + 0x44 (0x561f92e80c64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #6: <unknown function> + 0x4ccad4 (0x1522116f6ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x564a3f051f36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x564a3f02f97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x564a3f080038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x564a3f040ec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: Py_RunMain + 0x383 (0x561f92e7b233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #27: Py_BytesMain + 0x37 (0x561f92e42617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #28: __libc_start_main + 0xe5 (0x147d0cf67d85 in /lib64/libc.so.6)
+frame #29: <unknown function> + 0x28a4ca (0x561f92e424ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+frame #11: _PyFunction_Vectorcall + 0x17f (0x564a3f0617df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyEval_EvalFrameDefault + 0x45c7 (0x564a3f040ec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyFunction_Vectorcall + 0x17f (0x564a3f0617df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: _PyObject_FastCallDictTstate + 0x63 (0x564a3f034573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: _PyObject_Call_Prepend + 0xe9 (0x564a3f0691f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: <unknown function> + 0x2df369 (0x564a3f138369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: PyObject_Call + 0xbe (0x564a3f06b58e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: _PyEval_EvalFrameDefault + 0x45c7 (0x564a3f040ec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x29ac5d (0x564a3f0f3c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: PyEval_EvalCode + 0x9f (0x564a3f0f339f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2b831a (0x564a3f11131a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: <unknown function> + 0x2b3f93 (0x564a3f10cf93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: <unknown function> + 0x2c9540 (0x564a3f122540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: _PyRun_SimpleFileObject + 0x1bc (0x564a3f121ecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: _PyRun_AnyFileObject + 0x44 (0x564a3f121c64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: Py_RunMain + 0x383 (0x564a3f11c233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #27: Py_BytesMain + 0x37 (0x564a3f0e3617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #28: __libc_start_main + 0xe5 (0x152220347d85 in /lib64/libc.so.6)
+frame #29: <unknown function> + 0x28a4ca (0x564a3f0e34ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+E0517 13:55:13.863000 167382 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 1 (pid: 167441) of binary: /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python
+[W517 13:55:13.856348193 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2492-net7-3.leonardo.local]:35448, remote=[lrdn2491-net7-3.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1456be8df446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x1456f9fb0b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: <unknown function> + 0x5fef5bc (0x1456f9fb35bc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: <unknown function> + 0x5fef75d (0x1456f9fb375d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::compareSet(std::string const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&) + 0x318 (0x1456f9fad6a8 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7c7a4 (0x1457099a57a4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x1457090f5ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x55739257ef36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x55739255c97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x5573925ad038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: _PyObject_FastCallDictTstate + 0x63 (0x557392561573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: _PyObject_Call_Prepend + 0xe9 (0x5573925961f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: <unknown function> + 0x2df369 (0x557392665369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: PyObject_Call + 0xbe (0x55739259858e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x29ac5d (0x557392620c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: PyEval_EvalCode + 0x9f (0x55739262039f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: <unknown function> + 0x2b831a (0x55739263e31a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: <unknown function> + 0x2b3f93 (0x557392639f93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: <unknown function> + 0x2c9540 (0x55739264f540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: _PyRun_SimpleFileObject + 0x1bc (0x55739264eecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #27: _PyRun_AnyFileObject + 0x44 (0x55739264ec64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #28: Py_RunMain + 0x383 (0x557392649233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #29: Py_BytesMain + 0x37 (0x557392610617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #30: __libc_start_main + 0xe5 (0x145717d46d85 in /lib64/libc.so.6)
+frame #31: <unknown function> + 0x28a4ca (0x5573926104ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+W0517 13:55:13.869000 301832 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2494-net7-3.leonardo.local_301832_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+W0517 13:55:13.873000 167382 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2492.leonardo.local_167382_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+W0517 13:55:13.880000 69529 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2493.leonardo.local_69529_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+[W517 13:55:13.869463406 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2492-net7-3.leonardo.local]:35448, remote=[lrdn2491-net7-3.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1456be8df446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x1456f9fb0b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: <unknown function> + 0x5fef5bc (0x1456f9fb35bc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: <unknown function> + 0x5fef75d (0x1456f9fb375d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::compareSet(std::string const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&) + 0x318 (0x1456f9fad6a8 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7c7a4 (0x1457099a57a4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x1457090f5ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x55739257ef36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x55739255c97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x5573925ad038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: _PyObject_FastCallDictTstate + 0x63 (0x557392561573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: _PyObject_Call_Prepend + 0xe9 (0x5573925961f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: <unknown function> + 0x2df369 (0x557392665369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: PyObject_Call + 0xbe (0x55739259858e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x29ac5d (0x557392620c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: PyEval_EvalCode + 0x9f (0x55739262039f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2b831a (0x55739263e31a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: <unknown function> + 0x2b3f93 (0x557392639f93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: <unknown function> + 0x2c9540 (0x55739264f540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: _PyRun_SimpleFileObject + 0x1bc (0x55739264eecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: _PyRun_AnyFileObject + 0x44 (0x55739264ec64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: Py_RunMain + 0x383 (0x557392649233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #27: Py_BytesMain + 0x37 (0x557392610617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #28: __libc_start_main + 0xe5 (0x145717d46d85 in /lib64/libc.so.6)
+frame #29: <unknown function> + 0x28a4ca (0x5573926104ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+W0517 13:55:13.883000 167382 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2492.leonardo.local_167382_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+[W517 13:55:13.878087334 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2492.leonardo.local]:35448, remote=[lrdn2491-net7-3.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1456be8df446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x1456f9fb0b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: <unknown function> + 0x5fef5bc (0x1456f9fb35bc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: <unknown function> + 0x5fef75d (0x1456f9fb375d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::compareSet(std::string const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&) + 0x318 (0x1456f9fad6a8 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7c7a4 (0x1457099a57a4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x1457090f5ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x55739257ef36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x55739255c97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x5573925ad038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x55739258e7df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyObject_FastCallDictTstate + 0x63 (0x557392561573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyObject_Call_Prepend + 0xe9 (0x5573925961f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: <unknown function> + 0x2df369 (0x557392665369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: PyObject_Call + 0xbe (0x55739259858e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: _PyEval_EvalFrameDefault + 0x45c7 (0x55739256dec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: <unknown function> + 0x29ac5d (0x557392620c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: PyEval_EvalCode + 0x9f (0x55739262039f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x2b831a (0x55739263e31a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: <unknown function> + 0x2b3f93 (0x557392639f93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2c9540 (0x55739264f540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: _PyRun_SimpleFileObject + 0x1bc (0x55739264eecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: _PyRun_AnyFileObject + 0x44 (0x55739264ec64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: Py_RunMain + 0x383 (0x557392649233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: Py_BytesMain + 0x37 (0x557392610617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: __libc_start_main + 0xe5 (0x145717d46d85 in /lib64/libc.so.6)
+frame #27: <unknown function> + 0x28a4ca (0x5573926104ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+W0517 13:55:13.891000 167382 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2492.leonardo.local_167382_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+[W517 13:55:13.904295961 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2493.leonardo.local]:46146, remote=[lrdn2491.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x1521c6ee0446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x1522025b1b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: c10d::TCPStore::doWait(c10::ArrayRef<std::string>, std::chrono::duration<long, std::ratio<1l, 1000l> >) + 0x27e (0x1522025af56e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: c10d::TCPStore::doGet(std::string const&) + 0x2a (0x1522025af9ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::get(std::string const&) + 0x7a (0x1522025b083a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7cbec (0x152211fa6bec in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x1522116f6ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x564a3f051f36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x564a3f02f97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x564a3f080038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x564a3f040ec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x564a3f0617df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyObject_FastCallDictTstate + 0x63 (0x564a3f034573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyObject_Call_Prepend + 0xe9 (0x564a3f0691f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: <unknown function> + 0x2df369 (0x564a3f138369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: PyObject_Call + 0xbe (0x564a3f06b58e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: _PyEval_EvalFrameDefault + 0x45c7 (0x564a3f040ec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #17: <unknown function> + 0x29ac5d (0x564a3f0f3c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: PyEval_EvalCode + 0x9f (0x564a3f0f339f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x2b831a (0x564a3f11131a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+[W517 13:55:13.904872854 TCPStore.cpp:122] [c10d] sendBytes failed on SocketImpl(fd=20, addr=[lrdn2494-net7-3.leonardo.local]:50688, remote=[lrdn2491-net7-3.leonardo.local]:29500): Broken pipe
+Exception raised from sendBytes at ../torch/csrc/distributed/c10d/Utils.hpp:645 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x147cb3b00446 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x5fecb29 (0x147cef1d1b29 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: c10d::TCPStore::doWait(c10::ArrayRef<std::string>, std::chrono::duration<long, std::ratio<1l, 1000l> >) + 0x27e (0x147cef1cf56e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #3: c10d::TCPStore::doGet(std::string const&) + 0x2a (0x147cef1cf9ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #4: c10d::TCPStore::get(std::string const&) + 0x7a (0x147cef1d083a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_cpu.so)
+frame #5: <unknown function> + 0xd7cbec (0x147cfebc6bec in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #6: <unknown function> + 0x4ccad4 (0x147cfe316ad4 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/lib/libtorch_python.so)
+frame #7: <unknown function> + 0x1f8f36 (0x561f92db0f36 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #8: _PyObject_MakeTpCall + 0x29b (0x561f92d8e97b in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #9: <unknown function> + 0x227038 (0x561f92ddf038 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #10: _PyEval_EvalFrameDefault + 0x45c7 (0x561f92d9fec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: <unknown function> + 0x2b3f93 (0x564a3f10cf93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2c9540 (0x564a3f122540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: _PyRun_SimpleFileObject + 0x1bc (0x564a3f121ecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: _PyRun_AnyFileObject + 0x44 (0x564a3f121c64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: Py_RunMain + 0x383 (0x564a3f11c233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: Py_BytesMain + 0x37 (0x564a3f0e3617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #11: _PyFunction_Vectorcall + 0x17f (0x561f92dc07df in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #12: _PyObject_FastCallDictTstate + 0x63 (0x561f92d93573 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #13: _PyObject_Call_Prepend + 0xe9 (0x561f92dc81f9 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #14: <unknown function> + 0x2df369 (0x561f92e97369 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #15: PyObject_Call + 0xbe (0x561f92dca58e in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #16: _PyEval_EvalFrameDefault + 0x45c7 (0x561f92d9fec7 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: __libc_start_main + 0xe5 (0x152220347d85 in /lib64/libc.so.6)
+frame #27: <unknown function> + 0x28a4ca (0x564a3f0e34ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+frame #17: <unknown function> + 0x29ac5d (0x561f92e52c5d in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #18: PyEval_EvalCode + 0x9f (0x561f92e5239f in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #19: <unknown function> + 0x2b831a (0x561f92e7031a in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #20: <unknown function> + 0x2b3f93 (0x561f92e6bf93 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #21: <unknown function> + 0x2c9540 (0x561f92e81540 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #22: _PyRun_SimpleFileObject + 0x1bc (0x561f92e80ecc in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #23: _PyRun_AnyFileObject + 0x44 (0x561f92e80c64 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #24: Py_RunMain + 0x383 (0x561f92e7b233 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #25: Py_BytesMain + 0x37 (0x561f92e42617 in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+frame #26: __libc_start_main + 0xe5 (0x147d0cf67d85 in /lib64/libc.so.6)
+frame #27: <unknown function> + 0x28a4ca (0x561f92e424ca in /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/python)
+
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+W0517 13:55:13.894000 69529 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2493.leonardo.local_69529_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+W0517 13:55:13.894000 301832 site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py:1282] The node 'lrdn2494-net7-3.leonardo.local_301832_0' has failed to shutdown the rendezvous 'none' due to an error of type RendezvousConnectionError.
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+finetune-fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2492.leonardo.local
+  rank      : 6 (local_rank: 2)
+  exitcode  : 1 (pid: 167442)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-17_13:55:13
+  host      : lrdn2492.leonardo.local
+  rank      : 5 (local_rank: 1)
+  exitcode  : 1 (pid: 167441)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 117, in _call_store
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 117, in _call_store
+    return getattr(self._store, store_op)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.distributed.DistNetworkError: failed to recv, got 0 bytes
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    return getattr(self._store, store_op)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.distributed.DistNetworkError: failed to recv, got 0 bytes
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/bin/accelerate", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    sys.exit(main())
+             ^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    args.func(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1226, in launch_command
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    multi_gpu_launcher(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/accelerate/commands/launch.py", line 853, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    distrib_run.run(args)
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    elastic_launch(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 260, in launch_agent
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 260, in launch_agent
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 137, in wrapper
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/metrics/api.py", line 137, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 696, in run
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 696, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 891, in _invoke_run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/agent/server/api.py", line 891, in _invoke_run
+    num_nodes_waiting = rdzv_handler.num_nodes_waiting()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py", line 1253, in num_nodes_waiting
+    num_nodes_waiting = rdzv_handler.num_nodes_waiting()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py", line 1253, in num_nodes_waiting
+    self._state_holder.sync()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py", line 437, in sync
+    self._state_holder.sync()
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py", line 437, in sync
+    get_response = self._backend.get_state()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 75, in get_state
+    get_response = self._backend.get_state()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 75, in get_state
+    base64_state: bytes = self._call_store("get", self._key)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 119, in _call_store
+    base64_state: bytes = self._call_store("get", self._key)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    raise RendezvousConnectionError(
+  File "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev/lib/python3.11/site-packages/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py", line 119, in _call_store
+torch.distributed.elastic.rendezvous.api.RendezvousConnectionError: The connection to the C10d store has failed. See inner exception for details.
+    raise RendezvousConnectionError(
+torch.distributed.elastic.rendezvous.api.RendezvousConnectionError: The connection to the C10d store has failed. See inner exception for details.

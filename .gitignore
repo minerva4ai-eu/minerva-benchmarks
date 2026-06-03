@@ -35,12 +35,17 @@ inference/inference-Leonardo/env_ds/
 inference/inference-Leonardo/env_vllm/
 
 
-# Training - Leonardo
+# Training - MN5
 training/training_MN5/envs/
 training/training_MN5/datasets/
 training/training_MN5/results/
+
+# Training - Leonardo (dedicated dir; results/ intentionally tracked)
+training/training_Leonardo/envs/
+training/training_Leonardo/datasets/
 # Inference - Leonardo
 inference/inference-LEONARDO/env_ds/*
 inference/inference-LEONARDO/env_vllm/*
 inference/inference-LEONARDO/env_sglang/*
 
+training/training_MN5/rerun_missing.sh

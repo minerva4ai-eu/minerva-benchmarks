@@ -9,11 +9,10 @@ from dotenv import load_dotenv
 # -------------------------
 # Load environment & config
 # -------------------------
-SCRIPT_DIR = Path(__file__).resolve().parent
-load_dotenv(SCRIPT_DIR / ".env")
-load_dotenv(SCRIPT_DIR / ".env-leonardo")
-BASE_DIR = str(SCRIPT_DIR)
-BASE_DIR_RESULTS = "/leonardo_work/MNRVA_bench/davide_results"
+load_dotenv(".env")
+
+BASE_DIR = os.getcwd()
+BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
@@ -27,7 +26,9 @@ if os.path.exists(MODEL_TYPE_MAP_PATH):
         MODEL_TYPE_MAP = {}
 
 SUMMARY_FILENAME = "output/training_summary_0.json"
-OUTPUT_FILE = f"/leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
+OUTPUT_FILE = (
+    f"results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
+)
 
 # -------------------------
 # Desired CSV columns (training)
@@ -84,43 +85,10 @@ def parse_run_path(launch_path: Path):
     Return a dict with fields for metadata.
     """
     parts = launch_path.parts
-    framework = ""
+    # Default unknowns
     dataset_name = ""
     model_name = ""
     config_str = ""
-
-    base_results = Path(BASE_DIR_RESULTS)
-    try:
-        relative_parts = launch_path.relative_to(base_results).parts
-        if len(relative_parts) >= 4:
-            framework = relative_parts[0]
-            dataset_name = relative_parts[1]
-            model_name = relative_parts[2]
-            config_str = relative_parts[3]
-    except ValueError:
-        pass
-
-    if framework and dataset_name and model_name and config_str:
-        conf = {}
-        for chunk in config_str.split("-"):
-            if "_" in chunk:
-                k, v = chunk.split("_", 1)
-                conf[k.lower()] = v
-
-        return {
-            "Framework": framework,
-            "Dataset": dataset_name,
-            "Model": model_name,
-            "Number of Nodes": conf.get("nodes", ""),
-            "GPUs per Node": GPUS_PER_NODE,
-            "Total GPUs used": conf.get("gpus", ""),
-            "TypeParallelism": conf.get("parallelism", ""),
-            "Precision Type": conf.get("precision", ""),
-            "Batch Size": conf.get("bs", ""),
-            "Accumulation Gradients": conf.get("gas", ""),
-            "Max Length": conf.get("maxmodellength", ""),
-        }
-
     # Try to extract
     # parts example: ('.', 'results', 'torchrun', 'alpaca', 'Llama-3.1-8B-Instruct', 'Nodes_4-GPUs_16-...', 'launch-1')
     try:
@@ -342,8 +310,7 @@ def read_and_average_all_json_summaries(launch_dir: Path):
     Average numeric 'Avg.*' metrics across GPUs, take max for 'Peak.*' metrics,
     and combine everything into one summary dict.
     """
-    # Support both flat output files and per-job output folders (output/<job_id>/...).
-    json_files = list(launch_dir.glob("output/**/training_summary_*.json"))
+    json_files = list(launch_dir.glob("output/training_summary_*.json"))
     if not json_files:
         return {}
 
@@ -404,10 +371,6 @@ def main():
     config_groups = defaultdict(list)
     for launch_dir in base_results.rglob("launch-*"):
         if launch_dir.is_dir():
-            launch_dir_str = str(launch_dir).replace("\\", "/")
-            # Ignore accidental nested copies like .../launch-1/results/.../launch-1
-            if "/launch-1/results/" in launch_dir_str:
-                continue
             config_groups[launch_dir.parent].append(launch_dir)
 
     if not config_groups:
@@ -489,16 +452,10 @@ def main():
         # Add text fields
         combined.update(text_fields)
 
-        # Preserve whether failures were OOM-related or generic.
+        # If any run failed, mark it
         comments = [m.get("Comment", "") for m in all_metrics]
-        has_oom = any("oom" in c.lower() for c in comments)
-        has_error = any("error" in c.lower() for c in comments)
-        if has_oom and has_error:
-            combined["Comment"] = "Contains OOM and non-OOM failed runs"
-        elif has_oom:
-            combined["Comment"] = "Contains OOM failed runs"
-        elif has_error:
-            combined["Comment"] = "Contains non-OOM failed runs"
+        if any("oom" in c.lower() or "error" in c.lower() for c in comments):
+            combined["Comment"] = "Contains failed runs (OOM/Error)"
 
         # 4️⃣ Build CSV row
         row = {c: "" for c in COLUMNS}

@@ -1,5 +1,5 @@
 {
-  "Text Generation": "/leonardo_work/cin_staff/dgentile/models_registry",
-  "Embedding": "/leonardo_work/cin_staff/dgentile/models_registry",
-  "Vision": "/leonardo_work/cin_staff/dgentile/models_registry"
+  "Text Generation": "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry",
+  "Embedding": "/path/to/embedding/models",
+  "Vision": "/path/to/vision/models"
 }

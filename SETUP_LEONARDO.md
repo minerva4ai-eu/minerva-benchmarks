@@ -27,11 +27,11 @@
 
 ## Step 1: Create `.env-leonardo`
 
-Created `training/training_MN5/.env-leonardo` with Leonardo-specific SLURM and environment settings:
+Created `training/training_Leonardo/.env-leonardo` with Leonardo-specific SLURM and environment settings:
 
 ```bash
 # ENVIRONMENT PATH
-ENVIRONMENT_FINETUNING=/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/envs/fine-tune-dev
+ENVIRONMENT_FINETUNING=/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo/envs/fine-tune-dev
 
 # ADDITIONAL VARIABLES
 PORT=8000
@@ -58,7 +58,7 @@ Key differences from MN5:
 
 ## Step 2: Create Leonardo-specific conda environment YAML
 
-Created `training/training_MN5/envs-yaml/fine-tune-dev-env-leonardo.yaml` — a copy of `fine-tune-dev-env.yaml` with two fixes:
+Created `training/training_Leonardo/envs-yaml/fine-tune-dev-env-leonardo.yaml` — a copy of `fine-tune-dev-env.yaml` with two fixes:
 
 1. **Added PyTorch extra index URL** for CUDA 12.1 wheels:
    ```yaml
@@ -84,12 +84,12 @@ Created `training/training_MN5/envs-yaml/fine-tune-dev-env-leonardo.yaml` — a 
 ## Step 3: Create the conda environment
 
 ```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo
 eval "$(/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda shell.bash hook)"
 conda env create --prefix ./envs/fine-tune-dev -f envs-yaml/fine-tune-dev-env-leonardo.yaml
 ```
 
-**Installed environment location:** `training/training_MN5/envs/fine-tune-dev/`
+**Installed environment location:** `training/training_Leonardo/envs/fine-tune-dev/`
 
 **Key package versions:**
 | Package | Version |
@@ -153,7 +153,7 @@ Updated all dataset paths from BSC MN5 (`/gpfs/scratch/bsc99/...`) to Leonardo p
 
 ```json
 {
-  "alpaca": "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json",
+  "alpaca": "/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo/datasets/alpaca-cleaned/alpaca_data_cleaned.json",
   "squadv2": {
     "train": ".../datasets/squad_v2/squad_v2/train-00000-of-00001.parquet",
     "validation": ".../datasets/squad_v2/squad_v2/validation-00000-of-00001.parquet"
@@ -192,9 +192,9 @@ huggingface-cli download rajpurkar/SQuAD-explorer \
 ```
 
 **Dataset locations:**
-- `training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json` (42 MB)
-- `training/training_MN5/datasets/squad_v2/squad_v2/train-00000-of-00001.parquet` (16 MB)
-- `training/training_MN5/datasets/squad_v2/squad_v2/validation-00000-of-00001.parquet` (1.3 MB)
+- `training/training_Leonardo/datasets/alpaca-cleaned/alpaca_data_cleaned.json` (42 MB)
+- `training/training_Leonardo/datasets/squad_v2/squad_v2/train-00000-of-00001.parquet` (16 MB)
+- `training/training_Leonardo/datasets/squad_v2/squad_v2/validation-00000-of-00001.parquet` (1.3 MB)
 
 ---
 
@@ -246,21 +246,21 @@ Three changes applied to both files:
 ### New files created
 | File | Description |
 |---|---|
-| `training/training_MN5/.env-leonardo` | Leonardo environment variables |
-| `training/training_MN5/envs-yaml/fine-tune-dev-env-leonardo.yaml` | Conda env spec with PyTorch index URL fix |
-| `training/training_MN5/envs/fine-tune-dev/` | Installed conda environment (not tracked in git) |
-| `training/training_MN5/datasets/alpaca-cleaned/` | Alpaca Cleaned dataset |
-| `training/training_MN5/datasets/squad_v2/` | SQuAD v2 dataset |
+| `training/training_Leonardo/.env-leonardo` | Leonardo environment variables |
+| `training/training_Leonardo/envs-yaml/fine-tune-dev-env-leonardo.yaml` | Conda env spec with PyTorch index URL fix |
+| `training/training_Leonardo/envs/fine-tune-dev/` | Installed conda environment (not tracked in git) |
+| `training/training_Leonardo/datasets/alpaca-cleaned/` | Alpaca Cleaned dataset |
+| `training/training_Leonardo/datasets/squad_v2/` | SQuAD v2 dataset |
 
 ### Modified files
 | File | Change |
 |---|---|
-| `training/training_MN5/run_1_benchmark.sh` | MACHINE, cpus-per-task, partition flag |
-| `training/training_MN5/run_all_benchmarks.sh` | MACHINE, cpus-per-task, partition flag |
-| `training/training_MN5/scripts/activate-env-per-supercomputer.sh` | Leonardo conda activation logic |
-| `training/training_MN5/scripts/activate-env-variables-per-supercomputer.sh` | Leonardo NCCL/CUDA env vars |
-| `training/training_MN5/configs/config_datasets_paths_map.json` | Leonardo dataset paths |
-| `training/training_MN5/configs/model_type_directories_map.json` | Leonardo model registry path |
+| `training/training_Leonardo/run_1_benchmark.sh` | MACHINE, cpus-per-task, partition flag |
+| `training/training_Leonardo/run_all_benchmarks.sh` | MACHINE, cpus-per-task, partition flag |
+| `training/training_Leonardo/scripts/activate-env-per-supercomputer.sh` | Leonardo conda activation logic |
+| `training/training_Leonardo/scripts/activate-env-variables-per-supercomputer.sh` | Leonardo NCCL/CUDA env vars |
+| `training/training_Leonardo/configs/config_datasets_paths_map.json` | Leonardo dataset paths |
+| `training/training_Leonardo/configs/model_type_directories_map.json` | Leonardo model registry path |
 
 ### External assets (outside repo)
 | Path | Description |
@@ -273,7 +273,7 @@ Three changes applied to both files:
 ## Running a benchmark
 
 ```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo
 bash run_1_benchmark.sh
 ```
 
@@ -288,7 +288,7 @@ Two things were needed for reliable summary generation.
 1. **Run with the benchmark conda environment active**
 
 ```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo
 eval "$(/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda shell.bash hook)"
 conda activate ./envs/fine-tune-dev
 python generateSummaryTable.py
@@ -317,7 +317,7 @@ A timing bug in Accelerate FSDP produced negative values in summaries when `max_
 
 File fixed:
 
-- `training/training_MN5/scripts/accelerate-common/finetune-fsdp.py`
+- `training/training_Leonardo/scripts/accelerate-common/finetune-fsdp.py`
 
 Change applied:
 
@@ -335,38 +335,42 @@ After this fix, future runs produce correct timing metrics in the JSON summaries
 
 ---
 
-## Results: Fine-Tuning Campaign on Leonardo (2026-05-15)
+## Results: Fine-Tuning Campaign on Leonardo (2026-05-15 → 2026-06-03)
 
 All aggregated results are in:
 
-- `training/training_MN5/results/full_benchmark_training_summary_Leonardo_boost_usr_prod.csv`
+- `training/training_Leonardo/results/full_benchmark_training_summary_Leonardo_boost_usr_prod.csv`
 
 ### Report-ready summary (4 nodes x 4 GPUs = 16 GPUs, bf16, FSDP)
 
+Best throughput = best (BS=16) run per framework/dataset combination. All 18 configs complete (6×3).
+
 | Framework | Dataset | Successful configs | Best batch size | Best throughput (tokens/sec) | Exec time (hours) | Avg GPU mem (GB) | Peak GPU mem (GB) |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| accelerate | alpaca | 3/3 | 16 | 141449.21 | 7.293 | 60.29 | 61.46 |
-| accelerate | sharegpt | 1/3 | 16 | 6257.87 | 3.611 | 31.55 | 31.76 |
-| accelerate | sonnet | 3/3 | 16 | 4092.14 | 0.112 | 26.98 | 31.77 |
-| torchrun | alpaca | 3/3 | 16 | 73325.10 | 14.062 | 48.35 | 63.98 |
-| torchrun | sharegpt | 0/3 | - | - | - | - | - |
-| torchrun | sonnet | 0/3 | - | - | - | - | - |
+| accelerate | alpaca | 3/3 | 16 | 141531.34 | 7.29 | 60.22 | 61.46 |
+| accelerate | sharegpt | 3/3 | 16 | 6257.87 | 3.61 | 31.55 | 31.76 |
+| accelerate | sonnet | 3/3 | 16 | 4092.14 | 0.11 | 26.98 | 31.77 |
+| torchrun | alpaca | 3/3 | 16 | 72799.90 | 14.17 | 48.28 | 63.98 |
+| torchrun | sharegpt | 3/3 | 16 | 5971.21 | 3.78 | 47.38 | 54.46 |
+| torchrun | sonnet | 3/3 | 16 | 9215.09 | 0.05 | 35.17 | 54.86 |
 
 ### Key takeaway
 
-Best observed run was **accelerate + FSDP + alpaca + batch size 16** with **141449.21 tokens/sec** on 16xA100.
+Best observed run was **accelerate + FSDP + alpaca + batch size 16** with **141531 tokens/sec** on 16×A100.
 
 ### How results were generated for presentation
 
 ```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_Leonardo
 eval "$(/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda shell.bash hook)"
 conda activate ./envs/fine-tune-dev
 set -a
 source .env-leonardo
 set +a
-python generateSummaryTable.py
+python generateSummaryTablev2.py
 ```
+
+> **Note:** Use `generateSummaryTablev2.py` (not v1) — it has fixes for: path parsing anchored on `BASE_DIR_RESULTS`, recursive JSON discovery (`rglob`), and nested `launch-*` directory deduplication.
 
 ---
 
@@ -374,7 +378,7 @@ python generateSummaryTable.py
 
 These points were important to complete the full benchmark campaign reliably.
 
-1. Always launch from `training/training_MN5` so relative paths (`scripts/...`, `.env-leonardo`) resolve correctly.
+1. Always launch from `training/training_Leonardo` so relative paths (`scripts/...`, `.env-leonardo`) resolve correctly.
 2. Keep `MACHINE="leonardo"` in runner scripts so Leonardo-specific env and SLURM settings are loaded.
 3. Use `-p $PARTITION_NAME`, `-A $ACCOUNT`, `-q $QOS` in every `sbatch` submission.
 4. Keep `--cpus-per-task=$TOTAL_CPUS` for Accelerate jobs on Leonardo (32 CPUs/node effective in this setup), not a hardcoded MN5 value.
@@ -388,85 +392,27 @@ If a SLURM output shows:
 activate-env-per-supercomputer.sh: No such file or directory
 ```
 
-the job is being launched from a directory that does not contain the copied helper scripts. Re-run via `run_1_benchmark.sh` / `run_all_benchmarks.sh` from `training/training_MN5` so launch folders are created and populated correctly.
+the job is being launched from a directory that does not contain the copied helper scripts. Re-run via `run_1_benchmark.sh` / `run_all_benchmarks.sh` from `training/training_Leonardo` so launch folders are created and populated correctly.
 
 ---
 
-## Migration from cin_staff to mnrva_bench (2026-05-19)
+## Note: Temporary results redirect and resubmit (2026-05-19 — 2026-06-03)
 
-### Reason
-The cin_staff disk quota was saturating during benchmark runs, causing "Disk quota exceeded" errors. The solution was to migrate all outputs to the mnrva_bench account with dedicated storage at `/leonardo_work/MNRVA_bench/davide_results`.
+During the benchmark campaign the `cin_staff` disk quota was exhausted. Results were temporarily redirected to `/leonardo_work/MNRVA_bench/davide_results/`. Once the campaign completed, all results were consolidated back into `training/training_Leonardo/results/` in this repository.
 
-### Account & Output Path Changes
+Eight configs (accelerate/sharegpt BS4+BS8, torchrun/sharegpt ×3, torchrun/sonnet ×3) were resubmitted as independent jobs (no dependency chain) using account `llm4e_prod` instead of `mnrva_bench` for significantly better fairshare priority (0.879 vs 0.128). The resubmit script is `training/training_Leonardo/rerun_missing.sh`.
 
-**Before (cin_staff account):**
-- Account: `cin_staff` (from SLURM submissions)
-- Results: `training/training_MN5/results/` (relative path, stored in cin_staff workspace)
+---
 
-**After (mnrva_bench account):**
-- Account: `mnrva_bench` (updated SLURM submissions)
-- Results: `/leonardo_work/MNRVA_bench/davide_results/` (absolute path, dedicated quota)
+## Known hardcoded paths — update before re-deploying on a new account
 
-### Files Modified
+The following files contain absolute paths that are specific to the original `cin_staff` deployment. They work as-is but will need updating if the environment is re-created under a different account or directory:
 
-#### 1. Run Scripts
-- `training/training_MN5/run_1_benchmark.sh`
-- `training/training_MN5/run_all_benchmarks.sh`
-
-Changes:
-```bash
-# Added new variable
-RESULTS_BASE_DIR="/leonardo_work/MNRVA_bench/davide_results"
-
-# Updated BASE_FOLDER
-# OLD: BASE_FOLDER="results/${framework}/${dataset}/${model}"
-# NEW: BASE_FOLDER="${RESULTS_BASE_DIR}/${framework}/${dataset}/${model}"
-
-# Updated LAUNCH_FOLDER (now uses absolute path)
-# OLD: LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
-# NEW: LAUNCH_FOLDER="${FULL_FOLDER}/launch-${run_id}"
-```
-
-#### 2. Summary Generation Scripts
-- `training/training_MN5/generateSummaryTable.py`
-- `training/training_MN5/generateSummaryTablev2.py`
-
-Changes:
-```python
-# Updated path resolution to use script directory
-SCRIPT_DIR = Path(__file__).resolve().parent
-load_dotenv(SCRIPT_DIR / ".env")
-load_dotenv(SCRIPT_DIR / ".env-leonardo")
-BASE_DIR = str(SCRIPT_DIR)
-
-# Results directory now points to mnrva_bench
-BASE_DIR_RESULTS = "/leonardo_work/MNRVA_bench/davide_results"
-
-# Output CSV path updated
-OUTPUT_FILE = f"/leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
-
-# Fixed framework initialization bug in parse_run_path()
-framework = ""  # Initialize before use
-```
-
-### Data Migration
-- **Existing results**: 202MB of previous benchmark runs (21 launch folders) migrated from `training/training_MN5/results/` to `/leonardo_work/MNRVA_bench/davide_results/`
-- **Summary CSVs**: Regenerated from migrated data without loss
-
-### Verification
-```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks
-training/training_MN5/envs/fine-tune-dev/bin/python training/training_MN5/generateSummaryTable.py
-# Output: ✅ Training summary CSV written to: /leonardo_work/MNRVA_bench/davide_results/full_benchmark_training_summary_Leonardo_boost_usr_prod.csv
-# 📊 Config folders processed: 18
-```
-
-### New Workflow
-```bash
-cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
-bash run_1_benchmark.sh
-# Results now automatically written to: /leonardo_work/MNRVA_bench/davide_results/
-```
-
-No changes needed to workflow scripts - migration is transparent to end users.
+| File | What to update |
+|---|---|
+| `training/training_Leonardo/scripts/activate-env-per-supercomputer.sh` | Miniforge path: `/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda` |
+| `training/training_Leonardo/.env-leonardo` | `ENVIRONMENT_FINETUNING` path prefix |
+| `training/training_Leonardo/configs/model_type_directories_map.json` | Model registry path: `/leonardo_work/cin_staff/dgentile/models_registry` |
+| `training/training_Leonardo/configs/config_datasets_paths_map.json` | Dataset paths under `cin_staff` workspace |
+| `training/training_Leonardo/debug_run.sh` | `MODEL_PATH` and `DATASET_PATH` (lines 34-35) |
 
