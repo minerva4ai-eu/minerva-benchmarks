@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
 
 from omegaconf import MISSING
 
@@ -60,31 +59,7 @@ class CommConfig:
 
 
 @dataclass
-class SlurmConfig:
-    account: str = MISSING
-    qos: str = MISSING
-    gpus_per_node: int = field(default=1)
-    cpus_per_task: int = field(default=1)
-    cpus_per_gpu: int = field(default=1)
-    tasks_per_node: int = field(default=1)
-    chdir: str = MISSING
-    nodes: int = field(default=1)
-    gres: str = MISSING
-    output: str = MISSING
-    error: str = MISSING
-    extra_args: List[str] = field(default_factory=list)
-    single_gpu_also_valid: bool = False
-
-    def __post_init__(self):
-        if self.nodes < 1:
-            raise ValueError(f"nodes must be ≥ 1, got {self.nodes}")
-        if self.gpus_per_node < 1:
-            raise ValueError(f"gpus_per_node must be ≥ 1, got {self.gpus_per_node}")
-
-
-@dataclass
 class HPCArchitecture:
     gpu: GpuConfig = field(default_factory=GpuConfig)
     comm: CommConfig = field(default_factory=CommConfig)
     node: NodeConfig = field(default_factory=NodeConfig)
-    slurm: SlurmConfig = field(default_factory=SlurmConfig)
