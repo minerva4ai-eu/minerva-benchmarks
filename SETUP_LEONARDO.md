@@ -404,15 +404,15 @@ Eight configs (accelerate/sharegpt BS4+BS8, torchrun/sharegpt ×3, torchrun/sonn
 
 ---
 
-## Known hardcoded paths — update before re-deploying on a new account
+## Re-deploying on a new account
 
-The following files contain absolute paths that are specific to the original `cin_staff` deployment. They work as-is but will need updating if the environment is re-created under a different account or directory:
+All paths in the scripts are now resolved through environment variables. The only file that needs editing when re-deploying under a different account or directory is **`training/training_Leonardo/.env-leonardo`** — update the three `External resources` entries:
 
-| File | What to update |
-|---|---|
-| `training/training_Leonardo/scripts/activate-env-per-supercomputer.sh` | Miniforge path: `/leonardo_work/cin_staff/dgentile/miniforge3/bin/conda` |
-| `training/training_Leonardo/.env-leonardo` | `ENVIRONMENT_FINETUNING` path prefix |
-| `training/training_Leonardo/configs/model_type_directories_map.json` | Model registry path: `/leonardo_work/cin_staff/dgentile/models_registry` |
-| `training/training_Leonardo/configs/config_datasets_paths_map.json` | Dataset paths under `cin_staff` workspace |
-| `training/training_Leonardo/debug_run.sh` | `MODEL_PATH` and `DATASET_PATH` (lines 34-35) |
+```bash
+MINIFORGE_PATH=/your/miniforge3/path
+MODELS_REGISTRY=/your/models_registry/path
+DATASETS_EXTERNAL=/your/external/datasets/path
+```
+
+Everything else (`ENVIRONMENT_FINETUNING`, `DATASETS_DIR`, script paths) is computed automatically relative to the `.env-leonardo` file location.
 

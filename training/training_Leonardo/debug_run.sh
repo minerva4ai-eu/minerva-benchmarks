@@ -4,7 +4,7 @@
 # using boost_qos_dbg (high priority, 30 min limit, no chained dependencies).
 #
 # Usage:
-#   cd /leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5
+#   cd /path/to/minerva-benchmarks/training/training_Leonardo
 #   bash debug_run.sh
 #
 
@@ -31,8 +31,8 @@ LR=2e-5
 STEPS=5
 EPOCHS=""
 
-MODEL_PATH="/leonardo_work/cin_staff/dgentile/models_registry/${MODEL}"
-DATASET_PATH="/leonardo_work/cin_staff/dgentile/minerva-benchmarks/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+MODEL_PATH="${MODELS_REGISTRY}/${MODEL}"
+DATASET_PATH="${DATASETS_DIR}/alpaca-cleaned/alpaca_data_cleaned.json"
 
 # --- Launch folder (separate from production results) ---
 LAUNCH_FOLDER="${CURRENT_DIR}/results/accelerate/${DATASET}/${MODEL}/Nodes_${NODES}-GPUs_${TOTAL_GPUS}-Parallelism_${PARALLELISM}-Precision_${PRECISION}-BS_${BATCH_SIZE}-GAS_${GRAD_ACCUM}-MaxModelLength_${MAX_MODEL_LENGTH}/debug"

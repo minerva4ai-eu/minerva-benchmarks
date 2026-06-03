@@ -27,6 +27,9 @@ get_dataset_path() {
     exit 1
   fi
 
+  # Expand env vars (e.g. $DATASETS_DIR, $DATASETS_EXTERNAL) embedded in the JSON values
+  entry=$(echo "$entry" | envsubst)
+
   # Output the entry as-is (compact JSON)
   echo "$entry"
 }
@@ -63,7 +66,8 @@ get_model_directory() {
   local model_type="$1"
   local json_file="$2"
   grep -oP "\"$model_type\"\\s*:\\s*\"[^\"]+\"" "$json_file" | \
-    sed -E "s/.*: \"([^\"]+)\"/\1/"
+    sed -E "s/.*: \"([^\"]+)\"/\1/" | \
+    envsubst
 }
 
 # --- Utility to get model parallelism for training from model_parallelism_config.json ---
