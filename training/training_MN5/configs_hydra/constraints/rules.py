@@ -1,6 +1,6 @@
 import math
 
-from dataclasses_hydra.benchmark import BenchmarkConfig
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig
 
 from .base import ConstraintRule, RuleResult
