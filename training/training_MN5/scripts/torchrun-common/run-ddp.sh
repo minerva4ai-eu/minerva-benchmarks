@@ -65,8 +65,7 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-      finetune-ddp.py \
-        --minerva_dir "${CURRENT_DIR}" \
+      $TRAIN_SCRIPT \
         --model "${MODEL_PATH}" \
         --data '${DATASET_PATH}' \
         --output_dir "${OUTPUT_DIR}" \

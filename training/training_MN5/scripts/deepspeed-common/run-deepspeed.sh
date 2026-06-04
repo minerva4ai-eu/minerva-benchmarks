@@ -64,23 +64,23 @@ function exists_in_list() {
 
 # Get Arguments
 LAUNCH_FOLDER=$1
-DATASET=$2
-DATASET_PATH=$3
-ZERO_STAGE=$4
-# Validate ZERO_STAGE
-PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3" "zero3-offload")
-STAGES_WITH_HPZ=("zero2" "zero3" "zero3-offload")
-
-if [[ -z "$ZERO_STAGE" ]]; then
-    echo "Error: ZERO_STAGE is required. Please provide one of: ${PERMITTED_ZERO_STAGES[*]}"
-    exit 1
-fi
-
-if ! exists_in_list "${PERMITTED_ZERO_STAGES[*]}" " " "$ZERO_STAGE"; then
-    echo "Error: ZERO_STAGE must be one of: ${PERMITTED_ZERO_STAGES[*]}"
-    echo "Received: $ZERO_STAGE"
-    exit 1
-fi
+#DATASET=$2
+#DATASET_PATH=$3
+#ZERO_STAGE=$4
+## Validate ZERO_STAGE
+#PERMITTED_ZERO_STAGES=("zero1" "zero2" "zero3" "zero3-offload")
+#STAGES_WITH_HPZ=("zero2" "zero3" "zero3-offload")
+#
+#if [[ -z "$ZERO_STAGE" ]]; then
+#    echo "Error: ZERO_STAGE is required. Please provide one of: ${PERMITTED_ZERO_STAGES[*]}"
+#    exit 1
+#fi
+#
+#if ! exists_in_list "${PERMITTED_ZERO_STAGES[*]}" " " "$ZERO_STAGE"; then
+#    echo "Error: ZERO_STAGE must be one of: ${PERMITTED_ZERO_STAGES[*]}"
+#    echo "Received: $ZERO_STAGE"
+#    exit 1
+#fi
 
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
 mkdir -p $OUTPUT_DIR
@@ -136,8 +136,7 @@ train_command="accelerate launch \
     --config_file $accelerate_config_path \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
-    finetune-deepspeed.py \
-      --minerva_dir $CURRENT_DIR \
+    $TRAIN_SCRIPT \
       --model $MODEL_PATH \
       --data $DATASET_PATH \
       --output_dir $OUTPUT_DIR \
@@ -154,7 +153,29 @@ train_command="accelerate launch \
       --deepspeed_config_file  $deepspeed_config_path \
       --logging_steps 1 \
       --gradient_checkpointing"
-
+train_command="deepspeed \
+    --num_nodes $SLURM_NNODES \
+    --num_gpus $GPU_NODE \
+    --node_rank $SLURM_NODEID \
+    --master_addr $MASTER_ADDR \
+    --master_port $MASTER_PORT \
+    $TRAIN_SCRIPT \
+      --model $MODEL_PATH \
+      --data $DATASET_PATH \
+      --output_dir $OUTPUT_DIR \
+      --max_length $MAX_MODEL_LENGTH \
+      --batch_size $BATCH_SIZE \
+      ${EPOCHS:+--epochs "$EPOCHS"} \
+      ${STEPS:+--max_steps "$STEPS"} \
+      --precision $PRECISION \
+      --lr $SCALED_LR \
+      --gradient_accumulation_steps $GRAD_ACCUM \
+      --dataloader_num_workers 8 \
+      --dataset '$DATASET' \
+      --warmup_ratio 0.1 \
+      --deepspeed_config_file  $deepspeed_config_path \
+      --logging_steps 1 \
+      --gradient_checkpointing"
 # Launch Run
 srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background

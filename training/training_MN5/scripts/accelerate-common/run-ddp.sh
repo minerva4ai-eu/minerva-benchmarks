@@ -60,7 +60,6 @@ train_command="accelerate launch \
     --num_machines $NNODES \
     --precision $PRECISION \
       finetune-ddp.py \
-        --minerva_dir "${CURRENT_DIR}" \
         --model "${MODEL_PATH}" \
         --data '${DATASET_PATH}' \
         --output_dir "${OUTPUT_DIR}" \

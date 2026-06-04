@@ -36,13 +36,8 @@ def save_summary_stats_json(summary, output_file):
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Fine-tune LLaMA-8B with custom dataset"
-    )
-    parser.add_argument(
-        "--minerva_dir",
-        type=str,
-        required=True,
-        help="Path to Minerva Benchmarks (training/training_MN5)",
+        # TODO: Fill in argparse description
+        description="ToDo"
     )
     parser.add_argument(
         "--model", type=str, required=True, help="Path to pretrained model"

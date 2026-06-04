@@ -6,3 +6,4 @@ training:
   lr: 2e-5
   optimizer: "adamw"
   gradient_checkpointing: False
+  epochs: null
