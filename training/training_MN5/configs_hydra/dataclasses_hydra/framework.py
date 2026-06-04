@@ -24,7 +24,8 @@ class ParallelismSpec:
 class ScriptsConfig:
     run: str = MISSING
     finetune: str = MISSING
-    shared: List[str] = field(default_factory=list)
+    shared: str = MISSING
+    copy_files: List[str] = MISSING
 
     def __post_init__(self):
         if not self.run:
@@ -39,6 +40,7 @@ VALID_FRAMEWORKS = frozenset({"torchrun", "accelerate", "deepspeed"})
 @dataclass
 class FrameworkConfig:
     name: str = MISSING
+    parallelism_name: str = ""
     parallelism: Dict[str, ParallelismSpec] = field(default_factory=dict)
     scripts: ScriptsConfig = field(default_factory=ScriptsConfig)
 

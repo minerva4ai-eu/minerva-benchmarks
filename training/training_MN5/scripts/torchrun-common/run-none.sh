@@ -53,8 +53,7 @@ monitor_pid=\$!
 sleep 5
 
 # Launch training on a single Node
-python finetune-none.py \
-    --minerva_dir "${CURRENT_DIR}" \
+python "$TRAIN_SCRIPT" \
     --model $MODEL_PATH \
     --data $DATASET_PATH \
     --output_dir $OUTPUT_DIR \
@@ -65,7 +64,7 @@ python finetune-none.py \
     --precision $PRECISION \
     --lr $LR \
     --gradient_accumulation_steps $GRAD_ACCUM \
-    --dataloader_num_workers 32 \
+    --dataloader_num_workers 4 \
     --dataset $DATASET
 
 # Kill the GPU monitoring running in background 
