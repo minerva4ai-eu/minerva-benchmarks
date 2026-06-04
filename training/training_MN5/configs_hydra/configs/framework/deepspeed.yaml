@@ -1,5 +1,6 @@
 name: deepspeed
 
+parallelism_name: ""
 parallelism:
   zero1: { min_gpus: 2 }
   zero2: { min_gpus: 2 }
@@ -7,12 +8,14 @@ parallelism:
   zero3-offload: { min_gpus: 2 }
 
 scripts:
-  run:     scripts/deepspeed-common/run-deepspeed.sh
+  run: scripts/deepspeed-common/run-deepspeed.sh
   finetune: scripts/deepspeed-common/finetune-deepspeed-pure.py
-  shared:
+  shared: scripts/shared
+  copy_files:
     - scripts/deepspeed-common/gpu_monitor.py
     - scripts/deepspeed-common/utils.py
-    - scripts/deepspeed-common/configs/
-    - scripts/deepspeed-common/${scripts.run}
-    - scripts/deepspeed-common/${scripts.finetune}
     - scripts/gpu_plots.py
+    - scripts/activate-env-per-supercomputer.sh
+    - scripts/deepspeed-common/configs
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}

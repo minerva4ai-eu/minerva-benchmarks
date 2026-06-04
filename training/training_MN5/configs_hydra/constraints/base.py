@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from dataclasses_hydra.benchmark import BenchmarkConfig
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 
 
 @dataclass

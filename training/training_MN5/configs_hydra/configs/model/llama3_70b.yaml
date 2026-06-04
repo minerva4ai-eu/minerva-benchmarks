@@ -32,7 +32,7 @@ tokenizer_type:       tiktoken   # Llama 2 used sentencepiece
 #norm_eps:             1.0e-5
 #activation_function:  silu       # SwiGLU
 
-max_gpus_scale: 128
+max_gpus_scale: 32
 frameworks_supported:
   - torchrun
   - accelerate

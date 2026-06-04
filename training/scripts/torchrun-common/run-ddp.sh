@@ -15,9 +15,11 @@ training_activate_runtime_environment
 
 # Get Arguments
 LAUNCH_FOLDER=$1
-DATASET=$2
-DATASET_PATH=$3
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
+# Deprecated script arguments - provided by environment
+#DATASET=$2
+#DATASET_PATH=$3
+#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -48,8 +50,7 @@ train_command_min_overlap="accelerate launch \
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $NNODES \
-      finetune-fsdp.py \
-        --minerva_dir $CURRENT_DIR \
+      $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data '$DATASET_PATH' \
         --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
@@ -71,8 +72,7 @@ train_command_max_overlap="accelerate launch \
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $NNODES \
-      finetune-fsdp.py \
-        --minerva_dir $CURRENT_DIR \
+       $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data '$DATASET_PATH' \
         --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-max-overlap \

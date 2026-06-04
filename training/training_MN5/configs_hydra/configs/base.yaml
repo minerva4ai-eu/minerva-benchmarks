@@ -6,7 +6,7 @@ defaults:
   - dataset: base
   #- slurm: base
   - _self_
-
+id:
 machine:
   name: ??? # self given name, must coincide with .env-{machine.name} file
   name_pattern: ???

@@ -36,7 +36,7 @@ def save_summary_stats_json(summary, output_file):
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        # Todo: Fill in description
+        # TODO: Fill in argparse description
         description="ToDo"
     )
     parser.add_argument(
@@ -92,21 +92,6 @@ def parse_args():
             + "Note: This may increase GPU memory usage, so use with caution on memory-constrained setups."
         ),
     )
-<<<<<<< HEAD:training/scripts/accelerate-common/utils.py
-    parser.add_argument(
-        "--enable_compile",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
-    parser.add_argument(
-        "--gradient_checkpointing",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
-=======
->>>>>>> d78a5e8 ((WIP): debug fsdp for big models & TFLOPs):training/training_MN5/scripts/torchrun-common/utils.py
 
     return parser.parse_args()
 

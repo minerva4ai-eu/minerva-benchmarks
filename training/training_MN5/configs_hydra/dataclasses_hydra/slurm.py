@@ -38,5 +38,6 @@ class SrunConfig:
 class SlurmConfig:
     account: str = MISSING
     qos: str = MISSING
+    partition: str = MISSING
     sbatch: SbatchConfig = field(default_factory=SbatchConfig)
     srun: SrunConfig = field(default_factory=SrunConfig)

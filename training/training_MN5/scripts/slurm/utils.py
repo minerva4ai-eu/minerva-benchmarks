@@ -1,0 +1,48 @@
+# ANSI Escape Codes for Terminal Colors
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+CYAN = "\033[96m"
+GRAY = "\033[90m"
+RESET = "\033[0m"
+
+# --- Standard Unicode Icons ---
+SUCCESS = f"{GREEN}✓{RESET}"
+SUCCESS_HEAVY = f"{GREEN}✔{RESET}"
+FAILURE = f"{RED}✗{RESET}"
+FAILURE_HEAVY = f"{RED}✘{RESET}"
+WARNING = f"{YELLOW}⚠{RESET}"
+INFO = f"{BLUE}ℹ{RESET}"
+PROGRESS = f"{CYAN}⟳{RESET}"
+SKIPPED = f"{GRAY}↷{RESET}"
+
+# --- Modern Emoji Icons (No color codes needed) ---
+EMOJI_SUCCESS = "✅"
+EMOJI_FAILURE = "❌"
+EMOJI_WARNING = "⚠️"
+EMOJI_INFO = "ℹ️"
+EMOJI_PROGRESS = "⏳"
+EMOJI_SKIPPED = "⏩"
+
+# --- Arrow Indicators (For directions, flows, and pointers) ---
+ARROW_RIGHT = f"{CYAN}→{RESET}"  # Sleek right arrow
+ARROW_LEFT = f"{CYAN}←{RESET}"  # Sleek left arrow
+ARROW_SUCCESS = f"{GREEN}➔{RESET}"  # Heavy right arrow for progress/next step
+ARROW_FAT_RIGHT = f"{BLUE}►{RESET}"  # Solid triangle pointer
+ARROW_CHEVRON = f"{MAGENTA}»{RESET}"  # Double chevron (great for prompts)
+ARROW_SUB_ITEM = f"{GRAY}└──{RESET}"  # Directory tree style branch
+
+# --- Bullet Points & Custom Dots (For lists and sub-items) ---
+POINT_BULLET = f"{BLUE}•{RESET}"  # Standard clean bullet
+POINT_SUCCESS = f"{GREEN}⦿{RESET}"  # Bullseye dot for positive states
+POINT_WARNING = f"{YELLOW}⚠️{RESET}"  # (Emoji) Attention grabber
+POINT_DIAMOND = f"{MAGENTA}◆{RESET}"  # Diamond bullet for premium/special logs
+POINT_SQUARE = f"{GRAY}▪{RESET}"  # Small square for sub-bullets
+POINT_STAR = f"{YELLOW}★{RESET}"  # Star for highlighted/important items
+
+# --- Step / Numeric Indicators (For ordered workflows) ---
+STEP_1 = f"{CYAN}➀{RESET}"
+STEP_2 = f"{CYAN}➁{RESET}"
+STEP_3 = f"{CYAN}➂{RESET}"

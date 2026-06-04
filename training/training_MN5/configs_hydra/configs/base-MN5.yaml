@@ -6,7 +6,7 @@ defaults:
   - _self_
 
 machine:
-  name: MareNostrum5 # actual name of super computer running benchmarks
+  name: bsc-mn5-acc # actual name of super computer running benchmarks
   name_pattern: MN5 # configuration files naming convention pattern
   modules: jq cuda/12.1 miniforge # space separated modules to load
   python_environment: /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/envs/fine-tune-dev-test-cuda121-hydra

@@ -23,8 +23,8 @@ source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
 
 # Get Arguments
 LAUNCH_FOLDER=$1
-DATASET=$2
-DATASET_PATH=$3
+#DATASET=$2
+#DATASET_PATH=$3
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
 mkdir -p $OUTPUT_DIR
 
@@ -60,8 +60,7 @@ if [[ "$GPU_NODE" -eq 1 ]]; then
         --num_processes 1 \
         --num_machines 1 \
         --mixed_precision "$PRECISION" \
-        finetune-none.py \
-            --minerva_dir "${CURRENT_DIR}" \
+        "$TRAIN_SCRIPT" \
             --model $MODEL_PATH \
             --data $DATASET_PATH \
             --output_dir $OUTPUT_DIR \
@@ -80,8 +79,7 @@ elif [[ "$GPU_NODE" -eq 4 ]]; then
         --num_processes 4 \
         --num_machines 1 \
         --mixed_precision "$PRECISION" \
-        finetune-none.py \
-            --minerva_dir "${CURRENT_DIR}" \
+        "$TRAIN_SCRIPT" \
             --model $MODEL_PATH \
             --data $DATASET_PATH \
             --output_dir $OUTPUT_DIR \

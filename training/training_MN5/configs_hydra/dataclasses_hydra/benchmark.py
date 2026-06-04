@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+from configs_hydra.dataclasses_hydra import arch as a
+from configs_hydra.dataclasses_hydra import dataset as d
+from configs_hydra.dataclasses_hydra import framework as f
+from configs_hydra.dataclasses_hydra import model as m
+from configs_hydra.dataclasses_hydra import slurm as s
 from omegaconf import MISSING, DictConfig
-
-from dataclasses_hydra import arch as a
-from dataclasses_hydra import dataset as d
-from dataclasses_hydra import framework as f
-from dataclasses_hydra import model as m
-from dataclasses_hydra import slurm as s
 
 VALID_PRECISIONS = {"fp32", "bf16", "fp16", "fp8"}
 VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
@@ -81,6 +80,7 @@ class ExperimentConfig:
 
 @dataclass
 class BenchmarkConfig(DictConfig):
+    id: str
     trainings: TrainArgsConfig
     arch: a.HPCArchitecture
     model: m.ModelConfig

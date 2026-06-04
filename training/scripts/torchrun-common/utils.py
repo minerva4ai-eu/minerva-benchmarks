@@ -21,7 +21,7 @@ def save_summary_stats_json(summary, output_file):
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        # TODO: Fill in argparse description
+        # Todo: Fill in description
         description="ToDo"
     )
     parser.add_argument(

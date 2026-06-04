@@ -1,5 +1,6 @@
 account: bsc99
 qos: acc_bench
+partition: acc
 
 
 sbatch:
@@ -7,7 +8,7 @@ sbatch:
   cpus_per_gpu: 20
   chdir: ??
   nodes: 1
-  gres: gpu:${node.gpus_per_node}
+  gres: gpu:${arch.node.gpus_per_node}
   cpus_per_task: 80
   tasks_per_node: 1
   output: run-%j.out
