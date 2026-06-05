@@ -33,7 +33,12 @@ case "$MACHINE" in
         source $ENVIRONMENT/bin/activate
         which python
         ;;
-        
+    lumi-mi250)
+	module purge
+	module use /appl/local/laifs/modules
+	module load $MODULES
+	singularity exec $SIF bash -c "which python"
+	;;
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

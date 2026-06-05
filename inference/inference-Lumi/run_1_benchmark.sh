@@ -6,12 +6,12 @@
 # SPECIFIC CASE FOR TESTING
 #######################################################
 FRAMEWORKS=("vllm") # ("vllm" "sglang")    # Add other frameworks if needed
-DATASETS=("sonnet") # ("sharegpt" "sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # ("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "Llama-3.1-405B") # Add your models here
-NUMBER_OF_NODES=(1)
-MAX_MODEL_LENGTHS=(16384) # (4096 8192 16384 32768)
-REPEATS=1                 # Number of runs per configuration
-MACHINE="cines-adastra-mi300"  # cines-adastra-mi250 | cines-adastra-mi300
+DATASETS=("sharegpt" "sonnet") # ("sharegpt" "sonnet")  # Add more datasets if needed
+MODELS=("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "Llama-3.1-405B") # ("Llama-3.1-8B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "Llama-3.3-70B-Instruct" "Llama-3.1-405B") # Add your models here
+NUMBER_OF_NODES=(1 2 4)
+MAX_MODEL_LENGTHS=(4096 16384 32768) # (4096 8192 16384 32768)
+REPEATS=2                 # Number of runs per configuration
+MACHINE="lumi-mi250"
 MACHINE_TYPE="rocm" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
@@ -25,6 +25,11 @@ source scripts/utils.sh
 
 # SLURM args specific to machine
 case "$MACHINE" in
+    lumi-mi250)
+	SLURM_GPU_ARG="--gpus-per-node=$GPUS_PER_NODE"
+	SLURM_CONSTRAINT="--partition=standard-g"
+	SLURM_QOS=""
+	;;
     cines-adastra-mi250 | cines-adastra-mi300)
         SLURM_GPU_ARG="--gpus-per-node=$GPUS_PER_NODE"
         SLURM_CONSTRAINT="--constraint=$PARTITION_NAME"
@@ -58,8 +63,8 @@ for framework in "${FRAMEWORKS[@]}"; do
             # GENERAL PART (Common for all Frameworks).
             TOTAL_GPUS=$((NODES * GPU_NODE))
             TOTAL_CPUS=$((GPUS_PER_NODE * CPUS_PER_GPU))
-            TENSOR_PARALLEL=$TOTAL_GPUS
-            PIPELINE_PARALLEL=1
+            TENSOR_PARALLEL=$GPUS_PER_NODE
+            PIPELINE_PARALLEL=$NODES
 
             BASE_FOLDER="results/${framework}/${dataset}/${model}"
             RUN_FOLDER="Nodes_${NODES}-GPUs_${TOTAL_GPUS}-TP_${TENSOR_PARALLEL}-PP_${PIPELINE_PARALLEL}-MaxModelLength_${MAX_MODEL_LENGTH}"
@@ -90,10 +95,10 @@ for framework in "${FRAMEWORKS[@]}"; do
                   continue
                 fi
                 # Set extra args for Llama-3.1-405B
-                ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
+                ADDITIONAL_ARGS="--enforce-eager"
               fi
-              ADDITIONAL_ARGS="--disable-log-requests --enforce-eager"
-              
+              ADDITIONAL_ARGS="--enforce-eager"
+             
               for (( run_id=1; run_id<=REPEATS; run_id++ )); do
                 LAUNCH_FOLDER="${CURRENT_DIR}/${FULL_FOLDER}/launch-${run_id}"
                 echo "Setting up $LAUNCH_FOLDER"
@@ -130,8 +135,6 @@ for framework in "${FRAMEWORKS[@]}"; do
                     $SLURM_GPU_ARG \
                     --cpus-per-task=$TOTAL_CPUS \
                     $SLURM_CONSTRAINT \
-                    $SLURM_QOS \
-                    $DEPENDENCY \
                     --output=run-%j.out \
                     --error=run-%j.out \
                     -A $ACCOUNT \

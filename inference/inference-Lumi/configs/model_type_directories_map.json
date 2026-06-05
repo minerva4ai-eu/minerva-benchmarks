@@ -1,8 +1,3 @@
 {
-  "Text Generation": "/lus/work/BCINES/dci/SHARED/Models",
-  "Embedding": "/path/to/embedding/models",
-  "Vision": "/path/to/vision/models",
-  "Llama" : "/lus/work/BCINES/dci/SHARED/Models/meta-llama",
-  "Mistral" : "/lus/work/BCINES/dci/SHARED/Models/mistralai",
-  "Google" : "/lus/work/BCINES/dci/SHARED/Models/google"
+  "Text Generation": "/scratch/project_462000266/emilsala/AI-Models/"
 }

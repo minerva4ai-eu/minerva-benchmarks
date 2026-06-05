@@ -27,20 +27,13 @@ if [ "${NODE_TYPE}" != "--head" ] && [ "${NODE_TYPE}" != "--worker" ]; then
     exit 1
 fi
 
-# Activate environment
-echo "ENVIRONMENT_VLLM: $ENVIRONMENT_VLLM"
-echo ""
-source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
-echo "run_cluster: PYTHON PATH:"
-which python
-echo ""
-
-
 export RAY_USAGE_STATS_ENABLED=1
 
 CUR_DIR=$(pwd)
+
 echo "run_cluster - MACHINE: $MACHINE"
 echo "run_cluster - MACHINE_TYPE: $MACHINE_TYPE"
+echo "Container : $SINGULARITY_NAME"
 
 cat <<EOT > config.json
 {

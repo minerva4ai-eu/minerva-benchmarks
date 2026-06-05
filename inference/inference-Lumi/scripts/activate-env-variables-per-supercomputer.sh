@@ -37,6 +37,14 @@ case "$MACHINE" in
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
         
+    lumi-mi250)
+	export NCCL_SOCKET_IFNAME=hsn
+        export NCCL_NET_GDR_LEVEL=PHB
+	export RAY_TMPDIR=/tmp/ray_$SLURM_JOB_ID
+	
+	# GPU visibility
+        export HIP_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
+        ;;
     cines-adastra-mi250)
         # RCCL
         export NCCL_SOCKET_IFNAME=hsn
@@ -45,8 +53,6 @@ case "$MACHINE" in
         export HSA_ENABLE_SDMA=0
 
         export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
-        export VLLM_ROCM_USE_AITER=0
-        export SGLANG_USE_AITER=0
 
         # GPU visibility
         export HIP_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"

@@ -9,7 +9,7 @@
 ##################################################
 ###           Activate Environment             ###
 ##################################################
-source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM 
 
 ##################################################
 
@@ -45,7 +45,7 @@ export VLLM_ALLOW_ENGINE_USE_RAY=1
 
 # SLURM GPU arg (machine-specific)
 case "$MACHINE" in
-    cines-adastra-mi250 | cines-adastra-mi300)
+    cines-adastra-mi250 | cines-adastra-mi300 | lumi-mi250)
         SRUN_GPU_ARG="--gpus-per-node=$GPU_NODE"
         ;;
     *)
@@ -64,11 +64,11 @@ esac
 nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
 nodes_array=($nodes)
 head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname -I | awk '{print $1}')
+head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname -I | awk '{print $2}')
 
 # Get the IP addresses for each node
 for node in "${nodes_array[@]}"; do
-    node_ip=$(srun --nodes=1 --ntasks=1 -w "$node" hostname -I | awk '{print $1}')
+    node_ip=$(srun --nodes=1 --ntasks=1 -w "$node" hostname -I | awk '{print $2}')
     echo "Node: $node - IP: $node_ip"
 done
 
@@ -90,7 +90,7 @@ export VLLM_HOST_IP=$head_node_ip
 echo "Starting HEAD at $head_node"
 srun -n 1 --nodes=1 $SRUN_GPU_ARG -c $TOTAL_CPUS --cpu-bind=none -w "$head_node" \
     --export=ALL,VLLM_HOST_IP=$head_node_ip \
-    bash run_cluster.sh $head_node_ip --head $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
+    singularity exec $SIF bash run_cluster.sh $head_node_ip --head $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
 sleep 60
 SRUN_PID=$!
 
@@ -100,12 +100,12 @@ worker_num=$((SLURM_NNODES - 1))
 for ((i = 1; i <= worker_num; i++)); do
     node_i=${nodes_array[$i]}
     echo "Starting WORKER $i at $node_i"
-    local_node_ip=$(srun -n 1 -N 1 -c 1 -w "$node_i" hostname --ip-address | awk '{print $1}')
+    local_node_ip=$(srun -n 1 -N 1 -c 1 -w "$node_i" hostname --ip-address | awk '{print $2}')
     export VLLM_HOST_IP=$local_node_ip
     ip_local=$local_node_ip:$port
     srun -n 1 --nodes=1 $SRUN_GPU_ARG -c $TOTAL_CPUS --cpu-bind=none -w "$node_i" \
         --export=ALL,VLLM_HOST_IP=$local_node_ip \
-        bash run_cluster.sh $head_node_ip --worker $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
+        singularity exec $SIF bash run_cluster.sh $head_node_ip --worker $MODEL_PATH $LAUNCH_FOLDER $BENCHMARK_FILE $DATASET $DATASET_PATH $MACHINE $MACHINE_TYPE $ADDITIONAL_ARGS &
     sleep 3
 done
 

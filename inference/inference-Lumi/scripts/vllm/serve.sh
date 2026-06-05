@@ -1,13 +1,7 @@
 #!/bin/bash
 
-# Activate environment
-echo "ENVIRONMENT_VLLM: $ENVIRONMENT_VLLM"
-echo ""
-source activate-env-per-supercomputer.sh $ENVIRONMENT_VLLM
+
 source activate-env-variables-per-supercomputer.sh
-echo "serve.sh: PYTHON PATH:"
-which python
-echo ""
 
 python3 -c "import torch; torch.cuda.empty_cache()"
 
@@ -15,6 +9,7 @@ echo "serve.sh: LAUNCH_FOLDER: $LAUNCH_FOLDER"
 echo "serve.sh: ADDITIONAL_ARGS: ${ADDITIONAL_ARGS[*]}"
 echo "serve.sh: MACHINE: ${MACHINE}"
 echo "serve.sh: MACHINE_TYPE: ${MACHINE_TYPE}"
+echo "serve.sh: Container name: ${SINGULARITY_NAME}"
 
 # vLLM serve
 vllm serve "$MODEL_PATH" \

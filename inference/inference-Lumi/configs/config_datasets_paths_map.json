@@ -1,5 +1,5 @@
 {
-  "sharegpt": "/lus/work/BCINES/dci/SHARED/Datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
-  "sonnet": "/lus/work/BCINES/dci/SHARED/Datasets/sonnet.txt",
+  "sharegpt": "/scratch/project_462000266/emilsala/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/scratch/project_462000266/emilsala/datasets/sonnet.txt",
   "example_dataset": "/path/to/example_dataset"
 }
