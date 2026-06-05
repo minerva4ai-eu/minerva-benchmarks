@@ -8,8 +8,8 @@ from configs_hydra.dataclasses_hydra import model as m
 from configs_hydra.dataclasses_hydra import slurm as s
 from omegaconf import MISSING, DictConfig
 
-VALID_PRECISIONS = {"fp32", "bf16", "fp16", "fp8"}
 VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
+VALID_PRECISIONS = set([precisiontype.value for precisiontype in a.PrecisionType])
 
 
 @dataclass

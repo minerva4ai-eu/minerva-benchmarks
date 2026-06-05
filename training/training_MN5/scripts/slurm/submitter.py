@@ -1,8 +1,10 @@
 # benchmark/submitter.py
 import os
 import shutil
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig
 from scripts.slurm import utils as u
@@ -71,7 +73,12 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
         "MACHINE": cfg.machine.name,
         "TRAIN_SCRIPT": cfg.framework.scripts.finetune.split("/")[-1],
         "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
-        "ZERO_STAGE": cfg.framework.parallelism_name if cfg.framework.name == "deepspeed" else ""
+        "ZERO_STAGE": cfg.framework.parallelism_name
+        if cfg.framework.name == "deepspeed"
+        else "",
+        "GPU_PEAK_TFLOPS": str(
+            get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
+        ),
     }
 
 
@@ -110,7 +117,7 @@ def submit_job(
         os.path.join(launch, f.scripts.run.split("/")[-1]),
         str(launch),
     ]
-    print("\n".join(cmd))
+    # print("\n".join(cmd))
     job_cfg = (
         f"{m.name}-{f.name}-{cfg.dataset.name}"
         + f"-Par_{f.parallelism_name}"
@@ -122,12 +129,10 @@ def submit_job(
     )
     try:
         result = subprocess.run(
-           cmd, capture_output=True, text=True, env=build_env(cfg, run_id)
+            cmd, capture_output=True, text=True, env=build_env(cfg, run_id)
         )
         if result.returncode != 0:
-            print(
-                f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}"
-            )
+            print(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}")
             print(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
             return "-100"
         job_id = result.stdout.strip()
