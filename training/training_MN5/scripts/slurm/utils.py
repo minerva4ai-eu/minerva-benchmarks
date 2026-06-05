@@ -1,3 +1,5 @@
+import json
+
 # ANSI Escape Codes for Terminal Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -46,3 +48,21 @@ POINT_STAR = f"{YELLOW}★{RESET}"  # Star for highlighted/important items
 STEP_1 = f"{CYAN}➀{RESET}"
 STEP_2 = f"{CYAN}➁{RESET}"
 STEP_3 = f"{CYAN}➂{RESET}"
+
+
+def write_jsonl(d: list[dict], p: str):
+
+    with open(p, "w", encoding="utf-8") as f:
+        for record in d:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def read_jsonl(path: str) -> list[dict]:
+
+    records = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:  # Skip empty lines
+                records.append(json.loads(line))
+    return records

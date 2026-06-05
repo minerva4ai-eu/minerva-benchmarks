@@ -49,7 +49,7 @@ MODELS = [
     "llama3_8b",
 ]
 FRAMEWORKS = [
-    "deepspeed",
+    "accelerate",
 ]
 DATASETS = ["alpaca"]
 
@@ -92,16 +92,14 @@ def generate_valid_combos(
     ):
         raw_total = 0
         for model, framework, dataset in product(MODELS, FRAMEWORKS, DATASETS):
-            print(
-                f"Iteration on: \
-                \n\t· model:{model} \
-                \n\t· framework:{framework} \
-                \n\t· dataset:{dataset}"
+            _init_cfg: BenchmarkConfig = compose(
+                config_name,
             )
+
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
-                    f"model={model}",
+                    f"model={model}-{_init_cfg.machine.name_pattern}",
                     f"framework={framework}",
                     f"dataset={dataset}",
                 ],
@@ -208,9 +206,9 @@ def generate_valid_combos(
                             for s in results_msg:
                                 if s.reason == "":
                                     continue
-                                #msg += (
+                                # msg += (
                                 #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
-                                #)
+                                # )
 
                             print(msg)
                             raw_total += 1

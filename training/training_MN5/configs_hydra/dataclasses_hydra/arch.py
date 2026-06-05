@@ -45,6 +45,27 @@ class GpuConfig:
             )
 
 
+class PrecisionType(str, Enum):
+    fp32 = "fp32"
+    bf16 = "bf16"
+    fp16 = "fp16"
+    fp8 = "fp8"
+
+
+def get_peak_flops(cfg: GpuConfig, precision: str) -> int:
+    peak_flops = -100
+    if precision == PrecisionType.fp32:
+        peak_flops = cfg.theoretical_peak_fp32_tflops
+    if precision == PrecisionType.bf16:
+        peak_flops = cfg.theoretical_peak_bf16_tensor_tflops
+    if precision == PrecisionType.fp16:
+        peak_flops = cfg.theoretical_peak_fp16_tensor_tflops
+    if precision == PrecisionType.fp8:
+        peak_flops = cfg.theoretical_peak_fp8_tensor_tflops
+
+    return peak_flops
+
+
 @dataclass
 class NodeConfig:
     gpus_per_node: int = MISSING
