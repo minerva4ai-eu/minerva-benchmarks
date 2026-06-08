@@ -9,7 +9,7 @@
 
 
 Bootstrap: docker
-From: nvidia/cuda:12.8.0-cudnn-devel-ubuntu22.04
+From: python:3.11-slim
 
 %labels
     Author          Alexandros Paliouras
@@ -24,65 +24,53 @@ From: nvidia/cuda:12.8.0-cudnn-devel-ubuntu22.04
     uv.lock /opt/uv-env/uv.lock
 %post
     _CWD="/opt/uv-env"
-    UV_INSTALL_SH="$_CWD/uv-install.sh"
     TOML_PATH="$_CWD/pyproject.toml"
     #ENV_PATH="/opt/uv-env/.venv"
-
-    cd "$_CWD"
-    
-    echo "==> Suppressing apt interactive prompts..."
-    export DEBIAN_FRONTEND=noninteractive
-    export TZ=UTC
 
     echo "==> Installing system dependencies (including curl) in ONE pass..."
     # 1. Install minimal system dependencies
     apt-get update && apt-get install -y --no-install-recommends --allow-change-held-packages \
-        python3-pip python3-dev git curl build-essential libnccl2 libnccl-dev
+        git curl build-essential 
 
 
     # 2. install uv env tool
     echo "==> Installing uv via pip..."
-    pip install --upgrade pip
-    pip install uv
-    uv --version
+    pip install --upgrade pip uv
 
-    # Clean up apt cache only at the very end
-    rm -rf /var/lib/apt/lists/*
-
-    echo "==> Installing packages from pyproject.toml with uv..."
-
-    # Disable development dependencies
+    cd "$_CWD"
     export UV_NO_DEV=1
-    cd /opt/uv-env
     uv sync --locked
+    echo "uv sync exit code: $?"
+    ls -la /opt/uv-env/
+    
+    # system python is already at /usr/local/bin/python3
+    # just add the missing `python` alias
+    #ln -sf /usr/local/bin/python3 /usr/local/bin/python
 
-    #echo "==> Symlinking python for convenience..."
-    ln -sf /opt/uv-env/.venv/bin/python /usr/local/bin/python
+    python --version   # verify at build time
 
-    echo "==> Done. Environment installed at /opt/uv-env"
+    echo "==> Done. Environment installed at /opt/uv-env/.venv"
 
 %environment
-    
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
     export UV_SYSTEM_PYTHON=1
-
-%runscript
-    #uv -C "$UV_PROJECT_ENVIRONMENT" run python "$@"
-    uv run python "@"
-
-
-%environment
+    export PATH=/opt/uv-env/.venv/bin:/usr/.local/bin:$PATH
     export UV_PROJECT_ENVIRONMENT=/opt/uv-env/.venv
-    export PATH=/usr/local/bin/uv:$PATH
 
 %runscript
-    uv -C "$UV_PROJECT_ENVIRONMENT" python "$@"
+    exec python "$@"
 
 %test
+    cd /opt/uv-env/.venv
     echo "--- Python version ---"
     python --version
     echo "--- uv version ---"
     uv --version || echo "(uv not in PATH at runtime; only needed at build time)"
-    #echo "--- Installed packages ---"
-    #python -m pip list
+    echo "--- Installed packages ---"
+    $UV_PROJECT_ENVIRONMENT/bin/python -c "
+import importlib.metadata
+dists = sorted(importlib.metadata.distributions(), key=lambda d: d.metadata['Name'])
+for d in dists:
+    print(d.metadata['Name'], d.metadata['Version'])
+"
