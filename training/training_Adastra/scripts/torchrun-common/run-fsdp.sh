@@ -32,7 +32,7 @@ export SLURM_CPU_BIND=none
 ##################################################
 ###             Torchrun Setup                 ###
 ##################################################
-gpu_plots_monitor_command="python -m system_plots"
+gpu_plots_monitor_command="python -m gpu_plots"
 
 # Torchrun args
 JOB_ID=${SLURM_JOB_ID}
