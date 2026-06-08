@@ -53,6 +53,8 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
     )
     return {
         **os.environ,
+        "MODULES": cfg.machine.modules,
+        "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
         "NODES": str(s.sbatch.nodes),
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
         "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
@@ -71,11 +73,9 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
         "EPOCHS": str(t.epochs) if t.epochs else "-1",
         "REPEAT_ID": str(run_id),
         "MACHINE": cfg.machine.name,
-        "TRAIN_SCRIPT": cfg.framework.scripts.finetune.split("/")[-1],
+        "TRAIN_SCRIPT": f.scripts.finetune.split("/")[-1],
         "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
-        "ZERO_STAGE": cfg.framework.parallelism_name
-        if cfg.framework.name == "deepspeed"
-        else "",
+        "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
