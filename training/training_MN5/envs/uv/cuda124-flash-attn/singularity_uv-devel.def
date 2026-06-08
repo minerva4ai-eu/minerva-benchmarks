@@ -24,7 +24,6 @@ From: nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
     uv.lock /opt/uv-env/uv.lock
 %post
     _CWD="/opt/uv-env"
-    UV_INSTALL_SH="$_CWD/uv-install.sh"
     TOML_PATH="$_CWD/pyproject.toml"
     #ENV_PATH="/opt/uv-env/.venv"
 
@@ -54,7 +53,6 @@ From: nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
     # Disable development dependencies
     export UV_PYTHON_INSTALL_DIR=/opt/uv-python   # ← not under /root
     export UV_NO_DEV=1
-    cd $_CWD
     uv sync --locked
 
 
@@ -69,8 +67,7 @@ From: nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
     export LANG=C.UTF-8
     export UV_SYSTEM_PYTHON=1
     export PATH=/opt/uv-env/.venv/bin:/usr/local/bin:$PATH
-    #export VIRTUAL_ENV=/opt/uv-env/.venv
-    #export UV_PROJECT_ENVIRONMENT=/opt/uv-env/.venv
+    export UV_PROJECT_ENVIRONMENT=/opt/uv-env/.venv
 
 %runscript
     exec python "$@"
@@ -81,4 +78,9 @@ From: nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
     echo "--- uv version ---"
     uv --version || echo "(uv not in PATH at runtime; only needed at build time)"
     echo "--- Installed packages ---"
-    python -m pip list
+    $UV_PROJECT_ENVIRONMENT/bin/python -c "
+import importlib.metadata
+dists = sorted(importlib.metadata.distributions(), key=lambda d: d.metadata['Name'])
+for d in dists:
+    print(d.metadata['Name'], d.metadata['Version'])
+"
