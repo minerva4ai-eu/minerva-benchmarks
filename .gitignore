@@ -3,6 +3,8 @@ __pycache__/
 *.pyo
 *.pyd
 *.old
+*.venv
+*.sif
 
 # Folders
 inference/scripts/ray-serve/
