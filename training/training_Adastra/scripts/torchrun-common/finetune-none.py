@@ -194,8 +194,6 @@ def main():
     training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
     if args.max_steps is not None:
         training_args.max_steps = int(args.max_steps)
-        # train_dataset = torch.utils.data.Subset(train_dataset, range(min(450, len(train_dataset))))
-        # eval_dataset  = torch.utils.data.Subset(eval_dataset,  range(min(50, len(eval_dataset))))
 
     monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
@@ -298,7 +296,7 @@ def main():
         output_file=os.path.join(output_dir, "training_summary_0.json"),
     )
 
-    print("Single-Node Fine-tuning complete.")
+    print("Single-GPU Fine-tuning complete.")
 
 
 if __name__ == "__main__":
