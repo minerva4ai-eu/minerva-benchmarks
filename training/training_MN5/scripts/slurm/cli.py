@@ -5,12 +5,13 @@ import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 import click
 import scripts.slurm.monitor as m
 import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
+from omegaconf import DictConfig
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
@@ -18,6 +19,8 @@ from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 from scripts.slurm.submitter import build_launch_folder, submit_job
 
+if TYPE_CHECKING:
+    from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 warnings.filterwarnings(
     "ignore",
     category=UserWarning,
@@ -134,6 +137,11 @@ def run(dry_run, configs_path, config_name, output):
         )
 
 
+class InvalidRerun(Exception):
+    def __init__(self, msg: str):
+        super().__init__(msg)
+
+
 @cli.command()
 @click.option(
     "--run-date",
@@ -145,25 +153,140 @@ def run(dry_run, configs_path, config_name, output):
 @click.option(
     "--run-id",
     "run_id",
-    type=str,
-    help="",
+    type=int,
+    help="Serial id of run on provided date! If not provided, command will fail.",
     required=True,
 )
-@click.option("--failed", "mode", flag_value="failed", default=True)
-@click.option("--pending", "mode", flag_value="pending")
 @click.option(
-    "--id", "cfg_id", default=None, help="Rerun a specific benchmark configuration"
+    "--rerun-id",
+    "follow_rerun_id",
+    type=int,
+    help="Serial id of past resubmission on provided date run-id! Optional argument, which limits the resbmission to the job run on providied rerun-id.",
+    required=False,
 )
-def rerun(run_date, run_id, mode, cfg_id):
-    """Rerun failed or pending jobs, or a specific combo by id."""
+# @click.option("--only-failed", "mode", flag_value="failed", default=True)
+# @click.option("--pending", "mode", flag_value="pending")
+@click.option("--all", "all", is_flag=True, default=False)
+@click.option("--only-failed", "only_failed", is_flag=True, default=False)
+@click.option("--only-pending", "only_pending", is_flag=True, default=False)
+@click.option(
+    "--cfg-id",
+    "cfg_ids",
+    multiple=True,
+    default=None,
+    help=(
+        'Rerun a benchmark configuration by cfg_id. Multiple ids may be provided by repeating the input argument, e.g. "...--cfg-id cfgid1 --cfg-id cfgid2 --cfg-id cfgid3 etc..."'
+    ),
+)
+def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg_ids):
+    """Rerun all, failed, pending jobs, or a specific run/combo by id."""
 
-    run_jobs = m.load_all(
-        f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
+    print("\n")
+    print(
+        f"{u.POINT_DIAMOND} {u.CYAN} Re-running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
-    click.echo(f"Resubmitting {len(combos)} jobs (status={mode})...")
-    for combo in combos:
-        submit_job(combo, BASE_DIR, RUNS_DIR)
+    run_monitor_folder = f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}"
+    run_monitor_path = f"{run_monitor_folder}/jobs_submitted.jsonl"
+
+    rerun_id = 1
+    rerun_logs = f"jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
+    rerun_monitor_path = os.path.join(run_monitor_folder, rerun_logs)
+    while os.path.exists(rerun_monitor_path):
+        rerun_id += 1
+        rerun_logs = f"jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
+        rerun_monitor_path = os.path.join(run_monitor_folder, rerun_logs)
+
+    if follow_rerun_id:
+        run_logs = f"jobs_resubmitted-rerun_id-{follow_rerun_id}.jsonl"
+        run_monitor_path = os.path.join(run_monitor_folder, run_logs)
+
+    run_jobs = m.load_all(run_monitor_path)
+    _combos = run_jobs
+
+    mode = "all"
+    if not cfg_ids:
+        assert sum([all, only_failed, only_pending]) == 1, (
+            f"{u.RED}Only one of '--all', '--only-failed' or '--only-pending' must be provided!{u.RESET}"
+        )
+    if cfg_ids:
+        _combos = []
+        for cfg_id in cfg_ids:
+            try:
+                cfgid_job = [rj for rj in run_jobs if rj["cfg_id"] == cfg_id][0]
+                _combos.append(cfgid_job)
+                click.echo(
+                    f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config '{cfg_id}' FOUND in [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+                )
+            except IndexError:
+                click.echo(
+                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config '{cfg_id}' could NOT be FOUND among runs for [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+                )
+
+    combos = _combos
+    if only_failed:
+        mode = "only_failed"
+        slurm_mode = [
+            "node_fail",
+            "out_of_memory",
+            "cancelled",
+            "timeout",
+            "failed",
+            "stopped",
+            "suspended",
+        ]
+        combos = [
+            rj
+            for rj in sorted(_combos, key=lambda j: j["id"])
+            if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
+        ]
+
+    if only_pending:
+        mode = "only_pending"
+        slurm_mode = [
+            "pending",
+        ]
+        combos = [
+            rj
+            for rj in sorted(_combos, key=lambda j: j["id"])
+            if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
+        ]
+
+    click.echo(
+        f"\n{u.YELLOW}Resubmitting {len(combos)} jobs (status={mode})...{u.RESET}"
+    )
+    jobs_resubmitted = []
+    dependency_jobid = ""
+
+    for job in combos:
+        config_dir = "/".join(job["launch_folder"].split("/")[:-2])
+
+        cfg: "BenchmarkConfig" = DictConfig(
+            u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
+        )
+
+        for repeat_id in range(1, cfg.experiment.repeat + 1):
+            job_desc = {
+                "id": None,
+                "cfg_id": None,
+                "dependency": dependency_jobid,
+                "launch_folder": "",
+                "yaml_filename": "",
+            }
+
+            dependency_jobid = submit_job(
+                cfg=cfg,
+                launch_folder=Path(job["launch_folder"]),
+                repeat_id=repeat_id,
+                dependency=dependency_jobid,
+            )
+            job_desc["id"] = dependency_jobid
+            job_desc["cfg_id"] = cfg.id
+            job_desc["launch_folder"] = job["launch_folder"]
+            job_desc["yaml_filename"] = cfg.experiment.yaml_filename
+            jobs_resubmitted.append(job_desc)
+
+        u.write_jsonl(d=jobs_resubmitted, p=rerun_monitor_path)
 
 
 @cli.command()
@@ -204,10 +327,10 @@ def rerun(run_date, run_id, mode, cfg_id):
 )
 def status(run_date, run_id, model, framework, parallelism):
     """Print a summary of all run statuses."""
-
-    run_jobs = m.load_all(
+    run_monitor_folder = (
         f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
     )
+    run_jobs = m.load_all(run_monitor_folder)
 
     print(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
     s1 = " " * 20
@@ -349,14 +472,30 @@ def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
 
 
 RERUN_OPTIONS = [
-    OptionConfig(name="--run-date", prompt="run-date", validator=is_valid_date),
     OptionConfig(
-        name="--run-id",
-        prompt="run-id",
+        name="--run-date",
+        prompt="run-date",
+        transform=str2date2str,
+        validator=is_valid_date,
+        required=True,
+    ),
+    OptionConfig(name="--run-id", prompt="run-id", required=True),
+    OptionConfig(
+        name="--rerun-id",
+        prompt="rerun-id",
     ),
     OptionConfig(
-        name="--cfg-id",
-        prompt="yaml-cfg-id",
+        name="--cfg-ids",
+        prompt="cfg-ids (',' comma separated)",
+    ),
+    BoolOptionConfig(
+        name="--all",
+        prompt="all? [y/N]",
+        default="N",
+        transform=lambda x: x.lower(),
+        validator=lambda x: x in ("y", "n"),
+        error_msg="--all can only be y or n!",
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
     BoolOptionConfig(
         name="--only-failed",
@@ -364,7 +503,16 @@ RERUN_OPTIONS = [
         default="y",
         transform=lambda x: x.lower(),
         validator=lambda x: x in ("y", "n"),
-        error_msg="--dry-run can only be y or n!",
+        error_msg="--only-failed can only be y or n!",
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
+    ),
+    BoolOptionConfig(
+        name="--only-pending",
+        prompt="only-pending? [y/N]",
+        default="y",
+        transform=lambda x: x.lower(),
+        validator=lambda x: x in ("y", "n"),
+        error_msg="--only-pending can only be y or n!",
         condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
 ]

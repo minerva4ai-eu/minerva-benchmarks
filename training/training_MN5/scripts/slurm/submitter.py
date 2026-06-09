@@ -51,7 +51,9 @@ def build_launch_folder(
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
     # Copy folder with shared among frameworks
-    shutil.copytree(cfg.framework.scripts.shared, dest / "shared", dirs_exist_ok=True)
+    shutil.copytree(
+        cfg.framework.scripts.shared, os.path.join(dest, "shared"), dirs_exist_ok=True
+    )
 
     shutil.copy(cfg.framework.scripts.run, dest)
     if hasattr(cfg.framework.scripts, "finetune"):
@@ -122,8 +124,10 @@ def submit_job(
     launch_folder: Path,
     repeat_id: int,
     dependency: str,
+    resubmit: bool = False,
 ) -> str:
-    copy_scripts(cfg, launch_folder)
+    if not resubmit:
+        copy_scripts(cfg, launch_folder)
 
     m, d, f, s, t = (
         cfg.model,
