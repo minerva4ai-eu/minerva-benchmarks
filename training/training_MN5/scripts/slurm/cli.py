@@ -23,15 +23,16 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
-RUNS_DIR = Path("results/")
+RUNS_DIR = Path("benchmark-runs/")
 DEFAULT_CONFIGS_PATH = "./configs_hydra/configs"
 DEFAULT_CONFIG_NAME = "base"
 BASE_DIR = Path(".")
 
-MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
-os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
-HISTORY_FILE_PATH = os.path.join(os.path.expanduser("~/"), ".history")
-USER_CONFIG_PATH = os.path.join(MINERVA_USER_FOLDER, "benchmarks-config.json")
+# TODO: Folder is not working, check how to implement
+# MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
+# os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
+HISTORY_FILE_PATH = os.path.expanduser("~/.minerva-history")
+USER_CONFIG_PATH = os.path.expanduser(".minerva-benchmarks-config.json")
 
 # @dataclass
 # class UserBenchmarkConfig:
@@ -73,7 +74,7 @@ def run(dry_run, configs_path, config_name, output):
     run_date = datetime.now().date().strftime("%d-%m-%Y")
     slurm_monitor_dir = os.path.join(output, "slurm-monitor")
     date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
-    os.makedirs(date_monitor_dir, exist_ok=True)
+    # os.makedirs(date_monitor_dir, exist_ok=True)
     run_id = 1
     short_id = f"run_id-{run_id}"
     run_monitor_dir = os.path.join(date_monitor_dir, short_id)
@@ -82,51 +83,55 @@ def run(dry_run, configs_path, config_name, output):
         short_id = f"run_id-{run_id}"
         run_monitor_dir = os.path.join(date_monitor_dir, short_id)
 
-    click.echo(f"\nSlurm monitor ID: {run_date} | {short_id}")
-    click.echo(f"\nSubmitting {len(valid)} jobs...")
     dependency_jobid = ""
+    if dry_run:
+        click.echo(f"\nSlurm monitor ID: {run_date} | dry-run")
+        click.echo(f"\nDry running {len(valid)} experiment configuration...")
+    else:
+        click.echo(f"\nSlurm monitor ID: {run_date} | {short_id}")
+        click.echo(f"\nSubmitting {len(valid)} jobs...")
     jobs_submitted = []
     for cfg in valid:
         if dry_run:
             _ = build_launch_folder(
-                cfg, base_dir=BASE_DIR, runs_dir=RUNS_DIR, run_id=short_id, dry=dry_run
+                cfg, base_dir=BASE_DIR, runs_dir=output, run_id=short_id, dry=dry_run
             )
-            click.echo(f"  [dry] {cfg.id}")
-        else:
-            for repeat_id in range(1, cfg.experiment.repeat + 1):
-                job_desc = {
-                    "id": None,
-                    "cfg_id": None,
-                    "dependency": dependency_jobid,
-                    "launch_folder": "",
-                    "yaml_filename": "",
-                }
+            click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
+            continue
 
-                launch_folder = build_launch_folder(
-                    cfg,
-                    base_dir=BASE_DIR,
-                    runs_dir=RUNS_DIR,
-                    run_id=short_id,
-                    repeat_id=repeat_id,
-                )
-                dependency_jobid = submit_job(
-                    cfg=cfg,
-                    launch_folder=launch_folder,
-                    repeat_id=repeat_id,
-                    dependency=dependency_jobid,
-                )
-                job_desc["id"] = dependency_jobid
-                job_desc["cfg_id"] = cfg.id
-                job_desc["launch_folder"] = str(launch_folder.absolute())
-                job_desc["yaml_filename"] = cfg.experiment.yaml_filename
-                jobs_submitted.append(job_desc)
-            os.makedirs(run_monitor_dir, exist_ok=True)
-            print(f"jobs_submitted {jobs_submitted}")
-            print(f"run_monitor_dir {run_monitor_dir}")
-            u.write_jsonl(
-                d=jobs_submitted,
-                p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
+        for repeat_id in range(1, cfg.experiment.repeat + 1):
+            job_desc = {
+                "id": None,
+                "cfg_id": None,
+                "dependency": dependency_jobid,
+                "launch_folder": "",
+                "yaml_filename": "",
+            }
+
+            launch_folder = build_launch_folder(
+                cfg,
+                base_dir=BASE_DIR,
+                runs_dir=output,
+                run_id=short_id,
+                repeat_id=repeat_id,
             )
+            dependency_jobid = submit_job(
+                cfg=cfg,
+                launch_folder=launch_folder,
+                repeat_id=repeat_id,
+                dependency=dependency_jobid,
+            )
+            job_desc["id"] = dependency_jobid
+            job_desc["cfg_id"] = cfg.id
+            job_desc["launch_folder"] = str(launch_folder.absolute())
+            job_desc["yaml_filename"] = cfg.experiment.yaml_filename
+            jobs_submitted.append(job_desc)
+        os.makedirs(run_monitor_dir, exist_ok=True)
+
+        u.write_jsonl(
+            d=jobs_submitted,
+            p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
+        )
 
 
 @cli.command()
@@ -316,7 +321,7 @@ RUN_OPTIONS = [
     OptionConfig(
         name="--output",
         prompt="output",
-        default="./results",
+        default=str(RUNS_DIR),
     ),
     BoolOptionConfig(
         name="--dry-run",
@@ -441,7 +446,6 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                 if isinstance(opt, BoolOptionConfig):
                     if opt.condition_is_true(value):
                         run_args.extend([opt.name])
-                    print(run_args)
                     i += 1
                     continue
                 run_args.extend([opt.name, value])
@@ -551,7 +555,6 @@ def cli_entry():
     if len(sys.argv) == 1:
         interactive_loop()
     elif len(sys.argv) == 2:
-        print(sys.argv)
         interactive_loop(sys.argv[1])
     else:
         cli()
