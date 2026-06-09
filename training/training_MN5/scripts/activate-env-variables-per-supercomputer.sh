@@ -14,7 +14,7 @@ case "$MACHINE" in
         export NCCL_NET=IB
         export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
         export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_4,mlx5_5
-        export NCCL_DEBUG=TRACE
+        export NCCL_DEBUG=INFO
         export NCCL_NVLS_ENABLE=0
         export NCCL_IB_DISABLE=0
 

@@ -218,7 +218,7 @@ def monitor_gpus(
     interval_seconds: int = 5,
     duration_seconds: int = 10 * 3600,
     output_file="gpu_log.csv",
-) -> pd.DataFrame:
+):
     # writer = csv.writer(csvfile)
     global running
     global gpus_metrics
