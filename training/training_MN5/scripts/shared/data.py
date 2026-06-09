@@ -2,18 +2,20 @@ import ast
 import json
 from typing import TYPE_CHECKING, Callable, Tuple
 
+from sklearn.model_selection import train_test_split
 from torch.utils.data import random_split
+from torch.utils.data.dataset import Subset
 
 from shared.datasets.config_datasets_handlers_map import (
     DATASET_HANDLER_MAP,
+    DATASET_MAP,
 )
+from shared.datasets.handlers import DatasetHandler
 from shared.utils import print_rank
 
 if TYPE_CHECKING:
-    from torch.utils.data.dataset import Subset
+    from torch.utils.data import Dataset
     from transformers import PreTrainedTokenizer
-
-    from shared.datasets.handlers import DatasetHandler
 
 
 class CollateFnError(Exception):
@@ -59,7 +61,7 @@ def load_dataset(
     dataset_path: str,
     tokenizer: "PreTrainedTokenizer",
     max_length: int,
-) -> Tuple["DatasetHandler", "DatasetHandler", Callable, Callable]:
+) -> Tuple["DatasetHandler| Subset", "DatasetHandler | Subset", Callable, Callable]:
 
     if dataset_name not in DATASET_HANDLER_MAP:
         raise ValueError(f"Dataset {dataset_name} not supported.")
@@ -102,10 +104,10 @@ def load_dataset(
     def resolve_collate(
         ds_obj: "DatasetHandler | Subset", fallback: "DatasetHandler"
     ) -> Callable:
-        if hasattr(ds_obj, "collate_fn") and isinstance(ds_obj, "DatasetHandler"):
+        if hasattr(ds_obj, "collate_fn") and isinstance(ds_obj, DatasetHandler):
             return ds_obj.collate_fn
         if (
-            isinstance(ds_obj, "Subset")
+            isinstance(ds_obj, Subset)
             and hasattr(ds_obj, "dataset")
             and hasattr(ds_obj.dataset, "collate_fn")
         ):
@@ -120,3 +122,49 @@ def load_dataset(
     collate_fn_eval = resolve_collate(eval_dataset, dataset_for_collate)
 
     return train_dataset, eval_dataset, collate_fn_train, collate_fn_eval
+
+
+def load_and_prepare_raw_dataset(
+    dataset_name: str,
+    dataset_path: str,
+    test_size: float,
+    shuffle: bool = True,
+    seed: int = 42,
+) -> Tuple["Dataset", "Dataset"]:
+
+    if dataset_name not in DATASET_MAP:
+        raise ValueError(f"Dataset {dataset_name} not supported.")
+
+    # Get Dataset Handler
+    DatasetClass = DATASET_MAP[dataset_name]
+
+    train_path, val_path, is_split = parse_dataset_paths(dataset_path)
+
+    print_rank(
+        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}"
+    )
+    print_rank(f"  Train path: {train_path}")
+    if val_path:
+        print_rank(f"  Validation path: {val_path}")
+
+    # Load datasets
+    if is_split and val_path:
+        train_dataset = DatasetClass(
+            path=train_path,
+        ).prepare_text_dataset()
+        eval_dataset = DatasetClass(
+            path=val_path,
+        ).prepare_text_dataset()
+
+        return train_dataset, eval_dataset
+
+    full_dataset = DatasetClass(path=train_path).prepare_text_dataset()
+    train_data, test_data = train_test_split(
+        full_dataset.data.to_pylist(),
+        test_size=test_size,
+        shuffle=shuffle,
+        random_state=seed,
+    )
+    train_dataset = DatasetClass.from_data(train_data)
+    eval_dataset = DatasetClass.from_data(test_data)
+    return train_dataset, eval_dataset

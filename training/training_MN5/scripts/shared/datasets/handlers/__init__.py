@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset
 
 if TYPE_CHECKING:
@@ -29,3 +30,19 @@ class DatasetHandler(Dataset):
 
     # def data_collator(self, batch):
     #    raise NotImplementedError
+
+
+class RawTextDataset:
+    def __init__(self, path: str):
+        "Must implement data reading and loading on __init__()"
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def prepare_text_dataset(self) -> "HFDataset":
+        raise NotImplementedError
+
+    @staticmethod
+    def from_data(data: Any) -> "HFDataset":
+        raise NotImplementedError

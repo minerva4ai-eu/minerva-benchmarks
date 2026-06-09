@@ -6,17 +6,18 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
-if [ ! -z "$LOAD_MODULES" ]; then
-    eval "$LOAD_MODULES"
-fi 
-source shared/runtime_environment.sh
-training_activate_runtime_environment
+# Activate virtual environment using conda
+# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
+module load "$MODULES"
+# source activate $ENVIRONMENT_FINETUNING
+# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
+# which python
 
 
 # Get Arguments
-LAUNCH_FOLDER=$1
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by environment
+# Deprecated script arguments - provided by launch environment
+#LAUNCH_FOLDER=$1
 #DATASET=$2
 #DATASET_PATH=$3
 #TRAIN_SCRIPT=$4
@@ -41,8 +42,15 @@ export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 gpu_plots_monitor_command="python -m gpu_plots"
 
+singularity_prefix="singularity exec \
+    $SINGULARITY_ARGS \
+    $SINGULARITY_BINDS \
+    $SINGULARITY_CONTAINER"
+echo "singularity prefix $singularity_prefix"
 #    --precision $PRECISION \ accelerate launch
-train_command_min_overlap="accelerate launch \
+echo "PATH to Singularity Container: $SINGULARITY_CONTAINER"
+train_command_min_overlap="$singularity_prefix \
+    accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -64,7 +72,8 @@ train_command_min_overlap="accelerate launch \
         --dataloader_num_workers 4 \
         --dataset $DATASET"
 
-train_command_max_overlap="accelerate launch \
+train_command_max_overlap="$singularity_prefix \
+    accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -125,7 +134,7 @@ srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
 
     # Optional: give the monitor time to initialize
     sleep 5
-
+    
     # Run training in foreground (this blocks until done)
     $train_command_min_overlap
 

@@ -28,10 +28,7 @@ From: nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
     #ENV_PATH="/opt/uv-env/.venv"
 
     cd "$_CWD"
-    
-    echo "==> Suppressing apt interactive prompts..."
-    export DEBIAN_FRONTEND=noninteractive
-    export TZ=UTC
+
 
     echo "==> Installing system dependencies (including curl) in ONE pass..."
     # 1. Install minimal system dependencies

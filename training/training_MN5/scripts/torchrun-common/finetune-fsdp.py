@@ -1,73 +1,33 @@
 import gc
 import os
-import sys
 import time
 
+import psutil
 import torch
 import torch.distributed as dist
+from accelerate import init_on_device
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingTrainer
-from torch.utils.data import DataLoader, random_split
+from shared.data import load_dataset
+from shared.utils import (
+    count_parameters,
+    get_fsdp_layer_to_wrap,
+    print_rank,
+    save_summary_stats_json,
+)
 from transformers import (
+    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     TrainingArguments,
 )
-from utils import (
-    count_parameters,
-    parse_args,
-    parse_dataset_paths,
-    print_rank,
-    save_summary_stats_json,
-)
+from utils import parse_args
 
+# parse CLI args
 args = parse_args()
-sys.path.append(os.path.join(args.minerva_dir, "..", ".."))
-from training.training_MN5.configs.config_datasets_handlers_map import (
-    DATASET_HANDLER_MAP,
-)
 
 MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
-
-
-def get_fsdp_layer_to_wrap(model_name_or_path: str):
-    """
-    Returns the string representation of the Transformer layer class
-    based on the model architecture for FSDP wrapping.
-    """
-    model_name = model_name_or_path.lower()
-
-    if "llama" in model_name:
-        # Works for Llama-2, Llama-3, Llama-3.1, etc.
-        return "LlamaDecoderLayer"
-
-    elif "mistral" in model_name or "mixtral" in model_name:
-        return "MistralDecoderLayer"
-
-    elif "qwen" in model_name:
-        # Qwen2 and Qwen2.5 use this naming convention
-        return "Qwen2DecoderLayer"
-
-    elif "falcon" in model_name:
-        return "FalconLayer"
-
-    elif "phi-3" in model_name:
-        return "Phi3DecoderLayer"
-
-    elif "gemma" in model_name:
-        return "GemmaDecoderLayer"
-
-    elif "bert" in model_name:
-        return "BertLayer"
-
-    else:
-        # Fallback: Many HuggingFace models follow this pattern
-        # but it's safer to raise an error if you're unsure
-        raise ValueError(
-            f"Could not automatically determine FSDP layer for {model_name}. "
-            "Please manually specify the decoder layer class."
-        )
 
 
 def is_main_process():
@@ -91,12 +51,6 @@ def main():
 
     torch.cuda.empty_cache()
 
-    if args.dataset not in DATASET_HANDLER_MAP:
-        raise ValueError(f"Dataset {args.dataset} not supported.")
-
-    # Get Dataset Handler
-    DatasetHandlerClass = DATASET_HANDLER_MAP[args.dataset]
-
     model_name = args.model
     data = args.data
     output_dir = args.output_dir
@@ -113,100 +67,45 @@ def main():
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
-    train_path, val_path, is_split = parse_dataset_paths(data)
-
-    print_rank(
-        rank,
-        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}",
-    )
-    print_rank(rank, f"  Train path: {train_path}")
-    if val_path:
-        print_rank(rank, f"  Validation path: {val_path}")
-
-    # If we have explicit train/validation files
-    # Load datasets
-    if is_split and val_path:
-        train_dataset = DatasetHandlerClass(
-            path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        eval_dataset = DatasetHandlerClass(
-            path=val_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        dataset_for_collate = train_dataset
-    else:
-        dataset = DatasetHandlerClass(
-            path=train_path, tokenizer=tokenizer, max_length=MAX_LENGTH
-        )
-        train_size = int(0.9 * len(dataset))
-        eval_size = len(dataset) - train_size
-        train_dataset, eval_dataset = random_split(dataset, [train_size, eval_size])
-        dataset_for_collate = dataset
-
-    def resolve_collate(ds_obj, fallback):
-        if hasattr(ds_obj, "collate_fn"):
-            return getattr(ds_obj, "collate_fn")
-        if hasattr(ds_obj, "dataset") and hasattr(ds_obj.dataset, "collate_fn"):
-            return getattr(ds_obj.dataset, "collate_fn")
-        if fallback is not None and hasattr(fallback, "collate_fn"):
-            return getattr(fallback, "collate_fn")
-        return None
-
-    collate_fn_train = resolve_collate(train_dataset, dataset_for_collate)
-    collate_fn_eval = resolve_collate(eval_dataset, dataset_for_collate)
-
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=True,
-        # num_workers=args.dataloader_num_workers,
-        num_workers=0,
-        pin_memory=True,
-        collate_fn=collate_fn_train,
-        # persistent_workers=True,
-        persistent_workers=False,
-    )
-    eval_dataloader = DataLoader(
-        eval_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=False,
-        # num_workers=args.dataloader_num_workers,
-        num_workers=0,
-        pin_memory=True,
-        collate_fn=collate_fn_eval,
-        # persistent_workers=True,
-        persistent_workers=False,
-    )
-
-    # Model dtype
-    dtype = (
-        torch.float16
-        if args.precision == "fp16"
-        else torch.bfloat16
-        if args.precision == "bf16"
-        else torch.float32
+    train_dataset, eval_dataset, collate_fn, _ = load_dataset(
+        dataset_name=args.dataset,
+        dataset_path=args.data,
+        tokenizer=tokenizer,
+        max_length=MAX_LENGTH,
     )
 
     # Setup FSDP configuration
-
+    layer = get_fsdp_layer_to_wrap(model_name)
     fsdp_config = {
-        "activation_checkpointing": True,
-        "fsdp_activation_checkpointing_kwargs": {"use_reentrant": False},
-        "use_orig_params": False,
-        "cpu_ram_efficient_loading": True,
-        "sync_module_states": True,
+        "transformer_layer_cls_to_wrap": ",".join(layer)
+        if isinstance(layer, list)
+        else layer,
+        "fsdp_use_orig_params": True,  # needed for torch.compile + param groups
+        "fsdp_sharding_strategy": "FULL_SHARD",
+        "fsdp_activation_checkpointing": True,
+        # "fsdp_activation_checkpointing_kwargs": {"use_reentrant": True},
+        "fsdp_cpu_ram_efficient_loading": True,  # only rank 0 loads from disk to CPU
+        "fsdp_sync_module_states": True,  # rank 0 broadcasts shards directly to GPU
         "fsdp_offload_params": False,
-        "fsdp_cpu_ram_efficient_loading": True,
-        "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
-        "forward_prefetch": False,
-        "limit_all_gathers": True,
-        "backward_prefetch": "backward_post",
-        "transformer_layer_cls_to_wrap": get_fsdp_layer_to_wrap(model_name),
+        # "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
+        "fsdp_forward_prefetch": False,
+        "fsdp_limit_all_gathers": True,
+        "fsdp_backward_prefetch": "backward_post",
     }
 
+    # Model dtype
+    # --- Precision selection ---
+    if args.precision == "fp16":
+        dtype = torch.float16
+    elif args.precision == "bf16":
+        dtype = torch.bfloat16
+    else:
+        dtype = torch.float32
+
     if args.max_comm_comp_overlap:
-        fsdp_config["forward_prefetch"] = True
-        fsdp_config["limit_all_gathers"] = False
-        fsdp_config["backward_prefetch"] = "backward_pre"
+        fsdp_config["fsdp_forward_prefetch"] = True
+        fsdp_config["fsdp_limit_all_gathers"] = False
+        fsdp_config["fsdp_backward_prefetch"] = "backward_pre"
         print_rank(
             rank,
             "Enabled maximum communication-computation overlap in FSDP config: "
@@ -216,14 +115,33 @@ def main():
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
+        # train_dataloader = DataLoader(
+        #    train_dataset,
+        #    batch_size=BATCH_SIZE,
+        #    shuffle=False,
+        #    num_workers=args.dataloader_num_workers,
+        #    pin_memory=True,
+        #    collate_fn=collate_fn_train,
+        #    persistent_workers=args.dataloader_num_workers > 1,
+        # )
+        # eval_dataloader = DataLoader(
+        #    eval_dataset,
+        #    batch_size=BATCH_SIZE,
+        #    shuffle=False,
+        #    num_workers=args.dataloader_num_workers,
+        #    pin_memory=True,
+        #    collate_fn=collate_fn_eval,
+        #    persistent_workers=args.dataloader_num_workers > 1,
+        # )
+
         training_args = TrainingArguments(
             output_dir=output_dir,
             overwrite_output_dir=True,
             per_device_train_batch_size=BATCH_SIZE,
             gradient_accumulation_steps=args.gradient_accumulation_steps,
-            # gradient_checkpointing=True,
             learning_rate=args.lr,
             weight_decay=args.weight_decay,
+            # warmup_ratio=args.warmup_ratio,
             logging_steps=args.logging_steps,
             save_strategy="no",
             save_total_limit=1,
@@ -232,20 +150,21 @@ def main():
             optim="adamw_torch",
             logging_dir=f"{output_dir}/logs",
             report_to="none",
-            fsdp="full_shard auto_wrap",
-            fsdp_config=fsdp_config,
             eval_steps=None,
             ddp_timeout=1800,
+            # Dataloader is created automatically from trainer
+            dataloader_drop_last=True,
+            dataloader_num_workers=args.dataloader_num_workers,
+            data_seed=32,
+            dataloader_persistent_workers=args.dataloader_num_workers > 1,
+            dataloader_pin_memory=True,
+            dataloader_prefetch_factor=4,
+            # FSDP Config
+            fsdp="full_shard auto_wrap",
+            fsdp_config=fsdp_config,
         )
 
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            dtype=dtype,
-            use_cache=False,
-            device_map=None,
-        )
-        print_rank(rank, "Model Loaded")
-        training_args.num_train_epochs = args.epochs if args.epochs else 1
+        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
 
@@ -262,22 +181,72 @@ def main():
             0,
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
+        # model_config = AutoConfig.from_pretrained(model_name)
+
+        print_rank(f"Loading Model... dtype: {dtype}")
+        # model = AutoModelForCausalLM.from_pretrained(
+        #    model_name,
+        #    torch_dtype=dtype,
+        #    low_cpu_mem_usage=True,
+        #    device_map=None,
+        #    attn_implementation="flash_attention_2",
+        # )
+
+        # Just load normally on CPU — fsdp_cpu_ram_efficient_loading handles the rest
+        if is_main_process():
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                attn_implementation="flash_attention_2",
+            )
+        else:
+            # Non-zero ranks get empty shell — no CPU RAM used
+            config = AutoConfig.from_pretrained(model_name)
+            with init_on_device(torch.device("meta")):
+                model = AutoModelForCausalLM.from_config(
+                    config,
+                    torch_dtype=dtype,
+                    attn_implementation="flash_attention_2",
+                )
+
+        ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
+        print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
+
+        if hasattr(model.config, "use_cache"):
+            print_rank(0, "Disabling model's cache")
+            model.config.use_cache = False
+
+        # model.gradient_checkpointing_enable()
+
+        print_rank("Model Loaded")
+        print_rank(0, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(0, f"{i[0]} -> {i[1].device}")
+        print_rank(0, ":::::::::")
 
         trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
-            train_dataloader=train_dataloader,
-            eval_dataloader=eval_dataloader,
+            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
+            data_collator=collate_fn,
             tokenizer=tokenizer,
             callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
         )
 
+        print_rank(rank, "Trainer initialized and model has been wrapped!")
+        print_rank(rank, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(rank, f"{i[0]} -> {i[1].device}")
+        print_rank(rank, ":::::::::")
+
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
             interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
         )
+
         # Train Model
         start_time = time.time()
         trainer.train()
@@ -318,9 +287,7 @@ def main():
                 total_training_time_secs / training_args.num_train_epochs
             )
             avg_epoch_time_hours = avg_epoch_time_sec / 3600
-            avg_step_time_sec = avg_epoch_time_sec / len(
-                train_dataloader
-            )  # approximate
+            avg_step_time_sec = avg_epoch_time_sec / len(train_dataset)  # approximate
             avg_step_time_hours = avg_step_time_sec / 3600
 
         # ---- Compute derived metrics ----
@@ -407,6 +374,7 @@ def main():
             },
             output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
         )
+
         del trainer, model
         gc.collect()  # frees Python objects + their GPU tensor wrappers
         torch.cuda.empty_cache()  # returns freed CUDA memory back to the OS/driver

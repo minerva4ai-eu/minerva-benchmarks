@@ -85,3 +85,46 @@ def perf_timed(attr: str):
         return wrapper
 
     return decorator
+
+
+def get_fsdp_layer_to_wrap(model_name_or_path: str) -> list[str]:
+    """
+    Uses model config to determine FSDP wrap layers.
+    More reliable than string matching on model name.
+    """
+    from transformers import AutoConfig
+
+    config = AutoConfig.from_pretrained(model_name_or_path)
+
+    model_type = config.model_type.lower()  # e.g. "llama", "mistral", "mixtral"
+    print(f"[FSDP] Detected model_type: {model_type}")
+
+    mapping = {
+        # model_type → wrap layers
+        "llama": ["LlamaDecoderLayer"],
+        "mistral": ["MistralDecoderLayer"],
+        "mixtral": ["MixtralDecoderLayer", "MixtralBlockSparseTop2MLP"],
+        "qwen2": ["Qwen2DecoderLayer"],
+        "qwen2_moe": ["Qwen2MoeDecoderLayer", "Qwen2MoeMLP"],
+        "gemma": ["GemmaDecoderLayer"],
+        "gemma2": ["Gemma2DecoderLayer"],
+        "falcon": ["FalconDecoderLayer"],
+        "phi": ["PhiDecoderLayer"],
+        "phi3": ["Phi3DecoderLayer"],
+        "gpt2": ["GPT2Block"],
+        "opt": ["OPTDecoderLayer"],
+        "bloom": ["BloomBlock"],
+        "bert": ["BertLayer"],
+        "roberta": ["RobertaLayer"],
+    }
+
+    if model_type not in mapping:
+        raise ValueError(
+            f"model_type '{model_type}' not in FSDP layer mapping.\n"
+            f"Full config architectures: {config.architectures}\n"
+            "Add it manually to the mapping dict."
+        )
+
+    layers = mapping[model_type]
+    print(f"[FSDP] Using wrap layers: {layers}")
+    return layers

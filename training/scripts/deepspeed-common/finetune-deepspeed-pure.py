@@ -13,6 +13,9 @@ from utils import parse_args
 
 args = parse_args()
 
+MAX_LENGTH = args.max_length
+BATCH_SIZE = args.batch_size
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -96,7 +99,7 @@ def main():
         dataset_name=args.dataset,
         dataset_path=args.data,
         tokenizer=tokenizer,
-        max_length=args.max_length,
+        max_length=MAX_LENGTH,
     )
 
     # ------------------------------------------------------------------
@@ -112,7 +115,7 @@ def main():
     )
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=args.batch_size,
+        batch_size=BATCH_SIZE,
         sampler=train_sampler,
         num_workers=args.dataloader_num_workers,
         pin_memory=True,
@@ -163,10 +166,6 @@ def main():
         ds_config = json.load(f)
     ds_config["bf16"] = {"enabled": args.precision == "bf16"}
     ds_config["fp16"] = {"enabled": args.precision == "fp16"}
-    ds_config["train_micro_batch_size_per_gpu"] = args.batch_size
-    ds_config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
-    
-    print(f"DeepSpeed Config: \n{ds_config}")
 
     engine, optimizer, _, lr_scheduler = deepspeed.initialize(
         model=model,
@@ -198,7 +197,7 @@ def main():
     # GPU background monitor
     # ------------------------------------------------------------------
     gpu_stats_during, stop_flag = start_gpu_monitor(
-        interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+        interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
     )
 
     # ------------------------------------------------------------------
@@ -370,7 +369,7 @@ def main():
     )
     avg_gpu_mfu = sum(step_mfu_list) / len(step_mfu_list) if step_mfu_list else None
 
-    effective_batch_size = args.batch_size * grad_accum_steps * world_size
+    effective_batch_size = BATCH_SIZE * grad_accum_steps * world_size
 
     avg_step_time_sec = total_training_time_secs / global_step if global_step else None
     avg_step_time_hours = avg_step_time_sec / 3600 if avg_step_time_sec else None
@@ -419,7 +418,7 @@ def main():
             "dataset": data,
             "framework": "deepspeed",
             "parallelism_type": zero_stage,
-            "batch_size": args.batch_size,
+            "batch_size": BATCH_SIZE,
             "gradient_accumulation": grad_accum_steps,
             "trainable_parameters": trainable_params,
             "total_trainable_parameters": total_params,

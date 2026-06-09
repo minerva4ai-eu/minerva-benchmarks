@@ -1,51 +1,11 @@
 import argparse
-import ast
-import json
-import os
-
-
-def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
-    """Prints the message with the rank number.
-    Usage:
-        print_rank("msg")       -> all ranks
-        print_rank(0, "msg")    -> rank 0 only
-    """
-    if isinstance(rank_or_msg, str):
-        rank = None
-        msg = rank_or_msg
-    else:
-        rank = rank_or_msg
-
-    local_rank = int(os.environ.get("RANK", 0))
-    if rank is None or local_rank == rank:
-        print(
-            f"[ RANK {local_rank} ]: {msg}",
-            flush=True,
-        )
-
-
-def count_parameters(model):
-    total_params = sum(p.numel() for p in model.parameters())
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    return trainable_params, total_params, trainable_params / total_params * 100
-
-
-def save_summary_stats_json(summary, output_file):
-    with open(os.path.join(output_file), "w") as f:
-        json.dump(summary, f, indent=4)
-    # print(f"Training summary saved to {output_file}")
 
 
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Fine-tune LLaMA-8B with custom dataset"
-    )
-    parser.add_argument(
-        "--minerva_dir",
-        type=str,
-        required=True,
-        help="Path to Minerva Benchmarks (training/training_MN5)",
+        # TODO: Fill in description of argparser
+        description="ToDo"
     )
     parser.add_argument(
         "--model", type=str, required=True, help="Path to pretrained model"
@@ -107,38 +67,6 @@ def parse_args():
         action="store_true",
         help="Enable gradient checkpointing to save memory",
     )
+    parser.add_argument("--local_rank", type=int, default=-1)
 
     return parser.parse_args()
-
-
-def parse_dataset_paths(data_arg):
-    """
-    Parses dataset path argument which can be:
-      - A single string path (→ do train/val split)
-      - A JSON string like '{"train": "...", "validation": "..."}'
-      - A Python dict string like "{'train': '...', 'validation': '...'}"
-
-    Returns:
-        (train_path, val_path, is_split)
-        is_split = True if both train and val are provided
-    """
-    train_path, val_path = None, None
-
-    # Try Python-style dict
-    try:
-        parsed = ast.literal_eval(data_arg)
-        if isinstance(parsed, dict) and "train" in parsed:
-            return parsed["train"], parsed.get("validation"), True
-    except (ValueError, SyntaxError):
-        pass
-
-    # Try JSON-style dict
-    try:
-        parsed = json.loads(data_arg)
-        if isinstance(parsed, dict) and "train" in parsed:
-            return parsed["train"], parsed.get("validation"), True
-    except json.JSONDecodeError:
-        pass
-
-    # Otherwise, single dataset path
-    return data_arg, None, False
