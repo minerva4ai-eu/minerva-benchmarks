@@ -117,7 +117,7 @@ class JobInfo:
     status_meta: dict
 
 
-def get_job_info(job_id: int) -> JobInfo:
+def get_job_info(job_id: str) -> JobInfo:
     """
     Queries Slurm accounting database via sacct for a specific Job ID.
     Returns a parsed dictionary containing job details and normalized status metadata.
@@ -127,7 +127,7 @@ def get_job_info(job_id: int) -> JobInfo:
     cmd = [
         "sacct",
         "-j",
-        str(job_id),
+        job_id,
         "--allocations",
         "-p",
         "-n",

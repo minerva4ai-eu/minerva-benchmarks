@@ -14,7 +14,6 @@ scripts:
     - scripts/torchrun-common/gpu_monitor.py
     - scripts/torchrun-common/utils.py
     - scripts/gpu_plots.py
-    - scripts/activate-env-per-supercomputer.sh
     - scripts/activate-env-variables-per-supercomputer.sh
     - ${scripts.run}
     - ${scripts.finetune}
