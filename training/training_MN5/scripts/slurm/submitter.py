@@ -4,16 +4,21 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from scripts.slurm import utils as u
-from omegaconf import OmegaConf
-from typing import Optional
+
 
 def build_launch_folder(
-    cfg: BenchmarkConfig, base_dir: Path, runs_dir: Path, run_id: str, dry: Optional[bool] = False, repeat_id: Optional[int] = None, 
+    cfg: BenchmarkConfig,
+    base_dir: Path,
+    runs_dir: Path,
+    run_id: str,
+    dry: Optional[bool] = False,
+    repeat_id: Optional[int] = None,
 ) -> Path:
 
     parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
@@ -32,13 +37,17 @@ def build_launch_folder(
         os.makedirs(combo_path, exist_ok=True)
         OmegaConf.save(cfg, experiment_config_path)
         return Path(experiment_config_path)
-    launch_folder = Path('')
+    launch_folder = Path("")
     if repeat_id:
-        launch_folder = Path(combo_path, f"launch-{repeat_id}")
+        run_folder = os.path.join(combo_path, run_id)
+        launch_folder = Path(run_folder, f"launch-{repeat_id}")
         launch_folder.mkdir(parents=True, exist_ok=True)
     else:
-        raise ValueError(f"Argument 'repeat_id' must be provided! Instead got '{repeat_id}'")
+        raise ValueError(
+            f"Argument 'repeat_id' must be provided! Instead got '{repeat_id}'"
+        )
     return launch_folder
+
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
     # Copy folder with shared among frameworks
@@ -97,7 +106,9 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "REPEAT_ID": str(run_id),
         "MACHINE": cfg.machine.name,
         "LAUNCH_FOLDER": launch_folder.absolute(),
-        "TRAIN_SCRIPT": os.path.join(launch_folder.absolute(), f.scripts.finetune.split("/")[-1]),
+        "TRAIN_SCRIPT": os.path.join(
+            launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
+        ),
         "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
         "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
         "GPU_PEAK_TFLOPS": str(
@@ -136,8 +147,10 @@ def submit_job(
         f"--partition={s.partition}",
         *([f"--dependency={dependency}"] if dependency else []),
         *s.sbatch.extra_args,
-        os.path.join(launch_folder, f.scripts.run.split("/")[-1]), # path to training script
-        #str(launch_folder),
+        os.path.join(
+            launch_folder, f.scripts.run.split("/")[-1]
+        ),  # path to training script
+        # str(launch_folder),
     ]
     # print("\n".join(cmd))
     job_cfg = (
