@@ -8,6 +8,15 @@ defaults:
 machine:
   name: bsc-mn5-acc # actual name of super computer running benchmarks
   name_pattern: MN5 # configuration files naming convention pattern
-  modules: jq cuda/12.1 miniforge # space separated modules to load
+  modules: singularity # jq cuda/12.1 miniforge # space separated modules to load
   python_environment: /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/envs/fine-tune-dev-test-cuda121-hydra
-  singularity_container: "no-container"
+  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/envs/uv/cuda128-flash-attn/singularity_uv-runtime.sif
+  singularity_binds:
+    - "--bind /gpfs/scratch"
+    #- "-B /dev/infiniband"
+    #- "-B /sys/class/infiniband/"
+    - "-B /dev/shm/"
+  singularity_args:
+    - "--nv"
+    #- "--network=host"
+                        

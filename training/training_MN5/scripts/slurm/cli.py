@@ -6,41 +6,42 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
-import json
+
 import click
 import scripts.slurm.monitor as m
 import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
-from omegaconf import OmegaConf
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
-from scripts.slurm.submitter import submit_job
+from scripts.slurm.submitter import build_launch_folder, submit_job
 
 warnings.filterwarnings(
     "ignore",
     category=UserWarning,
 )
 
-RUNS_DIR = "results/"
+RUNS_DIR = Path("results/")
 DEFAULT_CONFIGS_PATH = "./configs_hydra/configs"
 DEFAULT_CONFIG_NAME = "base"
 BASE_DIR = Path(".")
 
-HISTORY_FILE_PATH = os.path.expanduser("~/.minerva-benchmarks")
-USER_CONFIG_PATH = os.path.join(HISTORY_FILE_PATH,"benchmarks-config.json")
+MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
+os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
+HISTORY_FILE_PATH = os.path.join(os.path.expanduser("~/"), ".history")
+USER_CONFIG_PATH = os.path.join(MINERVA_USER_FOLDER, "benchmarks-config.json")
 
-#@dataclass
-#class UserBenchmarkConfig:
-#    
+# @dataclass
+# class UserBenchmarkConfig:
+#
 #    runs_dir: str
 #    configs_path: str = USER_CONFIG_PATH
-#    
+#
 #    def save_json(self,):
 #        open(self.configs_path)
-    
+
 
 @click.group()
 def cli():
@@ -60,9 +61,11 @@ def cli():
 )
 def run(dry_run, configs_path, config_name, output):
     """Generate all valid configs and submit all pending jobs."""
-    print("\n\n")
-    print(f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}")
-    
+    print("\n")
+    print(
+        f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
+    )
+
     valid, skipped = generate_valid_combos(
         config_path=configs_path, config_name=config_name, outpath=output
     )
@@ -74,17 +77,20 @@ def run(dry_run, configs_path, config_name, output):
     run_id = 1
     short_id = f"run_id-{run_id}"
     run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-    if os.path.exists(run_monitor_dir):
+    while os.path.exists(run_monitor_dir):
         run_id += 1
         short_id = f"run_id-{run_id}"
         run_monitor_dir = os.path.join(date_monitor_dir, short_id)
 
-    click.echo(f"\nSlurm monitor ID: {short_id}")
+    click.echo(f"\nSlurm monitor ID: {run_date} | {short_id}")
     click.echo(f"\nSubmitting {len(valid)} jobs...")
     dependency_jobid = ""
     jobs_submitted = []
     for cfg in valid:
         if dry_run:
+            _ = build_launch_folder(
+                cfg, base_dir=BASE_DIR, runs_dir=RUNS_DIR, run_id=short_id, dry=dry_run
+            )
             click.echo(f"  [dry] {cfg.id}")
         else:
             for repeat_id in range(1, cfg.experiment.repeat + 1):
@@ -92,45 +98,41 @@ def run(dry_run, configs_path, config_name, output):
                     "id": None,
                     "cfg_id": None,
                     "dependency": dependency_jobid,
+                    "launch_folder": "",
+                    "yaml_filename": "",
                 }
+
+                launch_folder = build_launch_folder(
+                    cfg,
+                    base_dir=BASE_DIR,
+                    runs_dir=RUNS_DIR,
+                    run_id=short_id,
+                    repeat_id=repeat_id,
+                )
                 dependency_jobid = submit_job(
                     cfg=cfg,
-                    base_dir=BASE_DIR,
-                    run_id=repeat_id,
+                    launch_folder=launch_folder,
+                    repeat_id=repeat_id,
                     dependency=dependency_jobid,
                 )
                 job_desc["id"] = dependency_jobid
                 job_desc["cfg_id"] = cfg.id
+                job_desc["launch_folder"] = str(launch_folder.absolute())
+                job_desc["yaml_filename"] = cfg.experiment.yaml_filename
                 jobs_submitted.append(job_desc)
             os.makedirs(run_monitor_dir, exist_ok=True)
+            print(f"jobs_submitted {jobs_submitted}")
+            print(f"run_monitor_dir {run_monitor_dir}")
             u.write_jsonl(
-                d=jobs_submitted, p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl")
+                d=jobs_submitted,
+                p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
             )
-
-
-@cli.command()
-@click.option("--failed", "mode", flag_value="failed", default=True)
-@click.option("--pending", "mode", flag_value="pending")
-@click.option(
-    "--id", "cfg_id", default=None, help="Rerun a specific benchmark configuration"
-)
-def rerun(mode, cfg_id):
-    """Rerun failed or pending jobs, or a specific combo by id."""
-    if cfg_id:
-        path = RUNS_DIR / f"{cfg_id}.yaml"
-        combos = [OmegaConf.load(path)]
-    else:
-        combos = m.filter_by_status(RUNS_DIR, mode)
-
-    click.echo(f"Resubmitting {len(combos)} jobs (status={mode})...")
-    for combo in combos:
-        submit_job(combo, BASE_DIR, RUNS_DIR)
 
 
 @cli.command()
 @click.option(
     "--run-date",
-    "run_id",
+    "run_date",
     type=str,
     help="Date of run in format '%d-%m-%Y'! If not provided in the correct form, rerun will fail.",
     required=True,
@@ -142,9 +144,65 @@ def rerun(mode, cfg_id):
     help="",
     required=True,
 )
-def status(run_id):
+@click.option("--failed", "mode", flag_value="failed", default=True)
+@click.option("--pending", "mode", flag_value="pending")
+@click.option(
+    "--id", "cfg_id", default=None, help="Rerun a specific benchmark configuration"
+)
+def rerun(run_date, run_id, mode, cfg_id):
+    """Rerun failed or pending jobs, or a specific combo by id."""
+
+    run_jobs = m.load_all(
+        f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
+    )
+
+    click.echo(f"Resubmitting {len(combos)} jobs (status={mode})...")
+    for combo in combos:
+        submit_job(combo, BASE_DIR, RUNS_DIR)
+
+
+@cli.command()
+@click.option(
+    "--run-date",
+    "run_date",
+    type=str,
+    help="Date of run in format '%d-%m-%Y'! If not provided in the correct form, rerun will fail.",
+    required=True,
+)
+@click.option(
+    "--run-id",
+    "run_id",
+    type=str,
+    help="",
+    required=True,
+)
+@click.option(
+    "--model",
+    "model",
+    type=str,
+    help="",
+    required=False,
+)
+@click.option(
+    "--framework",
+    "framework",
+    type=str,
+    help="",
+    required=False,
+)
+@click.option(
+    "--parallelism-type",
+    "parallelism",
+    type=str,
+    help="",
+    required=False,
+)
+def status(run_date, run_id, model, framework, parallelism):
     """Print a summary of all run statuses."""
-    run_jobs = m.load_all(f"{RUNS_DIR}/slurm-monitor/{run_id}/jobs_submitted.jsonl")
+
+    run_jobs = m.load_all(
+        f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
+    )
 
     print(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
     s1 = " " * 20
@@ -195,8 +253,6 @@ def _(event):
 #    )  # Inserts a newline instead of submitting
 
 
-
-
 def read_user_input(
     history_path: str = HISTORY_FILE_PATH, input_text: str = "minerva-benchmarks > "
 ) -> str:
@@ -237,12 +293,12 @@ class OptionConfig:
     validator: Optional[Callable[[str], bool]] = None  # Return True if valid
     error_msg: str = "Invalid input."  # Shown when validator fails
     transform: Optional[Callable[[str], str]] = None  # Transform before storing
-    
-    
+
 
 @dataclass
 class BoolOptionConfig(OptionConfig):
     condition_is_true: Callable[[str], bool] = lambda x: False
+
 
 RUN_OPTIONS = [
     OptionConfig(
@@ -273,11 +329,61 @@ RUN_OPTIONS = [
     ),
 ]
 
-RERUN = [
+
+def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
+    try:
+        datetime.strptime(value, fmt)
+        return True
+    except ValueError:
+        return False
+
+
+def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
+    date = datetime.strptime(value, fmt).date()
+    return date.strftime(fmt)
+
+
+RERUN_OPTIONS = [
+    OptionConfig(name="--run-date", prompt="run-date", validator=is_valid_date),
     OptionConfig(
-        name="--output",
-        prompt="output",
-        default="./results",
+        name="--run-id",
+        prompt="run-id",
+    ),
+    OptionConfig(
+        name="--cfg-id",
+        prompt="yaml-cfg-id",
+    ),
+    BoolOptionConfig(
+        name="--only-failed",
+        prompt="only-failed? [y/N]",
+        default="y",
+        transform=lambda x: x.lower(),
+        validator=lambda x: x in ("y", "n"),
+        error_msg="--dry-run can only be y or n!",
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
+    ),
+]
+
+STATUS_OPTIONS = [
+    OptionConfig(
+        name="--run-date",
+        prompt="run-date",
+        transform=str2date2str,
+        validator=is_valid_date,
+    ),
+    OptionConfig(
+        name="--run-id",
+        prompt="run-id",
+    ),
+    OptionConfig(name="--nodes", prompt="nodes", validator=lambda x: int(x) >= 1),
+    OptionConfig(name="--model", prompt="model", validator=lambda x: int(x) >= 1),
+    OptionConfig(
+        name="--framework", prompt="framework", validator=lambda x: int(x) >= 1
+    ),
+    OptionConfig(
+        name="--parallelism-type",
+        prompt="parallelism-type",
+        validator=lambda x: int(x) >= 1,
     ),
 ]
 
@@ -291,10 +397,10 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
     run_args = []
     values = {opt.name: opt.default for opt in options}  # Seed with defaults
 
-    click.echo("\n  -- run options --")
     empty_inputs = {"", "\n"}
 
     i = 0
+    no_default_hint = "no default"
     while i < len(options):
         opt = options[i]
         try:
@@ -302,7 +408,7 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                 default_hint = (
                     f"default='{opt.default}'"
                     if opt.default is not None
-                    else "no default"
+                    else no_default_hint
                 )
                 raw = read_user_input(input_text=f"    {opt.prompt} ({default_hint}): ")
 
@@ -325,20 +431,20 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                     continue
 
                 value = raw
-                click.echo(f"\tUsing user input: {value}")
+                if not default_hint == no_default_hint:
+                    click.echo(f"\tUsing user input: {value}")
                 break
 
             # Append to args only if we have a value
             if value is not None:
                 values[opt.name] = value
-                if isinstance(opt,BoolOptionConfig):
+                if isinstance(opt, BoolOptionConfig):
                     if opt.condition_is_true(value):
                         run_args.extend([opt.name])
                     print(run_args)
                     i += 1
                     continue
                 run_args.extend([opt.name, value])
-            print(run_args)
             i += 1
 
         except KeyboardInterrupt:
@@ -359,35 +465,7 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
     return run_args
 
 
-def rerun_options_interactive() -> list[str]:
-    cmd_args = []
-    click.echo("\n  -- rerun options --")
-    cfg_id = prompt_arg("    --id (specific config id): ", required=False)
-    if cfg_id:
-        cmd_args.extend(["--id", cfg_id])
-    else:
-        mode_choice = click.prompt(
-            "    rerun mode",
-            type=click.Choice(["failed", "pending"]),
-            default="failed",
-        )
-        if mode_choice == "pending":
-            cmd_args.append("--pending")
-        # --failed is the default, no flag needed
-
-    return cmd_args
-
-
-def status_options_interactive() -> list[str]:
-    cmd_args = []
-    click.echo("\n  -- status options --")
-    run_id = prompt_arg("    --run-id: ", required=True)
-    cmd_args.extend(["--run-id", run_id])
-
-    return cmd_args
-
-
-def interactive_loop():
+def interactive_loop(subcmd: str = ""):
     """Run an interactive REPL loop for the CLI commands."""
     click.echo(f"{u.YELLOW}MINERVA benchmarks CLI — interactive mode{u.RESET}")
     click.echo(
@@ -396,7 +474,11 @@ def interactive_loop():
 
     while True:
         try:
-            user_input = read_user_input()
+            if subcmd == "":
+                user_input = read_user_input()
+            else:
+                user_input = subcmd
+                subcmd = ""
         except (EOFError, KeyboardInterrupt):
             click.echo("\nBye.")
             break
@@ -431,13 +513,16 @@ def interactive_loop():
         extra_args = []
         try:
             if cmd_name == "run":
+                click.echo("\n  -- run options --")
                 extra_args.extend(prompt_options_interactive(RUN_OPTIONS))
 
             elif cmd_name == "rerun":
-                extra_args.extend(rerun_options_interactive())
+                click.echo("\n  -- re-run options --")
+                extra_args.extend(prompt_options_interactive(RERUN_OPTIONS))
 
             elif cmd_name == "status":
-                extra_args.extend(status_options_interactive())
+                click.echo("\n  -- status options --")
+                extra_args.extend(prompt_options_interactive(STATUS_OPTIONS))
         except EOFError:
             click.echo("\nCancelled.")
             continue
@@ -465,6 +550,9 @@ def cli_entry():
     """Entry point — if no args given, enter interactive mode."""
     if len(sys.argv) == 1:
         interactive_loop()
+    elif len(sys.argv) == 2:
+        print(sys.argv)
+        interactive_loop(sys.argv[1])
     else:
         cli()
 

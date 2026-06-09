@@ -1,8 +1,9 @@
 import json
 
 import torch
+from datasets import Dataset as HFDataset
 
-from . import DatasetHandler
+from . import DatasetHandler, RawTextDataset
 from . import utils as u
 
 
@@ -69,3 +70,38 @@ class AlpacaHandler(DatasetHandler):
     #        return AlpacaHandler.collate_fn(list(zip(input_ids, attn)))
     #    else:
     #        return AlpacaHandler.collate_fn(batch)
+
+
+class AlpacaRawDataset(RawTextDataset):
+    def __init__(
+        self,
+        path,
+    ):
+        path = path.replace('"', "")
+        with open(path, "r", encoding="utf-8") as f:
+            self.data = json.load(f)
+
+    def __len__(self):
+        return len(self.data)
+
+    def prepare_text_dataset(
+        self,
+    ) -> HFDataset:
+        def build_prompt(item):
+            prompt = item.get("instruction", "")
+            if item.get("input"):
+                prompt = prompt + "\n\n" + item["input"]
+            prompt = prompt + "\n\n### Response:\n" + item.get("output", "")
+            return {"text": prompt}
+
+        processed = [build_prompt(item) for item in self.data]
+
+        # Must be a HuggingFace Dataset, not a torch Dataset — packing requires it
+        return HFDataset.from_list(processed)
+
+    @staticmethod
+    def from_data(
+        data: list[dict[str, str]],
+    ):
+
+        return HFDataset.from_list(data)

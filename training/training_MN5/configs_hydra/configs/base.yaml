@@ -13,12 +13,15 @@ machine:
   modules: ??? # space separated modules to load
   python_environment: ??? # path to python virtual environment
   singularity_container: ???
+  singularity_binds:
+  singularity_args:
   single_gpu_also_valid: True
 
 experiment:
   name: "benchmark_run"
   output_dir: "results/"
   repeat: 1
+  yaml_filename:
 
 #env:
 #  GPU_PEAK_TFLOPS:

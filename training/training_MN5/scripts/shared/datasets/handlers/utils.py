@@ -1,6 +1,10 @@
 import functools
 import logging
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +27,7 @@ def timed(attr: str):
             result = func(self, *args, **kwargs)
             duration = time.time() - start
             self.__dict__.setdefault(attr, []).append(duration)
-            print(f"[TIMING] {func.__name__} took {duration:.4f} seconds to run.")
+            # print(f"[TIMING] {func.__name__} took {duration:.4f} seconds to run.")
             return result
 
         return wrapper
@@ -49,7 +53,7 @@ def perf_timed(attr: str):
             result = func(self, *args, **kwargs)
             duration = time.perf_counter() - start
             self.__dict__.setdefault(attr, []).append(duration)
-            print(f"[TIMING] {func.__name__} took {duration:.4f} seconds to run.")
+            # print(f"[TIMING] {func.__name__} took {duration:.4f} seconds to run.")
             return result
 
         return wrapper
