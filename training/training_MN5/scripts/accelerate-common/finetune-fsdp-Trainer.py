@@ -2,23 +2,28 @@ import gc
 import os
 import time
 
+import psutil
 import torch
 import torch.distributed as dist
+from accelerate import init_on_device
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingTrainer
 from shared.data import load_dataset
 from shared.utils import (
     count_parameters,
+    get_fsdp_layer_to_wrap,
     print_rank,
     save_summary_stats_json,
 )
 from transformers import (
+    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     TrainingArguments,
 )
 from utils import parse_args
 
+# parse CLI args
 args = parse_args()
 
 MAX_LENGTH = args.max_length
@@ -69,6 +74,27 @@ def main():
         max_length=MAX_LENGTH,
     )
 
+    # Setup FSDP configuration
+
+    layer = get_fsdp_layer_to_wrap(model_name)
+    fsdp_config = {
+        "transformer_layer_cls_to_wrap": ",".join(layer)
+        if isinstance(layer, list)
+        else layer,
+        "use_orig_params": True,  # needed for torch.compile + param groups
+        "sharding_strategy": "FULL_SHARD",
+        "activation_checkpointing": True,
+        "activation_checkpointing_kwargs": {"use_reentrant": False},
+        "cpu_ram_efficient_loading": True,  # only rank 0 loads from disk to CPU
+        "sync_module_states": True,  # rank 0 broadcasts shards directly to GPU
+        "offload_params": False,
+        # "auto_wrap_policy": "TRANSFORMER_BASED_WRAP",
+        "forward_prefetch": False,
+        "limit_all_gathers": True,
+        "backward_prefetch": "backward_post",
+    }
+
+    # Model dtype
     # --- Precision selection ---
     if args.precision == "fp16":
         dtype = torch.float16
@@ -77,16 +103,27 @@ def main():
     else:
         dtype = torch.float32
 
+    if args.max_comm_comp_overlap:
+        fsdp_config["forward_prefetch"] = True
+        fsdp_config["limit_all_gathers"] = False
+        fsdp_config["backward_prefetch"] = "backward_pre"
+        print_rank(
+            rank,
+            "Enabled maximum communication-computation overlap in FSDP config: "
+            + "forward_prefetch=True, limit_all_gathers=False. "
+            + "Note: Monitor GPU memory usage as this may increase it.",
+        )
+
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
         # train_dataloader = DataLoader(
         #    train_dataset,
         #    batch_size=BATCH_SIZE,
-        #    shuffle=True,
+        #    shuffle=False,
         #    num_workers=args.dataloader_num_workers,
         #    pin_memory=True,
         #    collate_fn=collate_fn_train,
-        #    persistent_workers=True,
+        #    persistent_workers=args.dataloader_num_workers > 1,
         # )
         # eval_dataloader = DataLoader(
         #    eval_dataset,
@@ -95,7 +132,7 @@ def main():
         #    num_workers=args.dataloader_num_workers,
         #    pin_memory=True,
         #    collate_fn=collate_fn_eval,
-        #    persistent_workers=True,
+        #    persistent_workers=args.dataloader_num_workers > 1,
         # )
 
         training_args = TrainingArguments(
@@ -105,6 +142,7 @@ def main():
             gradient_accumulation_steps=args.gradient_accumulation_steps,
             learning_rate=args.lr,
             weight_decay=args.weight_decay,
+            # warmup_ratio=args.warmup_ratio,
             logging_steps=args.logging_steps,
             save_strategy="no",
             save_total_limit=1,
@@ -122,6 +160,9 @@ def main():
             dataloader_persistent_workers=args.dataloader_num_workers > 1,
             dataloader_pin_memory=True,
             dataloader_prefetch_factor=4,
+            # FSDP Config
+            fsdp="full_shard auto_wrap",
+            fsdp_config=fsdp_config,
         )
 
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
@@ -141,16 +182,49 @@ def main():
             0,
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
+        # model_config = AutoConfig.from_pretrained(model_name)
 
         print_rank(f"Loading Model... dtype: {dtype}")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
-            device_map=None,  # Trainer will put model on device
-            attn_implementation="flash_attention_2",
-        )
+        # model = AutoModelForCausalLM.from_pretrained(
+        #    model_name,
+        #    torch_dtype=dtype,
+        #    low_cpu_mem_usage=True,
+        #    device_map=None,
+        #    attn_implementation="flash_attention_2",
+        # )
+
+        # Just load normally on CPU — fsdp_cpu_ram_efficient_loading handles the rest
+        if is_main_process():
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                attn_implementation="flash_attention_2",
+            )
+        else:
+            # Non-zero ranks get empty shell — no CPU RAM used
+            config = AutoConfig.from_pretrained(model_name)
+            with init_on_device(torch.device("meta")):
+                model = AutoModelForCausalLM.from_config(
+                    config,
+                    torch_dtype=dtype,
+                    attn_implementation="flash_attention_2",
+                )
+
+        ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
+        print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
+
+        if hasattr(model.config, "use_cache"):
+            print_rank(0, "Disabling model's cache")
+            model.config.use_cache = False
+
+        # model.gradient_checkpointing_enable()
+
         print_rank("Model Loaded")
+        print_rank(0, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(0, f"{i[0]} -> {i[1].device}")
+        print_rank(0, ":::::::::")
 
         trainer = PerformanceTrackingTrainer(
             model=model,
@@ -162,6 +236,12 @@ def main():
             callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
         )
+
+        print_rank(rank, "Trainer initialized and model has been wrapped!")
+        print_rank(rank, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(rank, f"{i[0]} -> {i[1].device}")
+        print_rank(rank, ":::::::::")
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(

@@ -68,6 +68,8 @@ class MachineConfig:
     modules: str = MISSING  # space separated modules to load
     python_environment: str = MISSING
     singularity_container: str = MISSING
+    singularity_binds: List[str] = MISSING
+    singularity_args: List[str] = MISSING
     single_gpu_also_valid: bool = MISSING
 
 
@@ -76,7 +78,9 @@ class ExperimentConfig:
     name: str = MISSING
     output_dir: str = "results/"
     repeat: int = 1
+    yaml_filename: str = ""
 
+    
 
 @dataclass
 class BenchmarkConfig(DictConfig):

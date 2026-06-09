@@ -2,22 +2,43 @@
 import os
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig
 from scripts.slurm import utils as u
+from omegaconf import OmegaConf
+from typing import Optional
 
+def build_launch_folder(
+    cfg: BenchmarkConfig, base_dir: Path, runs_dir: Path, run_id: str, dry: Optional[bool] = False, repeat_id: Optional[int] = None, 
+) -> Path:
 
-def build_launch_folder(cfg: BenchmarkConfig, base_dir: Path, run_id: int) -> Path:
-    folder = Path(
-        os.path.join(os.path.join(base_dir, cfg.slurm.sbatch.chdir), f"launch-{run_id}")
+    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    results_dir = os.path.join(base_dir.absolute(), runs_dir)
+    machine_results_base = os.path.join(results_dir, cfg.machine.name)
+    date_folder = os.path.join(
+        machine_results_base,
+        datetime.now().strftime("%d-%m-%Y"),
     )
-
-    folder.mkdir(parents=True, exist_ok=True)
-    return folder
-
+    combo_path = os.path.join(
+        date_folder,
+        parameters_combo,
+    )
+    if dry:
+        experiment_config_path = os.path.join(combo_path, cfg.experiment.yaml_filename)
+        os.makedirs(combo_path, exist_ok=True)
+        OmegaConf.save(cfg, experiment_config_path)
+        return Path(experiment_config_path)
+    launch_folder = Path('')
+    if repeat_id:
+        launch_folder = Path(combo_path, f"launch-{repeat_id}")
+        launch_folder.mkdir(parents=True, exist_ok=True)
+    else:
+        raise ValueError(f"Argument 'repeat_id' must be provided! Instead got '{repeat_id}'")
+    return launch_folder
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
     # Copy folder with shared among frameworks
@@ -37,7 +58,7 @@ def copy_scripts(cfg: BenchmarkConfig, dest: Path):
             shutil.copy(src_path, dest)
 
 
-def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
+def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     m, t, f, d, s = (
         cfg.model,
         cfg.model.training,
@@ -55,6 +76,8 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
         **os.environ,
         "MODULES": cfg.machine.modules,
         "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
+        "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds),
+        "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args),
         "NODES": str(s.sbatch.nodes),
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
         "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
@@ -73,7 +96,8 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
         "EPOCHS": str(t.epochs) if t.epochs else "-1",
         "REPEAT_ID": str(run_id),
         "MACHINE": cfg.machine.name,
-        "TRAIN_SCRIPT": f.scripts.finetune.split("/")[-1],
+        "LAUNCH_FOLDER": launch_folder.absolute(),
+        "TRAIN_SCRIPT": os.path.join(launch_folder.absolute(), f.scripts.finetune.split("/")[-1]),
         "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
         "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
         "GPU_PEAK_TFLOPS": str(
@@ -84,12 +108,11 @@ def build_env(cfg: BenchmarkConfig, run_id: int) -> dict:
 
 def submit_job(
     cfg: BenchmarkConfig,
-    base_dir: Path,
-    run_id: int,
+    launch_folder: Path,
+    repeat_id: int,
     dependency: str,
 ) -> str:
-    launch = build_launch_folder(cfg, base_dir, run_id=run_id)
-    copy_scripts(cfg, launch)
+    copy_scripts(cfg, launch_folder)
 
     m, d, f, s, t = (
         cfg.model,
@@ -98,11 +121,10 @@ def submit_job(
         cfg.slurm,
         cfg.model.training,
     )
-
     cmd = [
         "sbatch",
         "--parsable",
-        f"--chdir={launch}",
+        f"--chdir={launch_folder}",
         f"--nodes={s.sbatch.nodes}",
         f"--gres=gpu:{s.sbatch.gpus_per_node}",
         f"--cpus-per-task={s.sbatch.cpus_per_gpu}",
@@ -114,8 +136,8 @@ def submit_job(
         f"--partition={s.partition}",
         *([f"--dependency={dependency}"] if dependency else []),
         *s.sbatch.extra_args,
-        os.path.join(launch, f.scripts.run.split("/")[-1]),
-        str(launch),
+        os.path.join(launch_folder, f.scripts.run.split("/")[-1]), # path to training script
+        #str(launch_folder),
     ]
     # print("\n".join(cmd))
     job_cfg = (
@@ -129,7 +151,10 @@ def submit_job(
     )
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True, env=build_env(cfg, run_id)
+            cmd,
+            capture_output=True,
+            text=True,
+            env=build_env(cfg, launch_folder, repeat_id),
         )
         if result.returncode != 0:
             print(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}")
