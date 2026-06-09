@@ -13,7 +13,6 @@ from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
 
-from scripts.slurm.submitter import build_launch_folder
 # Color Codes
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -183,20 +182,19 @@ def generate_valid_combos(
                             + ".yaml"
                         )
                         # MAKE SURE BEFORE DELETE
-                        #run_path = os.path.join(
+                        # run_path = os.path.join(
                         #    outpath,
                         #    parameters_combo,
-                        #)
-                        #os.makedirs(run_path, exist_ok=True)
+                        # )
+                        # os.makedirs(run_path, exist_ok=True)
                         for g in gpus_per_node:
                             if g == 1 and nodes == 1 and parallelism == "none":
                                 tmp_cfg.slurm.sbatch.gpus_per_node = 1
                                 tmp_cfg.slurm.sbatch.gres = "gpu:1"
                             msg = f"\t· parallelism: {parallelism} | nodes:{nodes} | bs:{bs} | grad_accum:{grad_acc} | precision:{precision} | steps:{steps}"
-                            
-                            
+
                             # MAKE SURE BEFORE DELETE
-                            #outpath_yaml = os.path.join(run_path, yaml_filename)
+                            # outpath_yaml = os.path.join(run_path, yaml_filename)
                             passed, results_msg = rules.is_valid(tmp_cfg)
                             if not passed:
                                 skipped.append([tmp_cfg, results_msg])
@@ -228,9 +226,9 @@ def generate_valid_combos(
                                 + f"-prec{precision}"
                                 + f"-steps{steps}"
                             )
-                            
+
                             # MAKE SURE BEFORE DELETE
-                            #tmp_cfg.slurm.sbatch.chdir = run_path
+                            # tmp_cfg.slurm.sbatch.chdir = run_path
                             tmp_cfg.experiment.yaml_filename = yaml_filename
                             # Resolve all yaml config parameter references before finish
                             OmegaConf.resolve(tmp_cfg)
@@ -251,6 +249,7 @@ def _print_summary(
     table.add_row("Total combos", str(total))
     table.add_row("[green]Valid[/green]", str(len(valid)))
     table.add_row("[yellow]Skipped[/yellow]", str(len(skipped)))
+    print("")
     console.print(table)
     # ToDo: Write summary file for failed or skipped configurations
 
@@ -285,5 +284,5 @@ if __name__ == "__main__":
     generate_valid_combos(
         config_path=os.path.abspath(args.config_path),
         config_name=args.config_name,
-        outpath="/home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/configs_hydra/benchmarks_to_run",
+        outpath="./benchmarks_to_run",
     )
