@@ -1,5 +1,7 @@
 import json
 
+import yaml
+
 # ANSI Escape Codes for Terminal Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -66,3 +68,17 @@ def read_jsonl(path: str) -> list[dict]:
             if line:  # Skip empty lines
                 records.append(json.loads(line))
     return records
+
+
+def load_yaml(filepath):
+    try:
+        with open(filepath, "r") as file:
+            # safe_load automatically converts YAML into native Python dicts/lists
+            config = yaml.safe_load(file)
+            return config
+    except FileNotFoundError:
+        print(f"Error: The file {filepath} was not found.")
+        return {}
+    except yaml.YAMLError as exc:
+        print(f"Error parsing YAML file: {exc}")
+        return {}

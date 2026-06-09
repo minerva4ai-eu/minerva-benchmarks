@@ -80,7 +80,6 @@ class ExperimentConfig:
     repeat: int = 1
     yaml_filename: str = ""
 
-    
 
 @dataclass
 class BenchmarkConfig(DictConfig):
