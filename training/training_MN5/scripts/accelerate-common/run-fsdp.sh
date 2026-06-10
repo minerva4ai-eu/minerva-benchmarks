@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=ACCELERATE_DYNAMIC
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 
 
 ##################################################
@@ -9,7 +9,7 @@
 ##################################################
 # Activate virtual environment using conda
 # source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-module load "$MODULES"
+eval "$LOAD_MODULES"
 # source activate $ENVIRONMENT_FINETUNING
 # export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
 # which python
@@ -47,13 +47,16 @@ export NUM_PROCS=$((NNODES * NPROC_PER_NODE))
 export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
-gpu_plots_monitor_command="python -m gpu_plots"
 
 singularity_prefix="singularity exec \
     $SINGULARITY_ARGS \
     $SINGULARITY_BINDS \
+    --home $LAUNCH_FOLDER \
     $SINGULARITY_CONTAINER"
 echo "singularity prefix $singularity_prefix"
+
+gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
+
 #    --precision $PRECISION \ accelerate launch
 echo "PATH to Singularity Container: $SINGULARITY_CONTAINER"
 train_command_min_overlap="$singularity_prefix \
@@ -76,10 +79,10 @@ train_command_min_overlap="$singularity_prefix \
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 4 \
+        --dataloader_num_workers 8 \
         --dataset $DATASET"
 
-train_command_max_overlap="$singularity_prefix \
+train_command_max_overlap="$singularity_prefix  \
     accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
@@ -94,12 +97,12 @@ train_command_max_overlap="$singularity_prefix \
         --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-max-overlap \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
+        ${EPOCHS:+--epochs $EPOCHS} \
+        ${STEPS:+--max_steps $STEPS} \
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 4 \
+        --dataloader_num_workers 8 \
         --dataset $DATASET \
         --max_comm_comp_overlap"
 
@@ -113,9 +116,25 @@ echo "train_command_min_overlap: {$train_command_min_overlap}"
 source activate-env-variables-per-supercomputer.sh
 
 # Launch Run
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
+# Start monitoring in background
+#$singularity_prefix $gpu_plots_monitor_command &
+#monitor_pid=$!
+#
+## Optional: give the monitor time to initialize
+#sleep 5
+#
+## Run training in foreground (this blocks until done)
+#eval "$train_command_min_overlap"
+#
+#eval "$train_command_max_overlap"
+#
+#kill -SIGTERM \"\$monitor_pid\"
+## Wait for the monitor to clean up and exit
+#wait "$monitor_pid"
+
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $gpu_plots_monitor_command &
+    $singularity_prefix $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize

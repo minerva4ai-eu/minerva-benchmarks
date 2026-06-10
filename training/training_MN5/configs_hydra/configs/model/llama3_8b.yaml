@@ -2,8 +2,8 @@ defaults:
   - base_training
   - _self_
 
-name: llama3-8b
-path: /path/to/llama3-8b
+name: llama3_8b # MUST BE same as the filename
+path: /path/to/llama3_8b
 
 # architecture dims — used by memory rule
 total_params_billions: 8.03
@@ -34,7 +34,7 @@ tokenizer_type:       tiktoken
 
 # GPU requirements — constraint metadata
 #min_gpus: 1
-max_gpus_scale: 8
+max_gpus_scale: 4
 frameworks_supported:
   - torchrun
   - accelerate
