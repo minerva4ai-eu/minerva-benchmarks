@@ -1,0 +1,33 @@
+defaults:
+  - base_training
+  - _self_
+
+name: gemma_1b # MUST BE same as the filename
+path: /path/to/gemma_1b
+# architecture dims — used by memory rule
+total_params_billions: 1.0
+architecture_type: dense
+num_layers:           18
+hidden_dim:           2048
+ffn_intermediate_dim: 16384
+num_attention_heads:  8
+num_kv_heads:         1        # MQA — all query heads share 1 KV head
+head_dim:             256      # hidden_dim / num_attention_heads = 2048 / 8
+# attention
+attention_type:       mqa      # multi query attention
+# tokenizer
+vocab_size:           256000
+tokenizer_type:       sentencepiece
+# GPU requirements — constraint metadata
+max_gpus_scale: 4
+frameworks_supported:
+  - torchrun
+  - accelerate
+  - deepspeed
+parallelism_supported:
+  - none
+  - ddp
+  - fsdp
+  - zero1
+  - zero2
+  - zero3

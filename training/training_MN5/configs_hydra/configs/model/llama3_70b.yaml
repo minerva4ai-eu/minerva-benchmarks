@@ -2,8 +2,8 @@ defaults:
   - base_training
   - _self_
 
-name: llama3-70b
-path: /path/to/llama3-8b
+name: llama3_70b # MUST BE same as the filename
+path: /path/to/llama3_70b
 
 # transformer dims
 total_params_billions: 70.6      # Llama 2 was ~68.9B

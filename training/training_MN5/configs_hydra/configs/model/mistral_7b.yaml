@@ -2,8 +2,8 @@ defaults:
   - base_training
   - _self_
 
-name: mistral-7b
-path: "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Mistral-7B-Instruct-v0.3"
+name: mistral_7b # MUST BE same as the filename
+path: path/to/mistral_7b
 
 # transformer dims
 total_params_billions: 7.24
@@ -34,7 +34,7 @@ tokenizer_type:       sentencepiece
 
 # GPU requirements — constraint metadata
 #min_gpus: 1
-max_gpus_scale: 8
+max_gpus_scale: 4
 frameworks_supported:
   - torchrun
   - accelerate

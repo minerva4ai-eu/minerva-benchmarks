@@ -8,15 +8,31 @@ defaults:
 machine:
   name: bsc-mn5-acc # actual name of super computer running benchmarks
   name_pattern: MN5 # configuration files naming convention pattern
-  modules: singularity # jq cuda/12.1 miniforge # space separated modules to load
+  modules: 
+    - singularity
+    - jq
+    - cuda/12.1
   python_environment: /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/envs/fine-tune-dev-test-cuda121-hydra
-  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/envs/uv/cuda128-flash-attn/singularity_uv-runtime.sif
+  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/envs/uv/cuda121-flash-attn/singularity_uv-runtime-app.sif
   singularity_binds:
-    - "--bind /gpfs/scratch"
-    #- "-B /dev/infiniband"
-    #- "-B /sys/class/infiniband/"
-    - "-B /dev/shm/"
+    # No escaped character may be used
+  #  - "--bind /opt/linpack/ACC/bench/opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so" 
+  #  - "--bind /gpfs/scratch:/gpfs/scratch"
+    - "--bind /dev/infiniband"
+    - "--bind /dev/shm"
+    #- "--bind /opt:/opt-host"
+    - "--bind /apps:/apps"
+    #- "--bind /gpfs/scratch"
+    #- "--bind /usr/lib64/libnccl.so:/usr/lib/x86_64-linux-gnu/libnccl.so # --> libnccl.so, libmlx5.so, libibverbs.so
+    - "--bind /usr/lib64/libmlx5.so:/usr/lib/x86_64-linux-gnu/libmlx5.so"
+    #- "--bind /usr/lib64/libmlx5.so.1:/usr/lib/x86_64-linux-gnu/libmlx5.so.1" # --> libnccl.so, libmlx5.so, libibverbs.so
+    - "--bind /usr/lib64/libibverbs.so:/usr/lib/x86_64-linux-gnu/libibverbs.so"
+    #- "--bind /usr/lib64/ibibverbs.so.1:/usr/lib/x86_64-linux-gnu/ibibverbs.so.1" # --> libnccl.so, libmlx5.so, libibverbs.so
+  
   singularity_args:
+    # No escaped character may be used
     - "--nv"
-    #- "--network=host"
+    - "--network=host"
+    #- "--env LD_PRELOAD=/usr/lib64/libnccl.so:/usr/lib64/libmlx5.so:/usr/lib64/libibverbs.so"
+    #- "--env LD_LIBRARY_PATH=/lib64:$LD_LIBRARY_PATH"
                         
