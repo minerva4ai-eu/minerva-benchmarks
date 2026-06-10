@@ -7,7 +7,7 @@
 #######################################################
 FRAMEWORKS=("vllm" "sglang" "deepspeed") # Add other frameworks if needed
 DATASETS=("sharegpt" "sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
+MODELS=("Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "ALIA-40b") # Add your models here
 NUMBER_OF_NODES=(1 2 4)
 MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
 REPEATS=3               # Number of runs per configuration
@@ -46,16 +46,19 @@ for framework in "${FRAMEWORKS[@]}"; do
             # GENERAL PART (Common for all Frameworks).
             TOTAL_GPUS=$((NODES * GPU_NODE))
             TOTAL_CPUS=$((GPUS_PER_NODE * CPUS_PER_GPU))
-            TENSOR_PARALLEL=$TOTAL_GPUS
-            PIPELINE_PARALLEL=1
+            # CPUS_PER_NODE=$TOTAL_CPUS
+            # VRAM_PER_NODE=$((GPUS_PER_NODE * VRAM_PER_GPU))
+            # TOTAL_VRAM=$((VRAM_PER_NODE * NODES))
+            TENSOR_PARALLEL=$GPU_NODE
+            PIPELINE_PARALLEL=$NODES
 
             BASE_FOLDER="results/${framework}/${dataset}/${model}"
             RUN_FOLDER="Nodes_${NODES}-GPUs_${TOTAL_GPUS}-TP_${TENSOR_PARALLEL}-PP_${PIPELINE_PARALLEL}-MaxModelLength_${MAX_MODEL_LENGTH}"
             FULL_FOLDER="${BASE_FOLDER}/${RUN_FOLDER}"
 
             # Define a unique MODEL_PATH per configuration
-            MODEL_TYPE=$(get_model_type "$model" "configs/model_type_map.json")
-            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs/model_type_directories_map.json")
+            MODEL_TYPE=$(get_model_type "$model" "configs-bsc-mn5-acc/model_type_map.json")
+            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-bsc-mn5-acc/model_type_directories_map.json")
             MODEL_PATH="${MODEL_DIRECTORY}/${model}"
 
             if [ -z "$MODEL_DIRECTORY" ]; then
@@ -63,8 +66,8 @@ for framework in "${FRAMEWORKS[@]}"; do
               exit 1
             fi
 
-            DATASET_PATH=$(get_dataset_path "$dataset" "configs/config_datasets_paths_map.json")
-            
+            DATASET_PATH=$(get_dataset_path "$dataset" "configs-bsc-mn5-acc/config_datasets_paths_map.json")
+
             # vLLM
             if [[ "$framework" == "vllm" ]]; then
               # vLLM
@@ -87,12 +90,11 @@ for framework in "${FRAMEWORKS[@]}"; do
                 echo "Setting up $LAUNCH_FOLDER"
                 mkdir -p "$LAUNCH_FOLDER"
                 
-                cp scripts/vllm/run_cluster.sh "$LAUNCH_FOLDER"
-                cp scripts/vllm/vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER"
-                cp scripts/vllm/serve.sh "$LAUNCH_FOLDER"
                 cp scripts/vllm/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
                 cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
                 cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
+
+                cp scripts/vllm/run_mp_vllm.sh "$LAUNCH_FOLDER"
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
@@ -103,6 +105,8 @@ for framework in "${FRAMEWORKS[@]}"; do
                 export MODULES
                 export MACHINE
                 export MACHINE_TYPE
+                export CPUS_PER_NODE VRAM_PER_NODE
+                export CUR_DIR=$(pwd)
 
                 REMAINING=$((TOTAL_CONFIGS - CONFIG_INDEX))
                 if [ "$REMAINING" -le 5 ] && [ "${#JOB_IDS[@]}" -gt 0 ]; then
@@ -121,7 +125,9 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --error=run-%j.err \
                     -A $ACCOUNT \
                     -q $QOS \
-                    vllm_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
+                    --time=$TIME_LIMIT \
+                    --partition=$PARTITION_NAME \
+                    run_mp_vllm.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
                 JOB_IDS+=("$JOB_ID")
@@ -194,6 +200,8 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --error=run-%j.err \
                     -A $ACCOUNT \
                     -q $QOS \
+                    --time=$TIME_LIMIT \
+                    --partition=$PARTITION_NAME \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -268,6 +276,8 @@ for framework in "${FRAMEWORKS[@]}"; do
                     --error=run-%j.err \
                     -A $ACCOUNT \
                     -q $QOS \
+                    --time=$TIME_LIMIT \
+                    --partition=$PARTITION_NAME \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
