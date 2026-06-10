@@ -45,12 +45,8 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = [
-    "llama3_8b",
-]
-FRAMEWORKS = [
-    "accelerate",
-]
+MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
+FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
 DATASETS = ["alpaca"]
 
 ################################################################
@@ -59,21 +55,17 @@ DATASETS = ["alpaca"]
 console = Console()
 
 
-def expand_arch_gpu_configs(cfg: DictConfig) -> list[int]:
-    """Replicates your GPU_CONFIGS=(1 $GPUS_PER_NODE) logic."""
-    _p = list(cfg.framework.parallelism.keys())
-    if len(_p) > 1:
-        raise Exception(
-            f"Fuction expand_arch_gpu_configs() received List instead of Dict for cfg.framework.parallelism: '{cfg.framework.parallelism}'"
-        )
-    p_name = _p[0]
+def single_gpu_config(cfg: BenchmarkConfig) -> bool:
+    """Replicates your GPU_CONFIGS=(1 $GPUS_PER_NODE)
+    logic for experiments on 1 node that require also
+    single GPU run"""
     if (
-        cfg.get("single_gpu_also_valid")
+        cfg.machine.single_gpu_also_valid
         and (cfg.slurm.sbatch.nodes == 1)
-        and (cfg.framework.parallelism[p_name]["min_gpus"] == 1)
+        and (cfg.framework.parallelism[cfg.framework.parallelism_name]["min_gpus"] == 1)
     ):
-        return [1, cfg.slurm.sbatch.gpus_per_node]
-    return [cfg.slurm.sbatch.gpus_per_node]
+        return True
+    return False
 
 
 def generate_valid_combos(
@@ -87,6 +79,7 @@ def generate_valid_combos(
     # outpath = os.path.join(outpath, "bencharks_to_run")
     os.makedirs(outpath, exist_ok=True)
 
+    cfg_seen = set()
     with initialize_config_dir(
         config_dir=os.path.abspath(config_path), version_base="1.3"
     ):
@@ -154,12 +147,13 @@ def generate_valid_combos(
                     tmp_cfg.model.training.optimizer = optimizer
                     tmp_cfg.model.training.steps = steps
 
-                    gpus_per_node = expand_arch_gpu_configs(tmp_cfg)
+                    # Will bee used later to take care of configuration
+                    # of 1 node and 1 gpu
 
                     # Get min number of nodes to run based on model and hpc architecture
                     min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
                     candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
-                        tmp_cfg.slurm.sbatch.gpus_per_node,
+                        tmp_cfg.arch.node.gpus_per_node,
                         max_gpus_scale=tmp_cfg.model.max_gpus_scale,
                     )
                     nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
@@ -181,58 +175,78 @@ def generate_valid_combos(
                             + f"steps{steps}"
                             + ".yaml"
                         )
-                        # MAKE SURE BEFORE DELETE
-                        # run_path = os.path.join(
-                        #    outpath,
-                        #    parameters_combo,
-                        # )
-                        # os.makedirs(run_path, exist_ok=True)
-                        for g in gpus_per_node:
-                            if g == 1 and nodes == 1 and parallelism == "none":
-                                tmp_cfg.slurm.sbatch.gpus_per_node = 1
-                                tmp_cfg.slurm.sbatch.gres = "gpu:1"
-                            msg = f"\t· parallelism: {parallelism} | nodes:{nodes} | bs:{bs} | grad_accum:{grad_acc} | precision:{precision} | steps:{steps}"
 
-                            # MAKE SURE BEFORE DELETE
-                            # outpath_yaml = os.path.join(run_path, yaml_filename)
-                            passed, results_msg = rules.is_valid(tmp_cfg)
-                            if not passed:
-                                skipped.append([tmp_cfg, results_msg])
-                                msg += f"-> {RED}❌ Failed:{RESET}"
-                                raw_total += 1
-                                for f in results_msg:
-                                    msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
-                                print(msg)
-                                continue
-                            msg += f" --> {GREEN}✅ Passed!{RESET}"
-                            for s in results_msg:
-                                if s.reason == "":
-                                    continue
-                                # msg += (
-                                #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
-                                # )
+                        # By default, if config is using 1 node,
+                        # all cfg.arch.node.gpus_per_node will ne utilized
+                        # Unless, perallelism defines min_gpus = 1
+                        if single_gpu_config(tmp_cfg):
+                            tmp_cfg.slurm.sbatch.gpus_per_node = 1
+                            tmp_cfg.slurm.sbatch.gres = "gpu:1"
 
-                            print(msg)
-                            raw_total += 1
-                            tmp_cfg.id = (
-                                f"{cfg.machine.name}"
-                                + f"_{cfg.model.name}"
-                                + f"_{cfg.framework.name}"
-                                + f"_{cfg.dataset.name}"
-                                + f"_nodes-{nodes}"
-                                + f"_{parallelism}"
-                                + f"--bs{bs}"
-                                + f"-grad_accum{grad_acc}"
-                                + f"-prec{precision}"
-                                + f"-steps{steps}"
+                        total_gpus = (
+                            tmp_cfg.slurm.sbatch.gpus_per_node
+                            * tmp_cfg.slurm.sbatch.nodes
+                        )
+                        msg = (
+                            f"\t· parallelism: {parallelism}"
+                            + f" | nodes:{nodes}"
+                            + f" | gpus:{total_gpus}"
+                            + f" | bs:{bs}"
+                            + f" | grad_accum:{total_gpus}"
+                            + f" | precision:{precision}"
+                            + f" | steps:{steps}"
+                        )
+
+                        tmp_cfg.id = (
+                            f"{tmp_cfg.machine.name}"
+                            + f"_{tmp_cfg.model.name}"
+                            + f"_{tmp_cfg.framework.name}"
+                            + f"_{tmp_cfg.framework.parallelism_name}"
+                            + f"_{tmp_cfg.dataset.name}"
+                            + f"_nodes-{nodes}"
+                            + f"_gpus-{total_gpus}"
+                            + f"--bs{bs}"
+                            + f"-grad_accum{grad_acc}"
+                            + f"-prec{precision}"
+                            + f"-steps{steps}"
+                        )
+                        if tmp_cfg.id in cfg_seen:
+                            print(
+                                f"{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
                             )
+                            continue
+                        cfg_seen.add(tmp_cfg.id)
+                        print(cfg_seen)
+                        # MAKE SURE BEFORE DELETE
+                        # outpath_yaml = os.path.join(run_path, yaml_filename)
+                        passed, results_msg = rules.is_valid(tmp_cfg)
+                        if not passed:
+                            skipped.append([tmp_cfg, results_msg])
+                            msg += f"-> {RED}❌ Failed:{RESET}"
+                            raw_total += 1
+                            for f in results_msg:
+                                msg += (
+                                    f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                                )
+                            print(msg)
+                            continue
+                        msg += f" --> {GREEN}✅ Passed!{RESET}"
+                        for s in results_msg:
+                            if s.reason == "":
+                                continue
+                            # msg += (
+                            #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
+                            # )
 
-                            # MAKE SURE BEFORE DELETE
-                            # tmp_cfg.slurm.sbatch.chdir = run_path
-                            tmp_cfg.experiment.yaml_filename = yaml_filename
-                            # Resolve all yaml config parameter references before finish
-                            OmegaConf.resolve(tmp_cfg)
-                            valid.append(deepcopy(tmp_cfg))
+                        print(msg)
+                        raw_total += 1
+
+                        # MAKE SURE BEFORE DELETE
+                        # tmp_cfg.slurm.sbatch.chdir = run_path
+                        tmp_cfg.experiment.yaml_filename = yaml_filename
+                        # Resolve all yaml config parameter references before finish
+                        OmegaConf.resolve(tmp_cfg)
+                        valid.append(deepcopy(tmp_cfg))
 
     _print_summary(raw_total, valid, skipped)
     return valid, skipped
