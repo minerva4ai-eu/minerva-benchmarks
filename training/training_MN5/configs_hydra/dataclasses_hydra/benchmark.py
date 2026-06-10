@@ -65,7 +65,7 @@ class TrainArgsConfig:
 class MachineConfig:
     name: str = MISSING  # actual name of super computer running benchmarks
     name_pattern: str = MISSING  # configuration files naming convention pattern
-    modules: str = MISSING  # space separated modules to load
+    modules: List[str] = MISSING
     python_environment: str = MISSING
     singularity_container: str = MISSING
     singularity_binds: List[str] = MISSING

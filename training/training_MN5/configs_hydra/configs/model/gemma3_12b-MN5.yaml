@@ -1,0 +1,5 @@
+defaults:
+  - gemma3_12b
+  - _self_
+
+path: /gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-12b-it

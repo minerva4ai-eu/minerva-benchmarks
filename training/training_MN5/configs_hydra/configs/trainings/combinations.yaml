@@ -1,6 +1,6 @@
-batch_sizes: [1]
+batch_sizes: [1, 2]
 precisions: ["bf16"]
-grad_accums: [4]
+grad_accums: [1, 4]
 lr: [2e-5]
 optimizer: ["adamw"]
 gradient_checkpointing: [False]

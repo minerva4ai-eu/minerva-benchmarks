@@ -1,15 +1,15 @@
 #!/bin/bash
 
 #SBATCH --job-name=ACCELERATE_DYNAMIC
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 
 
 ##################################################
 ###           Activate Environment             ###
 ##################################################
 # Activate virtual environment using conda
-source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-# module load $MODULES
+# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
+eval "$LOAD_MODULES"
 # source activate $ENVIRONMENT_FINETUNING
 # export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
 # which python
@@ -22,10 +22,12 @@ source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
 ##################################################
 
 # Get Arguments
-LAUNCH_FOLDER=$1
+OUTPUT_DIR="${LAUNCH_FOLDER}/output"
+# Deprecated script arguments - provided by launch environment
+#LAUNCH_FOLDER=$1
 #DATASET=$2
 #DATASET_PATH=$3
-OUTPUT_DIR="${LAUNCH_FOLDER}/output"
+#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -34,9 +36,17 @@ echo "LAUNCH FOLDER CONTENTS: MAX_MODEL_LENGTH: ${MAX_MODEL_LENGTH}, GPUS_PER_NO
 
 
 # Export environment variables
-# export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
-export SLURM_CPU_BIND=none
-export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:512,expandable_segments:True
+export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+
+
+# Torchrun args
+export JOB_ID=${SLURM_JOB_ID}
+export NNODES=${SLURM_NNODES}
+export NPROC_PER_NODE=$GPUS_PER_NODE
+export NUM_PROCS=$((NNODES * NPROC_PER_NODE))
+export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
+export MASTER_PORT=29500
+export NODE_RANK=$SLURM_PROCID
 
 ##################################################
 
@@ -44,65 +54,44 @@ export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_m
 ###           Training Execution              ###
 ##################################################
 # Define GPU monitoring command.
-gpu_plots_monitor_command="python -m gpu_plots"
+singularity_prefix="singularity exec \
+    $SINGULARITY_ARGS \
+    $SINGULARITY_BINDS \
+    --home $LAUNCH_FOLDER \
+    $SINGULARITY_CONTAINER"
+echo "singularity prefix $singularity_prefix"
+
+
+gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
 # Start GPU monitoring in background
-$gpu_plots_monitor_command &
+$singularity_prefix $gpu_plots_monitor_command &
 monitor_pid=\$!
 
 # Optional: give the monitor time to initialize
 sleep 5
 
-# Decide number of processes based on GPU_NODE
-if [[ "$GPU_NODE" -eq 1 ]]; then
-    echo "Launching on 1 GPU"
-    accelerate launch \
-        --num_processes 1 \
-        --num_machines 1 \
-        --mixed_precision "$PRECISION" \
-        "$TRAIN_SCRIPT" \
-            --model $MODEL_PATH \
-            --data $DATASET_PATH \
-            --output_dir $OUTPUT_DIR \
-            --batch_size $BATCH_SIZE \
-            ${EPOCHS:+--epochs "$EPOCHS"} \
-            ${STEPS:+--max_steps "$STEPS"} \
-            --max_length $MAX_MODEL_LENGTH \
-            --precision $PRECISION \
-            --lr $LR \
-            --gradient_accumulation_steps $GRAD_ACCUM \
-            --dataloader_num_workers 32 \
-            --dataset $DATASET
-elif [[ "$GPU_NODE" -eq 4 ]]; then
-    echo "Launching on 4 GPUs (1 node)"
-    accelerate launch \
-        --num_processes 4 \
-        --num_machines 1 \
-        --mixed_precision "$PRECISION" \
-        "$TRAIN_SCRIPT" \
-            --model $MODEL_PATH \
-            --data $DATASET_PATH \
-            --output_dir $OUTPUT_DIR \
-            --batch_size $BATCH_SIZE \
-            ${EPOCHS:+--epochs "$EPOCHS"} \
-            ${STEPS:+--max_steps "$STEPS"} \
-            --max_length $MAX_MODEL_LENGTH \
-            --precision $PRECISION \
-            --lr $LR \
-            --gradient_accumulation_steps $GRAD_ACCUM \
-            --dataloader_num_workers 32 \
-            --dataset $DATASET
-else
-    echo "Error: GPU_NODE must be 1 or 4"
-    exit 1
-fi
-
-# Kill the GPU monitoring running in background 
+$singularity_prefix accelerate launch \
+    --num_processes 1 \
+    --num_machines 1 \
+    "$TRAIN_SCRIPT" \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --output_dir $OUTPUT_DIR \
+        --batch_size $BATCH_SIZE \
+        ${EPOCHS:+--epochs "$EPOCHS"} \
+        ${STEPS:+--max_steps "$STEPS"} \
+        --max_length $MAX_MODEL_LENGTH \
+        --precision $PRECISION \
+        --lr $LR \
+        --gradient_accumulation_steps $GRAD_ACCUM \
+        --dataloader_num_workers 8 \
+        --dataset "$DATASET"
+    
 kill -SIGTERM \"\$monitor_pid\"
-
 # Wait for the monitor to clean up and exit
-wait \"\$monitor_pid\
-
-
+wait "$monitor_pid"
+   
 echo "✅ Single Node job completed."
+exit 0
 

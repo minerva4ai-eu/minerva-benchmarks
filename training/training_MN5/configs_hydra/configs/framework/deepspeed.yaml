@@ -1,6 +1,6 @@
 name: deepspeed
 
-parallelism_name: ""
+parallelism_name: "" # Will be filled in during composing time
 parallelism:
   zero1: { min_gpus: 2 }
   zero2: { min_gpus: 2 }

@@ -21,7 +21,7 @@ def build_launch_folder(
     repeat_id: Optional[int] = None,
 ) -> Path:
 
-    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
     results_dir = os.path.join(base_dir.absolute(), runs_dir)
     machine_results_base = os.path.join(results_dir, cfg.machine.name)
     date_folder = os.path.join(
@@ -32,9 +32,9 @@ def build_launch_folder(
         date_folder,
         parameters_combo,
     )
+    experiment_config_path = os.path.join(combo_path, cfg.experiment.yaml_filename)
+    os.makedirs(combo_path, exist_ok=True)
     if dry:
-        experiment_config_path = os.path.join(combo_path, cfg.experiment.yaml_filename)
-        os.makedirs(combo_path, exist_ok=True)
         OmegaConf.save(cfg, experiment_config_path)
         return Path(experiment_config_path)
     launch_folder = Path("")
@@ -42,6 +42,9 @@ def build_launch_folder(
         run_folder = os.path.join(combo_path, run_id)
         launch_folder = Path(run_folder, f"launch-{repeat_id}")
         launch_folder.mkdir(parents=True, exist_ok=True)
+        if not os.path.exists(experiment_config_path):
+            OmegaConf.save(cfg, experiment_config_path)
+
     else:
         raise ValueError(
             f"Argument 'repeat_id' must be provided! Instead got '{repeat_id}'"
@@ -85,10 +88,14 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     )
     return {
         **os.environ,
-        "MODULES": cfg.machine.modules,
+        "LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}",
         "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
-        "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds),
-        "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args),
+        "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+        if cfg.machine.singularity_binds
+        else "",
+        "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
+        if cfg.machine.singularity_args
+        else "",
         "NODES": str(s.sbatch.nodes),
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
         "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
@@ -158,8 +165,8 @@ def submit_job(
     ]
     # print("\n".join(cmd))
     job_cfg = (
-        f"{m.name}-{f.name}-{cfg.dataset.name}"
-        + f"-Par_{f.parallelism_name}"
+        f"{m.name}-{f.name}-{f.parallelism_name}"
+        + f"-{cfg.dataset.name}"
         + f"-Nodes_{s.sbatch.nodes}-GPUs_{s.sbatch.gpus_per_node * s.sbatch.nodes}"
         + f"-Prec_{t.precision}"
         + f"-BS_{t.batch_size}"

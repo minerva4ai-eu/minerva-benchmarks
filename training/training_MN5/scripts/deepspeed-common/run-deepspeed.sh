@@ -147,7 +147,7 @@ train_command="accelerate launch \
       --precision $PRECISION \
       --lr $SCALED_LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
-      --dataloader_num_workers 32 \
+      --dataloader_num_workers 8 \
       --dataset '$DATASET' \
       --warmup_ratio 0.1 \
       --deepspeed_config_file  $deepspeed_config_path \
@@ -179,7 +179,7 @@ train_command="deepspeed \
 # Launch Run
 srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $gpu_plots_monitor_command &
+    $singularity_prefix $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize
