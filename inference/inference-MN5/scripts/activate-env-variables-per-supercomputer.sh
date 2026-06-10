@@ -22,7 +22,8 @@ case "$MACHINE" in
         # export SINGULARITY_EXEC_COMMAND="singularity exec -B /gpfs:/gpfs --nv -C $SGLANG_IMAGE"
         # export SINGULARITY_EXEC_COMMAND="singularity exec -B /gpfs:/gpfs --no-home --nv -C $SGLANG_IMAGE"
         export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
-        export ADDITIONAL_SINGULARITY_ARGS="--no-home --nv -C"
+        export ADDITIONAL_SINGULARITY_ARGS="--no-home --nv"
+        # -C only works with SGLang.
         
         # CUDA DEVICES
         export CUDA_VISIBLE_DEVICES="0,1,2,3"

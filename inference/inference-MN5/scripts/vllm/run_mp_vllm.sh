@@ -68,10 +68,6 @@ echo "Head node: $head_node ($head_node_ip)"
 TP_SIZE=$TENSOR_PARALLEL
 PP_SIZE=$PIPELINE_PARALLEL
 MAX_MODEL_LEN=${MAX_MODEL_LEN:-8192}
-KV_CACHE_DTYPE=${KV_CACHE_DTYPE:-fp8}
-GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.95}
-MAX_NUM_SEQS=${MAX_NUM_SEQS:-32}
-MAX_NUM_BATCHED_TOKENS=${MAX_NUM_BATCHED_TOKENS:-32768}
 ENABLE_PREFIX_CACHING=${ENABLE_PREFIX_CACHING:-0}
 ENABLE_CHUNKED_PREFILL=${ENABLE_CHUNKED_PREFILL:-0}
 ENABLE_EXPERT_PARALLEL=${ENABLE_EXPERT_PARALLEL:-0}
@@ -91,8 +87,8 @@ if [ -n "$NODE_COUNT" ] && [ "$NODE_COUNT" -gt 0 ]; then
     NODES=( "${NODES[@]:0:$NODE_COUNT}" )
 fi
 
-NUM_NODES=${#NODES[@]}
-NODELIST=$(IFS=,; echo "${NODES[*]}")
+export NUM_NODES=${#NODES[@]}
+export NODELIST=$(IFS=,; echo "${NODES[*]}")
 export MASTER_ADDR="${NODES[0]}"
 
 
@@ -149,14 +145,25 @@ srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=AL
         echo "[$(hostname)][RANK $NODE_RANK] NCCL settings: NET=$NCCL_NET NVLS_ENABLE=$NCCL_NVLS_ENABLE IB_TIMEOUT=$NCCL_IB_TIMEOUT IB_RETRY_CNT=$NCCL_IB_RETRY_CNT SOCKET_IFNAME=$NCCL_SOCKET_IFNAME IB_HCA=$NCCL_IB_HCA IB_DISABLE=$NCCL_IB_DISABLE DEBUG=$NCCL_DEBUG DEBUG_SUBSYS=$NCCL_DEBUG_SUBSYS P2P_DISABLE=$NCCL_P2P_DISABLE"
       fi
 
-      main_args=('"$MODEL_PATH"' \
+      if [ "$NUM_NODES" -gt 1 ]; then
+          main_args=('"$MODEL_PATH"' \
             --tensor-parallel-size '"$TP_SIZE"' \
             --pipeline-parallel-size '"$PP_SIZE"' \
             --max-model-len '"$MAX_MODEL_LEN"' \
             --nnodes '"$NUM_NODES"' \
             --master-addr '"$MASTER_ADDR"' \
             --master-port '"$MASTER_PORT"' \
-      )
+          )
+      else
+          main_args=('"$MODEL_PATH"' \
+            --tensor-parallel-size '"$TP_SIZE"' \
+            --pipeline-parallel-size '"$PP_SIZE"' \
+            --max-model-len '"$MAX_MODEL_LEN"' \
+            --disable-custom-all-reduce \
+          )
+      fi
+
+
       if [ "$NODE_RANK" -eq 0 ]; then
           # Head node: runs the API server
           vllm serve "${main_args[@]}" \
@@ -251,4 +258,3 @@ sleep 10
 
 
 echo "Benchmark finished"
-

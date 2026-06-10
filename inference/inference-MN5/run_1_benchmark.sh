@@ -49,7 +49,7 @@ for framework in "${FRAMEWORKS[@]}"; do
             # CPUS_PER_NODE=$TOTAL_CPUS
             # VRAM_PER_NODE=$((GPUS_PER_NODE * VRAM_PER_GPU))
             # TOTAL_VRAM=$((VRAM_PER_NODE * NODES))
-            TENSOR_PARALLEL=$GPUS_PER_NODE
+            TENSOR_PARALLEL=$GPU_NODE
             PIPELINE_PARALLEL=$NODES
 
             BASE_FOLDER="results/${framework}/${dataset}/${model}"
@@ -95,7 +95,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                 cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
 
                 cp scripts/vllm/run_mp_vllm.sh "$LAUNCH_FOLDER"
-                cp scripts/vllm/wrapper_singularity.sh "$LAUNCH_FOLDER"
+                # cp scripts/vllm/wrapper_singularity.sh "$LAUNCH_FOLDER"
 
                 cd "$LAUNCH_FOLDER" || exit 1
 
