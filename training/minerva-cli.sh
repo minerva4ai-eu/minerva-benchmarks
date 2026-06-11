@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CLI_CONTAINER_PATH=/home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/envs/uv/cuda128-flash-attn/singularity_uv-runtime.sif
+CLI_CONTAINER_PATH="./envs/cli/singularity-uv.sif"
 
 module -q load singularity
 cli_args="$@"
