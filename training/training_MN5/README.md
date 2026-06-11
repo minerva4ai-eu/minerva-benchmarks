@@ -1,303 +1,287 @@
-# 🧠 Training & Fine-Tuning Benchmarks
+# 🧠 MINERVA Training & Fine-Tuning Benchmarks
 
-In addition to inference benchmarks, this repository also supports training and fine-tuning benchmarks for large language models using PyTorch Distributed, FSDP, and HuggingFace Accelerate.
+LLM training and fine-tuning benchmarks for HPC supercomputers, part of the [MINERVA](https://minerva-project.eu/) project. Designed to evaluate large language model training performance on BSC's MareNostrum 5 and other HPC systems.
 
-These benchmarks are designed to evaluate:
-* Total Time to Train or Fine-tune
-* Training throughput
-* Memory consumption
-* GPU utilization
-* Scaling behavior (single-GPU, DDP, FSDP)
+These benchmarks measure:
+- **Total Time to Train / Fine-tune** — End-to-end wall-clock time
+- **Training throughput** — Tokens per second, TFLOPs per GPU
+- **Memory consumption** — GPU VRAM usage per parallelism strategy
+- **GPU utilization** — Power draw, memory bandwidth, compute utilization
+- **Scaling behavior** — Single-GPU → DDP → FSDP → ZeRO comparison
 
-## 📁 Training Benchmark Project Structure
+## 📚 Documentation
 
-```text
-.
-├── configs/
-│   ├── config.json                          # Global benchmark configuration
-│   ├── config_datasets_handlers_map.py      # Maps datasets to Python handler classes
-│   ├── config_datasets_paths_map.json       # Dataset name → path mapping
-│   ├── model_parallelism_config.json        # DDP/FSDP/single-GPU configs
-│   ├── model_type_directories_map.json      # Model type → filesystem path
-│   └── model_type_map.json                  # Model identifier → model type
+| Topic | README |
+|-------|--------|
+| **Configuration System** (Hydra schemas, YAML configs, constraint validation) | [configs_hydra/README.md](configs_hydra/README.md) |
+| **Training Scripts** (launchers, entry points, shared code, utilities) | [scripts/README.md](scripts/README.md) |
+| **SLURM Job Submission** (CLI, job lifecycle, monitoring) | [scripts/slurm/README.md](scripts/slurm/README.md) |
+| **Environment Management** (Singularity containers, uv, CUDA versions) | [envs/README.md](envs/README.md) |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  User invokes: ./minerva-cli.sh run --config-name base-MN5      │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  configs_hydra/hydra_app.py                                     │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. Compose BenchmarkConfig from YAML + overrides        │    │
+│  │    (model, framework, dataset, parallelism)             │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 2. Validate with constraint rules                       │    │
+│  │    (GPU floor/ceiling, framework support, memory)       │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 3. Expand training combos (batch_size × precision × LR) │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  scripts/slurm/submitter.py                                     │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 4. Build launch folder: benchmark-runs/{machine}/{date}/ │    │
+│  │                        {model}/{framework}/.../           │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 5. Copy scripts (framework + shared) to launch folder   │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 6. Build env dict (MODEL, DATASET, PARALLELISM, etc.)   │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Singularity Container (envs/uv/cuda128-flash-attn/)            │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 7. sbatch → SLURM schedules job on compute nodes        │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 8. Launcher script runs inside container:               │    │
+│  │    accelerate/torchrun/deepspeed launch → training      │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ 9. GPU monitoring (gpu_plots.py) runs in background     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Results                                                        │
+│  ├── benchmark-runs/{machine}/{date}/.../launch-{R}/output/    │
+│  │   ├── checkpoints/                                          │    │
+│  │   ├── metrics.json                                          │    │
+│  │   └── profiler/{job_id}/gpu_plots.png                       │    │
+│  └── generateSummaryTable.py → full_benchmark_summary_*.csv   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📦 Supported Frameworks & Parallelism
+
+| Framework | Single-GPU | DDP | FSDP | ZeRO-1 | ZeRO-2 | ZeRO-3 | ZeRO-3-Offload |
+|-----------|:----------:|:---:|:----:|:------:|:------:|:------:|:--------------:|
+| **HuggingFace Accelerate** | ✅ | ✅ | ✅ | — | — | — | — |
+| **PyTorch TorchRun** | ✅ | ✅ | ✅ | — | — | — | — |
+| **Microsoft DeepSpeed** | — | — | — | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## 📁 Project Structure
+
+```
+training_MN5/
+├── configs_hydra/                    # Hydra-based configuration system
+│   ├── README.md                     # ← See configs_hydra/README.md
+│   ├── hydra_app.py                  # Orchestrator: composition + validation
+│   ├── dataclasses_hydra/            # Python dataclass schemas
+│   ├── constraints/                  # Rule-based validation
+│   └── configs/                      # YAML config files
+│       ├── base.yaml / base-MN5.yaml # Root configs
+│       ├── model/                    # Model definitions
+│       ├── framework/                # Framework specs
+│       ├── dataset/                  # Dataset definitions
+│       ├── slurm/                    # SLURM batch config
+│       ├── trainings/                # Training hyperparameter combos
+│       └── arch/                     # HPC architecture specs
 │
-├── datasets/
-│   ├── alpaca-cleaned/
-│   │   └── alpaca_data_cleaned.json
-│   ├── squad_v2/
-│   │   ├── train-00000-of-00001.parquet
-│   │   └── validation-00000-of-00001.parquet
-│   └── handlers/
-│       ├── AlpacaHandler.py                 # Dataset preprocessing logic
-│       └── SquadV2Handler.py
+├── scripts/                          # Training scripts & utilities
+│   ├── README.md                     # ← See scripts/README.md
+│   ├── shared/                       # Framework-agnostic code
+│   │   ├── custom_train.py           # CustomTrainer + MegatronFlopsCallback
+│   │   ├── data.py                   # Dataset loading & preprocessing
+│   │   └── utils.py                  # print_rank, count_parameters, timed
+│   ├── accelerate-common/            # HuggingFace Accelerate
+│   ├── torchrun-common/              # PyTorch native distributed
+│   ├── deepspeed-common/             # Microsoft DeepSpeed
+│   ├── slurm/                        # SLURM CLI (see scripts/slurm/README.md)
+│   ├── activate-env-variables-per-supercomputer.sh
+│   ├── utils.sh                      # Shell utilities
+│   └── gpu_plots.py                  # GPU utilization plotting
 │
-├── envs-yaml/
-│   └── fine-tuning-env.yaml                 # Environment for training benchmarks
+├── envs/                             # Environment management
+│   ├── README.md                     # ← See envs/README.md
+│   ├── uv/                           # uv + Singularity containers
+│   │   ├── cuda124-flash-attn/       # CUDA 12.4
+│   │   └── cuda128-flash-attn/       # CUDA 12.8
+│   └── cli/                          # CLI environment
 │
-├── scripts/
-│   ├── accelerate-common/
-│   │   ├── custom_train.py                  # Shared CustomTrainer class
-│   │   ├── finetune-none.py                 # Single-GPU training
-│   │   ├── finetune-ddp.py                  # DDP training
-│   │   ├── finetune-fsdp.py                 # FSDP training
-│   │   ├── run-none.sh                      # Launcher (single-GPU)
-│   │   ├── run-ddp.sh                       # Launcher (DDP)
-│   │   ├── run-fsdp.sh                      # Launcher (FSDP)
-│   │   ├── gpu_monitor.py                   # GPU usage monitoring
-│   │   └── utils.py
-│   │
-│   ├── torchrun-common/
-│   │   ├── custom_train.py                  # Shared CustomTrainer class
-│   │   ├── finetune-none.py
-│   │   ├── finetune-ddp.py
-│   │   ├── finetune-fsdp.py
-│   │   ├── run-none.sh
-│   │   ├── run-ddp.sh
-│   │   ├── run-fsdp.sh
-│   │   ├── gpu_monitor.py
-│   │   └── utils.py
-│   │
-│   ├── gpu_plots.py                         # GPU utilization plotting
-│   └── utils.sh
-│
-├── .env                                     # Environment variables
-├── .env-bsc-mn5-acc                         # Environment variables BSC MN5 ACC partition
-├── generateSummaryTable.py                  # Aggregates training benchmark results
-├── run_1_benchmark.sh                       # 1 benhcmark test for running the training benchmarks
-├── run_all_benchmarks.sh                    # Entry point for training benchmarks
-└── README.md                                # Project overview
-
+├── minerva-cli.sh                    # CLI entry point (wraps Singularity)
+├── generateSummaryTable.py           # Aggregate benchmark results
+├── generateSummaryTablev2.py         # Alternative results aggregator
+└── README.md                         # ← This file
 ```
 
-## 📦 Supported Training Frameworks
+---
 
-The training benchmarks support two frameworks:
+## 🚀 Quick Start
 
-🔹 HuggingFace Accelerate
+### 1. Build the Singularity Container
 
-Easier multi-GPU and multi-node setup
-
-Supports:
-* Single-GPU
-* Distributed Data Parallel (DDP)
-* Fully Sharded Data Parallel (FSDP)
-
-Scripts are located in:
 ```bash
-./scripts/accelerate-common/
+cd envs/uv/cuda128-flash-attn/
+singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
 ```
 
-🔹 TorchRun Distributed
-* Lower-level control over DDP and FSDP
-* Useful for detailed performance analysis
+See [envs/README.md](envs/README.md) for full environment management details.
 
-Scripts are located in:
-```bash
-./scripts/torchrun-common/
+### 2. Configure for Your Machine
+
+Edit `configs_hydra/configs/base-MN5.yaml` (or create a machine-specific variant):
+
+```yaml
+machine:
+  name: bsc-mn5-acc
+  modules: singularity jq cuda/12.1 miniforge
+  singularity_container: /path/to/singularity_uv-runtime.sif
+  singularity_binds:
+    - "--bind /gpfs/scratch"
+  singularity_args:
+    - "--nv"
 ```
 
+Ensure `scripts/activate-env-variables-per-supercomputer.sh` has correct NCCL/CUDA settings for your cluster.
 
-### 📊 Datasets & Handlers
+### 3. Run Benchmarks
 
-Datasets are decoupled from training logic using dataset handlers.
-
-#### Dataset Handlers
-
-Defined in:
 ```bash
-./configs/config_datasets_handlers_map.py
-```
-Each dataset handler:
-* Loads raw data
-* Applies preprocessing
-* Formats samples for training
+# Dry run — generate configs without submitting
+./minerva-cli.sh run --dry-run --config-name base-MN5
 
-Examples:
-* AlpacaHandler.py → Instruction fine-tuning
-* SquadV2Handler.py → Question answering
+# Submit all valid jobs
+./minerva-cli.sh run --config-name base-MN5
 
-#### Dataset Paths
-
-Defined in:
-```bash
-./configs/config_datasets_paths_map.json
+# Monitor running jobs
+./minerva-cli.sh monitor
 ```
 
-## ⚙️ Setup Instructions
-
-### 1. 🔧 Clone the repository
+### 4. Generate Summary
 
 ```bash
-# Clone git repository
-git clone https://
-
-# Copy inference data from MN5 to your Machine Name.
-cp -R ./training-minerva-benchmarks/training-MN5/ ./training-minerva-benchmarks/training-LEONARDO/
-
-# Move inside your machine folder.
-cd ./training-minerva-benchmarks/training-LEONARDO/
-
-# You can push code and results to the git repository inside your Machine folder.
-# git push
-```
-
-### 2. 🐍 Create Training Environments
-You will need 1 Conda/Miniforge/Python environments for all frameworks. You can optionally install all to a specific path.
-
-| Replace /your/envs/path/ with your desired directory for isolated envs (e.g., ~/model-benchmark-envs/).
-
-```bash
-# Set a path to store all environments
-ENV_DIR="/your/envs/path/"
-
-# Create fine-tuning environment # Adapt that command if conda is not supported in your supercomputer
-# module load miniforge
-conda env create --prefix ${ENV_DIR}/fine-tune-dev -f ./envs-yaml/fine-tune-dev-env.yaml
-
-```
-
-You will need to update your `.env-$MACHINE` file.
-
-You may activate an env with:
-```bash
-# Export environment variables
-source .env-$MACHINE
-
-conda activate ${ENVIRONMENT_FINETUNING}         # or the corresponding one
-   # or
-source activate ${ENVIRONMENT_FINETUNING}   # MN5
-# Check the file `activate-env-per-supercomputer.sh`
-# and change how you are activating the environment in your cluster depending on the $MACHINE variable.
-```
-* **IMPORTANT:** Check the file `activate-env-per-supercomputer.sh` and change how you are activating the environment in your cluster depending on the `MACHINE` variable.
-
-
-
-
-
-## ▶️ Running Training Benchmarks
-
-### 1. Adjust Configurations
-Before running, check or modify:
-
-* **configs/config.json:** Global settings (not update).
-* **configs/config_datasets_paths_map.json:** Path to each dataset file.
-* **configs/model_parallelism_config.json:** Setups and configurations to run for each model and parallelism type (distinct `batch sizes`, `max model length`, `steps`, `epochs` or `precion type` to iterate).
-* **configs/model_type_directories_map.json:** Model type directories mapping.
-* **configs/model_type_map.json:** Model identifier-to-type mapping (not update). 
-   ⚠️ WARNING: Make sure you have the models downloaded in each corresponding model type. Example contents:
-      - **Text Generation:** "Llama-3.1-8B-Instruct", "Llama-3.1-405B", "gemma-3-12b-it", "Mistral-7B-Instruct-v0.3".
-      - **Vision:** None
-* **scripts/activate-env-per-supercomputer.sh:** Define how to activate your environment in your cluster.
-* **scripts/activate-env-variables-per-supercomputer.sh:** Define your needed variables for running the benchmarks in your cluster.
-
-
-#### 1.1. 📥 Downloading Models
-
-Before running benchmarks, ensure all models listed in your `configs/model_type_map.json` are downloaded and available in the correct directories, as specified in `configs/model_type_directories_map.json`.
-
-Each model should be placed in a folder that matches its expected type. For example:
-
-- **Text Generation Models** → LLaMA, Gemma, Mistral.
-- **Vision Models** → Currently not required (none defined in this setup).
-
-> ⚠️ **WARNING:** Mismatches between model identifiers and their expected directories will cause benchmark failures.
-
-You can download HuggingFace models manually or using the CLI:
-
-```bash
-# Example: Download a model manually into the vllm directory
-# You need to create and activate an environment that has huggingface installed.
-#      pip install huggingface-hub
-mkdir -p /path/to/text-generation/Llama-3.1-8B-Instruct
-
-huggingface-cli download meta-llama/Llama-3.1-8B-Instruct --repo-type model --local-dir /path/to/text-generation/Llama-3.1-8B-Instruct --token hf_TOKEN
-
-```
-
-**Note:** You need to accept the llama agreement to share your contact information to access llama models. The information you provide will be collected, stored, processed and shared in accordance with the Meta Privacy Policy. 
-
-
-
-### 2. 🏁 Run a Simple Benchmark
-
-⚠️ **WARNING:** Ensure `.env-$MACHINE` is set properly if using any custom environment variables. You will need to change PATHS, MODULES, ACCOUNT, etc... Inside that `.env-$MACHINE` specific file.
-
-⚠️ **WARNING:** Ensure changing the ENVIRONMENT VARIABLES Section inside the `run_all_benchmarks.sh` script (change variables such as `MACHINE`, `MACHINE_TYPE` and the test that you want to run). First of all, try the `run_1_benchmark.sh` in your supercomputer. Once it's running OK, proceed with the `run_all_benchmarks.sh`.
-
-⚠️ **WARNING:** Check how we are activating environments in MN5 (e.g. source activate $ENVIRONMENT_FINETUNING) inside the scripts of **scripts/accelerate-common/** , **scripts/torchrun-common/** or **scripts/deepspeed-common** and change it accordingly to your cluster.
-
-The `run_1_benchmark.sh` script will:
-* Set up the required environment.
-* Launch `accelerate` benchmark and `Llama-3.1-8B-Instruct`.
-* Save results to the `results/` folder.
-
-```bash
-# Run a simple benchmark for testing
-bash run_1_benchmark.sh
-```
-
-### 3. 🏁 Run All Benchmarks
-
-Once the Simple Benchmark is running OK for each parallelism type (`none`,`ddp`,`fsdp`), each model (`gemma-3-1b-it`,`Llama-3.1-8B-Instruct`,`Mistral-7B-Instruct-v0.3`,`Llama-3.3-70B-Instruct`) and each dataset (`alpaca` and `squadv2`). We can try to run all benchmarks following those instructions:
-
-⚠️ **WARNING:** Ensure `.env-$MACHINE` is set properly if using any custom environment variables. You will need to change PATHS, MODULES, ACCOUNT, etc... Inside that `.env-$MACHINE` specific file.
-
-⚠️ **WARNING:** Ensure `scripts/activate-env-per-supercomputer.sh` and `scripts/activate-env-variables-per-supercomputer.sh` are set properly if using any custom environment variables or conda/python/miniforge environments. 
-
-⚠️ **WARNING:** Ensure changing the ENVIRONMENT VARIABLES Section inside the `run_all_benchmarks.sh` script. First of all, try the `run_1_benchmark.sh` in your supercomputer. Once it's running OK, proceed with the `run_all_benchmarks.sh`.
-
-⚠️ **WARNING:** Check how we are activating environments in MN5 (e.g. source activate $ENVIRONMENT_VLLM) inside the scripts of **scripts/accelerate-common/**, **scripts/torchrun-common/**or **scripts/deepspeed-common** and change it accordingly to your cluster.
-
-
-The `run_all_benchmarks.sh` script will:
-
-* Set up the required environment.
-* Launch benchmarks for all supported backends.
-* Save results to the `results/` folder.
-
-```bash
-# Run the complete benchmark suite
-bash run_all_benchmarks.sh
-```
-
-This script internally calls:
-* scripts/accelerate-common/run-ddp.sh
-* scripts/accelerate-common/run-fsdp.sh
-* scripts/accelerate-common/run-none.sh
-* scripts/torchrun-common/run-*.sh
-* scripts/deepspeed-common/run-*.sh
-
-
-### 📊 Training Benchmark Results Summary
-After the benchmarks are done, generate a summary table:
-
-```bash
-# Export environment variables
-source .env-$MACHINE
-
-# Activate environment.
-# IMPORTANT! Change it accordingly in your cluster.
-module load miniforge
-source activate ${ENVIRONMENT_FINETUNING}
-
-# Run the generation of the Table.
 python generateSummaryTable.py
-
 ```
 
-This will output a consolidated report from the files in `results/`.
-In MN5:
-   * `full_benchmark_training_summary_MareNostrum5_ACC.csv`
+---
 
-⚠️ IMPORTANT! Once you have run all benchmarks, make sure you `push` all your changes in your machine folder inside git repository.
+## ⚙️ Configuration
+
+The benchmark system uses [Hydra](https://hydra.cc/) for config composition. Key configuration files:
+
+| File | Purpose |
+|------|---------|
+| `configs_hydra/configs/base-MN5.yaml` | Machine-specific base config (container path, SLURM settings) |
+| `configs_hydra/configs/model/*.yaml` | Model definitions (architecture dims, GPU requirements) |
+| `configs_hydra/configs/framework/*.yaml` | Framework specs (parallelism, script paths) |
+| `configs_hydra/configs/dataset/*.yaml` | Dataset definitions (path, task type, seq length) |
+| `configs_hydra/configs/trainings/combinations.yaml` | Training hyperparameters (batch size, precision, LR, etc.) |
+| `configs_hydra/configs/slurm/MN5.yaml` | SLURM batch directives (account, QoS, partition, GPUs) |
+
+See [configs_hydra/README.md](configs_hydra/README.md) for full configuration reference.
+
+### Modifying the Generator
+
+Edit the `MODELS`, `FRAMEWORKS`, `DATASETS` lists in `configs_hydra/hydra_app.py` to control which combinations are generated:
+
+```python
+MODELS = ["llama3_8b", "mistral_7b"]
+FRAMEWORKS = ["accelerate", "deepspeed"]
+DATASETS = ["alpaca", "squadv2"]
+```
+
+---
+
+## 📊 Results
+
+### Output Structure
+
+```
+benchmark-runs/
+└── {machine}/                    # e.g., bsc-mn5-acc
+    └── {date}/                   # e.g., 10-06-2026
+        └── {model}/{framework}/{dataset}/
+            └── nodes-{N}/
+                └── run_id-{N}/
+                    └── launch-{R}/
+                        └── output/
+                            ├── checkpoints/
+                            ├── metrics.json
+                            └── profiler/
+                                └── gpu_plots.png
+```
+
+### Aggregation
+
+```bash
+python generateSummaryTable.py    # Standard aggregation
+python generateSummaryTablev2.py  # Alternative aggregation
+```
+
+Produces CSV files like `full_benchmark_summary_{machine}.csv`.
+
+---
+
+## 🖥️ Supported Machines
+
+| Machine | Partition | GPU | NCCL Settings |
+|---------|-----------|-----|---------------|
+| **MareNostrum 5 (BSC)** | `acc` | AMD MI300A | IB, `ib0-ib3`, `mlx5_0-mlx5_5` |
+| **Leonardo (CINECA)** | — | NVIDIA | `COMPILER=nvhpc`, CUDA 12.1 |
+
+Machine-specific settings are defined in `scripts/activate-env-variables-per-supercomputer.sh`.
 
 ---
 
 ## ✅ Requirements
-* Miniconda/Anaconda/Miniforge
-* GPU and drivers compatible with Accelerate/vLLM
-* Python 3.10+ recommended
+
+- **HPC Cluster** with SLURM job scheduler
+- **GPU** compatible with CUDA 12.x or ROCm (AMD MI300A)
+- **Singularity/Apptainer** for container execution
+- **Python 3.11** (provided inside containers)
+- **InfiniBand** networking (for multi-node NCCL communication)
+
+---
+
+## 📖 Detailed Documentation
+
+| Topic | Where to Look |
+|-------|---------------|
+| Config schemas & YAML files | [configs_hydra/README.md](configs_hydra/README.md) |
+| Constraint validation rules | [configs_hydra/README.md](configs_hydra/README.md#2-constraints-) |
+| Adding new models/datasets/frameworks | [configs_hydra/README.md](configs_hydra/README.md#adding-a-new-model) |
+| Training scripts & launchers | [scripts/README.md](scripts/README.md) |
+| SLURM CLI & job submission | [scripts/slurm/README.md](scripts/slurm/README.md) |
+| Singularity containers & uv | [envs/README.md](envs/README.md) |
+| GPU monitoring & plotting | [scripts/README.md](scripts/README.md#gpu_plotspy---gpu-utilization-plotting) |
+| Shared training code | [scripts/README.md](scripts/README.md#shared-code-shared) |
+
+---
+
+## 📄 License
+
+See [LICENSE](LICENSE) for project licensing information.
 * Accelerate, Torchrun, Deepspeed, Transformers
 
 ---
