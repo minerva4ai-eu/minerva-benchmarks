@@ -9,7 +9,7 @@
 
 
 Bootstrap: docker
-From: python:3.11-slim
+From: nvidia/cuda:12.8.1-runtime-ubuntu22.04
 
 %labels
     Author          Alexandros Paliouras
@@ -18,52 +18,61 @@ From: python:3.11-slim
     Description     MINERVA training benchmarks python environment built with uv from pyproject.toml
                     Envrironment choice is tailored to MareNostrum5
     InstallMethod   uv
+    Python          3.11
 
 %files
-    pyproject.toml /opt/uv-env/pyproject.toml
-    uv.lock /opt/uv-env/uv.lock
+    pyproject.toml /app/uv-env/pyproject.toml
+    uv.lock /app/uv-env/uv.lock
 %post
-    _CWD="/opt/uv-env"
-    
+    _CWD="/app/uv-env"
     TOML_PATH="$_CWD/pyproject.toml"
-    #ENV_PATH="/opt/uv-env/.venv"
+
+    mkdir -p "$_CWD"
+    cd "$_CWD"
 
     echo "==> Installing system dependencies (including curl) in ONE pass..."
     # 1. Install minimal system dependencies
     apt-get update && apt-get install -y --no-install-recommends --allow-change-held-packages \
-        git curl build-essential 
-
+        python3-pip python3-dev \
+        git curl \
+        build-essential libnccl2 libnccl-dev \
+        cuda-nvcc-12-8
 
     # 2. install uv env tool
     echo "==> Installing uv via pip..."
-    pip install --upgrade pip uv
+    pip install --upgrade pip
+    pip install uv
+    uv --version
 
-    cd "$_CWD"
+    # Clean up apt cache only at the very end
+    rm -rf /var/lib/apt/lists/*
+
+    echo "==> Installing packages from pyproject.toml with uv..."
+
+    # Disable development dependencies
+    export UV_PYTHON_INSTALL_DIR=/app/uv-python   # ← not under /root
     export UV_NO_DEV=1
+    cd $_CWD
     uv sync --locked
-    echo "uv sync exit code: $?"
-    ls -la /opt/uv-env/
-    
-    # system python is already at /usr/local/bin/python3
-    # just add the missing `python` alias
-    #ln -sf /usr/local/bin/python3 /usr/local/bin/python
 
-    python --version   # verify at build time
 
-    echo "==> Done. Environment installed at /opt/uv-env/.venv"
+    ln -sf $UV_PYTHON_INSTALL_DIR/cpython-3.11-linux-x86_64-gnu/bin/python3.11 /usr/local/bin/python
+    ln -sf $UV_PYTHON_INSTALL_DIR/cpython-3.11-linux-x86_64-gnu/bin/python3.11 /usr/local/bin/python3
+
+
+    echo "==> Done. Environment installed at /app/uv-env/.venv"
 
 %environment
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
     export UV_SYSTEM_PYTHON=1
-    export PATH=/app/uv-env/.venv/bin:/usr/.local/bin:$PATH
+    export PATH=/app/uv-env/.venv/bin:/usr/local/bin:$PATH
     export UV_PROJECT_ENVIRONMENT=/app/uv-env/.venv
 
 %runscript
     exec python "$@"
 
 %test
-    cd /app/uv-env/.venv
     echo "--- Python version ---"
     python --version
     echo "--- uv version ---"
