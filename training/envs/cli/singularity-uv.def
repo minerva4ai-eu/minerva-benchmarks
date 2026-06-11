@@ -20,13 +20,13 @@ From: python:3.11-slim
     InstallMethod   uv
 
 %files
-    pyproject.toml /opt/uv-env/pyproject.toml
-    uv.lock /opt/uv-env/uv.lock
+    pyproject.toml /app/uv-env/pyproject.toml
+    uv.lock /app/uv-env/uv.lock
 %post
-    _CWD="/opt/uv-env"
+    _CWD="/app/uv-env"
     
     TOML_PATH="$_CWD/pyproject.toml"
-    #ENV_PATH="/opt/uv-env/.venv"
+    #ENV_PATH="/app/uv-env/.venv"
 
     echo "==> Installing system dependencies (including curl) in ONE pass..."
     # 1. Install minimal system dependencies
@@ -42,7 +42,7 @@ From: python:3.11-slim
     export UV_NO_DEV=1
     uv sync --locked
     echo "uv sync exit code: $?"
-    ls -la /opt/uv-env/
+    ls -la /app/uv-env/
     
     # system python is already at /usr/local/bin/python3
     # just add the missing `python` alias
@@ -50,7 +50,7 @@ From: python:3.11-slim
 
     python --version   # verify at build time
 
-    echo "==> Done. Environment installed at /opt/uv-env/.venv"
+    echo "==> Done. Environment installed at /app/uv-env/.venv"
 
 %environment
     export LC_ALL=C.UTF-8
