@@ -42,14 +42,10 @@ case "$MACHINE" in
         export NCCL_SOCKET_IFNAME=hsn
         export NCCL_NET_GDR_LEVEL=PHB
 
-        export HSA_ENABLE_SDMA=0
-
-        export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
-        export VLLM_ROCM_USE_AITER=0
         export SGLANG_USE_AITER=0
 
         # GPU visibility
-        export HIP_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
+        export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
         ;;
 
     cines-adastra-mi300)
@@ -62,7 +58,7 @@ case "$MACHINE" in
         export PYTORCH_HIP_ALLOC_CONF=expandable_segments:True
 
         # GPU visibility (4 APU)
-        export HIP_VISIBLE_DEVICES="0,1,2,3"
+        export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
         ;;
         
     *)
