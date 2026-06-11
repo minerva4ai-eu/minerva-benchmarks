@@ -63,25 +63,10 @@ echo "singularity prefix $singularity_prefix"
 
 gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
-# Start GPU monitoring in background
-$singularity_prefix $gpu_plots_monitor_command &
-monitor_pid=$!
-
-# Optional: give the monitor time to initialize
-sleep 5
-
-# Launch training on a single Node
-
-
-# Kill the GPU monitoring running in background 
-kill -SIGTERM \"\$monitor_pid\"
-
-# Wait for the monitor to clean up and exit
-wait \"\$monitor_pid\
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $singularity_prefix $gpu_plots_monitor_command &
+    $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize

@@ -1,4 +1,5 @@
 name: alpaca
-path: "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+path: "pat/to/dataset"
 task: Instruction-Finetuning
 max_seq_len: 1024
+/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json
