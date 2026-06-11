@@ -21,7 +21,7 @@ BASE_DIR = Path(".")
 # TODO: Folder is not working, check how to implement
 # MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
 # os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
-HISTORY_FILE_PATH = os.path.expanduser("~/.minerva-history")
+HISTORY_FILE_PATH = os.path.expanduser(".minerva-history")
 USER_CONFIG_PATH = os.path.expanduser(".minerva-benchmarks-config.json")
 
 # Create key bindings
@@ -137,6 +137,12 @@ RUN_OPTIONS = [
         error_msg="--per-model-jobs can only be y or n!",
         condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
+    OptionConfig(
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
+    ),
 ]
 
 
@@ -174,7 +180,7 @@ RERUN_OPTIONS = [
         name="--cfg-id",
         prompt="cfg-ids (',' comma separated)",
         validator=lambda x: len(x) > 1,
-        transform=lambda x: x.split(","),
+        transform=lambda x: " ".join([f"--cfg-id {_x}" for _x in x.split(",")]),
     ),
     BoolOptionConfig(
         name="--all",

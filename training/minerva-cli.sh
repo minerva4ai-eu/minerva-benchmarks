@@ -2,7 +2,7 @@
 
 CLI_CONTAINER_PATH="./envs/cli/singularity-uv.sif"
 
-module -q load singularity
+module load singularity 2> /dev/null
 cli_args="$@"
 
 singularity exec --env CWD="$PWD" \

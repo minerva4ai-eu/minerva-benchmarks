@@ -64,7 +64,7 @@ def main():
     # If your load_dataset already returns pre-tokenized datasets, set
     # dataset_kwargs={"skip_prepare_dataset": True} in SFTConfig below.
     train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset, dataset_path=args.data, test_size=0.9
+        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
     )
 
     # Setup FSDP configuration
