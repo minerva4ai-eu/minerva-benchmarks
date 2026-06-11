@@ -45,9 +45,9 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
-DATASETS = ["alpaca", "squadv2"]
+MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
+FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
+DATASETS = ["alpaca"]
 
 ################################################################
 
@@ -88,27 +88,22 @@ def generate_valid_combos(
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
-            framework_pattern = f"{framework}-{_init_cfg.machine.framework_name_pattern}"
+
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
-                    f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={framework_pattern}",
+                    f"model={model}-{_init_cfg.machine.name_pattern}",
+                    f"framework={framework}",
                     f"dataset={dataset}",
-                    f"slurm={_init_cfg.machine.name_pattern}",
-                    f"arch={_init_cfg.machine.name_pattern}",
                 ],
             )
             print(
                 f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
                 + f"\n\t· model: {model}"
-                + f"\n\t· framework: {framework_pattern}"
+                + f"\n\t· framework: {framework}"
                 + f"\n\t· dataset: {dataset}"
             )
             if framework not in cfg.model.frameworks_supported:
-                print(
-                    f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
-                )
                 continue
 
             for parallelism in cfg.model.parallelism_supported:
@@ -116,42 +111,19 @@ def generate_valid_combos(
 
                 if parallelism not in cfg.framework.parallelism.keys():
                     continue
-                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
-                #print(f"parallelism: \n{parallelism}")
+                # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+                # print(f"parallelism: \n{parallelism}")
                 parallelism_spex = cfg.framework.parallelism[parallelism]
 
                 target_parallelism = OmegaConf.create(
                     DictConfig({parallelism: parallelism_spex})
                 )
-                #print(f"target_parallelism: \n{target_parallelism}")
-                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+                # print(f"target_parallelism: \n{target_parallelism}")
+                # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
                 tmp_cfg.framework.parallelism_name = parallelism
                 tmp_cfg.framework.parallelism = target_parallelism
-                #print(f"\tCreating configuration for parallelism {parallelism}:")
-                #print(OmegaConf.to_yaml(cfg))
-
-                # Make sure that slurm directives for 'qos'/'partition'
-                # & 'constraint' are provided accordingly
-                if (tmp_cfg.slurm.qos is not None) or (
-                    tmp_cfg.slurm.partition is not None
-                ):
-                    assert (tmp_cfg.slurm.qos is not None) and (
-                        tmp_cfg.slurm.partition is not None
-                    ), (
-                        f"{RED}Slurm arguments 'slurm.qos' and 'slurm.partition' cannot be 'None'!{RESET}"
-                        + f"\n{RED}Values received: '{tmp_cfg.slurm.qos}' & '{tmp_cfg.slurm.partition}'{RESET}"
-                    )
-
-                if tmp_cfg.slurm.constraint is not None:
-                    assert (tmp_cfg.slurm.qos is None) and (
-                        tmp_cfg.slurm.partition is None
-                    ), (
-                        f"{RED}Slurm argument 'slurm.constraint' cannot be combined with 'slurm.partition' or  'slurm.qos'!"
-                        + "\nReceived:"
-                        + f"\n\tslurm.constraint: '{tmp_cfg.slurm.constraint}'"
-                        + f"\n\tslurm.qos: '{tmp_cfg.slurm.qos}'"
-                        + f"\n\tslurm.partition: '{tmp_cfg.slurm.partition}'{RESET}"
-                    )
+                # print(f"\tCreating configuration for parallelism {parallelism}:")
+                #  print(OmegaConf.to_yaml(cfg))
 
                 for (
                     bs,
@@ -160,26 +132,21 @@ def generate_valid_combos(
                     lr,
                     optimizer,
                     steps,
-                    enable_compile,
                 ) in product(
-                    cfg.model.combinations.batch_sizes,
-                    cfg.model.combinations.grad_accums,
-                    cfg.model.combinations.precisions,
-                    cfg.model.combinations.lr,
-                    cfg.model.combinations.optimizer,
-                    cfg.model.combinations.steps,
-                    cfg.model.combinations.enable_compile,
+                    cfg.trainings.batch_sizes,
+                    cfg.trainings.grad_accums,
+                    cfg.trainings.precisions,
+                    cfg.trainings.lr,
+                    cfg.trainings.optimizer,
+                    cfg.trainings.steps,
                 ):
-                    # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
-                    # to each experiment combination
                     tmp_cfg.model.training.batch_size = bs
                     tmp_cfg.model.training.grad_accum = grad_acc
                     tmp_cfg.model.training.precision = precision
                     tmp_cfg.model.training.lr = lr
                     tmp_cfg.model.training.optimizer = optimizer
                     tmp_cfg.model.training.steps = steps
-                    tmp_cfg.model.training.enable_compile = enable_compile
-                    tmp_cfg.experiment.output_dir = outpath
+
                     # Will bee used later to take care of configuration
                     # of 1 node and 1 gpu
 
@@ -200,12 +167,13 @@ def generate_valid_combos(
                             tmp_cfg.experiment.output_dir, parameters_combo
                         )
 
-                        experiment_parameters = (
-                            f"bs{bs}"
-                            + f"-grad_accum{grad_acc}"
-                            + f"-compile{enable_compile}"
-                            + f"-prec{precision}"
-                            + f"-steps{steps}"
+                        yaml_filename = (
+                            f"{parallelism}--"
+                            + f"bs{bs}-"
+                            + f"grad_accum{grad_acc}-"
+                            + f"prec{precision}-"
+                            + f"steps{steps}"
+                            + ".yaml"
                         )
 
                         # By default, if config is using 1 node,
@@ -224,8 +192,7 @@ def generate_valid_combos(
                             + f" | nodes:{nodes}"
                             + f" | gpus:{total_gpus}"
                             + f" | bs:{bs}"
-                            + f" | grad_accum:{grad_acc}"
-                            + f" | compilation: {enable_compile}"
+                            + f" | grad_accum:{total_gpus}"
                             + f" | precision:{precision}"
                             + f" | steps:{steps}"
                         )
@@ -238,10 +205,10 @@ def generate_valid_combos(
                             + f"_{tmp_cfg.dataset.name}"
                             + f"_nodes-{nodes}"
                             + f"_gpus-{total_gpus}"
-                            + f"--{experiment_parameters}"
-                        )
-                        yaml_filename = (
-                            f"{parallelism}--{experiment_parameters}" + ".yaml"
+                            + f"--bs{bs}"
+                            + f"-grad_accum{grad_acc}"
+                            + f"-prec{precision}"
+                            + f"-steps{steps}"
                         )
                         if tmp_cfg.id in cfg_seen:
                             print(
@@ -249,7 +216,7 @@ def generate_valid_combos(
                             )
                             continue
                         cfg_seen.add(tmp_cfg.id)
-
+                        print(cfg_seen)
                         # MAKE SURE BEFORE DELETE
                         # outpath_yaml = os.path.join(run_path, yaml_filename)
                         passed, results_msg = rules.is_valid(tmp_cfg)
@@ -296,7 +263,7 @@ def _print_summary(
     table.add_row("Total combos", str(total))
     table.add_row("[green]Valid[/green]", str(len(valid)))
     table.add_row("[yellow]Skipped[/yellow]", str(len(skipped)))
-    print()
+    print("")
     console.print(table)
     # ToDo: Write summary file for failed or skipped configurations
 

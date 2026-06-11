@@ -1,23 +1,24 @@
+# finetune_llama8b.py
 import os
+import sys
 import time
 
 import torch
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import PerformanceTrackingSFTTrainer
-from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.utils import (
-    count_parameters,
-    save_summary_stats_json,
-)
+from shared.custom_train import PerformanceTrackingTrainer
+from torch.utils.data import DataLoader, random_split
+from shared.data import load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
+    TrainingArguments,
 )
-from trl.trainer.sft_config import (
-    SFTConfig,
+from utils import (
+    count_parameters,
+    parse_args,
+    parse_dataset_paths,
+    save_summary_stats_json,
 )
-from utils import parse_args
 
 args = parse_args()
 
@@ -50,16 +51,13 @@ def main():
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
-    # train_dataset, eval_dataset, collate_fn, _ = load_dataset(
-    #    dataset_name=args.dataset,
-    #    dataset_path=args.data,
-    #    tokenizer=tokenizer,
-    #    max_length=MAX_LENGTH,
-    # )
-    train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
+    train_dataset, eval_dataset, collate_fn, _ = load_dataset(
+        dataset_name=args.dataset,
+        dataset_path=args.data,
+        tokenizer=tokenizer,
+        max_length=MAX_LENGTH,
     )
-
+    # Model dtype
     # --- Precision selection ---
     if args.precision == "fp16":
         dtype = torch.float16
@@ -68,11 +66,28 @@ def main():
     else:
         dtype = torch.float32
 
-    trainable_params, total_params, trainable_pct = 0, 0, 0
-
-    training_args = SFTConfig(
+    # Create DataLoaders
+    train_dataloader = DataLoader(
+        train_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=args.dataloader_num_workers,  # parallel data loading
+        pin_memory=True,  # faster CPU→GPU transfer
+        collate_fn=collate_fn,  # your custom padding function
+        persistent_workers=True,
+    )
+    eval_dataloader = DataLoader(
+        eval_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        num_workers=args.dataloader_num_workers,
+        pin_memory=True,
+        collate_fn=collate_fn,
+        persistent_workers=True,
+    )
+    training_args = TrainingArguments(
         output_dir=output_dir,
-        # overwrite_output_dir=True,
+        overwrite_output_dir=True,
         # num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
@@ -87,34 +102,9 @@ def main():
         optim="adamw_torch",
         logging_dir=f"{output_dir}/logs",
         report_to="none",
-        eval_strategy="no",
+        eval_strategy="epoch",
         eval_steps=None,
-        # Dataloader is created automatically from trainer
-        dataloader_drop_last=True,
         dataloader_num_workers=args.dataloader_num_workers,
-        data_seed=32,
-        dataloader_persistent_workers=args.dataloader_num_workers > 1,
-        dataloader_pin_memory=True,
-        dataloader_prefetch_factor=8,
-        # --- SFT-specific args ---
-        max_length=MAX_LENGTH,  # replaces manual truncation in collator
-        dataset_text_field="text",  # TODO: set to your dataset's text column name
-        # OR remove and use formatting_func below
-        packing=True,  # set True to pack short sequences for efficiency
-        dataset_kwargs={"skip_prepare_dataset": False},
-        # TODO: If your dataset is already tokenized (input_ids present), set:
-        #   dataset_kwargs={"skip_prepare_dataset": True}
-        #   and remove dataset_text_field above.
-        # torch model compilation
-        **(
-            {
-                "torch_compile": True,
-                "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune-no-cudagraphs",
-            }
-            if bool(args.enable_compile)
-            else {}
-        ),
     )
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
@@ -132,7 +122,7 @@ def main():
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
 
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
         # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
@@ -145,29 +135,20 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        flopsCallback_megatronLM = mfu_callback_from_hf_config(
-            model,
-            tokenizer,
-            gpu_peak_flops=peak_gpu_tflops,
-            seq_length=args.max_length,
-        )
-        trainer = PerformanceTrackingSFTTrainer(
+        trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
-            train_dataset=train_dataset,
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
             eval_dataset=eval_dataset,
-            # data_collator=collate_fn,
-            processing_class=tokenizer,
-            callbacks=[
-                monitor,
-                flopsCallback_megatronLM,
-            ],
+            tokenizer=tokenizer,
+            callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
         )
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
         )
 
         # Train Model

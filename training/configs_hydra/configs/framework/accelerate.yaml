@@ -1,13 +1,8 @@
-defaults:
-  - base
-  - _self_
-
 name: accelerate
-python_environment: 
-singularity_container: 
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:
+  none: { min_gpus: 1, max_gpus: 1 }
   ddp: { min_gpus: 2 }
   fsdp: { min_gpus: 2 }
 
@@ -17,8 +12,8 @@ scripts:
   shared: scripts/shared
   copy_files:
     - scripts/accelerate-common/gpu_monitor.py
-    - scripts/accelerate-common/accelerate_config.yaml
     - scripts/accelerate-common/utils.py
     - scripts/gpu_plots.py
+    - scripts/activate-env-variables-per-supercomputer.sh
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}

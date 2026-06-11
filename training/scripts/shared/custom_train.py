@@ -32,15 +32,9 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     else:
         rank = rank_or_msg
 
-    if dist.is_initialized():
-        device_rank = dist.get_rank()
-    else:
-        device_rank = int(os.environ["RANK"])
-    if rank is None or device_rank == rank:
-        print(f"[ RANK {device_rank} ]: {msg}")
-
-
-FLOPS = []
+    local_rank = dist.get_rank()
+    if rank is None or local_rank == rank:
+        print(f"[ RANK {local_rank} ]: {msg}")
 
 
 def compute_tflops_per_step(
@@ -92,6 +86,7 @@ class MegatronFlopsCallback(TrainerCallback):
         vocab_size,
         max_len: int,
         num_gpus=1,
+        gradient_accumulation_enabled=False,
     ):
         self.num_layers = num_layers
         self.hidden_size = hidden_size
@@ -100,6 +95,7 @@ class MegatronFlopsCallback(TrainerCallback):
         self.num_gpus = num_gpus
         self._t0 = None
         self.max_len = max_len
+        self.accumulation_enabled = gradient_accumulation_enabled
 
     def on_step_begin(self, args, state, control, **kwargs):
         torch.cuda.synchronize()
@@ -124,7 +120,6 @@ class MegatronFlopsCallback(TrainerCallback):
             num_gpus=self.num_gpus,
         )
 
-        FLOPS.append(tflops)
         print(f"Step {state.global_step:>6} | {tflops:.1f} TFLOP/s per GPU")
 
 
@@ -273,6 +268,7 @@ class PerformanceTrackingTrainer(Trainer):
         HuggingFace Trainer calls this as:
             training_step(model, inputs, num_items_in_batch)
         """
+
         # ------------------------------
         # Step custom metrics
         # ------------------------------
@@ -327,10 +323,6 @@ class PerformanceTrackingTrainer(Trainer):
     def _finalize_flop_counts(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         global_average_flops = 0
-
-        # !! Temp fix for logged FLOPS !!
-        self.logged_flops_this_gpus = FLOPS
-
         local_avg_flops = sum(self.logged_flops_this_gpus) / len(
             self.logged_flops_this_gpus if self.logged_flops_this_gpus else 0
         )
@@ -378,6 +370,14 @@ class PerformanceTrackingTrainer(Trainer):
     # WRAP TRAINING WITH TIMING + FINAL REDUCTION
     # ************************************
     def train(self, *args, **kwargs):
+        if not getattr(self, "_model_compiled", False):
+            print_rank(0, "Compiling model with torch.compile()...")
+            compilation_start = time.time()
+            torch.cuda.synchronize()
+            self.model = torch.compile(self.model, mode="max-autotune")
+            torch.cuda.synchronize()
+            print_rank(0, f"Model compiled in {time.time() - compilation_start:.2f}s")
+            self._model_compiled = True
 
         # reset counters in case reused
         self.total_tokens_this_gpu = 0
@@ -484,7 +484,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
 
         self.total_tokens_this_gpu = 0
         self.total_tokens_global = 0
-        self.batches_seen_this_gpu = 0
 
         self.last_logged_flops_this_gpu = 0
         self.flops_accumulated = 0
@@ -518,13 +517,10 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         self.step_interval_time = 0.00001  # avoid division by zero in first step
         self.last_log_timestamp = None
 
-        print_rank(":::::::::")
-        layer_limit = 10
-        for idx, i in enumerate(kwargs["model"].named_parameters()):
-            print_rank(f"{i[0]} -> {i[1].device}")
-            if idx == layer_limit:
-                break
-        print_rank(":::::::::")
+        print_rank(0, ":::::::::")
+        for i in kwargs["model"].named_parameters():
+            print_rank(0, f"{i[0]} -> {i[1].device}")
+        print_rank(0, ":::::::::")
 
     def get_train_dataloader(self):
         if self.custom_train_dataloader is not None:
@@ -580,13 +576,11 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 )
 
             # Batch size info
-            logs[f"D{os.environ['RANK']}:seen_batches"] = self.batches_seen_this_gpu
-            logs[f"D{os.environ['RANK']}:seen_tokens"] = self.total_tokens_this_gpu
-            logs["effective_batch_size"] = (
-                self.args.per_device_train_batch_size
-                * self.args.gradient_accumulation_steps
-                * self.args.world_size
-            )
+            # logs["effective_batch_size"] = (
+            #    self.args.per_device_train_batch_size
+            #    * self.args.gradient_accumulation_steps
+            #    * self.args.world_size
+            # )
         if self.logged_flops_this_gpus:
             logs["TFLOPs/sec/GPU"] = f"{self.logged_flops_this_gpus[-1] / 1e12:.2f}"
         if self.logged_mfu_this_gpus:
@@ -622,11 +616,10 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             tokens_in_batch = 0
 
         # add to running counter
-        self.batches_seen_this_gpu += 1
         self.total_tokens_this_gpu += tokens_in_batch
 
         step_start = time.time()
-        torch.cuda.synchronize()
+        torch.cuda.synchronize()  #
         result = super().training_step(model, inputs)
         torch.cuda.synchronize()  #
         self.step_interval_time = time.time() - step_start
@@ -713,6 +706,14 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
     # WRAP TRAINING WITH TIMING + FINAL REDUCTION
     # ************************************
     def train(self, *args, **kwargs):
+        # if not getattr(self, "_model_compiled", False):
+        #    print_rank(0, "Compiling model with torch.compile()...")
+        #    compilation_start = time.time()
+        #    torch.cuda.synchronize()
+        #    self.model = torch.compile(self.model, mode="max-autotune")
+        #    torch.cuda.synchronize()
+        #    print_rank(0, f"Model compiled in {time.time() - compilation_start:.2f}s")
+        #    self._model_compiled = True
 
         # reset counters in case reused
         self.total_tokens_this_gpu = 0

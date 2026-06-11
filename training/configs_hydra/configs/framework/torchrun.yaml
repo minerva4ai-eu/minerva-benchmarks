@@ -1,10 +1,4 @@
-defaults:
-  - base
-  - _self_
-
 name: torchrun
-python_environment:
-singularity_container: 
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:
@@ -20,5 +14,6 @@ scripts:
     - scripts/torchrun-common/gpu_monitor.py
     - scripts/torchrun-common/utils.py
     - scripts/gpu_plots.py
+    - scripts/activate-env-variables-per-supercomputer.sh
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}

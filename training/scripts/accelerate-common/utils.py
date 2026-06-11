@@ -3,6 +3,7 @@ import ast
 import json
 import os
 
+<<<<<<< HEAD
 
 def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     """Prints the message with the rank number.
@@ -19,6 +20,9 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     local_rank = int(os.environ["RANK"])
     if rank is None or local_rank == rank:
         print(f"[ RANK {local_rank} ]: {msg}")
+=======
+import torch.distributed as dist
+>>>>>>> e423763 (training/training_MN5 -> training/)
 
 
 def count_parameters(model):
@@ -36,7 +40,11 @@ def save_summary_stats_json(summary, output_file):
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
+<<<<<<< HEAD
         # TODO: Fill in argparse description
+=======
+        # Todo: Fill in description
+>>>>>>> e423763 (training/training_MN5 -> training/)
         description="ToDo"
     )
     parser.add_argument(

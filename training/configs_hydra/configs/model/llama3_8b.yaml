@@ -34,18 +34,12 @@ tokenizer_type:       tiktoken
 
 # GPU requirements — constraint metadata
 #min_gpus: 1
-max_gpus_scale: 8
+max_gpus_scale: 4
 frameworks_supported:
   - torchrun
   - accelerate
   - deepspeed
-  - deepspeed-accelerate
 parallelism_supported:
   - fsdp
   - zero2
   - zero3
-
-
-combinations:
-  batch_sizes: [4, 8]
-  grad_accums: [8]

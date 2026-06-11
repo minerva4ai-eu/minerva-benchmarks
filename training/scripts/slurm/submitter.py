@@ -1,9 +1,10 @@
 # benchmark/submitter.py
-import json
 import os
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -11,26 +12,28 @@ from omegaconf import DictConfig, OmegaConf
 from scripts.slurm import utils as u
 
 
-class ExecussionEnvironmentSelectionError(ValueError):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
-
 def build_launch_folder(
     cfg: BenchmarkConfig,
     base_dir: Path,
     runs_dir: Path,
     run_id: str,
-    dry: bool | None = False,
-    repeat_id: int | None = None,
+    dry: Optional[bool] = False,
+    repeat_id: Optional[int] = None,
 ) -> Path:
-    combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
-    experiment_config_dir = os.path.join(combo_path, "yaml-configs")
-    experiment_config_path = os.path.join(
-        experiment_config_dir, cfg.experiment.yaml_filename
+
+    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    results_dir = os.path.join(base_dir.absolute(), runs_dir)
+    machine_results_base = os.path.join(results_dir, cfg.machine.name)
+    date_folder = os.path.join(
+        machine_results_base,
+        datetime.now().strftime("%d-%m-%Y"),
     )
+    combo_path = os.path.join(
+        date_folder,
+        parameters_combo,
+    )
+    experiment_config_path = os.path.join(combo_path, cfg.experiment.yaml_filename)
     os.makedirs(combo_path, exist_ok=True)
-    os.makedirs(experiment_config_dir, exist_ok=True)
     if dry:
         OmegaConf.save(cfg, experiment_config_path)
         return Path(experiment_config_path)
@@ -83,66 +86,22 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     assert (t.steps is not None) != (t.epochs is not None), (
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
-
-    execution_mode = cfg.machine.runtime_env_mode
-    # if cfg.framework.singularity_container:
-    #    execution_mode = "singularity"
-    # elif cfg.framework.python_environment:
-    #    execution_mode = "venv"
-    # else:
-    #    raise ExecussionEnvironmentSelectionError(
-    #        "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
-    #    )
-
-    env = {
+    return {
         **os.environ,
-        **(
-            {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
-            if cfg.machine.modules is not None
-            else {}
-        ),
-        "EXECUTION_MODE": execution_mode,
-        **(
-            {
-                "ENVIRONMENT_FINETUNING": cfg.framework.python_environment,
-            }
-            if cfg.framework.python_environment is not None
-            else {}
-        ),
-        **(
-            {
-                "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
-                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
-                if cfg.machine.singularity_binds
-                else "",
-                "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
-                if cfg.machine.singularity_args
-                else "",
-            }
-            if cfg.framework.singularity_container is not None
-            else {}
-        ),
+        "LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}",
+        "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
+        "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+        if cfg.machine.singularity_binds
+        else "",
+        "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
+        if cfg.machine.singularity_args
+        else "",
         "NODES": str(s.sbatch.nodes),
-        "GPU_NAME": cfg.arch.gpu.name,
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
         "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
         "FRAMEWORK": f.name,
         "DATASET": d.name,
         "DATASET_PATH": d.path,
-        **(
-            {
-                "DATASET_TRAIN": str(cfg.dataset.train),
-            }
-            if cfg.dataset.train is not None
-            else {}
-        ),
-        **(
-            {
-                "DATASET_VALIDATION": str(cfg.dataset.validation),
-            }
-            if cfg.dataset.validation is not None
-            else {}
-        ),
         "MODEL": m.name,
         "MODEL_PATH": m.path,
         "PARALLELISM": f.parallelism_name,
@@ -159,33 +118,12 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "TRAIN_SCRIPT": os.path.join(
             launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
         ),
-        "ZERO_STAGE": f.parallelism_name
-        if f.name in ["deepspeed", "deepspeed-accelerate"]
-        else "",
+        "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
+        "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
-        "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
-        "TOKENIZERS_PARALLELISM": str(False),
     }
-
-    # Merge machine-specific environment variables
-    if cfg.machine.env:
-        env.update(**cfg.machine.env)
-    if cfg.experiment.env:
-        env.update(**cfg.experiment.env)
-
-    def _serialize(value):
-        if value is None:
-            return ""
-        if isinstance(value, (list, tuple)):
-            return json.dumps(list(value))
-        return str(value)
-
-    # Make sure that all values are serialized/cast to string
-    for k, v in env.items():
-        env[k] = _serialize(v)
-    return env
 
 
 def submit_job(
@@ -205,7 +143,6 @@ def submit_job(
         cfg.slurm,
         cfg.model.training,
     )
-    # Build sbatch command to submit
     cmd = [
         "sbatch",
         "--parsable",
@@ -216,26 +153,16 @@ def submit_job(
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
         f"--output={s.sbatch.output}",
         f"--error={s.sbatch.error}",
+        f"--account={s.account}",
+        f"--qos={s.qos}",
         f"--partition={s.partition}",
         *([f"--dependency={dependency}"] if dependency else []),
+        *s.sbatch.extra_args,
+        os.path.join(
+            launch_folder, f.scripts.run.split("/")[-1]
+        ),  # path to training script
+        # str(launch_folder),
     ]
-    if s.qos is not None and s.account is not None:
-        cmd.extend(
-            [
-                f"--account={s.account}",
-                f"--qos={s.qos}",
-            ]
-        )
-
-    if s.constraint is not None:
-        cmd.extend([f"--constraint={s.constraint}"])
-
-    cmd.extend(
-        [
-            *s.sbatch.extra_args,
-            os.path.join(launch_folder, f.scripts.run.split("/")[-1]),
-        ]
-    )
     # print("\n".join(cmd))
     job_cfg = (
         f"{m.name}-{f.name}-{f.parallelism_name}"

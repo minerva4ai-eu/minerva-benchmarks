@@ -24,7 +24,7 @@ These benchmarks measure:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  User invokes: bash minerva-cli.sh run --config-name base-MN5      │
+│  User invokes: ./minerva-cli.sh run --config-name base-MN5      │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ▼
@@ -169,13 +169,13 @@ Ensure `scripts/activate-env-variables-per-supercomputer.sh` has correct NCCL/CU
 
 ```bash
 # Dry run — generate configs without submitting
-bash minerva-cli.sh run --dry-run --config-name base-MN5
+./minerva-cli.sh run --dry-run --config-name base-MN5
 
 # Submit all valid jobs
-bash minerva-cli.sh run --config-name base-MN5
+./minerva-cli.sh run --config-name base-MN5
 
 # Monitor running jobs
-bash minerva-cli.sh monitor
+./minerva-cli.sh monitor
 ```
 
 ### 4. Generate Summary

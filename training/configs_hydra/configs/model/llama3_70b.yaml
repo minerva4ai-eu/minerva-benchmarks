@@ -37,12 +37,6 @@ frameworks_supported:
   - torchrun
   - accelerate
   - deepspeed
-  - deepspeed-accelerate
 parallelism_supported:
   - fsdp
   - zero3
-
-
-combinations:
-  batch_sizes: [1, 2]
-  grad_accums: [8]

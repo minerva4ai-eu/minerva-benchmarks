@@ -1,10 +1,9 @@
 # benchmark/cli.py
 import os
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
 
 import click
 import scripts.slurm.utils as u
@@ -31,39 +30,12 @@ bindings = KeyBindings()
 
 # Define Ctrl+Enter (Ctrl+M) to submit input (Linux)
 # Define Ctrl+P to submit input (macOS)
-# @bindings.add("c-m")
-# @bindings.add("c-p")
-# def _(event):
-#     event.app.exit(result=event.app.current_buffer.text)
 @bindings.add("c-m")
 @bindings.add("c-p")
 def _(event):
-    event.current_buffer.validate_and_handle()
+    event.app.exit(result=event.app.current_buffer.text)
 
 
-style = Style.from_dict(
-    {
-        "prompt": "ansicyan bold",
-        "input": "ansigreen",
-    }
-)
-
-session = PromptSession(
-    key_bindings=bindings,
-    style=style,
-    history=FileHistory(HISTORY_FILE_PATH),
-    completer=PathCompleter(expanduser=True),
-    complete_while_typing=True,
-    multiline=False,
-)
-
-
-# try:
-#    with open(HISTORY_FILE_PATH, "a") as f:
-#        pass
-#    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
-# except Exception as e:
-#    print(f"DEBUG: history file FAILED: {e}")
 # Prevent Enter from submitting (we just want to move to the next line)
 # @bindings.add("enter")
 # def _(event):
@@ -75,28 +47,43 @@ session = PromptSession(
 def read_user_input(
     history_path: str = HISTORY_FILE_PATH, input_text: str = "minerva-benchmarks > "
 ) -> str:
+    style = Style.from_dict(
+        {
+            "prompt": "ansicyan bold",
+            "input": "ansigreen",
+        }
+    )
+
+    session = PromptSession(
+        key_bindings=bindings,
+        style=style,
+        history=FileHistory(history_path),
+        completer=PathCompleter(expanduser=True),
+        complete_while_typing=True,
+        multiline=False,
+    )
+
     return session.prompt(f"{input_text}")
 
 
-# def prompt_arg(message, required=True) -> str:
-#    """Prompt user for an argument value."""
-#    while True:
-#        value = read_user_input(input_text=message)
-#        if value or not required:
-#            return value
-#        click.echo("  This argument is required. Please enter a value.")
+def prompt_arg(message, required=True) -> str:
+    """Prompt user for an argument value."""
+    while True:
+        value = read_user_input(input_text=message)
+        if value or not required:
+            return value
+        click.echo("  This argument is required. Please enter a value.")
 
 
 @dataclass
 class OptionConfig:
     name: str  # CLI flag, e.g. "--configs-path"
     prompt: str  # Text shown to user
-    default: str | None = None  # Default value (None = not added to args)
+    default: Optional[str] = None  # Default value (None = not added to args)
     required: bool = False  # Force non-empty input
-    validator: Callable[[str], bool] | None = None  # Return True if valid
+    validator: Optional[Callable[[str], bool]] = None  # Return True if valid
     error_msg: str = "Invalid input."  # Shown when validator fails
-    transform: Callable[[str], Any] | None = None  # Transform before storing
-    exit_after: bool | None = False
+    transform: Optional[Callable[[str], Any]] = None  # Transform before storing
 
 
 @dataclass
@@ -128,16 +115,9 @@ RUN_OPTIONS = [
         default="base",
     ),
     OptionConfig(
-        name="--runs-dir",
-        prompt="runs-dir",
-        default=f"{RUNS_DIR}-[config-name]",
-    ),
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
-        exit_after=True,
+        name="--output",
+        prompt="output",
+        default=str(RUNS_DIR),
     ),
     BoolOptionConfig(
         name="--dry-run",
@@ -146,8 +126,7 @@ RUN_OPTIONS = [
         transform=lambda x: x.lower(),
         validator=lambda x: x in ("y", "n"),
         error_msg="--dry-run can only be y or n!",
-        condition_is_true=lambda x: x in ("y", "yes", "si", "oui", "ja"),
-        exit_after=True,
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
     BoolOptionConfig(
         name="--per-model-jobs",
@@ -161,10 +140,8 @@ RUN_OPTIONS = [
 ]
 
 
-def is_valid_date(value: str | None, fmt: str = "%d-%m-%Y") -> bool | None:
+def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
 
-    if not value:
-        return True
     try:
         date = datetime.strptime(value, fmt)
         if date.date() > datetime.now().date():
@@ -174,26 +151,12 @@ def is_valid_date(value: str | None, fmt: str = "%d-%m-%Y") -> bool | None:
         return False
 
 
-def str2date2str(value: str | None, fmt: str = "%d-%m-%Y") -> str | None:
-    if not value:
-        return value
+def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
     date = datetime.strptime(value, fmt).date()
     return date.strftime(fmt)
 
 
 RERUN_OPTIONS = [
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
-        exit_after=True,
-    ),
-    OptionConfig(
-        name="--runs-dir",
-        prompt="runs-dir",
-        default=f"{RUNS_DIR}-[config-name]",
-    ),
     OptionConfig(
         name="--run-date",
         prompt="run-date",
@@ -202,9 +165,16 @@ RERUN_OPTIONS = [
         error_msg="--run-date must be in the format DD-MM-YYYY or d-m-YYYY!Check date for errors in format & or future timestamps.",
         required=True,
     ),
+    OptionConfig(name="--run-id", prompt="run-id", required=True),
     OptionConfig(
-        name="--run-id",
-        prompt="run-id",
+        name="--rerun-id",
+        prompt="rerun-id",
+    ),
+    OptionConfig(
+        name="--cfg-id",
+        prompt="cfg-ids (',' comma separated)",
+        validator=lambda x: len(x) > 1,
+        transform=lambda x: x.split(","),
     ),
     BoolOptionConfig(
         name="--all",
@@ -237,81 +207,24 @@ RERUN_OPTIONS = [
 
 STATUS_OPTIONS = [
     OptionConfig(
-        name="--runs-dir",
-        prompt="runs-dir (root folder of benchmark runs)",
-        default=str(RUNS_DIR),
-        validator=lambda x: os.path.exists(x),
-    ),
-    OptionConfig(
-        name="--run-date",
-        prompt="run-date (date of benchmark runs: 01-01-2026)",
-        transform=str2date2str,
-        validator=is_valid_date,
-    ),
-    OptionConfig(
-        name="--run-id",
-        prompt="run-id (serial id number of run e.g. 1)",
-        default=str(RUNS_DIR),
-        # validator=lambda x: isinstance(x, int) and x > 0,
-    ),
-    OptionConfig(
-        name="--model",
-        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
-    ),
-    OptionConfig(
-        name="--framework",
-        prompt="framework (space-separated, e.g. 'vllm sglang')",
-    ),
-    OptionConfig(
-        name="--parallelism-type",
-        prompt="parallelism-type (space-separated, e.g. 'ddp fsdp')",
-    ),
-    OptionConfig(
-        name="--nodes",
-        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
-    ),
-    OptionConfig(
-        name="--state",
-        prompt="state (space-separated SLURM states, e.g. 'running pending failed')",
-    ),
-]
-
-
-CANCEL_OPTIONS = [
-    OptionConfig(
-        name="--runs-dir",
-        prompt="runs-dir (root folder of benchmark runs)",
-        validator=lambda x: os.path.exists(x),
-        default=str(RUNS_DIR),
-    ),
-    OptionConfig(
         name="--run-date",
         prompt="run-date",
         transform=str2date2str,
         validator=is_valid_date,
-        error_msg="--run-date must be in the format DD-MM-YYYY or d-m-YYYY! Check date for errors in format & or future timestamps.",
-        required=True,
     ),
     OptionConfig(
         name="--run-id",
         prompt="run-id",
-        required=True,
     ),
+    OptionConfig(name="--nodes", prompt="nodes", validator=lambda x: int(x) >= 1),
+    OptionConfig(name="--model", prompt="model", validator=lambda x: int(x) >= 1),
     OptionConfig(
-        name="--model",
-        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
-    ),
-    OptionConfig(
-        name="--framework",
-        prompt="framework (space-separated, e.g. 'vllm sglang')",
+        name="--framework", prompt="framework", validator=lambda x: int(x) >= 1
     ),
     OptionConfig(
         name="--parallelism-type",
-        prompt="parallelism-type (space-separated, e.g. 'dp fsdp')",
-    ),
-    OptionConfig(
-        name="--nodes",
-        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
+        prompt="parallelism-type",
+        validator=lambda x: int(x) >= 1,
     ),
 ]
 
@@ -370,11 +283,8 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                     if opt.condition_is_true(value):
                         run_args.extend([opt.name])
                     i += 1
-                else:
-                    run_args.extend([opt.name, value])
-
-            if opt.exit_after and value != opt.default:
-                break
+                    continue
+                run_args.extend([opt.name, value])
             i += 1
 
         except KeyboardInterrupt:

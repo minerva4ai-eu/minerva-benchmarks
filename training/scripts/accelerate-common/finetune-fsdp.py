@@ -7,10 +7,10 @@ import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import (
+    FlopCounter,
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
 from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
 from shared.utils import (
     count_parameters,
     get_fsdp_layer_to_wrap,
@@ -64,7 +64,7 @@ def main():
     # If your load_dataset already returns pre-tokenized datasets, set
     # dataset_kwargs={"skip_prepare_dataset": True} in SFTConfig below.
     train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
+        dataset_name=args.dataset, dataset_path=args.data, test_size=0.9
     )
 
     # Setup FSDP configuration
@@ -104,61 +104,52 @@ def main():
         )
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
-    # CHANGED: TrainingArguments → SFTConfig
-    # SFTConfig is a drop-in superset of TrainingArguments with SFT-specific fields.
-    training_args = SFTConfig(
-        output_dir=output_dir,
-        # overwrite_output_dir=True,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        gradient_checkpointing=False,
-        learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        logging_steps=args.logging_steps,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=args.precision == "fp16",
-        bf16=args.precision == "bf16",
-        optim="adamw_torch",
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        eval_steps=None,
-        ddp_timeout=1800,
-        dataloader_drop_last=True,
-        dataloader_num_workers=args.dataloader_num_workers,
-        data_seed=32,
-        dataloader_persistent_workers=args.dataloader_num_workers > 1,
-        dataloader_pin_memory=True,
-        dataloader_prefetch_factor=8,
-        # FSDP Config (unchanged)
-        fsdp="full_shard auto_wrap",
-        fsdp_config=fsdp_config,
-        # --- SFT-specific args ---
-        max_length=MAX_LENGTH,  # replaces manual truncation in collator
-        dataset_text_field="text",  # TODO: set to your dataset's text column name
-        #                                   # OR remove and use formatting_func below
-        packing=True,  # set True to pack short sequences for efficiency
-        dataset_kwargs={"skip_prepare_dataset": False},
-        # TODO: If your dataset is already tokenized (input_ids present), set:
-        #   dataset_kwargs={"skip_prepare_dataset": True}
-        #   and remove dataset_text_field above.
-        # torch model compilation
-        **(
-            {
-                "torch_compile": True,
-                "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune",
-            }
-            if bool(args.enable_compile)
-            else {}
-        ),
-    )
     try:
+        # CHANGED: TrainingArguments → SFTConfig
+        # SFTConfig is a drop-in superset of TrainingArguments with SFT-specific fields.
+        training_args = SFTConfig(
+            output_dir=output_dir,
+            overwrite_output_dir=True,
+            per_device_train_batch_size=BATCH_SIZE,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            gradient_checkpointing=False,
+            learning_rate=args.lr,
+            weight_decay=args.weight_decay,
+            logging_steps=args.logging_steps,
+            save_strategy="no",
+            save_total_limit=1,
+            fp16=args.precision == "fp16",
+            bf16=args.precision == "bf16",
+            optim="adamw_torch",
+            logging_dir=f"{output_dir}/logs",
+            report_to="none",
+            eval_steps=None,
+            ddp_timeout=1800,
+            dataloader_drop_last=True,
+            dataloader_num_workers=args.dataloader_num_workers,
+            data_seed=32,
+            dataloader_persistent_workers=args.dataloader_num_workers > 1,
+            dataloader_pin_memory=False,
+            dataloader_prefetch_factor=4,
+            # FSDP Config (unchanged)
+            fsdp="full_shard auto_wrap",
+            fsdp_config=fsdp_config,
+            # --- SFT-specific args ---
+            max_length=MAX_LENGTH,  # replaces manual truncation in collator
+            dataset_text_field="text",  # TODO: set to your dataset's text column name
+            #                                   # OR remove and use formatting_func below
+            packing=True,  # set True to pack short sequences for efficiency
+            dataset_kwargs={"skip_prepare_dataset": False},
+            # TODO: If your dataset is already tokenized (input_ids present), set:
+            #   dataset_kwargs={"skip_prepare_dataset": True}
+            #   and remove dataset_text_field above.
+        )
+
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
 
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
         _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
         peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
@@ -170,22 +161,27 @@ def main():
 
         print_rank(f"Loading Model... dtype: {dtype}")
 
-        if args.enable_compile:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                device_map=None,  # Trainer will put model on device
-                low_cpu_mem_usage=True,
-            )
-        else:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                device_map=None,  # Trainer will put model on device
-                attn_implementation="flash_attention_2",
-            )
-        print_rank("Model Loaded")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            attn_implementation="flash_attention_2",
+        )
+        # if is_main_process():
+        #    model = AutoModelForCausalLM.from_pretrained(
+        #        model_name,
+        #        torch_dtype=dtype,
+        #        low_cpu_mem_usage=True,
+        #        attn_implementation="flash_attention_2",
+        #    )
+        # else:
+        #    config = AutoConfig.from_pretrained(model_name)
+        #    with init_on_device(torch.device("meta")):
+        #        model = AutoModelForCausalLM.from_config(
+        #            config,
+        #            torch_dtype=dtype,
+        #            attn_implementation="flash_attention_2",
+        #        )
 
         ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
         print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
@@ -195,18 +191,13 @@ def main():
             model.config.use_cache = False
 
         print_rank("Model Loaded")
-        # print_rank(0, ":::::::::")
-        # for i in model.named_parameters():
-        #    print_rank(0, f"{i[0]} -> {i[1].device}")
-        # print_rank(0, ":::::::::")
+        print_rank(0, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(0, f"{i[0]} -> {i[1].device}")
+        print_rank(0, ":::::::::")
 
-        # flop_counter = FlopCounter(model)
-        flopsCallback_megatronLM = mfu_callback_from_hf_config(
-            model,
-            tokenizer,
-            gpu_peak_flops=peak_gpu_tflops,
-            seq_length=args.max_length,
-        )
+        flop_counter = FlopCounter(model)
+
         # CHANGED: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
         # CHANGED: If you need a custom formatting function instead of dataset_text_field, pass:
         #   formatting_func=lambda x: [f"### Input: {x['input']}\n### Output: {x['output']}"]
@@ -217,29 +208,27 @@ def main():
             eval_dataset=eval_dataset,
             # data_collator=collate_fn,  # REMOVED: SFTTrainer manages this internally
             processing_class=tokenizer,  # CHANGED: 'tokenizer' param renamed in TRL ≥0.12
-            callbacks=[monitor, flopsCallback_megatronLM],
+            callbacks=[monitor],
             peak_gpu_tflops=peak_gpu_tflops,
             # TODO: Uncomment if using a formatting function instead of dataset_text_field:
             # formatting_func=your_formatting_func,
         )
 
         print_rank(rank, "Trainer initialized and model has been wrapped!")
-        # print_rank(rank, ":::::::::")
-        # for i in model.named_parameters():
-        #    print_rank(rank, f"{i[0]} -> {i[1].device}")
-        # print_rank(rank, ":::::::::")
+        print_rank(rank, ":::::::::")
+        for i in model.named_parameters():
+            print_rank(rank, f"{i[0]} -> {i[1].device}")
+        print_rank(rank, ":::::::::")
 
         gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
         )
-        print_rank(
-            rank, f"Accelerator FSDP plugin: {trainer.accelerator.state.fsdp_plugin}"
-        )
-        print_rank(rank, f"Distributed type: {trainer.accelerator.distributed_type}")
+
         start_time = time.time()
         trainer.train()
         total_finetune_time = time.time() - start_time
 
+        flop_counter.summary()
         stop_flag["stop"] = True
         time.sleep(2)
 

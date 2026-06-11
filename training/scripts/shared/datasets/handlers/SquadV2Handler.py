@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from typing import Optional, Tuple
 
 import pandas as pd
@@ -18,11 +19,24 @@ class SquadV2Handler(DatasetHandler):
         max_length=1024,
         pad_maxlength=True,
     ):
+=======
+from typing import Tuple
+
+import pandas as pd
+import torch
+
+from . import DatasetHandler
+
+
+class SquadV2Handler(DatasetHandler):
+    def __init__(self, path: str, tokenizer, max_length: int = 1024):
+>>>>>>> e423763 (training/training_MN5 -> training/)
         """
         path: Path to .parquet file (e.g. squad_v2.parquet)
         tokenizer: Hugging Face tokenizer
         max_length: Maximum token length for encoding
         """
+<<<<<<< HEAD
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.pad_maxlength = pad_maxlength
@@ -40,6 +54,12 @@ class SquadV2Handler(DatasetHandler):
             "Data provided must be of type 'pandas.DataFrame'!!"
         )
         self.data = data
+=======
+        # Load dataset from parquet
+        self.data = pd.read_parquet(path)
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+>>>>>>> e423763 (training/training_MN5 -> training/)
 
         # Ensure essential columns exist
         required_cols = {"question", "context", "answers"}
@@ -50,6 +70,7 @@ class SquadV2Handler(DatasetHandler):
     def __len__(self):
         return len(self.data)
 
+<<<<<<< HEAD
     def __raw_items_range__(self, idxs):
         return pd.DataFrame([self.data.iloc[idx] for idx in idxs])
 
@@ -58,6 +79,16 @@ class SquadV2Handler(DatasetHandler):
         For each row, build the input text using the tokenizer's chat template:
           user: Question: ... Context: ...
           assistant: ...
+=======
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        For each row, build the input text:
+          Question: ...
+          Context: ...
+          ### Answer:
+          ...
+        If answer is empty (unanswerable), output will be an empty string.
+>>>>>>> e423763 (training/training_MN5 -> training/)
         """
         item = self.data.iloc[idx]
 
@@ -72,6 +103,7 @@ class SquadV2Handler(DatasetHandler):
         else:
             answer = str(answer_data) if isinstance(answer_data, str) else ""
 
+<<<<<<< HEAD
         templated_text = self.apply_chat_template(
             {
                 "question": question,
@@ -110,6 +142,21 @@ class SquadV2Handler(DatasetHandler):
 
     @u.perf_timed("collate_fn")
     def collate_fn(self, batch):
+=======
+        # Build the prompt like AlpacaHandler style
+        prompt = f"Question: {question}\n\nContext: {context}\n\n### Answer:\n{answer}"
+
+        enc = self.tokenizer(
+            prompt,
+            truncation=True,
+            max_length=self.max_length,
+            return_tensors="pt",
+        )
+        return enc.input_ids.squeeze(0), enc.attention_mask.squeeze(0)
+
+    @staticmethod
+    def collate_fn(batch):
+>>>>>>> e423763 (training/training_MN5 -> training/)
         """
         Pad variable-length input tensors into a uniform batch.
         """
@@ -131,6 +178,7 @@ class SquadV2Handler(DatasetHandler):
             "labels": input_ids.clone(),
         }
 
+<<<<<<< HEAD
     # @staticmethod
     # def data_collator(batch):
     #    """
@@ -205,3 +253,16 @@ class SquadV2RawDataset(RawTextDataset):
     ):
 
         return HFDataset.from_list(data)
+=======
+    @staticmethod
+    def data_collator(batch):
+        """
+        Compatible with both tuple-style and dict-style datasets.
+        """
+        if isinstance(batch[0], dict):
+            input_ids = [b["input_ids"] for b in batch]
+            attn = [b["attention_mask"] for b in batch]
+            return SquadV2Handler.collate_fn(list(zip(input_ids, attn)))
+        else:
+            return SquadV2Handler.collate_fn(batch)
+>>>>>>> e423763 (training/training_MN5 -> training/)

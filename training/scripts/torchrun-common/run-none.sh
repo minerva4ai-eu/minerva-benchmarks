@@ -1,19 +1,33 @@
 #!/bin/bash
 
 #SBATCH --job-name=PYTORCH_DYNAMIC
+#SBATCH --time=1:00:00
 
 
 ##################################################
-###            Setup Environment               ###
+###           Activate Environment             ###
 ##################################################
-if [ ! -z "$LOAD_MODULES" ]; then
-    eval "$LOAD_MODULES"
-fi
-source shared/runtime_environment.sh
-training_activate_runtime_environment
+# Activate virtual environment using conda
+# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
+eval "$LOAD_MODULES"
+# source activate $ENVIRONMENT_FINETUNING
+# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
+# which python
+
+##################################################
+
+
+##################################################
+###        Environment Variables Setup         ###
+##################################################
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
+# Deprecated script arguments - provided by launch environment
+#LAUNCH_FOLDER=$1
+#DATASET=$2
+#DATASET_PATH=$3
+#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -39,44 +53,55 @@ export NODE_RANK=$SLURM_PROCID
 ###           Training Execution              ###
 ##################################################
 # Define GPU monitoring command.
-runtime_prefix="$(training_build_runtime_prefix)"
-echo "Will apply runtime prefix '$runtime_prefix'"
+singularity_prefix="singularity exec \
+    $SINGULARITY_ARGS \
+    $SINGULARITY_BINDS \
+    --home $LAUNCH_FOLDER \
+    $SINGULARITY_CONTAINER"
+echo "singularity prefix $singularity_prefix"
 
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
-train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data $DATASET_PATH \
-        --output_dir $OUTPUT_DIR \
-        --batch_size $BATCH_SIZE \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
-        --max_length $MAX_MODEL_LENGTH \
-        --precision $PRECISION \
-        --lr $LR \
-        --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 2 \
-        --dataset '$DATASET'"
+# Start GPU monitoring in background
+$singularity_prefix $gpu_plots_monitor_command &
+monitor_pid=$!
 
-if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
-    train_command="$train_command --enable_compile"
-fi
+# Optional: give the monitor time to initialize
+sleep 5
 
+# Launch training on a single Node
+
+
+# Kill the GPU monitoring running in background 
+kill -SIGTERM \"\$monitor_pid\"
+
+# Wait for the monitor to clean up and exit
+wait \"\$monitor_pid\
 # Launch Run
-srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $gpu_plots_monitor_command &
+    $singularity_prefix $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize
     sleep 5
 
-    export RANK=0
-    export LOCAL_RANK=0
-    export WORLD_SIZE=1
     # Run training in foreground (this blocks until done)
-    $train_command
+    $singularity_prefix 
+        python $TRAIN_SCRIPT 
+        --model $MODEL_PATH
+        --data $DATASET_PATH
+        --output_dir $OUTPUT_DIR
+        --batch_size $BATCH_SIZE
+        ${EPOCHS:+--epochs "$EPOCHS"}
+        ${STEPS:+--max_steps "$STEPS"}
+        --max_length $MAX_MODEL_LENGTH
+        --precision $PRECISION
+        --lr $LR
+        --gradient_accumulation_steps $GRAD_ACCUM
+        --dataloader_num_workers 8
+        --dataset $DATASET
 
     kill -SIGTERM \"\$monitor_pid\"
 
