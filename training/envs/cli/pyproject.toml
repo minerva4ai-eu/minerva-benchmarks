@@ -13,6 +13,8 @@ dependencies = [
   "tqdm",
   "psutil",
   "prompt-toolkit",
+  "omegaconf",
   "hydra-core>=1.3.2",
   "click>=8.4.1",
+  "rich>=15.0.0",
 ]
