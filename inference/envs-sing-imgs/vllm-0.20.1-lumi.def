@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: docker.io/lumiaifactory/lumi-multitorch:full-u24r70f21m50t210-20260513_121430
+
+%post
+    . /opt/venv/bin/activate
+
+    # --- uv ---
+    pip install uv
+
+    # --- Ray + deps ---
+    uv pip install 'ray[default]'
+    uv pip install aiohttp-cors colorful plotly opencensus \
+        opentelemetry-api opentelemetry-sdk \
+        opentelemetry-exporter-prometheus opentelemetry-proto
+
+ # --- vLLM ROCm version installation todo ---
+ #    uv pip install vllm==0.21.0 \
+ #        --extra-index-url https://wheels.vllm.ai/rocm/0.21.0/rocm722 \
+ #       --no-deps
+
+    # --- build-time check ---
+    python -c "import torch; assert torch.version.hip, 'Torch HIP broken'; print('Torch', torch.__version__, 'HIP', torch.version.hip)"
+    python -c "import vllm; print('vLLM', vllm.__version__)"
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export VLLM_TARGET_DEVICE=rocm
+
