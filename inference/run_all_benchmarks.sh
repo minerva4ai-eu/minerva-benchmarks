@@ -57,8 +57,8 @@ for framework in "${FRAMEWORKS[@]}"; do
             FULL_FOLDER="${BASE_FOLDER}/${RUN_FOLDER}"
 
             # Define a unique MODEL_PATH per configuration
-            MODEL_TYPE=$(get_model_type "$model" "configs-bsc-mn5-acc/model_type_map.json")
-            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-bsc-mn5-acc/model_type_directories_map.json")
+            MODEL_TYPE=$(get_model_type "$model" "configs-$MACHINE/model_type_map.json")
+            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-$MACHINE/model_type_directories_map.json")
             MODEL_PATH="${MODEL_DIRECTORY}/${model}"
 
             if [ -z "$MODEL_DIRECTORY" ]; then
@@ -66,7 +66,7 @@ for framework in "${FRAMEWORKS[@]}"; do
               exit 1
             fi
 
-            DATASET_PATH=$(get_dataset_path "$dataset" "configs-bsc-mn5-acc/config_datasets_paths_map.json")
+            DATASET_PATH=$(get_dataset_path "$dataset" "configs-$MACHINE/config_datasets_paths_map.json")
 
             # vLLM
             if [[ "$framework" == "vllm" ]]; then
