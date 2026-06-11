@@ -24,6 +24,7 @@ From: python:3.11-slim
     uv.lock /opt/uv-env/uv.lock
 %post
     _CWD="/opt/uv-env"
+    
     TOML_PATH="$_CWD/pyproject.toml"
     #ENV_PATH="/opt/uv-env/.venv"
 
@@ -55,14 +56,14 @@ From: python:3.11-slim
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
     export UV_SYSTEM_PYTHON=1
-    export PATH=/opt/uv-env/.venv/bin:/usr/.local/bin:$PATH
-    export UV_PROJECT_ENVIRONMENT=/opt/uv-env/.venv
+    export PATH=/app/uv-env/.venv/bin:/usr/.local/bin:$PATH
+    export UV_PROJECT_ENVIRONMENT=/app/uv-env/.venv
 
 %runscript
     exec python "$@"
 
 %test
-    cd /opt/uv-env/.venv
+    cd /app/uv-env/.venv
     echo "--- Python version ---"
     python --version
     echo "--- uv version ---"
