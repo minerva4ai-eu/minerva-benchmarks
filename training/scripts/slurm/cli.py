@@ -532,8 +532,8 @@ def cli_entry():
         interactive_loop()
     elif len(sys.argv) == 2:
         print(sys.argv)
-        if sys.argv[1].strip() in ["--help"]:
-            # sys.argv[1] = "--help"
+        if sys.argv[1].strip() in ["help", "--help"]:
+            sys.argv[1] = "--help"
             cli()
         interactive_loop(sys.argv[1])
     else:
