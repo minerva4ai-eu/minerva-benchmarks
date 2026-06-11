@@ -63,7 +63,20 @@ def cli():
     "--output",
     default=RUNS_DIR,
 )
-def run(dry_run, per_model_jobs, configs_path, config_name, output):
+@click.option(
+    "--yaml",
+    "yamls",
+    multiple=True,
+    default=None,
+    help=(
+        'Run a benchmark configuration by providing the path to BenchmarkConfig file. Multiple ids may be provided by repeating the input argument, e.g. "...--cfg-id cfgid1 --cfg-id cfgid2 --cfg-id cfgid3 etc..."'
+        + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
+    ),
+)
+def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
+    assert not (dry_run and per_model_jobs), (
+        f"{u.RED}'--dry-run' & '--per-model-jobs' cannot be combined!{u.RESET}"
+    )
     # TODO: Optimize this function on code redundancy
     """Generate all valid configs and submit all pending jobs."""
     print("\n")
@@ -71,9 +84,29 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output):
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
-    valid, skipped = generate_valid_combos(
-        config_path=configs_path, config_name=config_name, outpath=output
-    )
+    valid = []
+    if yamls:
+        for y in yamls:
+            click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching fo {y}{u.RESET}")
+            try:
+                _cfg: "BenchmarkConfig" = DictConfig(u.load_yaml(y))
+                output = Path(_cfg.experiment.output_dir)
+                valid.append(_cfg)
+                click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
+            except FileNotFoundError:
+                click.echo(
+                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config could NOT be FOUND!{u.RESET}"
+                )
+                continue
+            except Exception as e:
+                click.echo(
+                    f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read file...{u.RESET}"
+                )
+                raise e
+    else:
+        valid, _ = generate_valid_combos(
+            config_path=configs_path, config_name=config_name, outpath=output
+        )
 
     run_date = datetime.now().date().strftime("%d-%m-%Y")
     slurm_monitor_dir = os.path.join(output, "slurm-monitor")
@@ -153,6 +186,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output):
     # Sumbit all jobs interedependent
     for cfg in valid:
         if dry_run:
+            print(output)
             _ = build_launch_folder(
                 cfg, base_dir=BASE_DIR, runs_dir=output, run_id=short_id, dry=dry_run
             )
@@ -245,7 +279,12 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
         f"{u.POINT_DIAMOND} {u.CYAN} Re-running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
-    run_monitor_folder = f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}"
+    run_date = str2date2str(run_date)
+    if not is_valid_date(run_date):
+        raise ValueError(
+            f"{u.RED}Provided invalid '--run-date' value '{run_date}'.Either faulty format or future timestamp!"
+        )
+    run_monitor_folder = f"{output}/slurm-monitor/{run_date}/run_id-{run_id}"
     run_monitor_path = f"{run_monitor_folder}/jobs_submitted.jsonl"
 
     rerun_id = 1
@@ -308,21 +347,35 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
             if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
         ]
 
-    click.echo(
-        f"\n{u.YELLOW}Resubmitting {len(combos)} jobs (status={mode})...{u.RESET}"
-    )
-    cfgs_seen = set()
-    jobs_resubmitted = []
-    dependency_jobid = ""
-
     rerun_id = f"run_id-{run_id}--rerun_id-{rerun_id}"
+    cfgs_to_rerun = []
     for job in combos:
         config_dir = "/".join(job["launch_folder"].split("/")[:-2])
 
-        cfg: "BenchmarkConfig" = DictConfig(
-            u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
-        )
+        try:
+            cfg: "BenchmarkConfig" = DictConfig(
+                u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
+            )
+            click.echo(
+                f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config '{job['yaml_filename']}' FOUND in [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+            )
+        except FileNotFoundError:
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}YAML config '{job['yaml_filename']}' could NOT be FOUND!{u.RESET}"
+            )
+            continue
+        except Exception as e:
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read YAML '{job['yaml_filename']}'{u.RESET}"
+            )
+            raise e
+        cfgs_to_rerun.append(cfg)
+    click.echo(f"\n{u.YELLOW}Resubmitting {len(combos)} jobs (mode={mode})...{u.RESET}")
 
+    cfgs_seen = set()
+    jobs_resubmitted = []
+    dependency_jobid = ""
+    for cfg in cfgs_to_rerun:
         for repeat_id in range(1, cfg.experiment.repeat + 1):
             job_desc = {
                 "id": None,
