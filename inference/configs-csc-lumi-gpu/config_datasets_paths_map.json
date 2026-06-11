@@ -1,0 +1,5 @@
+{
+  "sharegpt": "/scratch/project_462000266/emilsala/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/scratch/project_462000266/emilsala/datasets/sonnet.txt",
+  "example_dataset": "/path/to/example_dataset"
+}

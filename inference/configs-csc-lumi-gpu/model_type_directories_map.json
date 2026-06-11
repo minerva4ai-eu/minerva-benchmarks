@@ -1,0 +1,5 @@
+{
+  "Text Generation": "/scratch/project_462000266/emilsala/AI-Models/",
+  "Embedding": "/path/to/embedding/models",
+  "Vision": "/path/to/vision/models"
+}
