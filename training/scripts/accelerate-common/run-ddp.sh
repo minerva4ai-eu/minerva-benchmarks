@@ -91,7 +91,7 @@ source activate-env-variables-per-supercomputer.sh
 
 # Launch Run
 # Start monitoring in background
-#$singularity_prefix $gpu_plots_monitor_command &
+#$gpu_plots_monitor_command &
 #monitor_pid=$!
 #
 ## Optional: give the monitor time to initialize
@@ -107,7 +107,7 @@ source activate-env-variables-per-supercomputer.sh
 
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $singularity_prefix $gpu_plots_monitor_command &
+    $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize
