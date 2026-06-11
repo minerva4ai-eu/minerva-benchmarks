@@ -165,10 +165,10 @@ RERUN_OPTIONS = [
         error_msg="--run-date must be in the format DD-MM-YYYY or d-m-YYYY!Check date for errors in format & or future timestamps.",
         required=True,
     ),
-    OptionConfig(name="--run-id", prompt="run-id", required=True),
     OptionConfig(
-        name="--rerun-id",
-        prompt="rerun-id",
+        name="--output",
+        prompt="output",
+        default=str(RUNS_DIR),
     ),
     OptionConfig(
         name="--cfg-id",

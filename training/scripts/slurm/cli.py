@@ -12,7 +12,7 @@ import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
 from omegaconf import DictConfig
 from scripts.slurm.cli_utils import *
-from scripts.slurm.submitter import build_launch_folder, copy_scripts, submit_job
+from scripts.slurm.submitter import build_launch_folder, submit_job
 
 if TYPE_CHECKING:
     from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -222,14 +222,9 @@ class InvalidRerun(Exception):
     required=True,
 )
 @click.option(
-    "--rerun-id",
-    "follow_rerun_id",
-    type=int,
-    help="Serial id of past resubmission on provided date run-id! Optional argument, which limits the resbmission to the job run on providied rerun-id.",
-    required=False,
+    "--output",
+    default=RUNS_DIR,
 )
-# @click.option("--only-failed", "mode", flag_value="failed", default=True)
-# @click.option("--pending", "mode", flag_value="pending")
 @click.option("--all", "all", is_flag=True, default=False)
 @click.option("--only-failed", "only_failed", is_flag=True, default=False)
 @click.option("--only-pending", "only_pending", is_flag=True, default=False)
@@ -242,7 +237,7 @@ class InvalidRerun(Exception):
         'Rerun a benchmark configuration by cfg_id. Multiple ids may be provided by repeating the input argument, e.g. "...--cfg-id cfgid1 --cfg-id cfgid2 --cfg-id cfgid3 etc..."'
     ),
 )
-def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg_ids):
+def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
     """Rerun all, failed, pending jobs, or a specific run/combo by id."""
 
     print("\n")
@@ -260,10 +255,6 @@ def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg
         rerun_id += 1
         rerun_logs = f"jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
         rerun_monitor_path = os.path.join(run_monitor_folder, rerun_logs)
-
-    if follow_rerun_id:
-        run_logs = f"jobs_resubmitted-rerun_id-{follow_rerun_id}.jsonl"
-        run_monitor_path = os.path.join(run_monitor_folder, run_logs)
 
     run_jobs = m.load_all(run_monitor_path)
     _combos = run_jobs
@@ -324,6 +315,7 @@ def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg
     jobs_resubmitted = []
     dependency_jobid = ""
 
+    rerun_id = f"run_id-{run_id}--rerun_id-{rerun_id}"
     for job in combos:
         config_dir = "/".join(job["launch_folder"].split("/")[:-2])
 
@@ -344,10 +336,16 @@ def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg
                     f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                 )
                 continue
-            _ = copy_scripts(cfg, Path(job["launch_folder"]))
+            rerun_launch_folder = build_launch_folder(
+                cfg=cfg,
+                base_dir=BASE_DIR,
+                runs_dir=output,
+                run_id=rerun_id,
+                repeat_id=repeat_id,
+            )
             dependency_jobid = submit_job(
                 cfg=cfg,
-                launch_folder=Path(job["launch_folder"]),
+                launch_folder=Path(rerun_launch_folder),
                 repeat_id=repeat_id,
                 dependency=dependency_jobid,
             )
@@ -377,6 +375,13 @@ def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg
     required=True,
 )
 @click.option(
+    "--rerun-id",
+    "rerun_id",
+    type=int,
+    help="Get status of jobs of a rerun 'rerun-id' on provided 'run_id'.",
+    required=False,
+)
+@click.option(
     "--model",
     "model",
     type=str,
@@ -397,7 +402,7 @@ def rerun(run_date, run_id, follow_rerun_id, all, only_failed, only_pending, cfg
     help="",
     required=False,
 )
-def status(run_date, run_id, model, framework, parallelism):
+def status(run_date, run_id, rerun_id, model, framework, parallelism):
     """Print a summary of all run statuses."""
     is_valid_date(run_date)
     assert is_valid_date(run_date), (
@@ -408,6 +413,8 @@ def status(run_date, run_id, model, framework, parallelism):
     run_monitor_folder = (
         f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
     )
+    if rerun_id:
+        run_monitor_folder = f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
     try:
         run_jobs = m.load_all(run_monitor_folder)
     except FileNotFoundError:
@@ -531,7 +538,6 @@ def cli_entry():
     if len(sys.argv) == 1:
         interactive_loop()
     elif len(sys.argv) == 2:
-        print(sys.argv)
         if sys.argv[1].strip() in ["help", "--help"]:
             sys.argv[1] = "--help"
             cli()
