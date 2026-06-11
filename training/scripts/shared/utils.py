@@ -109,6 +109,7 @@ def get_fsdp_layer_to_wrap(model_name_or_path: str) -> list[str]:
         "gemma_text": ["GemmaDecoderLayer"],
         "gemma2_text": ["Gemma2DecoderLayer"],
         "gemma3_text": ["Gemma3DecoderLayer"],
+        "gemma3": ["Gemma3ForConditionalGeneration"],
         "falcon": ["FalconDecoderLayer"],
         "phi": ["PhiDecoderLayer"],
         "phi3": ["Phi3DecoderLayer"],
