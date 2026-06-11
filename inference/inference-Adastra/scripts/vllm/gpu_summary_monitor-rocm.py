@@ -66,30 +66,37 @@ finally:
 
     gpu_stats = []
     total_mem_avg = total_power_avg = total_mem_peak = total_power_peak = 0.0
+    reporting_gpus = 0  # GCDs qui reportent effectivement une puissance
 
     for i in range(device_count):
-        avg_mem = mem_sum[i] / count[i] if count[i] > 0 else 0
+        avg_mem   = mem_sum[i]   / count[i] if count[i] > 0 else 0
         avg_power = power_sum[i] / count[i] if count[i] > 0 else 0
         gpu_stats.append({
             "id": i,
-            "avg_memory_mb": round(avg_mem, 2),
+            "avg_memory_mb":  round(avg_mem, 2),
             "peak_memory_mb": round(mem_peak[i], 2),
-            "avg_power_w": round(avg_power, 2),
-            "peak_power_w": round(power_peak[i], 2)
+            "avg_power_w":    round(avg_power, 2),
+            "peak_power_w":   round(power_peak[i], 2)
         })
-        total_mem_avg += avg_mem
-        total_power_avg += avg_power
-        total_mem_peak += mem_peak[i]
-        total_power_peak += power_peak[i]
+        total_mem_avg   += avg_mem
+        total_mem_peak  += mem_peak[i]
+
+        # Sur MI250X, les GCDs impairs reportent 0 — on les exclut de la moyenne power
+        if avg_power > 0:
+            total_power_avg  += avg_power
+            total_power_peak += power_peak[i]
+            reporting_gpus   += 1
+
+    power_divisor = reporting_gpus if reporting_gpus > 0 else device_count
 
     summary = {
         "interval": poll_interval,
         "GPUs": gpu_stats,
         "total": {
-            "avg_memory_mb": round(total_mem_avg / device_count, 2),
-            "peak_memory_mb": round(total_mem_peak / device_count, 2),
-            "avg_power_w": round(total_power_avg / device_count, 2),
-            "peak_power_w": round(total_power_peak / device_count, 2)
+            "avg_memory_mb":  round(total_mem_avg   / device_count, 2),
+            "peak_memory_mb": round(total_mem_peak  / device_count, 2),
+            "avg_power_w":    round(total_power_avg  / power_divisor, 2),
+            "peak_power_w":   round(total_power_peak / power_divisor, 2)
         }
     }
 
