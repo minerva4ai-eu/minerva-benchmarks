@@ -4,25 +4,28 @@ __pycache__/
 *.pyd
 
 # Folders
-inference/inference-MN5/scripts/ray-serve/
-inference/inference-MN5/envs/
-inference/inference-MN5/results-*/
+inference/scripts/ray-serve/
+inference/envs/
+inference/results-*/
+inference/results/*
 
 
 # Ignore everything inside inference/results/
-inference/inference-MN5/results/vllm/
-inference/inference-MN5/results/deepspeed/
+inference/results/vllm/
+inference/results/deepspeed/
 
 # But do not ignore CSV files directly inside inference/results/
-# !inference/inference-MN5/results/*.csv
+# !inference/results/*.csv
 
 results/deepspeed/*
 results/vllm/*
 results/sglang/*
+results/vllm-1/*
+results/sglang-1/*
 
-inference/inference-MN5/results/deepspeed/*
-inference/inference-MN5/results/sglang/*
-inference/inference-MN5/results/vllm/*
+inference/results/deepspeed/*
+inference/results/sglang/*
+inference/results/vllm/*
 
-inference/inference-MN5/analytics-*/
-inference/inference-MN5/benchmarks-vllm-10122025/*
+inference/analytics-*/
+inference/benchmarks-vllm-10122025/*

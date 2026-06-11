@@ -32,7 +32,7 @@ minerva-benchmarks/
 
 ### Inference Benchmarks
 
-See: [inference/inference-MN5/README.md](training/inference-MN5/README.md)
+See: [inference/README.md](training/inference-MN5/README.md)
 
 Covers:
 
