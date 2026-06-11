@@ -1,0 +1,27 @@
+Bootstrap: docker
+From: lmsysorg/sglang:v0.5.6.post1-runtime
+
+%labels
+    Author YourName
+    Version 0.5.6.post1
+    Description "SGLang 0.5.6.post1 runtime server"
+
+%environment
+    export LC_ALL=C
+    export LANG=C
+
+
+%runscript
+    exec python3 -m sglang.launch_server "$@"
+
+%help
+    SGLang 0.5.6.post1
+    Source image:
+      docker://lmsysorg/sglang:v0.5.6.post1-runtime
+
+    Example:
+
+      apptainer run --nv sglang_0.5.6.post1.sif \
+          --model-path meta-llama/Llama-3.1-8B-Instruct \
+          --host 0.0.0.0 \
+          --port 30000

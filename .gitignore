@@ -29,3 +29,6 @@ inference/results/vllm/*
 
 inference/analytics-*/
 inference/benchmarks-vllm-10122025/*
+
+results/*
+inference/benchmarks/datasets/*
