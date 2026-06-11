@@ -26,6 +26,8 @@ echo "DATASET_PATH: {$DATASET_PATH}"
 export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 
 # NCCL variables
+module load $MODULES
+source activate-env-per-supercomputer.sh $ENVIRONMENT_SGLANG
 source activate-env-variables-per-supercomputer.sh
 
 ##################################################
