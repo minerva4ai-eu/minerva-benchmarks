@@ -42,7 +42,6 @@ export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 ##################################################
 ###             Torchrun Setup                 ###
 ##################################################
-gpu_plots_monitor_command="python -m gpu_plots"
 
 
 # Torchrun args
@@ -61,12 +60,13 @@ singularity_prefix="singularity exec \
     $SINGULARITY_CONTAINER"
 echo "singularity prefix $singularity_prefix"
 
+gpu_plots_monitor_command="$singularity_prefix python -m gpu_plots"
 source activate-env-variables-per-supercomputer.sh
 
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
-    $singularity_prefix $singularity_prefix $gpu_plots_monitor_command &
+    $gpu_plots_monitor_command &
     monitor_pid=\$!
 
     # Optional: give the monitor time to initialize

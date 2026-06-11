@@ -65,7 +65,7 @@ echo "singularity prefix $singularity_prefix"
 gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
 # Start GPU monitoring in background
-$singularity_prefix $gpu_plots_monitor_command &
+$gpu_plots_monitor_command &
 monitor_pid=\$!
 
 # Optional: give the monitor time to initialize

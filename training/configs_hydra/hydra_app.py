@@ -94,7 +94,7 @@ def generate_valid_combos(
                 overrides=[
                     f"model={model}-{_init_cfg.machine.name_pattern}",
                     f"framework={framework}",
-                    f"dataset={dataset}",
+                    f"dataset={dataset}-{_init_cfg.machine.name_pattern}",
                 ],
             )
             print(
