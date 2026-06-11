@@ -216,7 +216,7 @@ def generate_valid_combos(
                             )
                             continue
                         cfg_seen.add(tmp_cfg.id)
-                        print(cfg_seen)
+
                         # MAKE SURE BEFORE DELETE
                         # outpath_yaml = os.path.join(run_path, yaml_filename)
                         passed, results_msg = rules.is_valid(tmp_cfg)
