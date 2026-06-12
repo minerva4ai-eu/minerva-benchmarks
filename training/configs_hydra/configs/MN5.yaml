@@ -10,10 +10,11 @@ machine:
   name_pattern: MN5 # configuration files naming convention pattern
   modules: 
     - singularity
-    - jq
-    - cuda/12.1
-  python_environment: /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/envs/fine-tune-dev-test-cuda121-hydra
-  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/training_MN5/envs/uv/cuda121-flash-attn/singularity_uv-runtime-app.sif
+    #- jq
+    #- cuda/12.1
+  python_environment: ""
+  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-app.sif
+  #singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/pytorch_2.5.1-final.sif
   singularity_binds:
     # No escaped character may be used
   #  - "--bind /opt/linpack/ACC/bench/opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so" 
