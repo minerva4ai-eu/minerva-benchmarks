@@ -11,8 +11,8 @@ MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") #
 NUMBER_OF_NODES=(2)
 MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
-MACHINE_TYPE="cuda" # "cuda" or "rocm"
+MACHINE="csc-lumi-gpu"
+MACHINE_TYPE="rocm" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
 #######################################################
@@ -34,7 +34,7 @@ for framework in "${FRAMEWORKS[@]}"; do
     for model in "${MODELS[@]}"; do
       for NODES in "${NUMBER_OF_NODES[@]}"; do
         # Define which GPU configs to try
-        if [[ "$NODES" -eq 1 ]]; then
+        if [[ "$NODES" -eq 0 ]]; then
           GPU_CONFIGS=(1 $GPUS_PER_NODE)   # both 1-GPU and Max-GPU
         else
           GPU_CONFIGS=($GPUS_PER_NODE)  # use default
@@ -57,8 +57,8 @@ for framework in "${FRAMEWORKS[@]}"; do
             FULL_FOLDER="${BASE_FOLDER}/${RUN_FOLDER}"
 
             # Define a unique MODEL_PATH per configuration
-            MODEL_TYPE=$(get_model_type "$model" "configs-bsc-mn5-acc/model_type_map.json")
-            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-bsc-mn5-acc/model_type_directories_map.json")
+            MODEL_TYPE=$(get_model_type "$model" "configs-csc-lumi-gpu/model_type_map.json")
+            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-csc-lumi-gpu/model_type_directories_map.json")
             MODEL_PATH="${MODEL_DIRECTORY}/${model}"
 
             if [ -z "$MODEL_DIRECTORY" ]; then
@@ -66,7 +66,7 @@ for framework in "${FRAMEWORKS[@]}"; do
               exit 1
             fi
 
-            DATASET_PATH=$(get_dataset_path "$dataset" "configs-bsc-mn5-acc/config_datasets_paths_map.json")
+            DATASET_PATH=$(get_dataset_path "$dataset" "configs-csc-lumi-gpu/config_datasets_paths_map.json")
 
             # vLLM
             if [[ "$framework" == "vllm" ]]; then
@@ -119,11 +119,11 @@ for framework in "${FRAMEWORKS[@]}"; do
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
                     --nodes=$NODES \
-                    --gres=gpu:$GPUS_PER_NODE \
+                    --gpus-per-node=$GPUS_PER_NODE \
                     --cpus-per-task=$TOTAL_CPUS \
                     $DEPENDENCY \
                     --output=run-%j.out \
-                    --error=run-%j.err \
+                    --error=run-%j.out \
                     -A $ACCOUNT \
                     -q $QOS \
                     --time=$TIME_LIMIT \

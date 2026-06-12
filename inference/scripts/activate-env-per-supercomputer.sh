@@ -28,7 +28,11 @@ case "$MACHINE" in
         export COMPILER=nvhpc
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
-
+    csc-lumi-gpu)
+	module purge
+	module use /appl/local/laifs/modules
+	module load $MODULES
+	;;
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

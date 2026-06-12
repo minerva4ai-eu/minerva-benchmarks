@@ -37,7 +37,21 @@ case "$MACHINE" in
         export COMPILER=nvhpc
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
+    csc-lumi-gpu)
+	export NCCL_SOCKET_IFNAME=hsn
+        export NCCL_NET_GDR_LEVEL=PHB
+	export BINDINGS_SINGULARITY="/var/spool/slurmd,/pfs,/scratch,/projappl,/project,/flash,/appl,/boot"
+	export ADDITIONAL_SINGULARITY_ARGS="--no-home --nv"
 
+	export VLLM_RPC_BASE_PATH="$FLASH/tmp/.cache"
+	export VLLM_CACHE_ROOT="$FLASH/tmp/.vllm/cache"
+	export XDG_CACHE_HOME="$FLASH/tmp/.xdg/cache"
+	export TRITON_CACHE_DIR="$FLASH/tmp/triton"
+	export TORCHINDUCTOR_CACHE_DIR="$FLASH/tmp/inductor"
+
+	# GPU visibility
+        export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
+        ;;
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
