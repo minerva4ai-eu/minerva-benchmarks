@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #SBATCH --job-name=PYTORCH_DYNAMIC
-#SBATCH --time=1:00:00
 
 
 ##################################################

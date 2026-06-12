@@ -15,6 +15,7 @@ sbatch:
   error: run-%j.err
   extra_args:
     - "--exclusive"
+    - "--time=00:30:00"
 
 srun:
   gpus_per_node: 4
