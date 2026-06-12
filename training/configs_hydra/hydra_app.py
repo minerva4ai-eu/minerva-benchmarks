@@ -146,7 +146,7 @@ def generate_valid_combos(
                     tmp_cfg.model.training.lr = lr
                     tmp_cfg.model.training.optimizer = optimizer
                     tmp_cfg.model.training.steps = steps
-
+                    tmp_cfg.experiment.output_dir = outpath
                     # Will bee used later to take care of configuration
                     # of 1 node and 1 gpu
 

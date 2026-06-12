@@ -2,7 +2,6 @@ name: accelerate
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:
-  none: { min_gpus: 1, max_gpus: 1 }
   ddp: { min_gpus: 2 }
   fsdp: { min_gpus: 2 }
 
