@@ -6,10 +6,11 @@
 module load $MODULES
 
 # Tmp dir
-# Create Temporal directories
+# Create Temporal directories (tolerate pre-existing dir / files owned by
+# previous runs from other users; we only need our own subdirs to be writable).
 TMPDIR=$CUR_DIR/tmp
-mkdir $TMPDIR
-chmod -R 777 $TMPDIR
+mkdir -p "$TMPDIR"
+chmod 777 "$TMPDIR" 2>/dev/null || true
 export SINGULARITY_CACHEDIR=$TMPDIR
 export SINGULARITY_TMPDIR=$TMPDIR
 
@@ -73,7 +74,7 @@ ENABLE_CHUNKED_PREFILL=${ENABLE_CHUNKED_PREFILL:-0}
 ENABLE_EXPERT_PARALLEL=${ENABLE_EXPERT_PARALLEL:-0}
 ENFORCE_EAGER=${ENFORCE_EAGER:-0}
 DISABLE_CUSTOM_ALL_REDUCE=${DISABLE_CUSTOM_ALL_REDUCE:-0}
-export ENABLE_PREFIX_CACHING ENABLE_CHUNKED_PREFILL ENFORCE_EAGER DISABLE_CUSTOM_ALL_REDUCE
+export ENABLE_PREFIX_CACHING ENABLE_CHUNKED_PREFILL ENABLE_EXPERT_PARALLEL ENFORCE_EAGER DISABLE_CUSTOM_ALL_REDUCE
 
 # Disable allreduce+rms fusion path that can require multicast-capable symmetric memory
 #export COMPILATION_CONFIG='{"pass_config":{"fuse_allreduce_rms":true}}'

@@ -11,7 +11,7 @@ MODELS=("Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruc
 NUMBER_OF_NODES=(1 2 4)
 MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
 REPEATS=3               # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
+MACHINE="leonardo"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
