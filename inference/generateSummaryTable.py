@@ -6,21 +6,26 @@ import re
 
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
-load_dotenv(".env")
 
+import socket
+hostname = socket.gethostname()
+env_file = ".env-leonardo" if "leonardo" in hostname else ".env-bsc-mn5-acc"
+load_dotenv(env_file)
+#load_dotenv(".env")
 
 
 BASE_DIR =  os.getcwd() # Adjust if needed
 BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
+
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
 BENCHMARK_FILE = os.getenv("BENCHMARK_FILE", "Add to .env file")
-MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, "configs", "model_type_map.json")))
+MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json")))
 OUTPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 
 CSV_HEADERS = [
-    "Supercomputer", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",
+    "SUPCOMPUTER", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",
     "Concurrency Level", "Number of Nodes", "GPUs per Node", "Total Used GPUs", "Tensor", "Pipeline", "Max Model Length", "Additional Arguments",
     "GPU Memory Usage Avg (GB)", "GPU Memory Usage Peak (GB)", "Power Usage Avg (W)", "Power Usage Peak (W)",
     "TTFT (ms)", "ITL (ms)", "TPOT (ms)", "Output Throughput (tokens/s)", "Request Throughput (requests/s)"
@@ -73,7 +78,7 @@ def extract_additional_args(path: str):
     ADDITIONAL_ARGS = ""
     # Extract config file (get additional args).
 
-    config_file = "config.json"
+    config_file = f"config-{SUPCOMPUTER_NAME}.json"
     if os.path.exists(os.path.join(path, config_file)):
         with open(os.path.join(path, config_file)) as json_file:
             json_config_data = json.load(json_file)
