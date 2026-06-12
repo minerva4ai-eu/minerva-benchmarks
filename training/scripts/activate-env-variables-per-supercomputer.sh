@@ -35,9 +35,25 @@ case "$MACHINE" in
         ;;
 
     leonardo)
-        export COMPILER=nvhpc
-        export CUDA_HOME=/cineca/prod/CUDA/12.1
+        # NOTE: do NOT set NCCL_NET=IB on Leonardo: the NCCL build inside the
+        # container does not ship the IB plugin, so forcing the IB transport
+        # fails with "Error: network IB not found.". Letting NCCL auto-detect
+        # the transport works correctly on Leonardo.
+        # Likewise NCCL_IB_HCA / NCCL_SOCKET_IFNAME / NCCL_IB_DISABLE / NCCL_NET
+        # are intentionally left unset.
+
+        # CUDA devices: 4 GPUs per Leonardo Booster node.
+        export CUDA_VISIBLE_DEVICES="0,1,2,3"
+        export NCCL_DEBUG=INFO
+        
+        # PYTORCH allocator: expandable_segments is unsupported on Leonardo's
+        # GPUs (A100), so do not enable it — it triggers a runtime warning and
+        # has no effect.
+        # export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        # export CUDA_LAUNCH_BLOCKING=1   # debugging only — disables async kernels
         ;;
+ 
+ 
 
     *)
         echo "Unknown machine: $MACHINE"

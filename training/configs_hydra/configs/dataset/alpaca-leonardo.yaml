@@ -1,0 +1,4 @@
+defaults:
+  - alpaca
+
+path: /leonardo_work/MNRVA_bench/datasets/alpaca_data_cleaned.json

@@ -1,0 +1,5 @@
+defaults:
+  - gemma3_1b
+  - _self_
+
+path: /leonardo_work/MNRVA_bench/models/gemma-3-1b-it

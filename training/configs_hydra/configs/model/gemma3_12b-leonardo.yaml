@@ -1,0 +1,6 @@
+defaults:
+  - gemma3_12b
+  - _self_
+
+path: /leonardo_work/MNRVA_bench/models/gemma-3-12b-it
+max_gpus_scale: 8

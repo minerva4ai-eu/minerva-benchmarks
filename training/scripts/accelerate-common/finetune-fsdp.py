@@ -36,6 +36,15 @@ def is_main_process():
 
 
 def main():
+    # IMPORTANT: these env vars must be set BEFORE `AutoModelForCausalLM.from_pretrained`
+    # so HuggingFace's `is_fsdp_enabled()` check returns True at load time. Together they
+    # cause `from_pretrained` to load the full checkpoint only on rank 0 (other ranks get
+    # meta tensors), with weights later broadcast via FSDP `sync_module_states=True`.
+    # Without this, every rank loads a full CPU copy of the model and the subsequent
+    # FSDP wrap step OOMs the GPUs.
+    os.environ.setdefault("ACCELERATE_USE_FSDP", "true")
+    os.environ.setdefault("FSDP_CPU_RAM_EFFICIENT_LOADING", "true")
+
     if dist.is_initialized():
         rank = dist.get_rank()
         world_size = dist.get_world_size()
@@ -161,27 +170,16 @@ def main():
 
         print_rank(f"Loading Model... dtype: {dtype}")
 
+        # With ACCELERATE_USE_FSDP=true and FSDP_CPU_RAM_EFFICIENT_LOADING=true set
+        # above, HF loads the full state dict only on rank 0; non-zero ranks get an
+        # empty model on meta and are populated via `sync_module_states` during the
+        # FSDP wrap that happens inside the Trainer below.
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=dtype,
+            dtype=dtype,
             low_cpu_mem_usage=True,
             attn_implementation="flash_attention_2",
         )
-        # if is_main_process():
-        #    model = AutoModelForCausalLM.from_pretrained(
-        #        model_name,
-        #        torch_dtype=dtype,
-        #        low_cpu_mem_usage=True,
-        #        attn_implementation="flash_attention_2",
-        #    )
-        # else:
-        #    config = AutoConfig.from_pretrained(model_name)
-        #    with init_on_device(torch.device("meta")):
-        #        model = AutoModelForCausalLM.from_config(
-        #            config,
-        #            torch_dtype=dtype,
-        #            attn_implementation="flash_attention_2",
-        #        )
 
         ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
         print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")

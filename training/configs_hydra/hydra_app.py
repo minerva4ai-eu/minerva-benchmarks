@@ -45,8 +45,11 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
+#MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
+
+
+MODELS = ["gemma3_12b"]  # , "gemma3_1b", "gemma3_12b", "llama3_70b"]
+FRAMEWORKS = ["accelerate"]
 DATASETS = ["alpaca"]
 
 ################################################################

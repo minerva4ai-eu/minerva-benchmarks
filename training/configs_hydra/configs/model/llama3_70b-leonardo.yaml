@@ -1,0 +1,5 @@
+defaults:
+  - llama3_70b
+  - _self_
+
+path: /leonardo_work/MNRVA_bench/models/Llama-3.3-70B-Instruct

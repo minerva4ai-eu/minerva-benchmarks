@@ -1,0 +1,5 @@
+defaults:
+  - llama3_8b
+  - _self_
+
+path: /leonardo_work/MNRVA_bench/models/Llama-3.1-8B-Instruct

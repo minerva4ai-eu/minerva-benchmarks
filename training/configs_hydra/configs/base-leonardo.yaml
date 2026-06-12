@@ -1,0 +1,41 @@
+# Base configuration for benchmark experiments
+defaults:
+  - base
+  - arch: leonardo
+  - slurm: leonardo
+  - _self_
+
+machine:
+  name: leonardo # actual name of super computer running benchmarks
+  name_pattern: leonardo # configuration files naming convention pattern
+  modules: 
+    - singularity
+    - jq
+    - cuda/12.1
+  python_environment:  ""
+  singularity_container: /leonardo_work/MNRVA_bench/rscheda0/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-app.sif
+  singularity_binds:
+      # Bind the project root so models/, datasets/ and sibling paths are
+      # visible inside the container (singularity only auto-binds $HOME and
+      # $PWD, which here is the launch folder).
+      - "--bind /leonardo_work/MNRVA_bench:/leonardo_work/MNRVA_bench"
+      # - "--bind /dev/infiniband"
+      # - "--bind /usr/lib64/libnccl.so:/usr/lib/x86_64-linux-gnu/libnccl.so # --> libnccl.so, libmlx5.so, libibverbs.so"
+      # - "--bind /usr/lib64/libmlx5.so:/usr/lib/x86_64-linux-gnu/libmlx5.so"
+      # - "--bind /usr/lib64/libmlx5.so.1:/usr/lib/x86_64-linux-gnu/libmlx5.so.1 # --> libnccl.so, libmlx5.so, libibverbs.so"
+      # - "--bind /usr/lib64/libibverbs.so:/usr/lib/x86_64-linux-gnu/libibverbs.so"
+      # - "--bind /usr/lib64/libibverbs.so.1:/usr/lib/x86_64-linux-gnu/libibverbs.so.1 # --> libnccl.so, libmlx5.so, libibverbs.so"
+      #- "--bind /dev/shm"
+    #- "--bind /opt:/opt-host"
+    #- "--bind /apps:/apps"
+    #- "--bind /gpfs/scratch"
+        # No escaped character may be used
+  #  - "--bind /opt/linpack/ACC/bench/opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so" 
+  #  - "--bind /gpfs/scratch:/gpfs/scratch"
+  singularity_args:
+    # No escaped character may be used
+    - "--nv"
+    # - "--network=host"
+    # - "--env LD_PRELOAD=/usr/lib64/libnccl.so:/usr/lib64/libmlx5.so:/usr/lib64/libibverbs.so"
+    # - "--env LD_LIBRARY_PATH=/lib64:$LD_LIBRARY_PATH"
+                        

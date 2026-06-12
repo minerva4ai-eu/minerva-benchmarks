@@ -109,7 +109,13 @@ def get_fsdp_layer_to_wrap(model_name_or_path: str) -> list[str]:
         "gemma_text": ["GemmaDecoderLayer"],
         "gemma2_text": ["Gemma2DecoderLayer"],
         "gemma3_text": ["Gemma3DecoderLayer"],
-        "gemma3": ["Gemma3ForConditionalGeneration"],
+        # NOTE: For multimodal Gemma3 (`Gemma3ForConditionalGeneration`) we must wrap the
+        # inner repeated blocks, NOT the top-level model class. Wrapping the top-level
+        # class creates a single FSDP flat-parameter for the whole model => no sharding
+        # (every rank holds full weights -> OOM). We include both the text decoder layer
+        # and the SigLIP vision encoder layer; FSDP silently ignores names that are not
+        # present in the loaded model, so this is safe when only the text tower is loaded.
+        "gemma3": ["Gemma3DecoderLayer", "SiglipEncoderLayer"],
         "falcon": ["FalconDecoderLayer"],
         "phi": ["PhiDecoderLayer"],
         "phi3": ["Phi3DecoderLayer"],

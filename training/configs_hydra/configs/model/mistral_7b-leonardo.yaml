@@ -1,0 +1,5 @@
+defaults:
+  - mistral_7b
+  - _self_
+
+path: /leonardo_work/MNRVA_bench/models/Mistral-7B-Instruct-v0.3

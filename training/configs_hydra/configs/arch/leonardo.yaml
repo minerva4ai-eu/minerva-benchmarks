@@ -1,0 +1,23 @@
+gpu:
+  name: MN5_4xH100-SXM
+  accelerator_type: cuda 
+  vram_gb: 64
+  theoretical_peak_fp64_tflops: 34
+  theoretical_peak_fp64_tensor_tflops: 67
+  theoretical_peak_fp32_tflops: 67
+  theoretical_peak_tf32_tensor_tflops: 495
+  theoretical_peak_fp16_tensor_tflops: 989
+  theoretical_peak_bf16_tensor_tflops: 989
+  theoretical_peak_fp8_tensor_tflops: 1979
+  theoretical_peak_int8_tensor_tops: 1979
+
+comm:
+  internode_comm: nvlink4
+  internode_comm_bandwidth_GBs: 900
+  intranode_comm: infiniband
+  intranode_comm_bandwidth_GBs: 100
+
+node:
+  gpus_per_node: 4
+
+
