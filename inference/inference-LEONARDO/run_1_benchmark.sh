@@ -5,11 +5,11 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("deepspeed") #"vllm") # deepspeed") #sglang    # Add other frameworks if needed
-DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
+FRAMEWORKS=("sglang") #"vllm") # deepspeed") #sglang    # Add other frameworks if needed
+DATASETS=("sharegpt" "sonnet") #"sonnet") #"sonnet")  # Add more datasets if needed
+MODELS=("gemma-3-12b-it") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B"  "Mistral-7B-Instruct-v0.3") # Add your models here
 NUMBER_OF_NODES=(1)
-MAX_MODEL_LENGTHS=(4096) # 4096 8192 16384 32768)
+MAX_MODEL_LENGTHS=(4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
 MACHINE="leonardo"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"

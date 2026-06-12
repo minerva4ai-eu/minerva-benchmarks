@@ -47,5 +47,12 @@ training/training_Leonardo/datasets/
 inference/inference-LEONARDO/env_ds/*
 inference/inference-LEONARDO/env_vllm/*
 inference/inference-LEONARDO/env_sglang/*
+inference/inference-LEONARDO/benchmarks/datasets/
 
 training/training_MN5/rerun_missing.sh
+
+inference/inference-LEONARDO/results/
+inference/inference-LEONARDO/results/deepspeed/
+inference/inference-LEONARDO/results/vllm/
+inference/inference-LEONARDO/results/sglang/
+!inference/inference-LEONARDO/results/*.csv

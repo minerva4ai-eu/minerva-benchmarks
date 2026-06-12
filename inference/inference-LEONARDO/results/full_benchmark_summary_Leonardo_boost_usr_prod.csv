@@ -1,9 +1,267 @@
 Supercomputer,Partition,Model,Dataset/Model Type,Dataset,Framework,Benchmark Type,Concurrency Level,Number of Nodes,GPUs per Node,Total Used GPUs,Tensor,Pipeline,Max Model Length,Additional Arguments,GPU Memory Usage Avg (GB),GPU Memory Usage Peak (GB),Power Usage Avg (W),Power Usage Peak (W),TTFT (ms),ITL (ms),TPOT (ms),Output Throughput (tokens/s),Request Throughput (requests/s)
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,32768,,14.14,54.9,82.11,273.86,278.26,57.41,57.83,4722.67,45.55
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,32768,,14.12,54.75,82.92,265.27,183.59,51.69,52.48,4450.95,43.45
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,32768,,14.24,55.62,81.68,277.83,520.11,70.15,70.29,5898.51,57.16
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,32768,,14.01,54.75,83.64,286.13,525.39,65.67,69.68,2088.9,20.53
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,32768,,14.48,57.06,81.89,286.15,2110.38,104.63,103.32,6583.77,62.99
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,8192,,14.03,54.46,83.5,262.25,262.52,57.77,57.82,4704.02,45.32
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,8192,,14.01,54.31,85.67,282.13,182.28,51.62,52.38,4441.13,42.41
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,8192,,14.13,55.18,83.4,284.0,537.42,70.32,71.12,5844.55,56.79
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,8192,,13.91,54.31,85.64,286.75,521.96,64.44,67.24,2144.83,20.33
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,8192,,14.37,56.61,82.19,300.86,2151.12,101.27,98.5,6598.44,65.15
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,8,4,256,4,1,4096,,13.96,54.16,73.94,150.09,266.44,60.68,60.68,4492.15,43.88
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,8,4,256,4,1,4096,,13.92,54.01,73.13,148.87,184.59,54.39,55.22,4248.82,41.56
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,8,4,256,4,1,4096,,14.0,54.4,73.6,156.98,542.92,76.12,77.46,5454.69,52.51
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,8,4,256,4,1,4096,,13.85,53.89,74.52,158.68,576.4,71.21,74.84,1930.78,18.87
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,8,4,256,4,1,4096,,13.52,54.4,67.09,127.7,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,16,4,1024,4,1,8192,,13.75,53.35,72.14,145.03,285.85,64.6,64.85,4200.05,41.14
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,16,4,1024,4,1,8192,,13.72,53.21,72.55,140.73,183.64,58.56,59.64,3925.0,38.45
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,16,4,1024,4,1,8192,,13.79,53.59,71.92,152.69,529.53,82.74,83.22,5079.49,49.08
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,16,4,1024,4,1,8192,,13.63,53.09,73.34,138.31,603.79,79.09,83.8,1739.02,17.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,8,4,256,4,1,16384,,14.02,54.44,71.45,150.11,272.67,60.21,60.84,4513.25,44.01
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,8,4,256,4,1,16384,,13.99,54.3,72.16,148.12,176.12,53.82,54.81,4301.9,41.81
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,8,4,256,4,1,16384,,14.07,54.68,70.95,154.84,548.05,76.57,77.54,5449.95,54.14
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,8,4,256,4,1,16384,,13.89,54.17,72.76,156.38,583.51,70.84,74.57,1938.04,18.67
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,8,4,256,4,1,16384,,14.23,56.36,71.4,166.18,2055.83,108.52,111.66,6358.5,61.26
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,8,4,256,4,1,32768,,11.57,54.43,67.46,154.85,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,32768,,14.18,55.05,75.89,186.03,259.92,57.26,58.16,4713.08,45.85
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,32768,,14.15,54.91,76.45,182.52,169.23,52.23,52.9,4456.6,43.82
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,32768,,14.23,55.29,75.22,188.38,538.16,74.74,75.45,5569.41,54.38
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,32768,,14.06,54.79,75.77,184.49,576.3,66.91,70.47,2050.41,19.61
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,32768,,14.45,56.97,74.77,193.56,2038.83,106.28,110.06,6419.88,61.85
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,16384,,14.11,54.76,77.22,196.66,280.71,57.98,58.15,4672.76,45.24
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,16384,,14.08,54.62,76.56,191.35,181.75,52.5,53.36,4386.08,42.87
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,16384,,14.16,55.0,76.74,195.78,534.63,73.88,75.27,5611.23,54.17
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,16384,,13.99,54.49,76.84,203.7,565.49,67.56,70.74,2029.52,19.73
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,16384,,14.35,56.67,75.45,208.81,2078.79,104.97,103.05,6526.75,63.54
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,16384,,14.06,54.57,85.86,265.54,273.99,57.13,58.32,4721.55,45.37
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,16384,,14.04,54.43,85.7,265.21,171.25,51.11,51.6,4524.32,43.81
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,16384,,14.16,55.29,84.22,301.47,529.49,69.59,71.26,5857.77,56.32
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,16384,,13.94,54.43,86.26,289.8,521.7,64.53,68.15,2129.51,20.22
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,16384,,14.44,57.3,82.16,297.77,2058.23,103.36,105.83,6563.35,63.5
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,4096,,14.03,54.43,87.37,265.6,267.6,57.65,58.7,4706.9,45.03
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,4096,,14.01,54.28,84.77,268.9,170.73,52.03,52.84,4431.42,43.22
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,4096,,14.12,55.15,84.2,277.23,525.05,70.23,71.35,5858.87,57.27
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,4096,,13.9,54.28,86.41,289.8,557.18,64.53,68.74,2106.83,20.66
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,4096,,14.36,56.59,83.44,279.98,2099.29,107.14,108.1,6480.31,62.3
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,4096,,14.04,54.49,77.95,205.27,285.65,60.14,61.15,4503.98,44.37
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,4096,,14.01,54.35,79.4,191.47,171.14,52.49,52.97,4417.49,42.73
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,4096,,14.09,54.73,77.66,203.11,551.72,75.59,76.12,5515.59,54.87
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,4096,,13.92,54.22,79.22,205.6,551.49,67.23,71.07,2033.19,19.58
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,4096,,14.28,56.41,77.09,212.93,2170.57,105.65,106.19,6422.57,61.88
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,8192,,14.07,54.62,76.37,190.96,296.46,57.91,58.46,4676.66,45.13
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,8192,,14.04,54.47,77.5,190.69,178.05,53.02,53.86,4372.49,41.36
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,8192,,14.12,54.86,75.64,197.07,542.51,75.66,75.92,5522.05,54.83
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,8192,,13.94,54.35,77.39,200.14,562.82,68.06,71.42,2021.61,19.69
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,8192,,14.31,56.54,75.1,208.39,2160.35,104.99,103.07,6500.62,62.94
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,8,4,256,4,1,8192,,11.3,53.94,70.91,162.44,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,sglang,benchmark_serving.py,150,16,4,1024,4,1,4096,,11.29,52.99,66.74,133.13,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,32768,,27.34,54.18,103.55,202.01,465.98,37.84,36.94,6853.0,45.77
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,32768,,27.34,54.18,102.15,200.14,423.42,33.64,32.93,6901.16,46.06
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,32768,,27.34,54.18,101.49,235.98,931.06,60.08,57.27,7821.5,52.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,32768,,27.26,54.18,96.91,220.75,2037.05,34.54,34.36,3025.02,20.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,32768,,27.45,54.66,94.61,206.69,2171.73,141.98,125.67,7131.25,47.62
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,8192,,27.1,53.69,104.69,204.33,475.41,37.61,36.66,6889.33,45.96
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,8192,,27.1,53.69,103.2,200.35,473.54,33.88,33.43,6707.25,44.84
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,8192,,27.1,53.7,103.18,243.41,944.14,60.39,56.55,7886.91,52.7
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,8192,,27.01,53.69,97.91,223.09,1940.44,35.41,35.2,3015.56,20.16
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,8192,,27.27,54.43,97.34,209.57,1942.0,117.57,102.58,8634.48,57.66
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,32768,,13.96,54.11,83.92,197.27,461.18,39.47,38.74,6569.28,43.88
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,32768,,13.96,54.11,81.21,193.91,424.99,35.31,34.4,6628.43,44.29
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,32768,,13.96,54.11,83.31,203.7,929.52,63.39,60.52,7419.52,49.57
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,32768,,13.92,54.11,80.38,214.76,2219.05,34.75,34.73,2925.64,19.52
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,32768,,14.01,54.48,81.83,214.16,1800.75,120.38,111.49,8081.92,53.98
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,16384,,13.9,53.85,83.12,196.86,437.59,39.3,38.57,6639.29,44.33
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,16384,,13.9,53.85,83.09,194.24,466.37,35.39,34.55,6589.77,44.02
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,16384,,13.9,53.85,82.71,199.34,923.44,63.79,60.54,7439.59,49.68
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,16384,,13.84,53.85,79.91,213.44,2249.18,34.65,34.64,2918.81,19.49
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,16384,,13.95,54.22,81.77,211.08,1848.63,126.01,109.95,8144.36,54.41
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,16384,,27.18,53.86,106.0,204.97,442.18,38.2,37.4,6803.4,45.48
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,16384,,27.18,53.86,105.04,203.7,497.36,33.68,33.13,6768.7,45.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,16384,,27.18,53.86,105.4,245.41,928.62,60.31,56.45,7898.67,52.76
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,16384,,27.1,53.86,100.12,223.12,2035.02,34.63,34.48,3014.2,20.15
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,16384,,27.27,54.23,100.36,208.33,1843.54,119.38,102.56,8681.71,58.0
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,2,4,16,4,1,4096,,27.06,53.62,105.77,205.6,437.32,37.96,37.26,6842.7,45.73
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,2,4,16,4,1,4096,,27.06,53.62,105.49,206.48,456.92,34.13,33.41,6754.04,45.15
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,2,4,16,4,1,4096,,27.06,53.62,104.73,250.13,931.57,61.4,57.54,7779.53,51.97
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,2,4,16,4,1,4096,,26.97,53.61,99.72,223.09,2118.65,33.65,33.64,3030.66,20.24
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,2,4,16,4,1,4096,,27.17,54.07,100.18,209.9,1791.97,116.31,101.47,8797.37,58.74
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,4096,,13.82,53.55,82.92,191.27,461.66,39.27,38.55,6602.77,44.13
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,4096,,13.82,53.54,81.92,187.06,411.76,35.19,34.54,6626.48,44.28
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,4096,,13.82,53.55,82.19,197.19,922.38,63.21,60.33,7444.54,49.71
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,4096,,13.78,53.54,79.21,209.03,2181.59,34.95,34.79,2941.05,19.65
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,4096,,13.9,54.13,81.11,209.36,1566.21,123.43,112.42,8130.4,54.26
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,300,4,4,64,4,1,8192,,13.84,53.62,81.6,190.2,462.2,39.44,38.71,6595.48,44.07
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,250,4,4,64,4,1,8192,,13.84,53.62,81.15,188.38,473.8,34.89,34.43,6534.27,43.69
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,500,4,4,64,4,1,8192,,13.84,53.62,81.23,200.69,948.29,62.91,59.93,7497.77,50.05
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,150,4,4,64,4,1,8192,,13.8,53.62,78.23,209.24,2187.82,35.06,34.87,2930.47,19.57
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,sglang,benchmark_serving.py,1000,4,4,64,4,1,8192,,13.89,53.99,79.92,202.84,1832.33,118.95,108.91,8190.89,54.71
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,32768,,14.09,54.72,91.86,271.0,195.23,49.5,54.11,4799.35,24.28
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,32768,,14.04,54.43,90.91,262.31,152.78,44.86,47.66,4551.39,23.03
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,32768,,14.23,55.44,89.7,276.2,514.39,59.07,68.38,5691.43,28.84
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,32768,,13.98,54.43,87.28,281.13,423.2,42.11,49.93,3069.7,15.62
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,8192,,13.98,54.27,88.42,255.22,188.17,49.65,53.98,4775.45,24.43
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,8192,,13.93,53.98,89.6,256.22,155.28,45.13,47.79,4525.14,23.0
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,8192,,14.1,54.99,87.23,262.92,541.0,59.22,65.87,5743.2,29.22
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,8192,,13.86,53.98,85.73,265.06,389.49,42.06,47.99,3083.38,15.68
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,8192,,14.37,56.39,87.49,262.25,1670.07,60.69,72.91,6164.59,31.34
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,4096,,13.93,54.02,73.09,145.17,193.15,53.9,58.77,4471.48,22.66
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,4096,,13.89,53.88,72.53,143.63,156.79,48.53,51.57,4252.47,21.59
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,4096,,13.97,54.26,73.02,162.11,517.39,65.68,77.83,5322.17,27.12
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,4096,,13.82,53.76,72.64,153.34,423.6,45.14,52.14,2891.63,14.63
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,4096,,14.21,55.93,73.08,154.71,1708.94,66.47,88.2,5824.08,29.61
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,8192,,13.71,53.15,75.56,141.67,196.25,58.83,64.19,4073.73,20.75
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,8192,,13.68,53.0,75.7,138.44,160.27,53.57,56.6,3849.94,19.46
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,8192,,13.78,53.54,75.68,151.47,553.52,71.82,80.56,4827.92,24.47
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,8192,,13.62,52.88,75.1,135.22,488.56,51.29,63.5,2552.72,12.94
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,8192,,14.06,55.21,75.7,164.19,1696.84,73.76,100.46,5247.19,26.57
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,16384,,13.99,54.26,73.16,149.5,190.62,54.16,58.87,4486.6,22.8
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,16384,,13.95,54.11,72.34,147.03,155.84,48.88,52.2,4237.02,21.46
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,16384,,14.03,54.5,72.53,157.15,448.56,65.19,76.98,5358.23,27.27
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,16384,,13.87,53.99,72.29,157.76,408.27,45.71,52.68,2870.6,14.63
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,16384,,14.45,57.44,73.32,162.48,1756.93,64.73,76.38,5902.02,29.94
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,32768,,14.07,54.58,77.89,157.97,191.75,54.67,60.68,4409.79,22.4
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,32768,,14.03,54.44,76.81,156.7,157.97,48.21,51.34,4284.1,21.71
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,32768,,14.12,54.82,77.56,173.46,557.68,65.56,73.82,5302.26,27.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,32768,,13.96,54.32,76.75,168.5,424.71,45.38,52.38,2884.77,14.61
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,32768,,14.34,56.47,76.56,165.14,1663.44,112.91,374.96,4575.89,23.18
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,32768,,14.14,54.87,75.96,188.23,193.58,51.42,56.41,4742.76,24.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,32768,,14.1,54.72,77.14,188.85,159.49,46.81,49.83,4477.25,22.82
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,32768,,14.18,55.11,76.35,207.02,533.53,63.49,75.38,5588.47,28.26
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,32768,,14.03,54.6,76.61,204.05,410.83,43.01,50.02,3066.91,15.57
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,32768,,14.66,57.88,80.91,193.49,1591.58,64.29,79.75,6140.06,31.34
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,16384,,14.07,54.57,82.23,195.45,199.61,51.25,56.84,4759.94,24.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,16384,,14.03,54.42,81.91,193.31,155.05,46.71,49.58,4490.84,22.82
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,16384,,14.12,54.81,81.0,233.51,525.35,64.09,75.55,5579.89,28.2
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,16384,,13.96,54.3,80.14,210.74,431.01,43.4,52.19,3028.1,15.43
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,16384,,14.4,57.34,77.63,202.42,2565.04,99.68,301.99,4943.24,25.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,16384,,14.02,54.44,89.92,261.72,191.29,49.81,54.83,4774.16,24.21
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,16384,,13.97,54.15,89.61,262.98,147.25,45.22,48.14,4519.37,22.88
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,16384,,14.16,55.16,88.23,274.28,524.21,59.95,68.99,5646.86,28.63
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,16384,,13.91,54.15,86.78,287.72,435.41,42.15,49.78,3063.03,15.55
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,4096,,13.97,54.24,87.36,256.16,189.1,49.47,53.83,4806.72,24.37
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,4096,,13.93,53.96,87.72,254.01,150.17,45.57,48.32,4491.59,22.84
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,4096,,14.1,54.97,85.28,288.58,523.38,60.68,69.97,5625.64,28.62
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,4096,,13.86,53.96,86.2,283.73,407.43,42.28,50.16,3061.26,15.59
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,4096,,14.39,57.34,79.76,268.42,1832.35,118.59,450.95,4580.32,23.18
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,4096,,14.0,54.31,78.16,185.65,189.31,53.43,58.08,4587.42,23.18
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,4096,,13.97,54.16,80.35,189.42,156.07,47.17,50.32,4420.42,22.43
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,4096,,13.89,54.04,78.08,198.93,423.8,43.5,50.59,3015.8,15.41
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,4096,,14.25,56.21,77.48,220.65,1680.12,66.18,89.78,6028.95,30.66
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,32768,,13.83,53.61,73.47,141.77,197.08,57.25,62.57,4193.22,21.25
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,32768,,13.79,53.47,73.41,138.27,163.31,52.18,55.6,3954.06,20.02
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,32768,,13.88,53.85,73.42,150.54,555.59,70.78,82.93,4894.57,24.81
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,32768,,13.73,53.35,72.63,137.94,433.97,50.56,57.67,2603.33,13.27
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,32768,,14.14,55.52,73.81,160.11,1667.56,72.08,97.38,5362.02,27.32
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,8192,,14.02,54.38,82.41,193.11,191.06,51.44,55.92,4691.23,23.89
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,8192,,13.99,54.24,82.72,187.28,154.68,46.38,49.24,4481.03,22.74
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,8192,,14.07,54.62,80.65,211.85,537.06,62.66,73.58,5621.3,28.54
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,8192,,13.92,54.12,80.22,203.82,417.11,43.17,49.64,3041.74,15.41
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,8192,,14.5,57.47,81.73,205.03,1363.01,67.09,98.39,6034.01,30.63
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,8192,,13.95,54.1,74.63,151.35,195.26,53.09,57.99,4532.9,22.93
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,8192,,13.91,53.96,73.66,147.93,160.02,48.75,51.89,4245.19,21.49
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,8192,,13.99,54.34,74.0,159.95,541.15,65.17,77.35,5354.96,27.13
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,8192,,13.84,53.83,73.47,161.17,420.2,45.26,52.32,2891.01,14.71
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,8192,,14.32,56.62,74.44,164.53,1700.13,65.21,80.9,5893.06,29.8
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,4096,,13.68,53.05,71.24,136.02,192.85,58.77,64.07,4126.34,21.1
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,4096,,13.65,52.91,70.75,131.54,162.52,52.51,55.87,3942.4,20.05
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,4096,,13.73,53.29,71.33,143.06,438.71,71.39,82.9,4924.15,25.08
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,4096,,13.59,52.79,70.73,130.93,432.33,51.02,58.55,2581.13,13.14
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,4096,,14.16,56.18,71.47,154.4,1712.64,70.04,82.69,5411.56,27.68
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,16384,,13.75,53.31,75.02,139.57,195.3,58.92,65.27,4074.07,20.69
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,16384,,13.71,53.16,74.63,137.69,166.14,53.02,56.16,3889.44,19.84
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,16384,,13.8,53.55,74.96,147.81,556.4,72.27,84.44,4792.13,24.35
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,16384,,13.65,53.04,74.21,135.28,428.39,50.63,57.45,2603.16,13.31
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,16384,,14.25,56.49,75.5,162.82,1589.33,71.67,89.22,5326.69,26.97
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,32768,,27.34,54.18,103.92,207.6,256.74,47.96,55.42,4878.51,21.61
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,32768,,27.34,54.18,103.02,206.78,169.21,43.43,48.35,4692.56,20.77
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,32768,,27.34,54.18,103.81,210.96,428.84,51.89,62.08,6254.63,27.85
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,32768,,27.26,54.18,98.44,224.22,437.78,42.49,53.72,3065.23,13.77
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,32768,,27.4,54.38,100.89,215.37,1624.19,47.3,55.41,6880.93,30.85
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,8192,,27.1,53.69,102.87,201.48,258.47,47.33,55.97,4924.11,21.88
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,8192,,27.1,53.69,101.24,202.09,164.0,43.05,47.94,4673.99,20.83
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,8192,,27.1,53.69,102.13,202.62,420.36,51.67,62.13,6264.46,27.66
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,8192,,27.01,53.69,96.42,213.11,438.73,42.67,55.36,3080.74,13.79
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,8192,,27.15,53.9,97.09,213.0,1665.91,64.82,173.12,5928.59,26.38
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,4096,,13.73,53.16,75.92,150.28,256.34,50.61,58.0,4618.43,20.5
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,4096,,13.73,53.16,75.18,149.47,161.94,46.09,51.75,4311.0,18.89
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,4096,,13.73,53.16,75.41,165.23,456.92,55.75,67.29,5718.49,25.29
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,4096,,13.69,53.16,74.56,160.07,545.31,46.16,57.48,2749.81,12.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,4096,,13.76,53.46,74.9,155.78,1519.3,52.22,66.5,6153.93,27.2
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,8192,,13.55,52.45,72.2,130.79,260.42,54.02,62.99,4222.43,18.79
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,8192,,13.55,52.45,71.52,128.5,214.89,49.99,55.3,4068.73,18.11
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,8192,,13.55,52.45,71.94,141.81,406.75,62.04,74.7,5070.44,22.52
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,8192,,13.51,52.45,72.84,136.9,501.75,51.88,65.83,2533.03,11.2
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,8192,,13.22,52.45,66.42,122.94,1680.52,0.01,0.01,0.57,0.23
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,16384,,13.78,53.4,76.0,146.57,259.28,51.19,60.67,4626.93,20.63
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,16384,,13.78,53.4,75.72,146.57,168.62,46.34,51.55,4386.32,19.09
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,16384,,13.79,53.4,75.76,154.7,402.36,55.38,67.43,5701.23,25.45
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,16384,,13.75,53.4,74.3,158.32,546.41,48.01,69.28,2715.34,12.16
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,16384,,13.83,53.7,75.71,150.7,1670.58,53.17,69.82,6002.22,26.94
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,32768,,13.86,53.7,73.87,158.36,306.67,51.11,61.11,4569.82,20.17
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,32768,,13.86,53.7,73.72,155.49,216.05,46.08,51.37,4285.28,19.13
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,32768,,13.86,53.7,73.7,166.67,432.23,56.25,69.27,5697.34,25.09
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,32768,,13.82,53.7,74.97,166.67,466.79,45.29,56.83,2818.05,12.43
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,32768,,13.53,53.7,67.01,145.49,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,32768,,13.96,54.11,80.22,194.63,259.89,48.99,56.14,4761.13,21.3
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,32768,,13.96,54.11,79.88,189.92,163.26,44.56,49.2,4601.51,20.21
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,32768,,13.96,54.11,78.68,212.06,413.57,52.89,63.95,6121.3,26.82
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,32768,,13.92,54.11,78.12,208.14,449.36,43.15,52.86,3012.39,13.44
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,32768,,13.99,54.3,81.22,220.01,1631.29,49.76,59.42,6508.83,28.7
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,16384,,13.95,54.04,81.45,182.72,255.85,48.75,56.32,4789.93,21.27
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,16384,,13.95,54.04,81.35,180.58,158.91,43.69,48.33,4685.2,20.41
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,16384,,13.95,54.04,79.94,198.53,428.54,53.78,66.24,6027.29,27.23
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,16384,,13.88,54.04,79.66,199.14,444.63,43.15,56.0,3008.16,13.28
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,16384,,13.98,54.24,82.17,185.65,1619.94,49.33,57.15,6637.28,29.43
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,16384,,27.3,54.09,102.5,200.76,264.66,47.87,54.9,4954.2,21.97
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,16384,,27.3,54.09,100.87,207.75,166.4,42.99,47.7,4668.71,20.78
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,16384,,27.3,54.09,102.41,201.97,387.87,51.56,64.19,6292.64,28.06
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,16384,,27.17,54.09,97.2,214.16,442.06,42.11,54.76,3095.3,13.47
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,16384,,27.35,54.29,97.15,213.66,1573.67,59.08,116.88,6333.13,28.14
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,2,4,16,4,1,4096,,27.06,53.61,99.3,196.79,259.5,48.37,55.6,4972.97,22.1
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,2,4,16,4,1,4096,,27.06,53.61,97.08,196.06,165.67,42.67,47.06,4756.68,21.03
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,2,4,16,4,1,4096,,27.06,53.61,98.86,196.46,457.54,51.58,60.68,6227.59,27.84
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,2,4,16,4,1,4096,,26.97,53.61,93.53,213.88,442.22,43.11,57.65,3026.89,13.52
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,2,4,16,4,1,4096,,27.11,53.82,94.79,208.62,1906.3,62.09,153.61,5973.09,26.84
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,4096,,13.82,53.54,82.87,190.12,257.54,49.88,57.68,4763.56,21.24
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,4096,,13.82,53.54,82.46,183.23,162.46,44.17,48.6,4600.63,20.64
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,4096,,13.82,53.54,83.29,204.26,418.57,53.76,65.37,6029.85,26.72
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,4096,,13.78,53.54,81.06,199.62,468.23,43.29,53.47,2967.18,13.23
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,4096,,13.86,53.82,82.65,213.49,1503.12,50.27,65.65,6489.18,28.69
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,32768,,13.66,52.9,73.79,132.13,274.82,70.36,170.55,3451.17,15.36
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,32768,,13.66,52.9,74.27,130.11,215.06,49.33,54.72,3990.66,17.87
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,32768,,13.66,52.9,73.21,141.63,422.57,61.3,74.31,5228.93,23.38
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,32768,,13.63,52.9,74.19,136.58,496.41,51.69,69.18,2486.58,11.14
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,32768,,13.27,52.9,68.02,138.6,0.0,0.0,0.0,0.0,0.0
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,4,4,64,4,1,8192,,13.91,53.91,82.84,200.02,258.81,48.47,54.52,4891.27,21.72
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,4,4,64,4,1,8192,,13.91,53.91,82.37,200.35,162.78,43.58,48.1,4743.51,21.16
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,4,4,64,4,1,8192,,13.91,53.91,83.17,222.15,392.59,53.69,67.76,6053.32,26.82
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,4,4,64,4,1,8192,,13.85,53.91,81.14,215.09,435.07,43.47,55.73,2976.1,13.14
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,4,4,64,4,1,8192,,13.94,54.11,82.27,201.97,1599.54,49.56,57.9,6545.91,28.99
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,8,4,256,4,1,8192,,13.74,53.23,74.67,150.26,270.37,52.02,58.97,4529.07,19.94
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,8,4,256,4,1,8192,,13.74,53.23,74.35,149.33,166.39,46.3,51.39,4367.17,19.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,8,4,256,4,1,8192,,13.74,53.23,75.95,166.18,393.35,56.2,68.58,5631.75,24.91
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,8,4,256,4,1,8192,,13.71,53.23,75.08,163.43,470.22,46.48,61.19,2766.75,12.35
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,8,4,256,4,1,8192,,13.32,53.23,67.38,147.51,1509.46,9.61,5.21,12.22,1.91
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,4096,,13.52,52.33,73.53,131.25,287.37,64.41,133.43,3707.76,16.26
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,4096,,13.52,52.33,73.81,128.5,221.55,50.62,56.07,3891.09,17.12
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,4096,,13.52,52.33,73.38,134.95,439.71,61.58,73.06,5133.45,22.63
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,4096,,13.49,52.33,73.41,136.44,489.8,51.99,68.88,2513.46,11.25
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,300,16,4,1024,4,1,16384,,13.58,52.58,72.64,127.62,268.72,54.92,63.45,4237.92,18.85
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,250,16,4,1024,4,1,16384,,13.58,52.58,73.14,127.35,221.98,50.01,55.51,3965.29,17.62
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,500,16,4,1024,4,1,16384,,13.58,52.59,73.13,137.52,409.78,60.41,72.61,5256.19,23.39
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,150,16,4,1024,4,1,16384,,13.55,52.58,73.43,133.21,485.32,51.24,66.63,2530.92,11.3
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sharegpt,sglang,benchmark_serving.py,1000,16,4,1024,4,1,16384,,13.25,52.59,67.25,135.36,1692.79,0.01,0.01,15.16,2.1
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,179.62,374.61,889.46,31.14,31.14,7651.34,51.01
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,180.05,359.48,235.63,30.57,30.57,7739.28,51.6
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,176.5,360.54,3899.34,31.56,31.56,7622.5,50.82
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,201.49,424.09,335.9,29.41,29.34,4593.63,30.62
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.53,58.71,176.58,368.03,8047.48,31.12,31.12,7513.75,50.09
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,179.66,356.75,861.99,31.48,31.46,7668.29,51.12
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,179.41,354.89,239.43,30.71,30.71,7697.7,51.32
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,173.98,351.21,3939.25,31.91,31.9,7533.74,50.22
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,200.61,390.63,326.48,29.31,29.12,4629.92,30.87
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.53,58.71,174.9,363.98,8163.86,31.32,31.32,7471.41,49.81
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,177.53,364.08,877.0,31.62,31.62,7613.83,50.76
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,178.11,356.45,218.08,30.75,30.75,7735.51,51.57
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,178.79,363.52,3950.37,32.16,32.16,7497.59,49.98
@@ -14,13 +272,76 @@ Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchm
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,176.83,361.76,3929.9,31.8,31.8,7573.07,50.49
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,201.02,411.96,332.07,29.15,29.11,4607.42,30.72
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.32,58.34,175.2,347.54,8076.24,31.43,31.4,7488.3,49.92
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.43,58.71,179.86,364.76,889.23,31.47,31.45,7624.97,50.83
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,182.6,353.78,228.6,30.63,30.63,7715.41,51.44
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.69,58.71,182.06,367.6,3954.39,31.88,31.87,7534.18,50.23
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,204.28,417.68,314.85,29.2,29.08,4656.62,31.04
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.69,58.71,180.19,362.73,8142.3,31.54,31.52,7441.64,49.61
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,177.57,368.05,869.7,31.54,31.54,7640.65,50.94
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,178.78,357.49,225.89,30.78,30.77,7727.53,51.52
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,176.93,363.63,4010.9,32.28,32.27,7410.68,49.4
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,202.76,417.39,320.04,29.3,29.24,4630.6,30.87
+Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,175.59,359.48,8158.92,31.75,31.75,7397.92,49.32
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.86,59.08,181.37,390.83,2439.47,93.42,93.42,2592.32,17.28
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.39,58.39,182.89,334.29,393.18,92.95,92.95,2617.05,17.45
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,59.08,59.08,183.81,375.25,10689.71,91.62,91.62,2683.7,17.9
 Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.38,58.39,191.4,413.22,485.95,80.06,80.01,1728.67,11.53
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,59.08,59.08,182.42,387.21,22306.86,92.72,92.72,2613.91,17.43
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,183.77,371.48,2288.45,91.48,91.48,2663.31,17.76
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.77,59.12,183.59,346.11,404.36,91.9,91.91,2647.73,17.66
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,183.59,387.7,10604.66,91.59,91.6,2679.63,17.87
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.38,58.39,191.51,411.6,457.85,78.89,78.89,1760.19,11.74
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,184.19,389.83,22072.55,91.81,91.81,2640.26,17.61
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.85,59.06,188.42,400.92,2331.67,91.77,91.77,2652.96,17.69
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.39,58.39,189.16,339.27,403.31,92.25,92.25,2633.28,17.56
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,59.06,59.06,188.07,379.27,10736.8,92.15,92.16,2661.68,17.75
 Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.38,58.39,195.31,422.22,469.38,80.08,80.03,1734.49,11.57
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,59.06,59.06,188.51,400.23,22278.86,93.54,93.54,2598.04,17.33
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,183.99,348.39,2291.83,93.09,93.09,2622.16,17.48
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.9,59.12,183.59,359.71,387.32,92.85,92.86,2621.11,17.48
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,183.79,349.92,10842.16,92.84,92.84,2640.98,17.61
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.38,58.39,190.4,396.23,462.98,78.74,78.58,1767.2,11.78
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,59.12,59.12,182.14,377.73,22306.65,93.19,93.19,2616.13,17.44
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.84,59.02,182.78,381.22,2332.05,91.47,91.47,2657.2,17.72
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.39,58.39,183.82,312.09,403.08,91.94,91.94,2643.43,17.63
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,59.02,59.02,182.94,337.22,10672.6,92.01,92.01,2669.9,17.8
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.38,58.39,192.99,411.08,455.32,78.69,78.69,1767.14,11.78
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,59.02,59.02,182.13,376.14,21810.33,91.83,91.84,2650.13,17.67
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,59.0,59.0,185.78,397.65,2236.53,92.08,92.08,2665.69,17.77
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.71,59.0,185.55,331.39,401.29,91.55,91.55,2655.98,17.71
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,59.0,59.0,185.18,379.93,10727.6,92.57,92.57,2651.1,17.68
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.38,58.39,194.07,412.78,501.08,79.06,79.06,1745.66,11.64
+Leonardo,boost_usr_prod,gemma-3-12b-it,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,59.0,59.0,185.76,364.31,22048.43,92.81,92.82,2629.31,17.53
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,167.91,370.56,661.5,21.83,21.82,10777.07,71.87
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,169.57,362.96,222.66,20.58,20.58,11157.22,74.39
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,165.5,366.5,2664.5,21.18,21.17,11127.37,74.18
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,197.59,393.63,285.07,23.05,22.93,5833.91,38.9
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,164.22,375.97,5814.42,21.39,21.39,10671.66,71.14
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,166.75,380.8,692.6,21.45,21.42,10810.56,72.09
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,168.73,367.88,219.33,20.49,20.49,11250.45,75.02
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,167.07,371.32,2674.6,21.33,21.33,11089.14,73.93
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,194.41,414.77,290.4,23.36,23.1,5803.63,38.69
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,165.09,373.13,5796.23,21.42,21.42,10663.36,71.09
 Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,168.69,382.84,695.41,21.7,21.64,10726.37,71.52
 Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,171.03,384.03,221.87,20.51,20.5,11293.7,75.31
 Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,168.72,381.04,2760.58,21.54,21.54,10887.44,72.61
 Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,195.88,404.68,281.39,23.19,23.02,5800.9,38.68
 Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,2,4,16,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,164.87,371.87,5696.57,21.08,21.08,10828.28,72.22
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,161.98,372.14,672.83,21.18,21.18,10966.89,73.11
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,167.12,361.57,242.87,20.34,20.32,11281.0,75.21
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,164.94,364.89,2701.63,21.56,21.55,10950.87,73.01
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,195.12,422.51,290.38,23.22,22.91,5818.0,38.79
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,4096,--disable-log-requests --enforce-eager,58.23,58.26,165.64,369.75,5773.28,21.52,21.52,10577.92,70.52
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,164.97,373.02,703.97,21.31,21.31,10832.57,72.24
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,170.18,368.25,235.96,20.74,20.69,11027.64,73.52
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,165.42,370.99,2701.5,21.53,21.53,10920.35,72.8
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,198.4,422.72,329.47,23.1,22.75,5815.3,38.77
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,4,4,64,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,165.71,374.06,5798.58,21.53,21.51,10639.16,70.96
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,300,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,171.33,402.51,684.78,21.54,21.54,10741.68,71.63
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,250,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,168.77,371.93,227.83,20.58,20.58,11174.35,74.53
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,500,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,169.1,418.59,2699.57,21.6,21.6,10952.55,73.03
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,150,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,199.31,421.31,265.99,23.19,23.04,5827.2,38.85
+Leonardo,boost_usr_prod,Mistral-7B-Instruct-v0.3,Text Generation,sonnet,vllm,benchmark_serving.py,1000,8,4,256,4,1,8192,--disable-log-requests --enforce-eager,58.23,58.26,166.72,409.31,5723.83,21.18,21.18,10745.51,71.65
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,300,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,176.41,334.46,1015.27,32.14,34.32,5729.51,28.88
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,250,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.32,58.34,183.45,335.92,154.57,29.8,30.31,5891.09,29.76
 Leonardo,boost_usr_prod,Llama-3.1-8B-Instruct,Text Generation,sharegpt,vllm,benchmark_serving.py,500,2,4,16,4,1,8192,--disable-log-requests --enforce-eager,58.55,58.71,173.93,338.66,4702.43,32.06,32.92,5673.42,28.55
