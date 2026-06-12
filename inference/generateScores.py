@@ -6,7 +6,10 @@ import pandas as pd
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+import socket
+hostname = socket.gethostname()
+env_file = ".env-leonardo" if "leonardo" in hostname else ".env-bsc-mn5-acc"
+load_dotenv(env_file)
 
 
 BASE_DIR = os.getcwd()  # Adjust if needed
@@ -14,8 +17,10 @@ BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
+MACHINE = os.getenv("MACHINE", "Add to .env file")
+MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
 MODEL_TYPE_MAP = json.load(
-    open(os.path.join(BASE_DIR, "configs", "model_type_map.json"))
+    open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "model_type_map.json"))
 )
 
 INPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
