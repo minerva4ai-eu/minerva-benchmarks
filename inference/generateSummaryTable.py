@@ -6,8 +6,19 @@ import re
 
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
-load_dotenv(".env")
 
+import socket
+hostname = socket.gethostname()
+
+if "leonardo" in hostname:
+    env_file = ".env-leonardo"
+elif os.getenv("BSC_MACHINE", None) == "mn5":
+    env_file = ".env-bsc-mn5-acc"
+else:
+    env_file = "Define your logic to detect .env-MACHINE file."
+    print(env_file)
+
+load_dotenv(env_file)
 
 
 BASE_DIR =  os.getcwd() # Adjust if needed
@@ -16,7 +27,9 @@ SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
 BENCHMARK_FILE = os.getenv("BENCHMARK_FILE", "Add to .env file")
-MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, "configs", "model_type_map.json")))
+MACHINE = os.getenv("MACHINE", "Add to .env file")
+MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
+MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "model_type_map.json")))
 OUTPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 
 CSV_HEADERS = [
@@ -73,7 +86,7 @@ def extract_additional_args(path: str):
     ADDITIONAL_ARGS = ""
     # Extract config file (get additional args).
 
-    config_file = "config.json"
+    config_file = f"config-{SUPCOMPUTER_NAME}.json"
     if os.path.exists(os.path.join(path, config_file)):
         with open(os.path.join(path, config_file)) as json_file:
             json_config_data = json.load(json_file)
@@ -93,12 +106,12 @@ def extract_config_from_path(path):
     benchmark_filename = os.path.basename(BENCHMARK_FILE)
 
     nodes_match = re.search(r"Nodes_(\d+)", node_gpu_part)
-    gpus_used_per_node = re.search(r"GPUs_(\d+)", node_gpu_part)
+    total_gpus_used = re.search(r"GPUs_(\d+)", node_gpu_part)
     tensor = re.search(r"TP_(\d+)", node_gpu_part)
     pipeline = re.search(r"PP_(\d+)", node_gpu_part)
     max_model_length = re.search(r"MaxModelLength_(\d+)", node_gpu_part)
 
-    if not nodes_match or not gpus_used_per_node:
+    if not nodes_match or not total_gpus_used:
         print("Nodes/GPUs not match")
         return None
 
@@ -107,8 +120,7 @@ def extract_config_from_path(path):
         return None
     
     nodes = int(nodes_match.group(1))
-    gpus_used_per_node = int(gpus_used_per_node.group(1))
-    total_gpus_used = nodes * gpus_used_per_node
+    total_gpus_used = int(total_gpus_used.group(1))
     tensor = int(tensor.group(1))
     pipeline = int(pipeline.group(1))
     max_model_length = int(max_model_length.group(1))
