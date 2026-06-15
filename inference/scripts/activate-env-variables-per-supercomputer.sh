@@ -38,6 +38,10 @@ case "$MACHINE" in
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
 
+    bsc-mn5-gpp)
+        export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
+        ;;
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
