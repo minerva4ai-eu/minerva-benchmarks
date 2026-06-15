@@ -172,6 +172,10 @@ RERUN_OPTIONS = [
         required=True,
     ),
     OptionConfig(
+        name="--run-id",
+        prompt="run-id",
+    ),
+    OptionConfig(
         name="--output",
         prompt="output",
         default=str(RUNS_DIR),
