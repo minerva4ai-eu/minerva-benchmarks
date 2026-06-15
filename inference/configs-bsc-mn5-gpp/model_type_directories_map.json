@@ -1,0 +1,5 @@
+{
+  "Text Generation": "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry",
+  "Embedding": "/path/to/embedding/models",
+  "Vision": "/path/to/vision/models"
+}
