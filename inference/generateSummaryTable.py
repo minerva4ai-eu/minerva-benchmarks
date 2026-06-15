@@ -33,7 +33,7 @@ MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "mo
 OUTPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 
 CSV_HEADERS = [
-    "SUPCOMPUTER", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",
+    "Supercomputer", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",
     "Concurrency Level", "Number of Nodes", "GPUs per Node", "Total Used GPUs", "Tensor", "Pipeline", "Max Model Length", "Additional Arguments",
     "GPU Memory Usage Avg (GB)", "GPU Memory Usage Peak (GB)", "Power Usage Avg (W)", "Power Usage Peak (W)",
     "TTFT (ms)", "ITL (ms)", "TPOT (ms)", "Output Throughput (tokens/s)", "Request Throughput (requests/s)"
