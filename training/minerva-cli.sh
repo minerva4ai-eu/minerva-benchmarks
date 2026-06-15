@@ -2,7 +2,11 @@
 
 CLI_CONTAINER_PATH="./envs/cli/singularity-uv.sif"
 
-module load singularity 2> /dev/null
+# Load singularity module only if not already available
+if ! singularity --version &> /dev/null; then
+    module load singularity 2> /dev/null
+fi
+
 cli_args="$@"
 
 singularity exec --env CWD="$PWD" \
