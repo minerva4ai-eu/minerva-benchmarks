@@ -45,7 +45,7 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
+MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
 FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
 DATASETS = ["alpaca", "squadv2"]
 
@@ -155,6 +155,7 @@ def generate_valid_combos(
                     lr,
                     optimizer,
                     steps,
+                    disable_compile,
                 ) in product(
                     cfg.trainings.batch_sizes,
                     cfg.trainings.grad_accums,
@@ -162,13 +163,17 @@ def generate_valid_combos(
                     cfg.trainings.lr,
                     cfg.trainings.optimizer,
                     cfg.trainings.steps,
+                    cfg.trainings.disable_compile,
                 ):
+                    # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
+                    # to each experiment combination
                     tmp_cfg.model.training.batch_size = bs
                     tmp_cfg.model.training.grad_accum = grad_acc
                     tmp_cfg.model.training.precision = precision
                     tmp_cfg.model.training.lr = lr
                     tmp_cfg.model.training.optimizer = optimizer
                     tmp_cfg.model.training.steps = steps
+                    tmp_cfg.model.training.disable_compile = disable_compile
                     tmp_cfg.experiment.output_dir = outpath
                     # Will bee used later to take care of configuration
                     # of 1 node and 1 gpu
@@ -193,7 +198,7 @@ def generate_valid_combos(
                         experiment_parameters = (
                             f"bs{bs}"
                             + f"-grad_accum{grad_acc}"
-                            + f"-compil{tmp_cfg.trainings.disable_compile}"
+                            + f"-compil{disable_compile}"
                             + f"-prec{precision}"
                             + f"-steps{steps}"
                         )

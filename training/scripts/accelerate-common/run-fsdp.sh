@@ -78,8 +78,7 @@ train_command_min_overlap="$singularity_prefix \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset $DATASET \
-        --disable_compile $DISABLE_COMPILE"
+        --dataset $DATASET "
 
 train_command_max_overlap="$singularity_prefix  \
     accelerate launch \
@@ -103,8 +102,13 @@ train_command_max_overlap="$singularity_prefix  \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
         --dataset $DATASET \
-        --disable_compile $DISABLE_COMPILE \
         --max_comm_comp_overlap"
+
+echo "DISABLE_COMPILE: $DISABLE_COMPILE"
+if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
+    train_command_max_overlap="$train_command_max_overlap --disable_compile"
+    train_command_min_overlap="$train_command_min_overlap --disable_compile"
+fi
 
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"
@@ -115,22 +119,6 @@ echo "train_command_min_overlap: {$train_command_min_overlap}"
 
 source activate-env-variables-per-supercomputer.sh
 
-# Launch Run
-# Start monitoring in background
-#$gpu_plots_monitor_command &
-#monitor_pid=$!
-#
-## Optional: give the monitor time to initialize
-#sleep 5
-#
-## Run training in foreground (this blocks until done)
-#eval "$train_command_min_overlap"
-#
-#eval "$train_command_max_overlap"
-#
-#kill -SIGTERM \"\$monitor_pid\"
-## Wait for the monitor to clean up and exit
-#wait "$monitor_pid"
 
 srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
