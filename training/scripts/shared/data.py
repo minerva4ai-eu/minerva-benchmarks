@@ -2,16 +2,16 @@ import ast
 import json
 from typing import TYPE_CHECKING, Callable, Tuple
 
-from sklearn.model_selection import train_test_split
-from torch.utils.data import random_split
-from torch.utils.data.dataset import Subset
-
 from shared.datasets.config_datasets_handlers_map import (
     DATASET_HANDLER_MAP,
     DATASET_MAP,
 )
+import random
 from shared.datasets.handlers import DatasetHandler
 from shared.utils import print_rank
+from sklearn.model_selection import train_test_split
+from torch.utils.data import random_split
+from torch.utils.data.dataset import Subset
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
@@ -97,8 +97,23 @@ def load_dataset(
         )
         train_size = int(0.9 * len(dataset))
         eval_size = len(dataset) - train_size
-        train_dataset, eval_dataset = random_split(dataset, [train_size, eval_size])
-        dataset_for_collate = dataset
+        
+        indices = list(range(len(dataset)))
+        random.shuffle(indices)  # or use a seeded Generator for reproducibility
+        train_indices = indices[:train_size]
+        eval_indices  = indices[train_size:]
+        
+        train_dataset = DatasetHandlerClass(
+            data=dataset.__raw_items_range__(train_indices),
+            tokenizer=tokenizer,
+            max_length=max_length,
+        )
+        eval_dataset = DatasetHandlerClass(
+            data=dataset.__raw_items_range__(eval_indices),
+            tokenizer=tokenizer,
+            max_length=max_length,
+        )
+        dataset_for_collate = train_dataset
 
     # Resolve collate_fn() for both cases of if condition above
     def resolve_collate(
