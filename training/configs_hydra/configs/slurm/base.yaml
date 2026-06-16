@@ -1,0 +1,27 @@
+account: ""    # Must fill in
+qos:           # Optional fill in
+partition:     # Must fill in
+constraint:    # Must fill in
+# Only set qos/partition or constraint, based on your SLURM configuration
+# If using one, let the other unfilled
+
+sbatch:
+  gpus_per_node: 0                        # Must fill in
+  cpus_per_gpu: 0                         # Must fill in
+  chdir: ??                               # Not touch, will be filled in during composing
+  nodes: 0                                # Not touch, will be filled in during composing
+  gres: gpu:${arch.node.gpus_per_node}    # Not touch, will be filled in during composing
+  cpus_per_task: 0                        # Must fill in
+  tasks_per_node: 1                       # Not touch
+  output: run-%j.out                      # Not touch
+  error: run-%j.err                       # Not touch
+  extra_args:
+    - "--exclusive"                       # Not touch
+    - "--time=00:30:00"                   # Not touch
+
+srun:                                     # Field not implemented
+  gpus_per_node: 0
+  cpus_per_gpu: 0
+  nodes: 0
+  cpus_per_task: 0
+  tasks_per_node: 0

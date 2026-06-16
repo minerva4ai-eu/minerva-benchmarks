@@ -92,6 +92,12 @@ def parse_args():
             + "Note: This may increase GPU memory usage, so use with caution on memory-constrained setups."
         ),
     )
+    parser.add_argument(
+        "--disable_compile",
+        default=True,
+        action="store_true",
+        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
+    )
 
     return parser.parse_args()
 
