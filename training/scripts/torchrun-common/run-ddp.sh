@@ -73,22 +73,14 @@ echo "train_command: {$train_command}"
 
 source activate-env-variables-per-supercomputer.sh
 
-# Launch Run
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
-    # Start monitoring in background
-    $gpu_plots_monitor_command &
-    monitor_pid=\$!
 
-    # Optional: give the monitor time to initialize
-    sleep 5
-
-    $singularity_prefix torchrun \
+train_command="$singularity_prefix torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
       $TRAIN_SCRIPT \
-        --model "${MODEL_PATH}" \
-        --data '${DATASET_PATH}' \
-        --output_dir "${OUTPUT_DIR}" \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --output_dir $OUTPUT_DIR \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs "$EPOCHS"} \
@@ -97,8 +89,21 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset $DATASET \
-        --disable_compile $DISABLE_COMPILE
+        --dataset '$DATASET'"
+
+if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
+    train_command="$train_command --disable_compile"
+fi
+
+# Launch Run
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+    # Start monitoring in background
+    $gpu_plots_monitor_command &
+    monitor_pid=\$!
+
+    # Optional: give the monitor time to initialize
+    sleep 5
+    $train_command
     
     kill -SIGTERM \"\$monitor_pid\"
 

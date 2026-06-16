@@ -51,6 +51,46 @@ echo "singularity prefix $singularity_prefix"
 gpu_plots_monitor_command="$singularity_prefix python -m gpu_plots"
 source activate-env-variables-per-supercomputer.sh
 
+train_command_min_overlap="$singularity_prefix torchrun \
+  --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
+  --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
+  $TRAIN_SCRIPT \
+    --model $MODEL_PATH \
+    --data '$DATASET_PATH' \
+    --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
+    --batch_size $BATCH_SIZE \
+    --max_length $MAX_MODEL_LENGTH \
+    ${EPOCHS:+--epochs "$EPOCHS"} \
+    ${STEPS:+--max_steps "$STEPS"} \
+    --precision $PRECISION \
+    --lr $LR \
+    --gradient_accumulation_steps $GRAD_ACCUM \
+    --dataloader_num_workers 8 \
+    --dataset $DATASET  "
+
+train_command_max_overlap="$singularity_prefix torchrun \
+    --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
+    --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
+    $TRAIN_SCRIPT \
+      --model $MODEL_PATH \
+      --data '$DATASET_PATH' \
+      --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-max-overlap \
+      --batch_size $BATCH_SIZE \
+      --max_length $MAX_MODEL_LENGTH \
+      ${EPOCHS:+--epochs "$EPOCHS"} \
+      ${STEPS:+--max_steps "$STEPS"} \
+      --precision $PRECISION \
+      --lr $LR \
+      --gradient_accumulation_steps $GRAD_ACCUM \
+      --dataloader_num_workers 8 \
+      --dataset $DATASET \
+      --max_comm_comp_overlap "
+
+if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
+    train_command_max_overlap="$train_command_max_overlap --disable_compile"
+    train_command_min_overlap="$train_command_min_overlap --disable_compile"
+fi
+
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
@@ -61,42 +101,9 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     sleep 5
 
     # Run training in foreground (this blocks until done)
-    $singularity_prefix torchrun \
-      --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-      --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-      $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data '$DATASET_PATH' \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
-        --precision $PRECISION \
-        --lr $LR \
-        --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
-        --dataset $DATASET \
-        --disable_compile $DISABLE_COMPILE
+    $train_command_min_overlap
 
-    $singularity_prefix torchrun \
-      --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-      --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-      $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data '$DATASET_PATH' \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-max-overlap \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
-        --precision $PRECISION \
-        --lr $LR \
-        --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
-        --dataset $DATASET \
-        --max_comm_comp_overlap \
-        --disable_compile $DISABLE_COMPILE
+    $train_command_max_overlap
 
     kill -SIGTERM \"\$monitor_pid\"
 
