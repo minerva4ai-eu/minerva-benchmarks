@@ -1,7 +1,0 @@
-batch_sizes: [1, 2, 4, 8, 16, 32]
-precisions: ["bf16"]
-grad_accums: [1, 4, 8, 1, 6]
-lr: [2e-5]
-optimizer: ["adamw"]
-gradient_checkpointing: [False]
-steps: [50]

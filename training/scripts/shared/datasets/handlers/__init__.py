@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset
@@ -8,28 +8,33 @@ if TYPE_CHECKING:
 
 
 class DatasetHandler(Dataset):
+    data: Any
+    path: str
+    tokenizer: "PreTrainedTokenizer"
+    max_length: int
+
     def __init__(
         self,
-        path: str,
         tokenizer: "PreTrainedTokenizer",
         max_length: int,
+        path: Optional[str] = None,
+        data: Optional[list[dict[str, str]]] = None,
     ):
-        self.path = path
-        self.tokenizer = tokenizer
-        self.max_length = max_length
         super().__init__()
 
     def __len__(self):
         raise NotImplementedError
 
+    def __raw_items_range__(self, idxs):
+        raise NotImplementedError
+        
+        
     def __getitem__(self, idx):
         return super().__getitem__(idx)
 
+
     def collate_fn(self, batch):
         raise NotImplementedError
-
-    # def data_collator(self, batch):
-    #    raise NotImplementedError
 
 
 class RawTextDataset:
