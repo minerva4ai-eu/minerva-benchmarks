@@ -13,7 +13,7 @@ machine:
     #- jq
     #- cuda/12.1
   python_environment: ""
-  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-app.sif
+  singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-ncclIB.sif #singularity_uv-runtime-app.sif
   #singularity_container: /home/bsc/bsc206334/Workspace/MINERVA/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/pytorch_2.5.1-final.sif
   singularity_binds:
     # No escaped character may be used

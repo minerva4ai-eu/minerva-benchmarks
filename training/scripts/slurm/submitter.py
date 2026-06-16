@@ -96,6 +96,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     assert (t.steps is not None) != (t.epochs is not None), (
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
+
     return {
         **os.environ,
         "LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}",
@@ -107,6 +108,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         if cfg.machine.singularity_args
         else "",
         "NODES": str(s.sbatch.nodes),
+        "GPU_NAME": cfg.arch.gpu.name,
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
         "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
         "FRAMEWORK": f.name,
@@ -134,7 +136,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
         "TORCHINDUCTOR_CACHE_DIR": f"{cfg.experiment.output_dir}/.torch-inductor-cache",
-        "DISABLE_COMPILE": cfg.trainings.disable_compile,
+        "DISABLE_COMPILE": str(cfg.model.training.disable_compile),
     }
 
 

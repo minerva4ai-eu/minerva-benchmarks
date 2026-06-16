@@ -19,7 +19,7 @@ attention_type:       gqa      # grouped query attention — alternates local/gl
 vocab_size:           262144
 tokenizer_type:       sentencepiece
 # GPU requirements — constraint metadata
-max_gpus_scale: 4
+max_gpus_scale: 8
 frameworks_supported:
   - torchrun
   - accelerate

@@ -24,6 +24,7 @@ class ModelTrainingComboConfig:
     steps: Optional[int] = None
     epochs: Optional[int] = None
     gradient_checkpointing: bool = True
+    disable_compile: bool = MISSING
 
 
 @dataclass

@@ -62,17 +62,7 @@ echo "singularity prefix $singularity_prefix"
 
 gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
-# Launch Run
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
-    # Start monitoring in background
-    $gpu_plots_monitor_command &
-    monitor_pid=\$!
-
-    # Optional: give the monitor time to initialize
-    sleep 5
-
-    # Run training in foreground (this blocks until done)
-    $singularity_prefix 
+train_command="$singularity_prefix 
         python $TRAIN_SCRIPT 
         --model $MODEL_PATH
         --data $DATASET_PATH
@@ -85,8 +75,23 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --lr $LR
         --gradient_accumulation_steps $GRAD_ACCUM
         --dataloader_num_workers 8
-        --dataset $DATASET \
-        --disable_compile $DISABLE_COMPILE
+        --dataset '$DATASET'"
+
+if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
+    train_command="$train_command --disable_compile"
+fi
+
+# Launch Run
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+    # Start monitoring in background
+    $gpu_plots_monitor_command &
+    monitor_pid=\$!
+
+    # Optional: give the monitor time to initialize
+    sleep 5
+
+    # Run training in foreground (this blocks until done)
+    $train_command
 
     kill -SIGTERM \"\$monitor_pid\"
 
