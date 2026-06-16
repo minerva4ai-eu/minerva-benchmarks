@@ -1,13 +1,12 @@
 # finetune_llama8b.py
 import os
-import sys
 import time
 
 import torch
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingTrainer
-from torch.utils.data import DataLoader, random_split
 from shared.data import load_dataset
+from torch.utils.data import DataLoader
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -16,7 +15,6 @@ from transformers import (
 from utils import (
     count_parameters,
     parse_args,
-    parse_dataset_paths,
     save_summary_stats_json,
 )
 
@@ -105,6 +103,10 @@ def main():
         eval_strategy="epoch",
         eval_steps=None,
         dataloader_num_workers=args.dataloader_num_workers,
+        # torch model compilation
+        torch_compile=not args.disable_compile,
+        torch_compile_backend="inductor",
+        torch_compile_mode="max-autotune-no-cudagraphs",
     )
 
     trainable_params, total_params, trainable_pct = 0, 0, 0

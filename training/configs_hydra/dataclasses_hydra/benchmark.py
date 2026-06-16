@@ -24,8 +24,9 @@ class TrainArgsConfig:
     gradient_checkpointing: List[bool] = (
         MISSING  # field(default_factory=lambda: [True, False])
     )
-    steps: Optional[List[int]] = None  # field(default_factory=lambda: [50])
-    epochs: Optional[List[int]] = None  # field(default_factory=lambda: [1])
+    steps: Optional[List[int]] = MISSING  # field(default_factory=lambda: [50])
+    epochs: Optional[List[int]] = MISSING  # field(default_factory=lambda: [1])
+    disable_compile: Optional[List[bool]] = MISSING
 
     def __post_init__(self):
         bad_precisions = set(self.precisions) - VALID_PRECISIONS

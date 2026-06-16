@@ -78,7 +78,8 @@ train_command_min_overlap="$singularity_prefix \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset $DATASET"
+        --dataset $DATASET \
+        --disable_compile $DISABLE_COMPILE"
 
 train_command_max_overlap="$singularity_prefix  \
     accelerate launch \
@@ -102,6 +103,7 @@ train_command_max_overlap="$singularity_prefix  \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
         --dataset $DATASET \
+        --disable_compile $DISABLE_COMPILE \
         --max_comm_comp_overlap"
 
 echo "NODE_RANK: {$NODE_RANK}"

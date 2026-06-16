@@ -133,6 +133,8 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
+        "TORCHINDUCTOR_CACHE_DIR": f"{cfg.experiment.output_dir}/.torch-inductor-cache",
+        "DISABLE_COMPILE": cfg.trainings.disable_compile,
     }
 
 
@@ -153,6 +155,7 @@ def submit_job(
         cfg.slurm,
         cfg.model.training,
     )
+    # Build sbatch command to submit
     cmd = [
         "sbatch",
         "--parsable",
@@ -163,16 +166,26 @@ def submit_job(
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
         f"--output={s.sbatch.output}",
         f"--error={s.sbatch.error}",
-        f"--account={s.account}",
-        f"--qos={s.qos}",
         f"--partition={s.partition}",
         *([f"--dependency={dependency}"] if dependency else []),
-        *s.sbatch.extra_args,
-        os.path.join(
-            launch_folder, f.scripts.run.split("/")[-1]
-        ),  # path to training script
-        # str(launch_folder),
     ]
+    if s.qos is not None and s.account is not None:
+        cmd.extend(
+            [
+                f"--account={s.account}",
+                f"--qos={s.qos}",
+            ]
+        )
+
+    if s.constraint is not None:
+        cmd.extend([f"--constraint={s.constraint}"])
+
+    cmd.extend(
+        [
+            *s.sbatch.extra_args,
+            os.path.join(launch_folder, f.scripts.run.split("/")[-1]),
+        ]
+    )
     # print("\n".join(cmd))
     job_cfg = (
         f"{m.name}-{f.name}-{f.parallelism_name}"

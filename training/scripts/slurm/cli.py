@@ -69,7 +69,7 @@ def cli():
     multiple=True,
     default=None,
     help=(
-        'Run a benchmark configuration by providing the path to BenchmarkConfig file. Multiple ids may be provided by repeating the input argument, e.g. "...--cfg-id cfgid1 --cfg-id cfgid2 --cfg-id cfgid3 etc..."'
+        'Run a benchmark configuration by providing the path to BenchmarkConfig file. Multiple ids may be provided by repeating the input argument, e.g. "...--yaml yaml-1 --yaml yaml-2 --yaml yaml-3 etc..."'
         + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
     ),
 )

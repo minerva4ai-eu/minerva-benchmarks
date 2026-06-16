@@ -6,13 +6,7 @@
 ##################################################
 ###           Activate Environment             ###
 ##################################################
-# Activate virtual environment using conda
-# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
 eval "$LOAD_MODULES"
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
-
 ##################################################
 
 
@@ -22,11 +16,6 @@ eval "$LOAD_MODULES"
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -87,7 +76,8 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset $DATASET
+        --dataset $DATASET \
+        --disable_compile $DISABLE_COMPILE
 
     $singularity_prefix torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
@@ -105,7 +95,8 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
         --dataset $DATASET \
-        --max_comm_comp_overlap
+        --max_comm_comp_overlap \
+        --disable_compile $DISABLE_COMPILE
 
     kill -SIGTERM \"\$monitor_pid\"
 

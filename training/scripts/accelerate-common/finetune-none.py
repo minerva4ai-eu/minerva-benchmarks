@@ -65,6 +65,34 @@ def main():
         dtype = torch.float32
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        overwrite_output_dir=True,
+        per_device_train_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        weight_decay=args.weight_decay,
+        logging_steps=args.logging_steps,
+        save_strategy="no",
+        save_total_limit=1,
+        fp16=True if args.precision == "fp16" else False,
+        bf16=True if args.precision == "bf16" else False,
+        optim="adamw_torch",
+        logging_dir=f"{output_dir}/logs",
+        report_to="none",
+        eval_steps=None,
+        # Dataloader is created automatically from trainer
+        dataloader_drop_last=True,
+        dataloader_num_workers=args.dataloader_num_workers,
+        data_seed=32,
+        dataloader_persistent_workers=args.dataloader_num_workers > 1,
+        dataloader_pin_memory=True,
+        dataloader_prefetch_factor=4,
+        # torch model compilation
+        torch_compile=not args.disable_compile,
+        torch_compile_backend="inductor",
+        torch_compile_mode="max-autotune-no-cudagraphs",
+    )
     try:
         # Create DataLoaders
         # train_dataloader = DataLoader(
@@ -85,30 +113,6 @@ def main():
         #     collate_fn=collate_fn_eval,
         #     persistent_workers=True,
         # )
-        training_args = TrainingArguments(
-            output_dir=output_dir,
-            overwrite_output_dir=True,
-            per_device_train_batch_size=args.batch_size,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            learning_rate=args.lr,
-            weight_decay=args.weight_decay,
-            logging_steps=args.logging_steps,
-            save_strategy="no",
-            save_total_limit=1,
-            fp16=True if args.precision == "fp16" else False,
-            bf16=True if args.precision == "bf16" else False,
-            optim="adamw_torch",
-            logging_dir=f"{output_dir}/logs",
-            report_to="none",
-            eval_steps=None,
-            # Dataloader is created automatically from trainer
-            dataloader_drop_last=True,
-            dataloader_num_workers=args.dataloader_num_workers,
-            data_seed=32,
-            dataloader_persistent_workers=args.dataloader_num_workers > 1,
-            dataloader_pin_memory=True,
-            dataloader_prefetch_factor=4,
-        )
         print(f"Loading Model... dtype: {dtype}")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,

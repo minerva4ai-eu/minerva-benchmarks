@@ -370,14 +370,6 @@ class PerformanceTrackingTrainer(Trainer):
     # WRAP TRAINING WITH TIMING + FINAL REDUCTION
     # ************************************
     def train(self, *args, **kwargs):
-        if not getattr(self, "_model_compiled", False):
-            print_rank(0, "Compiling model with torch.compile()...")
-            compilation_start = time.time()
-            torch.cuda.synchronize()
-            self.model = torch.compile(self.model, mode="max-autotune")
-            torch.cuda.synchronize()
-            print_rank(0, f"Model compiled in {time.time() - compilation_start:.2f}s")
-            self._model_compiled = True
 
         # reset counters in case reused
         self.total_tokens_this_gpu = 0
@@ -619,7 +611,9 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         self.total_tokens_this_gpu += tokens_in_batch
 
         step_start = time.time()
-        torch.cuda.synchronize()  #
+        torch.cuda.synchronize()
+        print(f"model device: {model.device}")
+        print(f"inputs device: {inputs['input_ids'].device}")
         result = super().training_step(model, inputs)
         torch.cuda.synchronize()  #
         self.step_interval_time = time.time() - step_start
@@ -706,14 +700,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
     # WRAP TRAINING WITH TIMING + FINAL REDUCTION
     # ************************************
     def train(self, *args, **kwargs):
-        # if not getattr(self, "_model_compiled", False):
-        #    print_rank(0, "Compiling model with torch.compile()...")
-        #    compilation_start = time.time()
-        #    torch.cuda.synchronize()
-        #    self.model = torch.compile(self.model, mode="max-autotune")
-        #    torch.cuda.synchronize()
-        #    print_rank(0, f"Model compiled in {time.time() - compilation_start:.2f}s")
-        #    self._model_compiled = True
 
         # reset counters in case reused
         self.total_tokens_this_gpu = 0

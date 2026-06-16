@@ -47,7 +47,7 @@ RESET = "\033[0m"
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
 MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b"]
 FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
-DATASETS = ["alpaca"]
+DATASETS = ["alpaca", "squadv2"]
 
 ################################################################
 
@@ -125,6 +125,29 @@ def generate_valid_combos(
                 # print(f"\tCreating configuration for parallelism {parallelism}:")
                 #  print(OmegaConf.to_yaml(cfg))
 
+                # Make sure that slurm directives for 'qos'/'partition'
+                # & 'constraint' are provided accordingly
+                if (tmp_cfg.slurm.qos is not None) or (
+                    tmp_cfg.slurm.partition is not None
+                ):
+                    assert (tmp_cfg.slurm.qos is not None) and (
+                        tmp_cfg.slurm.partition is not None
+                    ), (
+                        f"{RED}Slurm arguments 'slurm.qos' and 'slurm.partition' cannot be 'None'!{RESET}"
+                        + f"\n{RED}Values received: '{tmp_cfg.slurm.qos}' & '{tmp_cfg.slurm.partition}'{RESET}"
+                    )
+
+                if tmp_cfg.slurm.constraint is not None:
+                    assert (tmp_cfg.slurm.qos is None) and (
+                        tmp_cfg.slurm.partition is None
+                    ), (
+                        f"{RED}Slurm argument 'slurm.constraint' cannot be combined with 'slurm.partition' or  'slurm.qos'!"
+                        + "\nReceived:"
+                        + f"\n\tslurm.constraint: '{tmp_cfg.slurm.constraint}'"
+                        + f"\n\tslurm.qos: '{tmp_cfg.slurm.qos}'"
+                        + f"\n\tslurm.partition: '{tmp_cfg.slurm.partition}'{RESET}"
+                    )
+
                 for (
                     bs,
                     grad_acc,
@@ -167,13 +190,12 @@ def generate_valid_combos(
                             tmp_cfg.experiment.output_dir, parameters_combo
                         )
 
-                        yaml_filename = (
-                            f"{parallelism}--"
-                            + f"bs{bs}-"
-                            + f"grad_accum{grad_acc}-"
-                            + f"prec{precision}-"
-                            + f"steps{steps}"
-                            + ".yaml"
+                        experiment_parameters = (
+                            f"bs{bs}"
+                            + f"-grad_accum{grad_acc}"
+                            + f"-compil{tmp_cfg.trainings.disable_compile}"
+                            + f"-prec{precision}"
+                            + f"-steps{steps}"
                         )
 
                         # By default, if config is using 1 node,
@@ -193,6 +215,7 @@ def generate_valid_combos(
                             + f" | gpus:{total_gpus}"
                             + f" | bs:{bs}"
                             + f" | grad_accum:{total_gpus}"
+                            + f" | compilation: {tmp_cfg.trainings.disable_compile}"
                             + f" | precision:{precision}"
                             + f" | steps:{steps}"
                         )
@@ -205,10 +228,10 @@ def generate_valid_combos(
                             + f"_{tmp_cfg.dataset.name}"
                             + f"_nodes-{nodes}"
                             + f"_gpus-{total_gpus}"
-                            + f"--bs{bs}"
-                            + f"-grad_accum{grad_acc}"
-                            + f"-prec{precision}"
-                            + f"-steps{steps}"
+                            + f"--{experiment_parameters}"
+                        )
+                        yaml_filename = (
+                            f"{parallelism}--{experiment_parameters}" + ".yaml"
                         )
                         if tmp_cfg.id in cfg_seen:
                             print(

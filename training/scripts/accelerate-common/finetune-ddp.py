@@ -121,7 +121,11 @@ def main():
             data_seed=32,
             dataloader_persistent_workers=args.dataloader_num_workers > 1,
             dataloader_pin_memory=True,
-            dataloader_prefetch_factor=4,
+            dataloader_prefetch_factor=8,
+            # torch model compilation
+            torch_compile=not args.disable_compile,
+            torch_compile_backend="inductor",
+            torch_compile_mode="max-autotune-no-cudagraphs",
         )
 
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1

@@ -72,6 +72,7 @@ echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
 source activate-env-variables-per-supercomputer.sh
+
 # Launch Run
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
@@ -96,34 +97,14 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset $DATASET
+        --dataset $DATASET \
+        --disable_compile $DISABLE_COMPILE
     
     kill -SIGTERM \"\$monitor_pid\"
 
     # Wait for the monitor to clean up and exit
     wait \"\$monitor_pid\"
 "
-
-# # Launch Run
-# srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL \
-#   torchrun \
-#     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-#     --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-#     finetune-ddp.py \
-#       --minerva_dir "${CURRENT_DIR}" \
-#       --model "${MODEL_PATH}" \
-#       --data "${DATASET_PATH}" \
-#       --output_dir "${OUTPUT_DIR}" \
-#       --batch_size $BATCH_SIZE \
-#       --max_length $MAX_MODEL_LENGTH \
-#       ${EPOCHS:+--epochs "$EPOCHS"} \
-#       ${STEPS:+--max_steps "$STEPS"} \
-#       --precision $PRECISION \
-#       --lr $LR \
-#       --gradient_accumulation_steps $GRAD_ACCUM \
-#       --dataloader_num_workers 8 \
-#       --dataset $DATASET
-
 
 echo "DDP Job Completed."
 
