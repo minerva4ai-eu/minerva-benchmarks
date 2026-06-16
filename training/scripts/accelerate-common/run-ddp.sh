@@ -77,7 +77,8 @@ train_command="$singularity_prefix accelerate launch \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset '$DATASET'"
+        --dataset '$DATASET' \
+        --disable_compile $DISABLE_COMPILE"
 
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"

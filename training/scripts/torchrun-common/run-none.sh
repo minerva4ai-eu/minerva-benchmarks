@@ -85,7 +85,8 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
         --lr $LR
         --gradient_accumulation_steps $GRAD_ACCUM
         --dataloader_num_workers 8
-        --dataset $DATASET
+        --dataset $DATASET \
+        --disable_compile $DISABLE_COMPILE
 
     kill -SIGTERM \"\$monitor_pid\"
 

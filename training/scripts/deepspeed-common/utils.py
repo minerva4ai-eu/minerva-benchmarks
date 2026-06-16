@@ -68,5 +68,11 @@ def parse_args():
         help="Enable gradient checkpointing to save memory",
     )
     parser.add_argument("--local_rank", type=int, default=-1)
+    parser.add_argument(
+        "--disable_compile",
+        default=True,
+        action="store_true",
+        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
+    )
 
     return parser.parse_args()

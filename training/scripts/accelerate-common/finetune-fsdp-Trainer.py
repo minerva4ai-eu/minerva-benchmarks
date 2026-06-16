@@ -115,6 +115,40 @@ def main():
         )
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
+
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        overwrite_output_dir=True,
+        per_device_train_batch_size=BATCH_SIZE,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        weight_decay=args.weight_decay,
+        # warmup_ratio=args.warmup_ratio,
+        logging_steps=args.logging_steps,
+        save_strategy="no",
+        save_total_limit=1,
+        fp16=args.precision == "fp16",
+        bf16=args.precision == "bf16",
+        optim="adamw_torch",
+        logging_dir=f"{output_dir}/logs",
+        report_to="none",
+        eval_steps=None,
+        ddp_timeout=1800,
+        # Dataloader is created automatically from trainer
+        dataloader_drop_last=True,
+        dataloader_num_workers=args.dataloader_num_workers,
+        data_seed=32,
+        dataloader_persistent_workers=args.dataloader_num_workers > 1,
+        dataloader_pin_memory=True,
+        dataloader_prefetch_factor=4,
+        # FSDP Config
+        fsdp="full_shard auto_wrap",
+        fsdp_config=fsdp_config,
+        # torch model compilation
+        torch_compile=not args.disable_compile,
+        torch_compile_backend="inductor",
+        torch_compile_mode="max-autotune-no-cudagraphs",
+    )
     try:
         # train_dataloader = DataLoader(
         #    train_dataset,
@@ -134,36 +168,6 @@ def main():
         #    collate_fn=collate_fn_eval,
         #    persistent_workers=args.dataloader_num_workers > 1,
         # )
-
-        training_args = TrainingArguments(
-            output_dir=output_dir,
-            overwrite_output_dir=True,
-            per_device_train_batch_size=BATCH_SIZE,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            learning_rate=args.lr,
-            weight_decay=args.weight_decay,
-            # warmup_ratio=args.warmup_ratio,
-            logging_steps=args.logging_steps,
-            save_strategy="no",
-            save_total_limit=1,
-            fp16=args.precision == "fp16",
-            bf16=args.precision == "bf16",
-            optim="adamw_torch",
-            logging_dir=f"{output_dir}/logs",
-            report_to="none",
-            eval_steps=None,
-            ddp_timeout=1800,
-            # Dataloader is created automatically from trainer
-            dataloader_drop_last=True,
-            dataloader_num_workers=args.dataloader_num_workers,
-            data_seed=32,
-            dataloader_persistent_workers=args.dataloader_num_workers > 1,
-            dataloader_pin_memory=True,
-            dataloader_prefetch_factor=4,
-            # FSDP Config
-            fsdp="full_shard auto_wrap",
-            fsdp_config=fsdp_config,
-        )
 
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:

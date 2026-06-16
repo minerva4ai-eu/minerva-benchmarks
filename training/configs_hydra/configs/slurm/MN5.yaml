@@ -1,7 +1,9 @@
 account: bsc99
-qos: acc_bench
+qos: acc_bench 
 partition: acc
-
+constraint:    
+# Only set qos/partition or constraint, based on your SLURM configuration
+# If using one, let the other unfilled
 
 sbatch:
   gpus_per_node: 4
