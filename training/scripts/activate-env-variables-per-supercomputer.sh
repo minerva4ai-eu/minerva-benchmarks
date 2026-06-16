@@ -11,7 +11,7 @@
 case "$MACHINE" in
     bsc-mn5-acc)
         # NCCL variables
-        #export NCCL_NET=IB
+        export NCCL_NET=IB
         echo "NCCL_NET: $NCCL_NET"
         export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
         echo "NCCL_SOCKET_IFNAME: $NCCL_SOCKET_IFNAME"
@@ -21,7 +21,7 @@ case "$MACHINE" in
         echo "NCCL_DEBUG: $NCCL_DEBUG"
         export NCCL_NVLS_ENABLE=0
         echo "NCCL_NVLS_ENABLE: $NCCL_NVLS_ENABLE"
-        export NCCL_IB_DISABLE=1
+        export NCCL_IB_DISABLE=0
         echo "NCCL_IB_DISABLE: $NCCL_IB_DISABLE"
 
         # CUDA DEVICES
