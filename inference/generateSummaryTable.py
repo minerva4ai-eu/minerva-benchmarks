@@ -6,9 +6,9 @@ import re
 
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
-load_dotenv(".env")
 
-
+env_file = ".env-idris-jeanzay-h100"
+load_dotenv(env_file)
 
 BASE_DIR =  os.getcwd() # Adjust if needed
 BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")

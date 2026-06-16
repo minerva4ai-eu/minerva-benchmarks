@@ -6,7 +6,7 @@ import pandas as pd
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv(".env-idris-jeanzay-h100")
 
 
 BASE_DIR = os.getcwd()  # Adjust if needed

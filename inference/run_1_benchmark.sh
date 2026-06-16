@@ -5,13 +5,13 @@
 #######################################################
 # SPECIFIC CASE FOR TESTING
 #######################################################
-FRAMEWORKS=("vllm") #"vllm") # deepspeed")    # Add other frameworks if needed
+FRAMEWORKS=("sglang") #"vllm") # deepspeed")    # Add other frameworks if needed
 DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
 MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
 NUMBER_OF_NODES=(2)
 MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
+MACHINE="idris-jeanzay-h100"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
@@ -57,8 +57,8 @@ for framework in "${FRAMEWORKS[@]}"; do
             FULL_FOLDER="${BASE_FOLDER}/${RUN_FOLDER}"
 
             # Define a unique MODEL_PATH per configuration
-            MODEL_TYPE=$(get_model_type "$model" "configs-bsc-mn5-acc/model_type_map.json")
-            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-bsc-mn5-acc/model_type_directories_map.json")
+            MODEL_TYPE=$(get_model_type "$model" "configs-$MACHINE/model_type_map.json")
+            MODEL_DIRECTORY=$(get_model_directory "$MODEL_TYPE" "configs-$MACHINE/model_type_directories_map.json")
             MODEL_PATH="${MODEL_DIRECTORY}/${model}"
 
             if [ -z "$MODEL_DIRECTORY" ]; then
@@ -66,7 +66,7 @@ for framework in "${FRAMEWORKS[@]}"; do
               exit 1
             fi
 
-            DATASET_PATH=$(get_dataset_path "$dataset" "configs-bsc-mn5-acc/config_datasets_paths_map.json")
+            DATASET_PATH=$(get_dataset_path "$dataset" "configs-$MACHINE/config_datasets_paths_map.json")
 
             # vLLM
             if [[ "$framework" == "vllm" ]]; then
@@ -128,6 +128,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    --constraint=$CONSTRAINT \
                     run_mp_vllm.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -203,6 +204,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    --constraint=$CONSTRAINT \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -279,6 +281,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    --constraint=$CONSTRAINT \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
