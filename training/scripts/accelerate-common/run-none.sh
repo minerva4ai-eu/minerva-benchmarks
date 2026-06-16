@@ -63,17 +63,10 @@ echo "singularity prefix $singularity_prefix"
 
 gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 
-# Start GPU monitoring in background
-$gpu_plots_monitor_command &
-monitor_pid=\$!
-
-# Optional: give the monitor time to initialize
-sleep 5
-
-$singularity_prefix accelerate launch \
+train_command="$singularity_prefix accelerate launch \
     --num_processes 1 \
     --num_machines 1 \
-    "$TRAIN_SCRIPT" \
+    $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data $DATASET_PATH \
         --output_dir $OUTPUT_DIR \
@@ -85,12 +78,25 @@ $singularity_prefix accelerate launch \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 8 \
-        --dataset "$DATASET"
+        --dataset '$DATASET' \
+        --disable_compile $DISABLE_COMPILE"
+
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
+    # Start monitoring in background
+    $gpu_plots_monitor_command &
+    monitor_pid=\$!
+
+    # Optional: give the monitor time to initialize
+    sleep 5
     
-kill -SIGTERM \"\$monitor_pid\"
-# Wait for the monitor to clean up and exit
-wait "$monitor_pid"
-   
+    # Run training in foreground (this blocks until done)
+    $train_command
+
+    kill -SIGTERM \"\$monitor_pid\"
+
+    # Wait for the monitor to clean up and exit
+    wait \"\$monitor_pid\"
+"
+
 echo "✅ Single Node job completed."
 exit 0
-

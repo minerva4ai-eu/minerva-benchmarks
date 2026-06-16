@@ -12,6 +12,7 @@ from shared.utils import (
     print_rank,
     save_summary_stats_json,
 )
+from torch.utils.data import DataLoader, DistributedSampler
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -78,50 +79,67 @@ def main():
         dtype = torch.float32
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        overwrite_output_dir=True,
+        per_device_train_batch_size=BATCH_SIZE,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        weight_decay=args.weight_decay,
+        logging_steps=args.logging_steps,
+        save_strategy="no",
+        save_total_limit=1,
+        fp16=args.precision == "fp16",
+        bf16=args.precision == "bf16",
+        optim="adamw_torch",
+        logging_dir=f"{output_dir}/logs",
+        report_to="none",
+        eval_steps=None,
+        ddp_timeout=1800,
+        # Dataloader is created automatically from trainer
+        dataloader_drop_last=True,
+        dataloader_num_workers=args.dataloader_num_workers,
+        data_seed=32,
+        dataloader_persistent_workers=args.dataloader_num_workers > 1,
+        dataloader_pin_memory=True,
+        dataloader_prefetch_factor=4,
+        # torch model compilation
+        torch_compile=not args.disable_compile,
+        torch_compile_backend="inductor",
+        torch_compile_mode="max-autotune-no-cudagraphs",
+    )
     try:
-        # train_dataloader = DataLoader(
-        #    train_dataset,
-        #    batch_size=BATCH_SIZE,
-        #    shuffle=True,
-        #    num_workers=args.dataloader_num_workers,
-        #    pin_memory=True,
-        #    collate_fn=collate_fn_train,
-        #    persistent_workers=True,
-        # )
-        # eval_dataloader = DataLoader(
-        #    eval_dataset,
-        #    batch_size=BATCH_SIZE,
-        #    shuffle=False,
-        #    num_workers=args.dataloader_num_workers,
-        #    pin_memory=True,
-        #    collate_fn=collate_fn_eval,
-        #    persistent_workers=True,
-        # )
+        # ---------------------------------------------------------------------
+        # Handle dataset path (string or dict)
+        # ---------------------------------------------------------------------
+        train_dataset, eval_dataset, collate_fn, _ = load_dataset(
+            dataset_name=args.dataset,
+            dataset_path=args.data,
+            tokenizer=tokenizer,
+            max_length=MAX_LENGTH,
+        )
+        train_sampler = DistributedSampler(train_dataset, shuffle=True)
+        eval_sampler = DistributedSampler(eval_dataset, shuffle=False)
 
-        training_args = TrainingArguments(
-            output_dir=output_dir,
-            overwrite_output_dir=True,
-            per_device_train_batch_size=BATCH_SIZE,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            learning_rate=args.lr,
-            weight_decay=args.weight_decay,
-            logging_steps=args.logging_steps,
-            save_strategy="no",
-            save_total_limit=1,
-            fp16=args.precision == "fp16",
-            bf16=args.precision == "bf16",
-            optim="adamw_torch",
-            logging_dir=f"{output_dir}/logs",
-            report_to="none",
-            eval_steps=None,
-            ddp_timeout=1800,
-            # Dataloader is created automatically from trainer
-            dataloader_drop_last=True,
-            dataloader_num_workers=args.dataloader_num_workers,
-            data_seed=32,
-            dataloader_persistent_workers=args.dataloader_num_workers > 1,
-            dataloader_pin_memory=True,
-            dataloader_prefetch_factor=4,
+        train_dataloader = DataLoader(
+            train_dataset,
+            batch_size=BATCH_SIZE,
+            sampler=train_sampler,
+            shuffle=False,
+            num_workers=args.dataloader_num_workers,
+            pin_memory=True,
+            collate_fn=collate_fn,
+            persistent_workers=True,
+        )
+        eval_dataloader = DataLoader(
+            eval_dataset,
+            batch_size=BATCH_SIZE,
+            sampler=eval_sampler,
+            shuffle=False,
+            num_workers=args.dataloader_num_workers,
+            pin_memory=True,
+            collate_fn=collate_fn,
+            persistent_workers=True,
         )
 
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
@@ -148,15 +166,15 @@ def main():
             torch_dtype=dtype,
             low_cpu_mem_usage=True,
             device_map=None,  # Trainer will put model on device
-            attn_implementation="flash_attention_2",
+            # attn_implementation="flash_attention_2",
         )
         print_rank("Model Loaded")
 
         trainer = PerformanceTrackingTrainer(
             model=model,
             args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
             data_collator=collate_fn,
             tokenizer=tokenizer,
             callbacks=[monitor],
