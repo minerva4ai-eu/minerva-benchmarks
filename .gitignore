@@ -33,7 +33,7 @@ inference/results/vllm/*
 inference/inference-MN5/analytics-*/
 inference/inference-MN5/benchmarks-vllm-10122025/*
 
-training/benchmark-runs/*
+training/benchmark-runs*
 training/configs_hydra/benchmarks_to_run/*
 
 training/.torchcompile_cache/*
