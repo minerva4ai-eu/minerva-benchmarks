@@ -142,11 +142,11 @@ def main():
         # TODO: If your dataset is already tokenized (input_ids present), set:
         #   dataset_kwargs={"skip_prepare_dataset": True}
         #   and remove dataset_text_field above.
-        # torch model compilation
-        torch_compile=not args.disable_compile,
-        torch_compile_backend="inductor",
-        torch_compile_mode="max-autotune-no-cudagraphs",
     )
+    if bool(args.enable_compile):
+        training_args.torch_compile = True
+        training_args.torch_compile_backend = "inductor"
+        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
     try:
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:
@@ -224,7 +224,7 @@ def main():
         print_rank(rank, ":::::::::")
 
         gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
+            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
         )
 
         start_time = time.time()

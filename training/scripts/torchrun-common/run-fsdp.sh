@@ -86,9 +86,9 @@ train_command_max_overlap="$singularity_prefix torchrun \
       --dataset $DATASET \
       --max_comm_comp_overlap "
 
-if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
-    train_command_max_overlap="$train_command_max_overlap --disable_compile"
-    train_command_min_overlap="$train_command_min_overlap --disable_compile"
+if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
+    train_command_max_overlap="$train_command_max_overlap --enable_compile"
+    train_command_min_overlap="$train_command_min_overlap --enable_compile"
 fi
 
 # Launch Run

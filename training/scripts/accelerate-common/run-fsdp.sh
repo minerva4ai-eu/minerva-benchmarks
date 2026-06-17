@@ -104,10 +104,11 @@ train_command_max_overlap="$singularity_prefix  \
         --dataset $DATASET \
         --max_comm_comp_overlap"
 
-echo "DISABLE_COMPILE: $DISABLE_COMPILE"
-if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
-    train_command_max_overlap="$train_command_max_overlap --disable_compile"
-    train_command_min_overlap="$train_command_min_overlap --disable_compile"
+echo "ENABLE_COMPILE: $ENABLE_COMPILE"
+if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
+    echo "Compile enabled!"
+    train_command_max_overlap="$train_command_max_overlap --enable_compile"
+    train_command_min_overlap="$train_command_min_overlap --enable_compile"
 fi
 
 echo "NODE_RANK: {$NODE_RANK}"
