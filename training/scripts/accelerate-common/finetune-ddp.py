@@ -78,60 +78,42 @@ def main():
         dtype = torch.float32
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
+
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        overwrite_output_dir=True,
+        per_device_train_batch_size=BATCH_SIZE,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        weight_decay=args.weight_decay,
+        logging_steps=args.logging_steps,
+        save_strategy="no",
+        save_total_limit=1,
+        fp16=args.precision == "fp16",
+        bf16=args.precision == "bf16",
+        optim="adamw_torch",
+        logging_dir=f"{output_dir}/logs",
+        report_to="none",
+        eval_steps=None,
+        ddp_timeout=1800,
+        # Dataloader is created automatically from trainer
+        dataloader_drop_last=True,
+        dataloader_num_workers=args.dataloader_num_workers,
+        data_seed=32,
+        dataloader_persistent_workers=args.dataloader_num_workers > 1,
+        dataloader_pin_memory=True,
+        dataloader_prefetch_factor=8,
+    )
+    if bool(args.enable_compile):
+        training_args.torch_compile = True
+        training_args.torch_compile_backend = "inductor"
+        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
+
+    training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
+    if args.max_steps is not None:
+        training_args.max_steps = int(args.max_steps)
+
     try:
-        # train_dataloader = DataLoader(
-        #    train_dataset,
-        #    batch_size=BATCH_SIZE,
-        #    shuffle=True,
-        #    num_workers=args.dataloader_num_workers,
-        #    pin_memory=True,
-        #    collate_fn=collate_fn_train,
-        #    persistent_workers=True,
-        # )
-        # eval_dataloader = DataLoader(
-        #    eval_dataset,
-        #    batch_size=BATCH_SIZE,
-        #    shuffle=False,
-        #    num_workers=args.dataloader_num_workers,
-        #    pin_memory=True,
-        #    collate_fn=collate_fn_eval,
-        #    persistent_workers=True,
-        # )
-
-        training_args = TrainingArguments(
-            output_dir=output_dir,
-            overwrite_output_dir=True,
-            per_device_train_batch_size=BATCH_SIZE,
-            gradient_accumulation_steps=args.gradient_accumulation_steps,
-            learning_rate=args.lr,
-            weight_decay=args.weight_decay,
-            logging_steps=args.logging_steps,
-            save_strategy="no",
-            save_total_limit=1,
-            fp16=args.precision == "fp16",
-            bf16=args.precision == "bf16",
-            optim="adamw_torch",
-            logging_dir=f"{output_dir}/logs",
-            report_to="none",
-            eval_steps=None,
-            ddp_timeout=1800,
-            # Dataloader is created automatically from trainer
-            dataloader_drop_last=True,
-            dataloader_num_workers=args.dataloader_num_workers,
-            data_seed=32,
-            dataloader_persistent_workers=args.dataloader_num_workers > 1,
-            dataloader_pin_memory=True,
-            dataloader_prefetch_factor=8,
-            # torch model compilation
-            torch_compile=not args.disable_compile,
-            torch_compile_backend="inductor",
-            torch_compile_mode="max-autotune-no-cudagraphs",
-        )
-
-        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
-        if args.max_steps is not None:
-            training_args.max_steps = int(args.max_steps)
-
         monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
@@ -169,7 +151,7 @@ def main():
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
+            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
         )
 
         # Train Model
