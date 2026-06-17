@@ -21,27 +21,6 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
-RUNS_DIR = Path("benchmark-runs/")
-DEFAULT_CONFIGS_PATH = "./configs_hydra/configs"
-DEFAULT_CONFIG_NAME = "base"
-BASE_DIR = Path(".")
-
-# TODO: Folder is not working, check how to implement
-# MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
-# os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
-HISTORY_FILE_PATH = os.path.expanduser("~/.minerva-history")
-USER_CONFIG_PATH = os.path.expanduser(".minerva-benchmarks-config.json")
-
-# @dataclass
-# class UserBenchmarkConfig:
-#
-#    runs_dir: str
-#    configs_path: str = USER_CONFIG_PATH
-#
-#    def save_json(self,):
-#        open(self.configs_path)
-
-
 @click.group()
 def cli():
     pass
@@ -435,6 +414,11 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
     required=False,
 )
 @click.option(
+    "--runs-dir",
+    "runs_dir",
+    default=RUNS_DIR,
+)
+@click.option(
     "--model",
     "model",
     type=str,
@@ -455,7 +439,7 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
     help="",
     required=False,
 )
-def status(run_date, run_id, rerun_id, model, framework, parallelism):
+def status(run_date, run_id, rerun_id, runs_dir, model, framework, parallelism):
     """Print a summary of all run statuses."""
     is_valid_date(run_date)
     assert is_valid_date(run_date), (
@@ -464,10 +448,10 @@ def status(run_date, run_id, rerun_id, model, framework, parallelism):
     run_date = str2date2str(run_date)
 
     run_monitor_folder = (
-        f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
+        f"{runs_dir}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
     )
     if rerun_id:
-        run_monitor_folder = f"{RUNS_DIR}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
+        run_monitor_folder = f"{runs_dir}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
     try:
         run_jobs = m.load_all(run_monitor_folder)
     except FileNotFoundError:
@@ -480,12 +464,121 @@ def status(run_date, run_id, rerun_id, model, framework, parallelism):
     s1 = " " * 20
     s2 = " " * 50
     s3 = " " * 49
-    print(f"{s1} {u.YELLOW}JOBID{s2}RUNID{s3}DEPJOB")
+    print(f"{u.YELLOW}JOBID | RUNID | DEPJOB")
     for job in sorted(run_jobs, key=lambda j: j["id"]):
         job_info = m.get_job_info(job["id"])
 
         m.print_job_status(job, job_info)
 
+
+@cli.command()
+@click.option(
+    "--run-date",
+    "run_date",
+    type=str,
+    help="Date of run in format '%d-%m-%Y'.",
+    required=True,
+)
+@click.option(
+    "--run-id",
+    "run_id",
+    type=str,
+    help="Serial id of run on provided date.",
+    required=True,
+)
+@click.option(
+    "--runs-dir",
+    "runs_id",
+    default=RUNS_DIR,
+)
+def cancel(run_date, run_id, runs_id):
+    """Cancel all running and pending jobs for a given run."""
+
+    print("\n")
+    print(
+        f"{u.POINT_DIAMOND} {u.CYAN} Cancelling {u.MAGENTA} MINERVA Benchmarks {u.CYAN} jobs {u.POINT_DIAMOND} {u.RESET}"
+    )
+
+    run_date = str2date2str(run_date)
+    if not is_valid_date(run_date):
+        raise ValueError(
+            f"{u.RED}Provided invalid '--run-date' value '{run_date}'. Either faulty format or future timestamp!{u.RESET}"
+        )
+
+    run_monitor_folder = f"{runs_id}/slurm-monitor/{run_date}/run_id-{run_id}"
+    run_monitor_path = os.path.join(run_monitor_folder, "jobs_submitted.jsonl")
+
+    if not os.path.exists(run_monitor_path):
+        click.echo(f"{u.RED}Could not find jobs file @ {run_monitor_path}{u.RESET}")
+        exit(1)
+
+    run_jobs = m.load_all(run_monitor_path)
+    if not run_jobs:
+        click.echo(
+            f"{u.YELLOW}No jobs found for run {run_date} | run_id-{run_id}{u.RESET}"
+        )
+        return
+
+    import subprocess
+
+    cancelled = []
+    skipped = []
+
+    for job in sorted(run_jobs, key=lambda j: j["id"]):
+        job_id = job["id"]
+        cfg_id = job["cfg_id"]
+        try:
+            job_info = m.get_job_info(job_id)
+            state = job_info.status_meta["code_complete"]
+        except Exception:
+            click.echo(
+                f"{u.WARNING} Could not query job {job_id} ({cfg_id}), skipping.{u.RESET}"
+            )
+            skipped.append({"id": job_id, "cfg_id": cfg_id, "reason": "query_failed"})
+            continue
+
+        if state in ("running", "pending"):
+            try:
+                result = subprocess.run(
+                    ["scancel", job_id],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    cancelled.append({"id": job_id, "cfg_id": cfg_id, "state": state})
+                    click.echo(
+                        f"{u.SUCCESS_HEAVY} {u.GREEN}Cancelled {job_id} ({cfg_id}) [{state}]{u.RESET}"
+                    )
+                else:
+                    skipped.append(
+                        {
+                            "id": job_id,
+                            "cfg_id": cfg_id,
+                            "reason": result.stderr.strip(),
+                        }
+                    )
+                    click.echo(
+                        f"{u.FAILURE_HEAVY} {u.RED}Failed to cancel {job_id} ({cfg_id}): {result.stderr.strip()}{u.RESET}"
+                    )
+            except Exception as e:
+                skipped.append({"id": job_id, "cfg_id": cfg_id, "reason": str(e)})
+                click.echo(
+                    f"{u.FAILURE_HEAVY} {u.RED}Exception cancelling {job_id} ({cfg_id}): {e}{u.RESET}"
+                )
+        else:
+            skipped.append(
+                {
+                    "id": job_id,
+                    "cfg_id": cfg_id,
+                    "state": state,
+                    "reason": "not_running_or_pending",
+                }
+            )
+            click.echo(f"{u.INFO} {job_id} ({cfg_id}) is [{state}], skipping.{u.RESET}")
+
+    click.echo(
+        f"\n{u.POINT_DIAMOND} Summary: {u.GREEN}{len(cancelled)} cancelled{u.RESET}, {u.YELLOW}{len(skipped)} skipped{u.RESET}"
+    )
 
 # ---------------------------------------------------------------------------
 # Interactive mode
@@ -496,7 +589,8 @@ Interactive mode — type a command and press Enter:
 
   run          Submit new benchmark jobs (will prompt for arguments)
   rerun        Rerun failed/pending jobs (will prompt for arguments)
-  status       Check status of a run (will prompt for --run-id)
+  status       Check status of a run (will prompt for arguments)
+  cancel       Cancel jobs of running/pending jobs of a run (will prompt for arguments)
   help         Show this help
   quit/exit    Exit
 
@@ -543,7 +637,7 @@ def interactive_loop(subcmd: str = ""):
             continue
         cmd_name = parts[0].lower()
 
-        if cmd_name not in ("run", "rerun", "status"):
+        if cmd_name not in subcommands_list(cli):
             click.echo(
                 f"{u.RED}\tUnknown command: '{cmd_name}'! Type 'help' for options.{u.RESET}\n"
             )
@@ -563,12 +657,17 @@ def interactive_loop(subcmd: str = ""):
             elif cmd_name == "status":
                 click.echo("\n  -- status options --")
                 extra_args.extend(prompt_options_interactive(STATUS_OPTIONS))
+            elif cmd_name == "cancel":
+                click.echo("\n  -- cancel options --")
+                extra_args.extend(prompt_options_interactive(CANCEL_OPTIONS))
         except EOFError:
             click.echo("\nCancelled.")
             continue
 
         # Build a Click context and invoke the command
-        cmd_map = {"run": run, "rerun": rerun, "status": status}
+        cmd_map = {"run": run, "rerun": rerun, "status": status, "cancel": cancel}
+        _cmd_mao = command_tree(cli)
+        print(f"_cmd_mao: {_cmd_mao}")
         cmd = cmd_map[cmd_name]
         try:
             # Use sys.argv temporarily so Click can parse the sub-command args
@@ -597,7 +696,14 @@ def cli_entry():
         interactive_loop(sys.argv[1])
     else:
         cli()
+def command_tree(obj):
+    
+    if isinstance(obj, click.Group):
+        return {name: value
+                for name, value in obj.commands.items()}
 
-
+def subcommands_list(obj) -> list[str]:
+    cmd_tree = command_tree(obj)
+    return list(cmd_tree.keys())
 if __name__ == "__main__":
     cli_entry()
