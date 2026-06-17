@@ -21,7 +21,7 @@ BASE_DIR = Path(".")
 # TODO: Folder is not working, check how to implement
 # MINERVA_USER_FOLDER = os.path.join(os.path.expanduser("~/"), ".minerva-benchmarks")
 # os.makedirs(MINERVA_USER_FOLDER, exist_ok=True)
-HISTORY_FILE_PATH = os.path.expanduser(".minerva-history")
+HISTORY_FILE_PATH = os.path.expanduser("~/.minerva-history")
 USER_CONFIG_PATH = os.path.expanduser(".minerva-benchmarks-config.json")
 
 # Create key bindings
@@ -30,12 +30,38 @@ bindings = KeyBindings()
 
 # Define Ctrl+Enter (Ctrl+M) to submit input (Linux)
 # Define Ctrl+P to submit input (macOS)
+# @bindings.add("c-m")
+# @bindings.add("c-p")
+# def _(event):
+#     event.app.exit(result=event.app.current_buffer.text)
 @bindings.add("c-m")
 @bindings.add("c-p")
 def _(event):
-    event.app.exit(result=event.app.current_buffer.text)
+    event.current_buffer.validate_and_handle()
+
+style = Style.from_dict(
+    {
+        "prompt": "ansicyan bold",
+        "input": "ansigreen",
+    }
+)
+
+session = PromptSession(
+    key_bindings=bindings,
+    style=style,
+    history=FileHistory(HISTORY_FILE_PATH),
+    completer=PathCompleter(expanduser=True),
+    complete_while_typing=True,
+    multiline=False,
+)
 
 
+try:
+    with open(HISTORY_FILE_PATH, 'a') as f:
+        pass
+    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
+except Exception as e:
+    print(f"DEBUG: history file FAILED: {e}")
 # Prevent Enter from submitting (we just want to move to the next line)
 # @bindings.add("enter")
 # def _(event):
@@ -47,32 +73,16 @@ def _(event):
 def read_user_input(
     history_path: str = HISTORY_FILE_PATH, input_text: str = "minerva-benchmarks > "
 ) -> str:
-    style = Style.from_dict(
-        {
-            "prompt": "ansicyan bold",
-            "input": "ansigreen",
-        }
-    )
-
-    session = PromptSession(
-        key_bindings=bindings,
-        style=style,
-        history=FileHistory(history_path),
-        completer=PathCompleter(expanduser=True),
-        complete_while_typing=True,
-        multiline=False,
-    )
-
     return session.prompt(f"{input_text}")
 
 
-def prompt_arg(message, required=True) -> str:
-    """Prompt user for an argument value."""
-    while True:
-        value = read_user_input(input_text=message)
-        if value or not required:
-            return value
-        click.echo("  This argument is required. Please enter a value.")
+#def prompt_arg(message, required=True) -> str:
+#    """Prompt user for an argument value."""
+#    while True:
+#        value = read_user_input(input_text=message)
+#        if value or not required:
+#            return value
+#        click.echo("  This argument is required. Please enter a value.")
 
 
 @dataclass
@@ -217,14 +227,22 @@ RERUN_OPTIONS = [
 
 STATUS_OPTIONS = [
     OptionConfig(
+        name="--runs-dir",
+        prompt="runs-dir (root folder of benchmark runs)",
+        default=str(RUNS_DIR),
+        validator=lambda x: os.path.exists(x),
+    ),
+    OptionConfig(
         name="--run-date",
-        prompt="run-date",
+        prompt="run-date (date of benchmark runs: 01-01-2026)",
         transform=str2date2str,
         validator=is_valid_date,
     ),
     OptionConfig(
         name="--run-id",
-        prompt="run-id",
+        prompt="run-id (serial id number of run e.g. 1)",
+        default=str(RUNS_DIR),
+        # validator=lambda x: isinstance(x, int) and x > 0,
     ),
     OptionConfig(name="--nodes", prompt="nodes", validator=lambda x: int(x) >= 1),
     OptionConfig(name="--model", prompt="model", validator=lambda x: int(x) >= 1),
@@ -238,6 +256,28 @@ STATUS_OPTIONS = [
     ),
 ]
 
+
+CANCEL_OPTIONS = [
+    OptionConfig(
+        name="--runs-dir",
+        prompt="runs-dir (root folder of benchmark runs)",
+        validator=lambda x: os.path.exists(x),
+        default=str(RUNS_DIR),
+    ),
+    OptionConfig(
+        name="--run-date",
+        prompt="run-date",
+        transform=str2date2str,
+        validator=is_valid_date,
+        error_msg="--run-date must be in the format DD-MM-YYYY or d-m-YYYY! Check date for errors in format & or future timestamps.",
+        required=True,
+    ),
+    OptionConfig(
+        name="--run-id",
+        prompt="run-id",
+        required=True,
+    ),
+]
 
 def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
     """
