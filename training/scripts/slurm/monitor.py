@@ -173,10 +173,10 @@ def get_job_info(job_id: str) -> JobInfo:
 
 
 def print_job_status(job: dict, job_info: JobInfo):
-
+    dil = f"{u.YELLOW}|{u.RESET}"
     print(
         f"{u.POINT_BULLET} {job_info.status_meta['icon']} ({job_info.status_meta['code_complete']}) {u.ARROW_CHEVRON} "
-        + f"{job['id']} | {job['cfg_id']} | {job['dependency']}"
+        + f"{job['id']} {dil} {job['cfg_id']} {dil} {job['dependency']}"
     )
 
 

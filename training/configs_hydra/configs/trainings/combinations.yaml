@@ -5,4 +5,4 @@ lr: [2e-5]
 optimizer: ["adamw"]
 gradient_checkpointing: [False] # TODO: Implement parameterization
 steps: [50]
-disable_compile: [False, True]
+enable_compile: [False, True]

@@ -39,6 +39,7 @@ bindings = KeyBindings()
 def _(event):
     event.current_buffer.validate_and_handle()
 
+
 style = Style.from_dict(
     {
         "prompt": "ansicyan bold",
@@ -57,7 +58,7 @@ session = PromptSession(
 
 
 try:
-    with open(HISTORY_FILE_PATH, 'a') as f:
+    with open(HISTORY_FILE_PATH, "a") as f:
         pass
     print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
 except Exception as e:
@@ -76,7 +77,7 @@ def read_user_input(
     return session.prompt(f"{input_text}")
 
 
-#def prompt_arg(message, required=True) -> str:
+# def prompt_arg(message, required=True) -> str:
 #    """Prompt user for an argument value."""
 #    while True:
 #        value = read_user_input(input_text=message)
@@ -125,8 +126,8 @@ RUN_OPTIONS = [
         default="base",
     ),
     OptionConfig(
-        name="--output",
-        prompt="output",
+        name="--runs-dir",
+        prompt="runs-dir",
         default=str(RUNS_DIR),
     ),
     BoolOptionConfig(
@@ -174,6 +175,11 @@ def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
 
 RERUN_OPTIONS = [
     OptionConfig(
+        name="--runs-dir",
+        prompt="runs-dir",
+        default=str(RUNS_DIR),
+    ),
+    OptionConfig(
         name="--run-date",
         prompt="run-date",
         transform=str2date2str,
@@ -186,15 +192,10 @@ RERUN_OPTIONS = [
         prompt="run-id",
     ),
     OptionConfig(
-        name="--output",
-        prompt="output",
-        default=str(RUNS_DIR),
-    ),
-    OptionConfig(
-        name="--cfg-id",
-        prompt="cfg-ids (',' comma separated)",
-        validator=lambda x: len(x) > 1,
-        transform=lambda x: " ".join([f"--cfg-id {_x}" for _x in x.split(",")]),
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
     ),
     BoolOptionConfig(
         name="--all",
@@ -278,6 +279,7 @@ CANCEL_OPTIONS = [
         required=True,
     ),
 ]
+
 
 def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
     """

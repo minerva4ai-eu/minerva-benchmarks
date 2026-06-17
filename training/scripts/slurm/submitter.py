@@ -42,8 +42,12 @@ def build_launch_folder(
 ) -> Path:
 
     combo_path = get_cfg_folder(cfg, base_dir, runs_dir)
-    experiment_config_path = os.path.join(combo_path, cfg.experiment.yaml_filename)
+    experiment_config_dir = os.path.join(combo_path, "yaml-configs")
+    experiment_config_path = os.path.join(
+        experiment_config_dir, cfg.experiment.yaml_filename
+    )
     os.makedirs(combo_path, exist_ok=True)
+    os.makedirs(experiment_config_dir, exist_ok=True)
     if dry:
         OmegaConf.save(cfg, experiment_config_path)
         return Path(experiment_config_path)
@@ -97,7 +101,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
 
-    return {
+    env = {
         **os.environ,
         "LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}",
         "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
@@ -136,8 +140,11 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
         "TORCHINDUCTOR_CACHE_DIR": f"{cfg.experiment.output_dir}/.torch-inductor-cache",
-        "DISABLE_COMPILE": str(cfg.model.training.disable_compile),
+        "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
+        "TOKENIZERS_PARALLELISM": str(False),
     }
+
+    return env
 
 
 def submit_job(

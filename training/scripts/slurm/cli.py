@@ -21,6 +21,7 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
+
 @click.group()
 def cli():
     pass
@@ -39,7 +40,7 @@ def cli():
     default=DEFAULT_CONFIG_NAME,
 )
 @click.option(
-    "--output",
+    "--runs-dir",
     default=RUNS_DIR,
 )
 @click.option(
@@ -52,7 +53,7 @@ def cli():
         + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
     ),
 )
-def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
+def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
     assert not (dry_run and per_model_jobs), (
         f"{u.RED}'--dry-run' & '--per-model-jobs' cannot be combined!{u.RESET}"
     )
@@ -65,11 +66,16 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
 
     valid = []
     if yamls:
+        if isinstance(yamls, tuple) and len(yamls) == 1:
+            yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
+        print(yamls)
         for y in yamls:
-            click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching fo {y}{u.RESET}")
+            print(y)
+            click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
+
             try:
                 _cfg: "BenchmarkConfig" = DictConfig(u.load_yaml(y))
-                output = Path(_cfg.experiment.output_dir)
+                runs_dir = Path(_cfg.experiment.output_dir)
                 valid.append(_cfg)
                 click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
             except FileNotFoundError:
@@ -84,11 +90,11 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
                 raise e
     else:
         valid, _ = generate_valid_combos(
-            config_path=configs_path, config_name=config_name, outpath=output
+            config_path=configs_path, config_name=config_name, outpath=runs_dir
         )
 
     run_date = datetime.now().date().strftime("%d-%m-%Y")
-    slurm_monitor_dir = os.path.join(output, "slurm-monitor")
+    slurm_monitor_dir = os.path.join(runs_dir, "slurm-monitor")
     date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
     # os.makedirs(date_monitor_dir, exist_ok=True)
     run_id = 1
@@ -138,7 +144,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
                     launch_folder = build_launch_folder(
                         cfg,
                         base_dir=BASE_DIR,
-                        runs_dir=output,
+                        runs_dir=runs_dir,
                         run_id=short_id,
                         repeat_id=repeat_id,
                     )
@@ -165,9 +171,8 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
     # Sumbit all jobs interedependent
     for cfg in valid:
         if dry_run:
-            print(output)
             _ = build_launch_folder(
-                cfg, base_dir=BASE_DIR, runs_dir=output, run_id=short_id, dry=dry_run
+                cfg, base_dir=BASE_DIR, runs_dir=runs_dir, run_id=short_id, dry=dry_run
             )
             click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
             continue
@@ -189,7 +194,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, output, yamls):
             launch_folder = build_launch_folder(
                 cfg,
                 base_dir=BASE_DIR,
-                runs_dir=output,
+                runs_dir=runs_dir,
                 run_id=short_id,
                 repeat_id=repeat_id,
             )
@@ -235,22 +240,25 @@ class InvalidRerun(Exception):
     required=True,
 )
 @click.option(
-    "--output",
+    "--runs-dir",
     default=RUNS_DIR,
 )
 @click.option("--all", "all", is_flag=True, default=False)
 @click.option("--only-failed", "only_failed", is_flag=True, default=False)
 @click.option("--only-pending", "only_pending", is_flag=True, default=False)
 @click.option(
-    "--cfg-id",
-    "cfg_ids",
+    "--yaml",
+    "yamls",
     multiple=True,
     default=None,
     help=(
-        'Rerun a benchmark configuration by cfg_id. Multiple ids may be provided by repeating the input argument, e.g. "...--cfg-id cfgid1 --cfg-id cfgid2 --cfg-id cfgid3 etc..."'
+        'Re-run a benchmark configuration by providing the path to BenchmarkConfig file. Multiple ids may be provided by repeating the input argument, e.g. "...--yaml yaml-1 --yaml yaml-2 --yaml yaml-3 etc..."'
+        + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
+        + "\nRerun will not copy original files into launch folder, but rather use the same scripts from the provided run-id!"
+        + "\nIf you wish to apply or try changes made on the original scripts, it is suggested to go for subcommand 'run' instead!"
     ),
 )
-def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
+def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
     """Rerun all, failed, pending jobs, or a specific run/combo by id."""
 
     print("\n")
@@ -278,24 +286,33 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
     _combos = run_jobs
 
     mode = "all"
-    if not cfg_ids:
+    if not yamls:
         assert sum([all, only_failed, only_pending]) == 1, (
             f"{u.RED}Only one of '--all', '--only-failed' or '--only-pending' must be provided!{u.RESET}"
         )
-    if cfg_ids:
-        mode = "cfg-ids"
+    if yamls:
+        mode = "yamls"
         _combos = []
-        for cfg_id in cfg_ids:
+        if isinstance(yamls, tuple) and len(yamls) == 1:
+            yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
+        for y in yamls:
+            click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
+
             try:
-                cfgid_job = [rj for rj in run_jobs if rj["cfg_id"] == cfg_id][0]
-                _combos.append(cfgid_job)
+                _cfg: "BenchmarkConfig" = DictConfig(u.load_yaml(y))
+                output = Path(_cfg.experiment.output_dir)
+                _combos.append(_cfg)
+                click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
+            except FileNotFoundError:
                 click.echo(
-                    f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config '{cfg_id}' FOUND in [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config could NOT be FOUND!{u.RESET}"
                 )
-            except IndexError:
+                continue
+            except Exception as e:
                 click.echo(
-                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config '{cfg_id}' could NOT be FOUND among runs for [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+                    f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read file...{u.RESET}"
                 )
+                raise e
 
     combos = _combos
     if only_failed:
@@ -415,7 +432,6 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
 )
 @click.option(
     "--runs-dir",
-    "runs_dir",
     default=RUNS_DIR,
 )
 @click.option(
@@ -439,7 +455,7 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, cfg_ids):
     help="",
     required=False,
 )
-def status(run_date, run_id, rerun_id, runs_dir, model, framework, parallelism):
+def status(run_date, run_id, rerun_id, output, model, framework, parallelism):
     """Print a summary of all run statuses."""
     is_valid_date(run_date)
     assert is_valid_date(run_date), (
@@ -448,10 +464,10 @@ def status(run_date, run_id, rerun_id, runs_dir, model, framework, parallelism):
     run_date = str2date2str(run_date)
 
     run_monitor_folder = (
-        f"{runs_dir}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
+        f"{output}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_submitted.jsonl"
     )
     if rerun_id:
-        run_monitor_folder = f"{runs_dir}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
+        run_monitor_folder = f"{output}/slurm-monitor/{run_date}/run_id-{run_id}/jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
     try:
         run_jobs = m.load_all(run_monitor_folder)
     except FileNotFoundError:
@@ -580,6 +596,7 @@ def cancel(run_date, run_id, runs_id):
         f"\n{u.POINT_DIAMOND} Summary: {u.GREEN}{len(cancelled)} cancelled{u.RESET}, {u.YELLOW}{len(skipped)} skipped{u.RESET}"
     )
 
+
 # ---------------------------------------------------------------------------
 # Interactive mode
 # ---------------------------------------------------------------------------
@@ -696,14 +713,18 @@ def cli_entry():
         interactive_loop(sys.argv[1])
     else:
         cli()
+
+
 def command_tree(obj):
-    
+
     if isinstance(obj, click.Group):
-        return {name: value
-                for name, value in obj.commands.items()}
+        return {name: value for name, value in obj.commands.items()}
+
 
 def subcommands_list(obj) -> list[str]:
     cmd_tree = command_tree(obj)
     return list(cmd_tree.keys())
+
+
 if __name__ == "__main__":
     cli_entry()

@@ -104,10 +104,11 @@ def main():
         eval_steps=None,
         dataloader_num_workers=args.dataloader_num_workers,
         # torch model compilation
-        torch_compile=not args.disable_compile,
-        torch_compile_backend="inductor",
-        torch_compile_mode="max-autotune-no-cudagraphs",
     )
+    if bool(args.enable_compile):
+        training_args.torch_compile = True
+        training_args.torch_compile_backend = "inductor"
+        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
@@ -150,7 +151,7 @@ def main():
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
+            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
         )
 
         # Train Model

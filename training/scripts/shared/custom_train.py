@@ -612,8 +612,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
 
         step_start = time.time()
         torch.cuda.synchronize()
-        print(f"model device: {model.device}")
-        print(f"inputs device: {inputs['input_ids'].device}")
         result = super().training_step(model, inputs)
         torch.cuda.synchronize()  #
         self.step_interval_time = time.time() - step_start
