@@ -10,12 +10,13 @@ fi
 cli_args="$@"
 
 singularity exec --env CWD="$PWD" \
-    --bind "$HOME":"$HOME" \
+    --bind "$HOME":"/tmp_home" \
     --bind "$PWD":"$PWD" \
     --bind /etc/passwd:/etc/passwd \
     --bind /etc/group:/etc/group \
     --bind $(which sbatch):/usr/local/bin/sbatch \
     --bind $(which sacct):/usr/local/bin/sacct \
+    --bind $(which scancel):/usr/local/bin/scancel \
     --bind /var/run/munge:/var/run/munge \
     --bind /etc/munge:/etc/munge \
     --bind /etc/slurm:/etc/slurm \
