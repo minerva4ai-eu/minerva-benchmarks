@@ -197,7 +197,7 @@ def main():
     # GPU background monitor
     # ------------------------------------------------------------------
     gpu_stats_during, stop_flag = start_gpu_monitor(
-        interval_sec=5, n_gpus=int(os.environ.get("GPU_NODE", 1))
+        interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
     )
 
     # ------------------------------------------------------------------

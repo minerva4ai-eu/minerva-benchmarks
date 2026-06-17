@@ -93,8 +93,8 @@ def parse_args():
         ),
     )
     parser.add_argument(
-        "--disable_compile",
-        default=True,
+        "--enable_compile",
+        default=False,
         action="store_true",
         help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
     )

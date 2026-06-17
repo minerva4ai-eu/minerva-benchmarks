@@ -91,8 +91,8 @@ train_command="$singularity_prefix torchrun \
         --dataloader_num_workers 8 \
         --dataset '$DATASET'"
 
-if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
-    train_command="$train_command --disable_compile"
+if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
+    train_command="$train_command --enable_compile"
 fi
 
 # Launch Run
