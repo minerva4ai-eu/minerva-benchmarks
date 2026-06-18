@@ -1,4 +1,5 @@
 # benchmark/submitter.py
+import json
 import os
 import shutil
 import subprocess
@@ -11,6 +12,9 @@ from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig, OmegaConf
 from scripts.slurm import utils as u
 
+class ExecussionEnvironmentSelectionError(ValueError):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 def get_cfg_folder(
     cfg: BenchmarkConfig,
@@ -101,16 +105,46 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
 
+    def _serialize_dataset_split(value):
+        if value is None:
+            return ""
+        if isinstance(value, (list, tuple)):
+            return json.dumps(list(value))
+        return str(value)
+
+    if cfg.machine.singularity_container:
+        execution_mode = "singularity"
+    elif cfg.machine.python_environment:
+        execution_mode = "venv"
+    else:
+        raise ExecussionEnvironmentSelectionError(
+            "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
+            )
+
     env = {
         **os.environ,
-        "LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}",
-        "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
-        "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
-        if cfg.machine.singularity_binds
-        else "",
-        "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
-        if cfg.machine.singularity_args
-        else "",
+        **(
+            {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
+            if cfg.machine.modules is not None
+            else {}
+        ),
+        "EXECUTION_MODE": execution_mode,
+        **(
+            {
+                "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
+            }
+            if cfg.machine.python_environment is not None
+            else {}
+        ),
+        **(
+            {
+                "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
+                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds) if cfg.machine.singularity_binds else "",
+                "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args) if cfg.machine.singularity_args else "",
+            }
+            if cfg.machine.singularity_container is not None
+            else {}
+        ),
         "NODES": str(s.sbatch.nodes),
         "GPU_NAME": cfg.arch.gpu.name,
         "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
@@ -118,6 +152,8 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "FRAMEWORK": f.name,
         "DATASET": d.name,
         "DATASET_PATH": d.path,
+        "DATASET_TRAIN": _serialize_dataset_split(getattr(d, "train", "")),
+        "DATASET_VALIDATION": _serialize_dataset_split(getattr(d, "validation", "")),
         "MODEL": m.name,
         "MODEL_PATH": m.path,
         "PARALLELISM": f.parallelism_name,
@@ -134,7 +170,6 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "TRAIN_SCRIPT": os.path.join(
             launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
         ),
-        "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
         "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
