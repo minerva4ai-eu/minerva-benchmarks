@@ -6,13 +6,12 @@
 ##################################################
 ###           Load HPC modules                 ###
 ##################################################
-eval "$LOAD_MODULES"
-##################################################
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
 
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
 function exists_in_list() {
     LIST=$1

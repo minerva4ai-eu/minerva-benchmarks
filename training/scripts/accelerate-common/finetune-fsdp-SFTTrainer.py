@@ -143,11 +143,16 @@ def main():
         #   dataset_kwargs={"skip_prepare_dataset": True}
         #   and remove dataset_text_field above.
         # torch model compilation
-        )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
+    )
     try:
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:

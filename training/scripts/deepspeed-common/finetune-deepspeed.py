@@ -105,11 +105,16 @@ def main():
         # Deepspeed Config
         deepspeed=args.deepspeed_config_file,
         # torch model compilation
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
     )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
     try:
         # train_dataloader = DataLoader(
         #    train_dataset,
@@ -166,10 +171,10 @@ def main():
             model.config.use_cache = False
         print_rank("Model Loaded")
 
-        print_rank(0, ":::::::::")
-        for i in model.named_parameters():
-            print_rank(0, f"{i[0]} -> {i[1].device}")
-        print_rank(0, ":::::::::")
+        #print_rank(0, ":::::::::")
+        #for i in model.named_parameters():
+        #    print_rank(0, f"{i[0]} -> {i[1].device}")
+        #print_rank(0, ":::::::::")
 
         if args.gradient_checkpointing:
             model.gradient_checkpointing_enable()
@@ -187,10 +192,10 @@ def main():
         )
 
         print_rank(rank, "Trainer initialized and model has been wrapped!")
-        print_rank(rank, ":::::::::")
-        for i in model.named_parameters():
-            print_rank(rank, f"{i[0]} -> {i[1].device}")
-        print_rank(rank, ":::::::::")
+        #print_rank(rank, ":::::::::")
+        #for i in model.named_parameters():
+        #    print_rank(rank, f"{i[0]} -> {i[1].device}")
+        #print_rank(rank, ":::::::::")
 
         # Start GPU monitor
         gpu_stats_during, stop_flag = start_gpu_monitor(

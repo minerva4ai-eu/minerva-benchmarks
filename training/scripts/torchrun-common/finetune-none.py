@@ -104,11 +104,16 @@ def main():
         eval_steps=None,
         dataloader_num_workers=args.dataloader_num_workers,
         # torch model compilation
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
     )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:

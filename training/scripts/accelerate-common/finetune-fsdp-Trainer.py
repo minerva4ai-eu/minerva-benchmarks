@@ -145,11 +145,16 @@ def main():
         fsdp="full_shard auto_wrap",
         fsdp_config=fsdp_config,
         # torch model compilation
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
     )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
     try:
         # train_dataloader = DataLoader(
         #    train_dataset,

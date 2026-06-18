@@ -4,15 +4,13 @@
 
 
 ##################################################
-###           Activate Environment             ###
+###            Setup Environment               ###
 ##################################################
-eval "$LOAD_MODULES"
-##################################################
-
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
@@ -30,6 +28,8 @@ export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 ##################################################
 ###             Torchrun Setup                 ###
 ##################################################
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix $runtime_prefix"
 
 
 # Torchrun args
@@ -41,17 +41,10 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
-singularity_prefix="singularity exec \
-    $SINGULARITY_ARGS \
-    $SINGULARITY_BINDS \
-    --home $LAUNCH_FOLDER \
-    $SINGULARITY_CONTAINER"
-echo "singularity prefix $singularity_prefix"
-
-gpu_plots_monitor_command="$singularity_prefix python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
 source activate-env-variables-per-supercomputer.sh
 
-train_command_min_overlap="$singularity_prefix torchrun \
+train_command_min_overlap="${runtime_prefix:+$runtime_prefix }torchrun \
   --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
   --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
   $TRAIN_SCRIPT \
@@ -68,7 +61,7 @@ train_command_min_overlap="$singularity_prefix torchrun \
     --dataloader_num_workers 8 \
     --dataset $DATASET  "
 
-train_command_max_overlap="$singularity_prefix torchrun \
+train_command_max_overlap="${runtime_prefix:+$runtime_prefix }torchrun \
     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
     --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
     $TRAIN_SCRIPT \

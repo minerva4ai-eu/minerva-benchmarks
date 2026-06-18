@@ -68,9 +68,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
     if yamls:
         if isinstance(yamls, tuple) and len(yamls) == 1:
             yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
-        print(yamls)
         for y in yamls:
-            print(y)
             click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
 
             try:
@@ -684,7 +682,6 @@ def interactive_loop(subcmd: str = ""):
         # Build a Click context and invoke the command
         cmd_map = {"run": run, "rerun": rerun, "status": status, "cancel": cancel}
         _cmd_mao = command_tree(cli)
-        print(f"_cmd_mao: {_cmd_mao}")
         cmd = cmd_map[cmd_name]
         try:
             # Use sys.argv temporarily so Click can parse the sub-command args

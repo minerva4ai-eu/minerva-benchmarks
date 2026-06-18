@@ -133,11 +133,16 @@ def main():
         fsdp="full_shard auto_wrap",
         fsdp_config=fsdp_config,
         # torch model compilation
-        )
-    if bool(args.enable_compile):
-            training_args.torch_compile = True
-            training_args.torch_compile_backend = "inductor"
-            training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
+    )
     try:
         # ---------------------------------------------------------------------
         # Handle dataset path (string or dict)
@@ -210,10 +215,10 @@ def main():
         # model.gradient_checkpointing_enable()
 
         print_rank("Model Loaded")
-        print_rank(0, ":::::::::")
-        for i in model.named_parameters():
-            print_rank(0, f"{i[0]} -> {i[1].device}")
-        print_rank(0, ":::::::::")
+        #print_rank(0, ":::::::::")
+        #for i in model.named_parameters():
+        #    print_rank(0, f"{i[0]} -> {i[1].device}")
+        #print_rank(0, ":::::::::")
 
         trainer = PerformanceTrackingTrainer(
             model=model,
