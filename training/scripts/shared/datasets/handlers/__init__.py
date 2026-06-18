@@ -36,9 +36,17 @@ class DatasetHandler(Dataset):
     def collate_fn(self, batch):
         raise NotImplementedError
 
+    def apply_chat_template(self, item: dict) -> str:
+        """
+        Convert dataset item into messages format and apply the tokenizer's chat template.
+        Subclasses MUST override this to define how their data maps to role/content messages.
+        Returns the templated text string ready for tokenization.
+        """
+        raise NotImplementedError
+
 
 class RawTextDataset:
-    def __init__(self, path: str):
+    def __init__(self, path: str | list[str]):
         "Must implement data reading and loading on __init__()"
         raise NotImplementedError
 

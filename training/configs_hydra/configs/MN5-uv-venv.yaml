@@ -1,0 +1,14 @@
+# Base configuration for benchmark experiments
+defaults:
+  - base
+  - arch: MN5
+  - slurm: MN5
+  - _self_
+
+machine:
+  name: bsc-mn5-acc # actual name of super computer running benchmarks
+  name_pattern: MN5 # configuration files naming convention pattern
+  modules: 
+    - singularity
+  python_environment: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv"
+           
