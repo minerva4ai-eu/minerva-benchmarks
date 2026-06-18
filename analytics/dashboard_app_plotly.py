@@ -105,6 +105,13 @@ if {"output_throughput_toks_s", "power_avg_w"}.issubset(df_full.columns):
 else:
     df_full["tokens_per_watt"] = np.nan
 
+# After applying all filters, recompute derived columns on filtered df
+if {"output_throughput_toks_s", "power_avg_w"}.issubset(df_full.columns):
+    df_full["wh_per_1k_tokens"] = (df_full["power_avg_w"] / df_full["output_throughput_toks_s"]) / 3600 * 1000
+    df_full["joules_per_token"] = df_full["wh_per_1k_tokens"] * 3.6
+else:
+    df_full["joules_per_token"] = np.nan
+
 # Fill categorical NaNs
 for col in ["supercomputer", "partition", "model", "dataset", "framework"]:
     if col in df_full.columns:
@@ -251,6 +258,10 @@ app.layout = html.Div(
                     children=[dcc.Graph(id="heatmap-scalability-gpus-thr")],
                 ),
                 dcc.Tab(
+                    label="Scatter: Efficiency vs Throughput",
+                    children=[dcc.Graph(id="scatter-efficiency")],
+                ),
+                dcc.Tab(
                     label="Filtered Table", children=[html.Div(id="table-container")]
                 ),
             ]
@@ -302,6 +313,7 @@ def make_heatmap(df, metric="output_throughput_toks_s", xaxis_col="number_of_nod
         Output("bar-tpw", "figure"),
         Output("heatmap-scalability-nodes-thr", "figure"),
         Output("heatmap-scalability-gpus-thr", "figure"),
+        Output("scatter-efficiency", "figure"),
         Output("table-container", "children"),
     ],
     [Input(f"filter-{col}", "value") for col in filter_cols]
@@ -336,7 +348,7 @@ def update_dashboard(*args):
 
     if df.empty:
         empty_fig = go.Figure()
-        return [empty_fig] * 7 + ["No rows match filters"]
+        return [empty_fig] * 8 + ["No rows match filters"]
 
     # Scatter: throughput vs power
     # fig_scatter = (
@@ -614,6 +626,25 @@ def update_dashboard(*args):
 
     else:
         fig_tpw = go.Figure()
+
+    # Efficiency vs Throughput
+    fig_efficiency = (
+        px.scatter(
+            df,
+            x="output_throughput_toks_s",
+            y="joules_per_token",
+            color="supercomputer",
+            size="total_used_gpus",
+            hover_data=["model", "dataset", "framework", "power_avg_w", "total_used_gpus"],
+            labels={
+                "output_throughput_toks_s": "Output Throughput (tokens/s)",
+                "joules_per_token": "Energy per Token (J/token)",
+            },
+            title="Energy per Token vs Throughput (bubble = GPU count)",
+        )
+        if {"joules_per_token", "output_throughput_toks_s"}.issubset(df.columns)
+        else go.Figure()
+    )
 
     # # Heatmaps
     # fig_heat_nodes = make_heatmap(
@@ -982,6 +1013,7 @@ def update_dashboard(*args):
         fig_tpw,
         fig_heat_nodes,
         fig_heat_gpus,
+        fig_efficiency,
         table_html,
     )
 
