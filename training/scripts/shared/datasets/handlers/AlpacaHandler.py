@@ -35,21 +35,18 @@ class AlpacaHandler(DatasetHandler):
 
     def __len__(self):
         return len(self.data)
-    
+
     def __raw_items_range__(self, idxs):
         return [self.data[idx] for idx in idxs]
 
     @u.perf_timed("__getitem__")
     def __getitem__(self, idx):
         item = self.data[idx]
-        prompt = item.get("instruction", "")
-        if item.get("input"):
-            prompt = prompt + "\n\n" + item["input"]
-        prompt = prompt + "\n\n### Response:\n" + item.get("output", "")
+        templated_text = self.apply_chat_template(item)
 
         if self.pad_maxlength:
             enc = self.tokenizer(
-                prompt,
+                templated_text,
                 truncation=True,
                 max_length=self.max_length,
                 padding="max_length",
@@ -58,19 +55,33 @@ class AlpacaHandler(DatasetHandler):
 
         else:
             enc = self.tokenizer(
-                prompt, truncation=True, max_length=self.max_length, return_tensors="pt"
+                templated_text,
+                truncation=True,
+                max_length=self.max_length,
+                return_tensors="pt",
             )
         return enc.input_ids.squeeze(0), enc.attention_mask.squeeze(0)
+
+    def apply_chat_template(self, item: dict) -> str:
+        messages = [
+            {
+                "role": "user",
+                "content": item.get("instruction", "")
+                + (f"\n\n{item['input']}" if item.get("input") else ""),
+            },
+            {"role": "assistant", "content": item.get("output", "")},
+        ]
+        return self.tokenizer.apply_chat_template(messages, tokenize=False)
 
     @u.perf_timed("collate_fn")
     def collate_fn(self, batch):
         input_ids_list, attn_list = zip(*batch)
         lengths = [b.size(0) for b in input_ids_list]
         max_len = max(lengths)
-        
+
         input_ids = torch.full((len(batch), max_len), fill_value=0, dtype=torch.long)
         attention_mask = torch.zeros((len(batch), max_len), dtype=torch.long)
-        
+
         for i, b in enumerate(input_ids_list):
             l = b.size(0)
             input_ids[i, :l] = b
