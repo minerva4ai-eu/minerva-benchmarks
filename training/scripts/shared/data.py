@@ -63,8 +63,8 @@ def parse_dataset_paths(dataset_root: str, train_files: list[str]=[], validation
         (train_path, val_path, is_split)
         is_split = True if both train and val are provided
     """
-    train_files = train_files or ast.literal_eval(os.environ.get("DATASET_TRAIN", '[""]'))
-    validation_files = validation_files or ast.literal_eval(os.environ.get("DATASET_VALIDATION", '[""]'))
+    train_files = train_files or json.loads(os.environ.get("DATASET_TRAIN", '[""]'))
+    validation_files = validation_files or json.loads(os.environ.get("DATASET_VALIDATION", '[""]'))
 
     if train_files or validation_files:
         if not train_files or not validation_files:

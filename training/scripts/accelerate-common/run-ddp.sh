@@ -4,29 +4,17 @@
 
 
 ##################################################
-###           Activate Environment             ###
+###            Setup Environment               ###
 ##################################################
-# Activate virtual environment using conda
-# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-eval "$LOAD_MODULES"
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
-##################################################
-
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -47,17 +35,13 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
-singularity_prefix="singularity exec \
-    $SINGULARITY_ARGS \
-    $SINGULARITY_BINDS \
-    --home $LAUNCH_FOLDER \
-    $SINGULARITY_CONTAINER"
-echo "singularity prefix $singularity_prefix"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
-echo "PATH to Singularity Container: $SINGULARITY_CONTAINER"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+echo "EXECUTION_MODE: $EXECUTION_MODE"
 
-train_command="$singularity_prefix accelerate launch \
+train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -92,22 +76,6 @@ echo "train_command: {$train_command}"
 
 source activate-env-variables-per-supercomputer.sh
 
-# Launch Run
-# Start monitoring in background
-#$gpu_plots_monitor_command &
-#monitor_pid=$!
-#
-## Optional: give the monitor time to initialize
-#sleep 5
-#
-## Run training in foreground (this blocks until done)
-#eval "$train_command"
-#
-#
-#kill -SIGTERM \"\$monitor_pid\"
-## Wait for the monitor to clean up and exit
-#wait "$monitor_pid"
-
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &
@@ -124,7 +92,6 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Wait for the monitor to clean up and exit
     wait \"\$monitor_pid\"
 "
- 
 
 
 echo "DDP Job Completed."

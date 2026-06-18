@@ -104,11 +104,16 @@ def main():
         dataloader_pin_memory=True,
         dataloader_prefetch_factor=4,
         # torch model compilation
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
     )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
     try:
         # ---------------------------------------------------------------------
         # Handle dataset path (string or dict)

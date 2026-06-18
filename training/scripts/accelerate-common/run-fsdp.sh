@@ -3,29 +3,18 @@
 #SBATCH --job-name=ACCELERATE_DYNAMIC
 
 ##################################################
-###           Activate Environment             ###
+###            Setup Environment               ###
 ##################################################
-# Activate virtual environment using conda
-# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-eval "$LOAD_MODULES"
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
 
-##################################################
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -46,19 +35,14 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
-singularity_prefix="singularity exec \
-    $SINGULARITY_ARGS \
-    $SINGULARITY_BINDS \
-    --home $LAUNCH_FOLDER \
-    $SINGULARITY_CONTAINER"
-echo "singularity prefix $singularity_prefix"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix}python -m gpu_plots"
 
 #    --precision $PRECISION \ accelerate launch
-echo "PATH to Singularity Container: $SINGULARITY_CONTAINER"
-train_command_min_overlap="$singularity_prefix \
-    accelerate launch \
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+train_command_min_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -80,8 +64,7 @@ train_command_min_overlap="$singularity_prefix \
         --dataloader_num_workers 8 \
         --dataset $DATASET "
 
-train_command_max_overlap="$singularity_prefix  \
-    accelerate launch \
+train_command_max_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \

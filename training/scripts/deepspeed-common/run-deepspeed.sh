@@ -4,15 +4,14 @@
 
 
 ##################################################
-###           Load HPC modules                 ###
+###           Environment Setup                ###
 ##################################################
-eval "$LOAD_MODULES"
-##################################################
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
 
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
 function exists_in_list() {
     LIST=$1
@@ -29,15 +28,6 @@ function exists_in_list() {
 }
 
 # Get Arguments
-OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
-#ZERO_STAGE=$4
-
-
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
 mkdir -p $OUTPUT_DIR
 
@@ -89,14 +79,10 @@ if exists_in_list "${STAGES_WITH_HPZ[*]}" " " "$ZERO_STAGE"; then
     echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
 fi
 
-singularity_prefix="singularity exec \
-    $SINGULARITY_ARGS \
-    $SINGULARITY_BINDS \
-    --home $LAUNCH_FOLDER \
-    $SINGULARITY_CONTAINER"
-echo "singularity prefix $singularity_prefix"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
 
 #train_command="accelerate launch \
 #    --config_file $accelerate_config_path \
@@ -118,8 +104,7 @@ gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
 #      --warmup_ratio 0.1 \
 #      --deepspeed_config_file  $deepspeed_config_path \
 #      --logging_steps 1 "
-train_command="$singularity_prefix \
-    deepspeed \
+train_command="${runtime_prefix:+$runtime_prefix }deepspeed \
     --hostfile $HOSTFILE \
     --num_nodes $SLURM_NNODES \
     --num_gpus $GPU_NODE \
