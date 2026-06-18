@@ -28,7 +28,7 @@ def find_col(df, possibilities):
 def load_and_normalize(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     canonical = {
-        "supercomputer": ["SUPCOMPUTER", "supercomputer", "system", "site"],
+        "supercomputer": ["supercomputer", "system", "site"],
         "partition": ["partition"],
         "model": ["model"],
         "dataset": ["dataset"],
@@ -105,6 +105,13 @@ if {"output_throughput_toks_s", "power_avg_w"}.issubset(df_full.columns):
 else:
     df_full["tokens_per_watt"] = np.nan
 
+# After applying all filters, recompute derived columns on filtered df
+if {"output_throughput_toks_s", "power_avg_w"}.issubset(df_full.columns):
+    df_full["wh_per_1k_tokens"] = (df_full["power_avg_w"] / df_full["output_throughput_toks_s"]) / 3600 * 1000
+    df_full["joules_per_token"] = df_full["wh_per_1k_tokens"] * 3.6
+else:
+    df_full["joules_per_token"] = np.nan
+
 # Fill categorical NaNs
 for col in ["supercomputer", "partition", "model", "dataset", "framework"]:
     if col in df_full.columns:
@@ -115,6 +122,20 @@ for col in ["supercomputer", "partition", "model", "dataset", "framework"]:
 # -----------------------------
 app = dash.Dash(__name__)
 app.title = "MINERVA AI Benchmarks - Inference - Supercomputers Dashboard"
+
+filter_defaults = {
+    "supercomputer": ["All"],
+    "partition": ["All"],
+    "model": ["All"],
+    "dataset": ["All"],
+    "concurrency_level": ["All"],
+    "framework": ["vllm"],
+    "tensor_parallelism": [4],
+    "pipeline_parallelism": [1],
+    "max_model_length": [4096],
+    "number_of_nodes": [1],
+    "total_used_gpus": [4],
+}
 
 # Add concurrency_level to filter_cols
 filter_cols = [
@@ -237,6 +258,10 @@ app.layout = html.Div(
                     children=[dcc.Graph(id="heatmap-scalability-gpus-thr")],
                 ),
                 dcc.Tab(
+                    label="Scatter: Efficiency vs Throughput",
+                    children=[dcc.Graph(id="scatter-efficiency")],
+                ),
+                dcc.Tab(
                     label="Filtered Table", children=[html.Div(id="table-container")]
                 ),
             ]
@@ -288,6 +313,7 @@ def make_heatmap(df, metric="output_throughput_toks_s", xaxis_col="number_of_nod
         Output("bar-tpw", "figure"),
         Output("heatmap-scalability-nodes-thr", "figure"),
         Output("heatmap-scalability-gpus-thr", "figure"),
+        Output("scatter-efficiency", "figure"),
         Output("table-container", "children"),
     ],
     [Input(f"filter-{col}", "value") for col in filter_cols]
@@ -322,141 +348,648 @@ def update_dashboard(*args):
 
     if df.empty:
         empty_fig = go.Figure()
-        return [empty_fig] * 7 + ["No rows match filters"]
+        return [empty_fig] * 8 + ["No rows match filters"]
 
     # Scatter: throughput vs power
+    # fig_scatter = (
+    #     px.scatter(
+    #         df,
+    #         x="power_avg_w",
+    #         y="output_throughput_toks_s",
+    #         color="supercomputer",
+    #         hover_data=["model", "dataset", "total_used_gpus"],
+    #     )
+    #     if {"output_throughput_toks_s", "power_avg_w"}.issubset(df.columns)
+    #     else go.Figure()
+    # )
+    df["system_partition_framework"] = (
+        df["supercomputer"].astype(str)
+        + " | "
+        + df["partition"].astype(str)
+        + " | "
+        + df["framework"].astype(str)
+    )
+
     fig_scatter = (
         px.scatter(
             df,
             x="power_avg_w",
             y="output_throughput_toks_s",
-            color="supercomputer",
-            hover_data=["model", "dataset", "total_used_gpus"],
+
+            color="system_partition_framework",
+            symbol="framework",
+
+            facet_col="dataset",
+
+            # size="total_used_gpus",
+
+            hover_data=[
+                "model",
+                "framework",
+                "dataset",
+                "total_used_gpus",
+            ],
         )
         if {"output_throughput_toks_s", "power_avg_w"}.issubset(df.columns)
         else go.Figure()
     )
 
-    # Latency vs Throughput
+    fig_scatter.update_layout(
+        title="Throughput vs Power",
+        margin=dict(t=60),
+    )
+
+    # # Latency vs Throughput
+    # fig_latency_thr = (
+    #     px.scatter(
+    #         df,
+    #         x=throughput_metric,
+    #         y=latency_metric,
+    #         color="supercomputer",
+    #         hover_data=["model", "dataset", "total_used_gpus"],
+    #     )
+    #     if {latency_metric, throughput_metric}.issubset(df.columns)
+    #     else go.Figure()
+    # )
+
     fig_latency_thr = (
         px.scatter(
             df,
             x=throughput_metric,
             y=latency_metric,
-            color="supercomputer",
-            hover_data=["model", "dataset", "total_used_gpus"],
+
+            color="system_partition_framework",
+            symbol="framework",
+
+            # facet_row="partition",
+            facet_col="dataset",
+
+            # size="total_used_gpus",
+
+            hover_data=[
+                "model",
+                "framework",
+                "dataset",
+                "total_used_gpus",
+            ],
         )
         if {latency_metric, throughput_metric}.issubset(df.columns)
         else go.Figure()
     )
 
+    fig_latency_thr.update_layout(
+        title="Latency vs Throughput (grouped by system, partition, framework, dataset)",
+        margin=dict(t=60),
+    )
+
     # Concurrency curve
     fig_line = go.Figure()
+
     if {
         "concurrency_level",
         "output_throughput_toks_s",
         "supercomputer",
         "partition",
         "framework",
+        "model",
+        "dataset",
     }.issubset(df.columns):
-        for (sc, part, fw), group in df.groupby(["supercomputer", "partition", "framework"]):
+
+        for (sc, part, fw, md, dt), group in df.groupby(
+            ["supercomputer", "partition", "framework", "model", "dataset"]
+        ):
             agg = (
                 group.groupby("concurrency_level")["output_throughput_toks_s"]
                 .mean()
                 .reset_index()
             )
+
             fig_line.add_trace(
                 go.Scatter(
                     x=agg["concurrency_level"],
                     y=agg["output_throughput_toks_s"],
                     mode="lines+markers",
-                    name=f"{fw} | {sc} | {part}",
+                    name=f"{sc} | {fw} | {md} | {dt} | {part}",
                 )
             )
+
         fig_line.update_layout(
             xaxis_title="Concurrency Level",
             yaxis_title="Avg Output Throughput (tokens/s)",
-            title="Concurrency Curve (Supercomputer | Partition | Framework)",
+            title="Concurrency Curve (all configurations)",
             margin=dict(t=40),
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                tracegroupgap=5
+            ),
         )
 
-    # Barplots
-    if "output_throughput_toks_s" in df.columns and "model" in df.columns:
-        if df["model"].nunique() > 1:
-            agg = (
-                df.groupby(["model", "supercomputer"])["output_throughput_toks_s"]
-                .mean()
-                .reset_index()
-            )
-            fig_bar = px.bar(
-                agg,
-                x="model",
-                y="output_throughput_toks_s",
-                color="supercomputer",
-                barmode="group",
-            )
-            fig_bar.update_layout(
-                xaxis_title="Model",
-                yaxis_title="Mean Throughput (tokens/s)",
-                title="Mean Throughput per Model & Supercomputer",
-                margin=dict(t=50),
-            )
-        else:
-            agg = (
-                df.groupby("supercomputer")["output_throughput_toks_s"]
-                .mean()
-                .reset_index()
-            )
-            fig_bar = px.bar(agg, x="supercomputer", y="output_throughput_toks_s")
-            fig_bar.update_layout(
-                xaxis_title="Supercomputer",
-                yaxis_title="Mean Throughput (tokens/s)",
-                title="Mean Throughput per Supercomputer",
-                margin=dict(t=50),
-            )
+    # # Barplots
+    # if "output_throughput_toks_s" in df.columns and "model" in df.columns:
+    #     if df["model"].nunique() > 1:
+    #         agg = (
+    #             df.groupby(["model", "supercomputer", "framework", "dataset"])["output_throughput_toks_s"]
+    #             .mean()
+    #             .reset_index()
+    #         )
+    #         fig_bar = px.bar(
+    #             agg,
+    #             x="model",
+    #             y="output_throughput_toks_s",
+    #             color="supercomputer",
+    #             barmode="group",
+    #         )
+    #         fig_bar.update_layout(
+    #             xaxis_title="Model",
+    #             yaxis_title="Mean Throughput (tokens/s)",
+    #             title="Mean Throughput per Model & Supercomputer",
+    #             margin=dict(t=50),
+    #         )
+    #     else:
+    #         agg = (
+    #             df.groupby("supercomputer")["output_throughput_toks_s"]
+    #             .mean()
+    #             .reset_index()
+    #         )
+    #         fig_bar = px.bar(agg, x="supercomputer", y="output_throughput_toks_s")
+    #         fig_bar.update_layout(
+    #             xaxis_title="Supercomputer",
+    #             yaxis_title="Mean Throughput (tokens/s)",
+    #             title="Mean Throughput per Supercomputer",
+    #             margin=dict(t=50),
+    #         )
+    # else:
+    #     fig_bar = go.Figure()
+
+    # Barplots split by model, supercomputer, framework, and dataset
+    group_cols = ["model", "supercomputer", "framework", "dataset"]
+
+    available_cols = [c for c in group_cols if c in df.columns]
+
+    if "output_throughput_toks_s" in df.columns and available_cols:
+
+        agg = (
+            df.groupby(available_cols)["output_throughput_toks_s"]
+            .mean()
+            .reset_index()
+        )
+
+        fig_bar = px.bar(
+            agg,
+            x="framework" if "framework" in available_cols else available_cols[0],
+            y="output_throughput_toks_s",
+            color="supercomputer" if "supercomputer" in available_cols else None,
+            barmode="group",
+            facet_row="model" if "model" in available_cols else None,
+            facet_col="dataset" if "dataset" in available_cols else None,
+        )
+
+        fig_bar.update_layout(
+            title="Mean Throughput split by Model, Supercomputer, Framework, and Dataset",
+            xaxis_title="Framework",
+            yaxis_title="Mean Throughput (tokens/s)",
+            margin=dict(t=80),
+            height=300 * max(1, agg["model"].nunique() if "model" in agg.columns else 1),
+        )
+
+        fig_bar.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+
     else:
         fig_bar = go.Figure()
 
-    # Tokens per watt
-    if "tokens_per_watt" in df.columns and "model" in df.columns:
-        if df["model"].nunique() > 1:
-            agg = (
-                df.groupby(["model", "supercomputer"])["tokens_per_watt"]
-                .mean()
-                .reset_index()
-            )
-            fig_tpw = px.bar(
-                agg,
-                x="model",
-                y="tokens_per_watt",
-                color="supercomputer",
-                barmode="group",
-            )
-            fig_tpw.update_layout(
-                xaxis_title="Model",
-                yaxis_title="Mean Tokens per Watt",
-                title="Mean Tokens per Watt per Model & Supercomputer",
-                margin=dict(t=50),
-            )
-        else:
-            agg = df.groupby("supercomputer")["tokens_per_watt"].mean().reset_index()
-            fig_tpw = px.bar(agg, x="supercomputer", y="tokens_per_watt")
-            fig_tpw.update_layout(
-                xaxis_title="Supercomputer",
-                yaxis_title="Mean Tokens per Watt",
-                title="Mean Tokens per Watt per Supercomputer",
-                margin=dict(t=50),
-            )
+    # # Tokens per watt
+    # if "tokens_per_watt" in df.columns and "model" in df.columns:
+    #     if df["model"].nunique() > 1:
+    #         agg = (
+    #             df.groupby(["model", "supercomputer"])["tokens_per_watt"]
+    #             .mean()
+    #             .reset_index()
+    #         )
+    #         fig_tpw = px.bar(
+    #             agg,
+    #             x="model",
+    #             y="tokens_per_watt",
+    #             color="supercomputer",
+    #             barmode="group",
+    #         )
+    #         fig_tpw.update_layout(
+    #             xaxis_title="Model",
+    #             yaxis_title="Mean Tokens per Watt",
+    #             title="Mean Tokens per Watt per Model & Supercomputer",
+    #             margin=dict(t=50),
+    #         )
+    #     else:
+    #         agg = df.groupby("supercomputer")["tokens_per_watt"].mean().reset_index()
+    #         fig_tpw = px.bar(agg, x="supercomputer", y="tokens_per_watt")
+    #         fig_tpw.update_layout(
+    #             xaxis_title="Supercomputer",
+    #             yaxis_title="Mean Tokens per Watt",
+    #             title="Mean Tokens per Watt per Supercomputer",
+    #             margin=dict(t=50),
+    #         )
+    # else:
+    #     fig_tpw = go.Figure()
+
+    # Tokens per watt split by model, supercomputer, framework, and dataset
+    group_cols = ["model", "supercomputer", "framework", "dataset"]
+
+    available_cols = [c for c in group_cols if c in df.columns]
+
+    if "tokens_per_watt" in df.columns and available_cols:
+
+        agg = (
+            df.groupby(available_cols)["tokens_per_watt"]
+            .mean()
+            .reset_index()
+        )
+
+        fig_tpw = px.bar(
+            agg,
+            x="framework" if "framework" in available_cols else available_cols[0],
+            y="tokens_per_watt",
+            color="supercomputer" if "supercomputer" in available_cols else None,
+            barmode="group",
+            facet_row="model" if "model" in available_cols else None,
+            facet_col="dataset" if "dataset" in available_cols else None,
+        )
+
+        fig_tpw.update_layout(
+            title="Mean Tokens per Watt split by Model, Supercomputer, Framework, and Dataset",
+            xaxis_title="Framework",
+            yaxis_title="Mean Tokens per Watt",
+            margin=dict(t=80),
+            height=300 * max(1, agg["model"].nunique() if "model" in agg.columns else 1),
+        )
+
+        fig_tpw.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+
     else:
         fig_tpw = go.Figure()
 
-    # Heatmaps
-    fig_heat_nodes = make_heatmap(
-        df, metric="output_throughput_toks_s", xaxis_col="number_of_nodes"
+    # Efficiency vs Throughput
+    fig_efficiency = (
+        px.scatter(
+            df,
+            x="output_throughput_toks_s",
+            y="joules_per_token",
+            color="supercomputer",
+            size="total_used_gpus",
+            hover_data=["model", "dataset", "framework", "power_avg_w", "total_used_gpus"],
+            labels={
+                "output_throughput_toks_s": "Output Throughput (tokens/s)",
+                "joules_per_token": "Energy per Token (J/token)",
+            },
+            title="Energy per Token vs Throughput (bubble = GPU count)",
+        )
+        if {"joules_per_token", "output_throughput_toks_s"}.issubset(df.columns)
+        else go.Figure()
     )
-    fig_heat_gpus = make_heatmap(
-        df, metric="output_throughput_toks_s", xaxis_col="total_used_gpus"
+
+    # # Heatmaps
+    # fig_heat_nodes = make_heatmap(
+    #     df, metric="output_throughput_toks_s", xaxis_col="number_of_nodes"
+    # )
+    # HeatMap: Scalability Nodes
+    df["sc_model_fw"] = (
+        df["supercomputer"].astype(str)
+        + " | "
+        + df["model"].astype(str)
+        + " | "
+        + df["framework"].astype(str)
     )
+
+    required_cols = [
+        "output_throughput_toks_s",
+        "number_of_nodes",
+    ]
+
+    if all(c in df.columns for c in required_cols):
+
+        agg = (
+            df.groupby([
+                "sc_model_fw",
+                "dataset",
+                "number_of_nodes",
+            ])["output_throughput_toks_s"]
+            .mean()
+            .reset_index()
+        )
+
+        # -------------------------------------------------
+        # Extract sorting keys
+        # -------------------------------------------------
+        split_cols = agg["sc_model_fw"].str.split(" | ", regex=False)
+
+        agg["system_sort"] = split_cols.str[0]
+        agg["model_sort"] = split_cols.str[1]
+        agg["framework_sort"] = split_cols.str[2]
+
+        # -------------------------------------------------
+        # Final row ordering
+        # -------------------------------------------------
+        ordered_rows = (
+            agg[[
+                "model_sort",
+                "framework_sort",
+                "system_sort",
+                "sc_model_fw",
+            ]]
+            .drop_duplicates()
+            .sort_values([
+                "model_sort",
+                "framework_sort",
+                "system_sort",
+                "sc_model_fw",
+            ])
+            ["sc_model_fw"]
+            .tolist()
+        )
+
+        datasets = sorted(agg["dataset"].dropna().unique())
+        initial_dataset = datasets[0]
+
+        # -------------------------------------------------
+        # Heatmap (initial)
+        # -------------------------------------------------
+        fig_heat_nodes = px.density_heatmap(
+            agg[agg["dataset"] == initial_dataset],
+
+            x="number_of_nodes",
+            y="sc_model_fw",
+
+            z="output_throughput_toks_s",
+            histfunc="avg",
+
+            text_auto=".2f",
+            color_continuous_scale="Viridis",
+        )
+
+        # -------------------------------------------------
+        # X axis ordering
+        # -------------------------------------------------
+        fig_heat_nodes.update_xaxes(
+            type="category",
+            categoryorder="array",
+            categoryarray=sorted(
+                agg["number_of_nodes"].dropna().unique(),
+                key=lambda x: int(x)
+            ),
+        )
+
+        # -------------------------------------------------
+        # Y axis ordering (model → framework → system)
+        # -------------------------------------------------
+        fig_heat_nodes.update_yaxes(
+            categoryorder="array",
+            categoryarray=ordered_rows,
+        )
+
+        # -------------------------------------------------
+        # Dataset dropdown
+        # -------------------------------------------------
+        buttons = []
+
+        for dataset in datasets:
+
+            df_dataset = agg[agg["dataset"] == dataset]
+
+            temp_fig = px.density_heatmap(
+                df_dataset,
+
+                x="number_of_nodes",
+                y="sc_model_fw",
+
+                z="output_throughput_toks_s",
+                histfunc="avg",
+
+                text_auto=".2f",
+                color_continuous_scale="Viridis",
+            )
+
+            temp_fig.update_yaxes(
+                categoryorder="array",
+                categoryarray=ordered_rows,
+            )
+
+            buttons.append(
+                dict(
+                    label=str(dataset),
+                    method="update",
+                    args=[
+                        {
+                            "z": [trace.z for trace in temp_fig.data],
+                            "x": [trace.x for trace in temp_fig.data],
+                            "y": [trace.y for trace in temp_fig.data],
+                        },
+                        {
+                            "title": f"Throughput Heatmap — Dataset: {dataset}"
+                        },
+                    ],
+                )
+            )
+
+        # -------------------------------------------------
+        # Layout
+        # -------------------------------------------------
+        fig_heat_nodes.update_layout(
+            title=f"Throughput Heatmap — Dataset: {initial_dataset}",
+            xaxis_title="Number of Nodes",
+            yaxis_title="Supercomputer | Model | Framework",
+            margin=dict(t=120),
+            height=max(500, 35 * agg["sc_model_fw"].nunique()),
+
+            updatemenus=[
+                dict(
+                    buttons=buttons,
+                    direction="right",
+                    showactive=True,
+                    x=0.0,
+                    y=1.15,
+                )
+            ],
+        )
+
+    else:
+        fig_heat_nodes = go.Figure()
+    
+    # Heatmap: Scalability GPUs
+    # fig_heat_gpus = make_heatmap(
+    #     df, metric="output_throughput_toks_s", xaxis_col="total_used_gpus"
+    # )
+    
+    # Heatmap: Scalability GPUs
+    df["sc_model_fw"] = (
+        df["supercomputer"].astype(str)
+        + " | "
+        + df["model"].astype(str)
+        + " | "
+        + df["framework"].astype(str)
+    )
+
+    required_cols = [
+        "output_throughput_toks_s",
+        "total_used_gpus",
+    ]
+
+    if all(c in df.columns for c in required_cols):
+
+        # Clean GPU column
+        df["total_used_gpus"] = pd.to_numeric(
+            df["total_used_gpus"], errors="coerce"
+        ).astype("Int64")
+
+        agg = (
+            df.groupby([
+                "sc_model_fw",
+                "dataset",
+                "total_used_gpus",
+            ])["output_throughput_toks_s"]
+            .mean()
+            .reset_index()
+        )
+
+        agg["total_used_gpus"] = agg["total_used_gpus"].astype(int)
+
+        # -------------------------------------------------
+        # Sorting keys (model → framework → system)
+        # -------------------------------------------------
+        split_cols = agg["sc_model_fw"].str.split(" | ", regex=False)
+
+        agg["system_sort"] = split_cols.str[0]
+        agg["model_sort"] = split_cols.str[1]
+        agg["framework_sort"] = split_cols.str[2]
+
+        ordered_rows = (
+            agg[[
+                "model_sort",
+                "framework_sort",
+                "system_sort",
+                "sc_model_fw",
+            ]]
+            .drop_duplicates()
+            .sort_values([
+                "model_sort",
+                "framework_sort",
+                "system_sort",
+                "sc_model_fw",
+            ])
+            ["sc_model_fw"]
+            .tolist()
+        )
+
+        datasets = sorted(agg["dataset"].dropna().unique())
+        initial_dataset = datasets[0]
+
+        # -------------------------------------------------
+        # Initial heatmap (NO facets)
+        # -------------------------------------------------
+        fig_heat_gpus = px.density_heatmap(
+            agg[agg["dataset"] == initial_dataset],
+
+            x="total_used_gpus",
+            y="sc_model_fw",
+
+            z="output_throughput_toks_s",
+            histfunc="avg",
+
+            text_auto=".2f",
+            color_continuous_scale="Viridis",
+        )
+
+        # -------------------------------------------------
+        # GPU axis ordering (keep 2^n style if present)
+        # -------------------------------------------------
+        gpu_scale = sorted(
+            agg["total_used_gpus"].dropna().unique().tolist()
+        )
+
+        gpu_scale = [
+            g for g in gpu_scale
+            if g > 0 and (g & (g - 1)) == 0
+        ]
+
+        fig_heat_gpus.update_xaxes(
+            type="category",
+            categoryorder="array",
+            categoryarray=gpu_scale,
+        )
+
+        # -------------------------------------------------
+        # Y-axis ordering
+        # -------------------------------------------------
+        fig_heat_gpus.update_yaxes(
+            categoryorder="array",
+            categoryarray=ordered_rows,
+        )
+
+        # -------------------------------------------------
+        # Dataset dropdown
+        # -------------------------------------------------
+        buttons = []
+
+        for dataset in datasets:
+
+            df_dataset = agg[agg["dataset"] == dataset]
+
+            temp_fig = px.density_heatmap(
+                df_dataset,
+
+                x="total_used_gpus",
+                y="sc_model_fw",
+
+                z="output_throughput_toks_s",
+                histfunc="avg",
+
+                text_auto=".2f",
+                color_continuous_scale="Viridis",
+            )
+
+            temp_fig.update_yaxes(
+                categoryorder="array",
+                categoryarray=ordered_rows,
+            )
+
+            buttons.append(
+                dict(
+                    label=str(dataset),
+                    method="update",
+                    args=[
+                        {
+                            "z": [trace.z for trace in temp_fig.data],
+                            "x": [trace.x for trace in temp_fig.data],
+                            "y": [trace.y for trace in temp_fig.data],
+                        },
+                        {
+                            "title": f"GPU Scalability Heatmap — Dataset: {dataset}"
+                        },
+                    ],
+                )
+            )
+
+        # -------------------------------------------------
+        # Layout
+        # -------------------------------------------------
+        fig_heat_gpus.update_layout(
+            title=f"GPU Scalability Heatmap — Dataset: {initial_dataset}",
+            xaxis_title="Total Used GPUs",
+            yaxis_title="Supercomputer | Model | Framework",
+            margin=dict(t=120),
+            height=max(500, 35 * agg["sc_model_fw"].nunique()),
+
+            updatemenus=[
+                dict(
+                    buttons=buttons,
+                    direction="right",
+                    showactive=True,
+                    x=0.0,
+                    y=1.15,
+                )
+            ],
+        )
+
+    else:
+        fig_heat_gpus = go.Figure()
 
     # Table
     table_html = html.Div(
@@ -480,6 +1013,7 @@ def update_dashboard(*args):
         fig_tpw,
         fig_heat_nodes,
         fig_heat_gpus,
+        fig_efficiency,
         table_html,
     )
 
