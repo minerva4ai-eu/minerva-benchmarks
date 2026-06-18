@@ -34,8 +34,21 @@ From: nvidia/cuda:12.1.1-runtime-ubuntu22.04
     apt-get update && apt-get install -y --no-install-recommends --allow-change-held-packages \
         python3-pip python3-dev \
         git curl \
-        build-essential libnccl2 libnccl-dev \
+        build-essential \
+	    libibverbs-dev \
+    	ibverbs-utils \
         cuda-nvcc-12-1
+
+	# Add NVIDIA CUDA apt repository
+	cuda_version_short=$(echo 12.1 | cut -d. -f1,2)
+	curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb -o /tmp/cuda-keyring.deb
+	dpkg -i	 /tmp/cuda-keyring.deb
+	apt-get update
+
+	# Install NCCL from NVIDIA repo (INCLUDES IB plugins)
+	NCCL_VER=$(apt-cache madison libnccl-dev | grep "+cuda${cuda_version_short}" | head -1 | awk -F'|' '{gsub(/^ +| +$/, "", $2); print $2}')
+	apt-get install -y --no-install-recommends --allow-change-held-packages \
+    		libnccl-dev=${NCCL_VER} libnccl2=${NCCL_VER}
 
     # 2. install uv env tool
     echo "==> Installing uv via pip..."
