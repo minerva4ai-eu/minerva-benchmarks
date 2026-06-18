@@ -4,29 +4,16 @@
 
 
 ##################################################
-###           Activate Environment             ###
+###            Setup Environment               ###
 ##################################################
-# Activate virtual environment using conda
-# source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
-eval "$LOAD_MODULES"
-# source activate $ENVIRONMENT_FINETUNING
-# export PATH=$ENVIRONMENT_FINETUNING/bin:$PATH
-# which python
-
-##################################################
-
-
-##################################################
-###        Environment Variables Setup         ###
-##################################################
+if [ -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
 mkdir -p $OUTPUT_DIR
 
 # Print Arguments Received
@@ -52,18 +39,13 @@ export NODE_RANK=$SLURM_PROCID
 ###           Training Execution              ###
 ##################################################
 # Define GPU monitoring command.
-singularity_prefix="singularity exec \
-    $SINGULARITY_ARGS \
-    $SINGULARITY_BINDS \
-    --home $LAUNCH_FOLDER \
-    $SINGULARITY_CONTAINER"
-echo "singularity prefix $singularity_prefix"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "Will apply runtime prefix '$runtime_prefix'"
 
 
-gpu_plots_monitor_command="$singularity_prefix  python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
 
-train_command="$singularity_prefix 
-        python $TRAIN_SCRIPT 
+train_command="${runtime_prefix:+$runtime_prefix }python $TRAIN_SCRIPT 
         --model $MODEL_PATH
         --data $DATASET_PATH
         --output_dir $OUTPUT_DIR

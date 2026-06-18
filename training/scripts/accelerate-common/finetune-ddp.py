@@ -103,12 +103,17 @@ def main():
         dataloader_persistent_workers=args.dataloader_num_workers > 1,
         dataloader_pin_memory=True,
         dataloader_prefetch_factor=8,
+        # torch model compilation
+        **(
+            {
+                "torch_compile": True,
+                "torch_compile_backend": "inductor",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
+            }
+            if bool(args.enable_compile)
+            else {}
+        ),
     )
-    if bool(args.enable_compile):
-        training_args.torch_compile = True
-        training_args.torch_compile_backend = "inductor"
-        training_args.torch_compile_mode = "max-autotune-no-cudagraphs"
-
     training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
     if args.max_steps is not None:
         training_args.max_steps = int(args.max_steps)
