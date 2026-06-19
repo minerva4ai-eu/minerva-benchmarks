@@ -3,6 +3,7 @@ defaults:
   - base
   - arch: MN5
   - slurm: MN5
+  - env: MN5
   - _self_
 
 machine:
@@ -11,4 +12,13 @@ machine:
   modules: 
     - singularity
   python_environment: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv"
-           
+  env:
+    NCCL_NET: IB
+    NCCL_SOCKET_IFNAME: ib0,ib1,ib2,ib3
+    NCCL_IB_HCA: mlx5_0,mlx5_1,mlx5_4,mlx5_5
+    NCCL_DEBUG: INFO
+    NCCL_NVLS_ENABLE: "0"
+    NCCL_IB_DISABLE: "0"
+    CUDA_VISIBLE_DEVICES: "0,1,2,3"
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
+    CUDA_LAUNCH_BLOCKING: "1"

@@ -101,9 +101,6 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command_min_overlap: {$train_command_min_overlap}"
 
-source activate-env-variables-per-supercomputer.sh
-
-
 srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &

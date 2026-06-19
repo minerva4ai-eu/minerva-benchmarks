@@ -18,31 +18,30 @@ machine:
   single_gpu_also_valid: True     # include single GPUs experiments, where it applies
 
 experiment:
-  name: "benchmark_run"
-  output_dir: "results/"
-  repeat: 1
-  yaml_filename:
-
-#env:
-#  GPU_PEAK_TFLOPS:
-#  NODES": ${slurm.sbatch.nodes},
-#  GPUS_PER_NODE": ${slurm.sbatch.gpus_per_node},
-#  GPU_NODE": ${s.sbatch.nodes * s.sbatch.gpus_per_node},
-#  FRAMEWORK": f.name,
-#  DATASET": d.name,
-#  DATASET_PATH": d.path,
-#  MODEL": m.name,
-#  MODEL_PATH": m.path,
-#  PARALLELISM": f.parallelism_name,
-#  PRECISION": t.precision,
-#  BATCH_SIZE": ${t.batch_size},
-#  GRAD_ACCUM": ${t.grad_accum},
-#  MAX_MODEL_LENGTH": ${d.max_seq_len},
-#  LR": ${t.lr},
-#  STEPS": ${t.steps} if t.steps else "-1",
-#  EPOCHS": ${t.epochs} if t.epochs else "-1",
-#  REPEAT_ID": ${run_id},
-#  MACHINE": cfg.machine.name,
-#  TRAIN_SCRIPT": cfg.framework.scripts.finetune.split("/"}[-1],
-#  ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
-#  ZERO_STAGE": cfg.framework.parallelism_name if cfg.framework.name == "deepspeed" else ""
+  name: "benchmark_run"           # Do not change here, only in inherited configuration
+  output_dir: "results/"          # DEPRECATED(?), overwritten by RUNS_DIR global variable in 'hydra_app.py'
+  repeat: 1                       # Do not change, default value for all benchmarks across computers
+  yaml_filename:                  # Do not fill in, value filled during compose runtime
+  env:
+  #  GPU_PEAK_TFLOPS:
+  #  NODES": ${slurm.sbatch.nodes},
+  #  GPUS_PER_NODE": ${slurm.sbatch.gpus_per_node},
+  #  GPU_NODE": ${s.sbatch.nodes * s.sbatch.gpus_per_node},
+  #  FRAMEWORK": f.name,
+  #  DATASET": d.name,
+  #  DATASET_PATH": d.path,
+  #  MODEL": m.name,
+  #  MODEL_PATH": m.path,
+  #  PARALLELISM": f.parallelism_name,
+  #  PRECISION": t.precision,
+  #  BATCH_SIZE": ${t.batch_size},
+  #  GRAD_ACCUM": ${t.grad_accum},
+  #  MAX_MODEL_LENGTH": ${d.max_seq_len},
+  #  LR": ${t.lr},
+  #  STEPS": ${t.steps} if t.steps else "-1",
+  #  EPOCHS": ${t.epochs} if t.epochs else "-1",
+  #  REPEAT_ID": ${run_id},
+  #  MACHINE": cfg.machine.name,
+  #  TRAIN_SCRIPT": cfg.framework.scripts.finetune.split("/"}[-1],
+  #  ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
+  #  ZERO_STAGE": cfg.framework.parallelism_name if cfg.framework.name == "deepspeed" else ""

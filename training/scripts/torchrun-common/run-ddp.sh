@@ -51,9 +51,6 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
-source activate-env-variables-per-supercomputer.sh
-
-
 train_command="${runtime_prefix:+$runtime_prefix }torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \

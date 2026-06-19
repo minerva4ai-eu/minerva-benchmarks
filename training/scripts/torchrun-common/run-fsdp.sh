@@ -42,7 +42,6 @@ export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
-source activate-env-variables-per-supercomputer.sh
 
 train_command_min_overlap="${runtime_prefix:+$runtime_prefix }torchrun \
   --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
