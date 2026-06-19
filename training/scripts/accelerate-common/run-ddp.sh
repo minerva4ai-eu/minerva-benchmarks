@@ -74,8 +74,6 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
-source activate-env-variables-per-supercomputer.sh
-
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &

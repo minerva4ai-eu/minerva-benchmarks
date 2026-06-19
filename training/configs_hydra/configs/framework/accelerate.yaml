@@ -13,6 +13,5 @@ scripts:
     - scripts/accelerate-common/gpu_monitor.py
     - scripts/accelerate-common/utils.py
     - scripts/gpu_plots.py
-    - scripts/activate-env-variables-per-supercomputer.sh
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}
