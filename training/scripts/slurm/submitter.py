@@ -179,6 +179,10 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "TOKENIZERS_PARALLELISM": str(False),
     }
 
+    # Merge machine-specific environment variables
+    if cfg.machine.env:
+        env.update(cfg.machine.env)
+
     return env
 
 

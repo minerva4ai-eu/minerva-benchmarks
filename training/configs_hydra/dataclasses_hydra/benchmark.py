@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 from configs_hydra.dataclasses_hydra import arch as a
 from configs_hydra.dataclasses_hydra import dataset as d
@@ -72,6 +72,7 @@ class MachineConfig:
     singularity_binds: List[str] | None = None
     singularity_args: List[str] | None = None
     single_gpu_also_valid: bool = MISSING
+    env: Dict[str, str] = field(default_factory=dict)  # machine-specific environment variables
 
 
 @dataclass
