@@ -8,3 +8,13 @@ training:
   gradient_checkpointing: False
   enable_compile: True
   epochs: null
+
+combinations:
+  batch_sizes: [1, 4, 8]
+  precisions: ["bf16"]
+  grad_accums: [8, 16]
+  lr: [2e-5]
+  optimizer: ["adamw"]
+  gradient_checkpointing: [False] # TODO: Implement parameterization
+  steps: [50]
+  enable_compile: [False, True]

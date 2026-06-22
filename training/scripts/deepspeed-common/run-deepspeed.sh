@@ -6,7 +6,7 @@
 ##################################################
 ###           Environment Setup                ###
 ##################################################
-if [ -z "$LOAD_MODULES" ]; then
+if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi
 
@@ -54,7 +54,7 @@ head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$MASTER_ADDR" hostname --ip-address
 # ------------------------------------------------------------------
 HOSTFILE="$OUTPUT_DIR/hostfile"
 scontrol show hostnames "${SLURM_NODELIST}" | while read -r hostname; do
-    echo "${hostname} slots=${GPU_NODE}" >> "$HOSTFILE"
+    echo "${hostname} slots=${GPUS_PER_NODE}" >> "$HOSTFILE"
 done
 echo "Generated DeepSpeed hostfile at: $HOSTFILE"
 cat "$HOSTFILE"
@@ -72,42 +72,22 @@ sed -i "s/machine_rank: 0/machine_rank: $NODE_RANK/g" "$accelerate_config_path"
 sed -i "s|{{path to ds_config.json}}|$deepspeed_config_path|g" "$accelerate_config_path"
 
 # Update hpZ partition size for parallelism of stage2 and stage3 configurations only, as stage1 does not use hpZ
-if exists_in_list "${STAGES_WITH_HPZ[*]}" " " "$ZERO_STAGE"; then
-    HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
-    #HPZ_PARTITION_SIZE=4
-    sed -i "s/\"zero_hpz_partition_size\": \"{{HPZ_PARTITION_SIZE}}\"/\"zero_hpz_partition_size\": $HPZ_PARTITION_SIZE/g" "$deepspeed_config_path"
-    echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
-fi
+HPZ_PARTITION_SIZE=$((SLURM_NNODES * GPUS_PER_NODE))
+sed -i "s/\"zero_hpz_partition_size\": \"{{HPZ_PARTITION_SIZE}}\"/\"zero_hpz_partition_size\": $HPZ_PARTITION_SIZE/g" "$deepspeed_config_path"
+echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
+
 
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
 
-#train_command="accelerate launch \
-#    --config_file $accelerate_config_path \
-#    --machine_rank $SLURM_NODEID \
-#    --rdzv_backend c10d \
-#    $TRAIN_SCRIPT \
-#      --model $MODEL_PATH \
-#      --data $DATASET_PATH \
-#      --output_dir $OUTPUT_DIR \
-#      --max_length $MAX_MODEL_LENGTH \
-#      --batch_size $BATCH_SIZE \
-#      ${EPOCHS:+--epochs "$EPOCHS"} \
-#      ${STEPS:+--max_steps "$STEPS"} \
-#      --precision $PRECISION \
-#      --lr $LR \
-#      --gradient_accumulation_steps $GRAD_ACCUM \
-#      --dataloader_num_workers 8 \
-#      --dataset '$DATASET' \
-#      --warmup_ratio 0.1 \
-#      --deepspeed_config_file  $deepspeed_config_path \
-#      --logging_steps 1 "
-train_command="${runtime_prefix:+$runtime_prefix }deepspeed \
+train_command="${runtime_prefix:+$runtime_prefix} deepspeed \
+    --no_ssh \
     --hostfile $HOSTFILE \
     --num_nodes $SLURM_NNODES \
-    --num_gpus $GPU_NODE \
+    --num_gpus $GPUS_PER_NODE \
+    --node_rank \${SLURM_NODEID} \
     --master_addr $MASTER_ADDR \
     --master_port $MASTER_PORT \
     $TRAIN_SCRIPT \
@@ -121,7 +101,7 @@ train_command="${runtime_prefix:+$runtime_prefix }deepspeed \
       --precision $PRECISION \
       --lr $LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
-      --dataloader_num_workers 8 \
+      --dataloader_num_workers 4 \
       --dataset '$DATASET' \
       --warmup_ratio 0.1 \
       --deepspeed_config_file  $deepspeed_config_path \

@@ -32,9 +32,12 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     else:
         rank = rank_or_msg
 
-    local_rank = dist.get_rank()
-    if rank is None or local_rank == rank:
-        print(f"[ RANK {local_rank} ]: {msg}")
+    if dist.is_initialized():
+        device_rank = dist.get_rank()
+    else:
+        device_rank = int(os.environ["RANK"])
+    if rank is None or device_rank == rank:
+        print(f"[ RANK {device_rank} ]: {msg}")
 
 
 def compute_tflops_per_step(

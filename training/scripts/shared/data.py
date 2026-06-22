@@ -1,4 +1,3 @@
-import ast
 import json
 import os
 import random
@@ -23,9 +22,7 @@ class CollateFnError(Exception):
         super().__init__(msg)
 
 
-
-
-def _resolve_dataset_files(dataset_root: str , dataset_files: list[str]) -> list [str]:
+def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[str]:
     if dataset_root is None or dataset_files is None:
         return None
     if isinstance(dataset_files, list):
@@ -35,23 +32,30 @@ def _resolve_dataset_files(dataset_root: str , dataset_files: list[str]) -> list
                 dataset_full_paths.append(str(item))
                 continue
             full_path = os.path.join(str(dataset_root), str(item))
-            assert os.path.exists(full_path),( f"Train/validation files should be absolute or direct subpaths of the dataset root path! "
-                                              + f"Could not join paths:\n\t- {dataset_root}"
-                                              +f"Could not join paths:\n\t- {dataset_root}")
+            assert os.path.exists(full_path), (
+                "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+                + f"Could not join paths:\n\t- {dataset_root}"
+                + f"Could not join paths:\n\t- {dataset_root}"
+            )
             dataset_full_paths.append(str(full_path))
         return dataset_full_paths
-    
+
     if os.path.isabs(str(dataset_file)):
         return str(dataset_file)
     full_path = os.path.join(str(dataset_root), str(dataset_file))
 
-    assert os.path.exists(full_path), ( f"Train/validation files should be absolute or direct subpaths of the dataset root path! "
-                                              + f"Could not join paths:\n\t- {dataset_root}"
-                                              +f"Could not join paths:\n\t- {dataset_root}")
-            
+    assert os.path.exists(full_path), (
+        "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+        + f"Could not join paths:\n\t- {dataset_root}"
+        + f"Could not join paths:\n\t- {dataset_root}"
+    )
+
     return full_path
 
-def parse_dataset_paths(dataset_root: str, train_files: list[str]=[], validation_files: list[str]=[]):
+
+def parse_dataset_paths(
+    dataset_root: str, train_files: list[str] = [], validation_files: list[str] = []
+):
     """
     Parses dataset path argument which can be:
       - A single string path (→ do train/val split)
@@ -63,8 +67,14 @@ def parse_dataset_paths(dataset_root: str, train_files: list[str]=[], validation
         (train_path, val_path, is_split)
         is_split = True if both train and val are provided
     """
-    train_files = train_files or json.loads(os.environ.get("DATASET_TRAIN", '[""]'))
-    validation_files = validation_files or json.loads(os.environ.get("DATASET_VALIDATION", '[""]'))
+    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
+    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
+    train_files = train_files or json.loads(os.environ.get("DATASET_TRAIN", "[]"))
+    validation_files = validation_files or json.loads(
+        os.environ.get("DATASET_VALIDATION", "[]")
+    )
+    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
+    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
 
     if train_files or validation_files:
         if not train_files or not validation_files:
