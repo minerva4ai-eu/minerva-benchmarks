@@ -17,14 +17,19 @@ class ShareGPTHandler(DatasetHandler):
 
     def __getitem__(self, idx):
         item = self.data[idx]
-        prompt = item.get("instruction", "")
-        if item.get("input"):
-            prompt = prompt + "\n\n" + item["input"]
-        prompt = prompt + "\n\n### Response:\n" + item.get("output", "")
+        templated_text = self.apply_chat_template(item)
         enc = self.tokenizer(
-            prompt, truncation=True, max_length=self.max_length, return_tensors="pt"
+            templated_text, truncation=True, max_length=self.max_length, return_tensors="pt"
         )
         return enc.input_ids.squeeze(0), enc.attention_mask.squeeze(0)
+
+    def apply_chat_template(self, item: dict) -> str:
+        # ShareGPT format: list of {"from": "human"/"gpt", "value": "..."}
+        messages = [
+            {"role": "user" if turn["from"] == "human" else "assistant", "content": turn["value"]}
+            for turn in item["conversations"]
+        ]
+        return self.tokenizer.apply_chat_template(messages, tokenize=False)
 
     def collate_fn(self, batch):
         input_ids_list, attn_list = zip(*batch)

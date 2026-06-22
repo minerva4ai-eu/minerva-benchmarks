@@ -221,7 +221,7 @@ accelerate launch --num_processes 1 --mixed_precision "$PRECISION" \
     --batch_size $BATCH_SIZE --max_length $MAX_MODEL_LENGTH \
     --precision $PRECISION --lr $LR \
     --gradient_accumulation_steps $GRAD_ACCUM \
-    --dataloader_num_workers 32 --dataset $DATASET
+    --dataloader_num_workers 4 --dataset $DATASET
 
 # 5. Cleanup
 kill -SIGTERM "$monitor_pid"
@@ -435,7 +435,7 @@ python finetune-*.py \
     --precision $PRECISION \
     --lr $LR \
     --gradient_accumulation_steps $GRAD_ACCUM \
-    --dataloader_num_workers 32 \
+    --dataloader_num_workers 4 \
     --dataset $DATASET \
     --steps $STEPS \
     --epochs $EPOCHS \
