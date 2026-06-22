@@ -1,10 +1,10 @@
 from hydra.core.config_store import ConfigStore
 
 from .arch import HPCArchitecture
-from .benchmark import BenchmarkConfig, TrainArgsConfig
+from .benchmark import BenchmarkConfig
 from .dataset import DatasetConfig
 from .framework import FrameworkConfig
-from .model import ModelConfig
+from .model import ModelConfig, TrainArgsConfig
 from .slurm import SlurmConfig
 
 

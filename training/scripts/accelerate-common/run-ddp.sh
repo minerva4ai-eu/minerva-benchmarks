@@ -6,7 +6,7 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
-if [ -z "$LOAD_MODULES" ]; then
+if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi
 source shared/runtime_environment.sh
@@ -60,7 +60,7 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
+        --dataloader_num_workers 4 \
         --dataset '$DATASET' "
 
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then

@@ -157,13 +157,13 @@ def generate_valid_combos(
                     steps,
                     enable_compile,
                 ) in product(
-                    cfg.trainings.batch_sizes,
-                    cfg.trainings.grad_accums,
-                    cfg.trainings.precisions,
-                    cfg.trainings.lr,
-                    cfg.trainings.optimizer,
-                    cfg.trainings.steps,
-                    cfg.trainings.enable_compile,
+                    cfg.model.combinations.batch_sizes,
+                    cfg.model.combinations.grad_accums,
+                    cfg.model.combinations.precisions,
+                    cfg.model.combinations.lr,
+                    cfg.model.combinations.optimizer,
+                    cfg.model.combinations.steps,
+                    cfg.model.combinations.enable_compile,
                 ):
                     # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
                     # to each experiment combination

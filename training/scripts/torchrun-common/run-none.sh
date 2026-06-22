@@ -6,7 +6,7 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
-if [ -z "$LOAD_MODULES" ]; then
+if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi
 source shared/runtime_environment.sh
@@ -43,20 +43,20 @@ runtime_prefix="$(training_build_runtime_prefix)"
 echo "Will apply runtime prefix '$runtime_prefix'"
 
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
 
-train_command="${runtime_prefix:+$runtime_prefix }python $TRAIN_SCRIPT 
-        --model $MODEL_PATH
-        --data $DATASET_PATH
-        --output_dir $OUTPUT_DIR
-        --batch_size $BATCH_SIZE
-        ${EPOCHS:+--epochs "$EPOCHS"}
-        ${STEPS:+--max_steps "$STEPS"}
-        --max_length $MAX_MODEL_LENGTH
-        --precision $PRECISION
-        --lr $LR
-        --gradient_accumulation_steps $GRAD_ACCUM
-        --dataloader_num_workers 8
+train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --output_dir $OUTPUT_DIR \
+        --batch_size $BATCH_SIZE \
+        ${EPOCHS:+--epochs "$EPOCHS"} \
+        ${STEPS:+--max_steps "$STEPS"} \
+        --max_length $MAX_MODEL_LENGTH \
+        --precision $PRECISION \
+        --lr $LR \
+        --gradient_accumulation_steps $GRAD_ACCUM \
+        --dataloader_num_workers 2 \
         --dataset '$DATASET'"
 
 if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
@@ -72,6 +72,9 @@ srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Optional: give the monitor time to initialize
     sleep 5
 
+    export RANK=0
+    export LOCAL_RANK=0
+    export WORLD_SIZE=1
     # Run training in foreground (this blocks until done)
     $train_command
 

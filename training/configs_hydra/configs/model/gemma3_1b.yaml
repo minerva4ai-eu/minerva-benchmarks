@@ -31,3 +31,7 @@ parallelism_supported:
   - zero1
   - zero2
   - zero3
+
+combinations:
+  batch_sizes: [8, 16]
+  grad_accums: [8, 16]

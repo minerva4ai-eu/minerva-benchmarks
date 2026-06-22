@@ -5,7 +5,8 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
-if [ -z "$LOAD_MODULES" ]; then
+echo "LOAD_MODULES: $LOAD_MODULES"
+if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi
 
@@ -42,7 +43,7 @@ gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix}python -m gpu_plots
 
 #    --precision $PRECISION \ accelerate launch
 echo "EXECUTION_MODE: $EXECUTION_MODE"
-train_command_min_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch \
+train_command_min_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -61,10 +62,10 @@ train_command_min_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch 
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
+        --dataloader_num_workers 4 \
         --dataset $DATASET "
 
-train_command_max_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch \
+train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -83,7 +84,7 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix }accelerate launch 
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
+        --dataloader_num_workers 4 \
         --dataset $DATASET \
         --max_comm_comp_overlap"
 

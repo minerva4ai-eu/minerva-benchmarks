@@ -12,9 +12,11 @@ from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import DictConfig, OmegaConf
 from scripts.slurm import utils as u
 
+
 class ExecussionEnvironmentSelectionError(ValueError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
 
 def get_cfg_folder(
     cfg: BenchmarkConfig,
@@ -119,7 +121,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     else:
         raise ExecussionEnvironmentSelectionError(
             "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
-            )
+        )
 
     env = {
         **os.environ,
@@ -139,8 +141,12 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         **(
             {
                 "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
-                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds) if cfg.machine.singularity_binds else "",
-                "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args) if cfg.machine.singularity_args else "",
+                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+                if cfg.machine.singularity_binds
+                else "",
+                "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
+                if cfg.machine.singularity_args
+                else "",
             }
             if cfg.machine.singularity_container is not None
             else {}
@@ -152,8 +158,20 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "FRAMEWORK": f.name,
         "DATASET": d.name,
         "DATASET_PATH": d.path,
-        "DATASET_TRAIN": _serialize_dataset_split(getattr(d, "train", "")),
-        "DATASET_VALIDATION": _serialize_dataset_split(getattr(d, "validation", "")),
+        **(
+            {
+                "DATASET_TRAIN": cfg.dataset.train,
+            }
+            if cfg.dataset.train is not None
+            else {}
+        ),
+        **(
+            {
+                "DATASET_VALIDATION": cfg.dataset.validation,
+            }
+            if cfg.dataset.validation is not None
+            else {}
+        ),
         "MODEL": m.name,
         "MODEL_PATH": m.path,
         "PARALLELISM": f.parallelism_name,
