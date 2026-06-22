@@ -3,3 +3,4 @@ defaults:
   - _self_
 
 path: /gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.1-8B-Instruct
+max_gpus_scale: 8

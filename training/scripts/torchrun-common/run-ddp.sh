@@ -6,7 +6,7 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
-if [ -z "$LOAD_MODULES" ]; then
+if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi 
 source shared/runtime_environment.sh
@@ -32,7 +32,7 @@ export SLURM_CPU_BIND=none
 ##################################################
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix }python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
 
 
 # Torchrun args
@@ -51,7 +51,7 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
-train_command="${runtime_prefix:+$runtime_prefix }torchrun \
+train_command="${runtime_prefix:+$runtime_prefix} torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
       $TRAIN_SCRIPT \
@@ -65,7 +65,7 @@ train_command="${runtime_prefix:+$runtime_prefix }torchrun \
         --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
+        --dataloader_num_workers 4 \
         --dataset '$DATASET'"
 
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then

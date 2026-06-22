@@ -140,7 +140,7 @@ def main():
         data_seed=32,
         dataloader_persistent_workers=args.dataloader_num_workers > 1,
         dataloader_pin_memory=True,
-        dataloader_prefetch_factor=4,
+        dataloader_prefetch_factor=8,
         # FSDP Config
         fsdp="full_shard auto_wrap",
         fsdp_config=fsdp_config,
@@ -179,7 +179,7 @@ def main():
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
 
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
         # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
