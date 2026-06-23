@@ -81,6 +81,12 @@ def parse_args():
         action="store_true",
         help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
     )
+    parser.add_argument(
+        "--gradient_checkpointing",
+        default=False,
+        action="store_true",
+        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
+    )
 
     return parser.parse_args()
 
