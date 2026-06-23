@@ -107,13 +107,6 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
 
-    def _serialize_dataset_split(value):
-        if value is None:
-            return ""
-        if isinstance(value, (list, tuple)):
-            return json.dumps(list(value))
-        return str(value)
-
     if cfg.machine.singularity_container:
         execution_mode = "singularity"
     elif cfg.machine.python_environment:
@@ -188,7 +181,9 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "TRAIN_SCRIPT": os.path.join(
             launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
         ),
-        "ZERO_STAGE": f.parallelism_name if f.name == "deepspeed" else "",
+        "ZERO_STAGE": f.parallelism_name
+        if f.name in ["deepspeed", "deepspeed-accelerate"]
+        else "",
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
@@ -199,8 +194,18 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
 
     # Merge machine-specific environment variables
     if cfg.machine.env:
-        env.update(cfg.machine.env)
+        env.update(**cfg.machine.env)
 
+    def _serialize(value):
+        if value is None:
+            return ""
+        if isinstance(value, (list, tuple)):
+            return json.dumps(list(value))
+        return str(value)
+
+    # Make sure that all values are serialized/cast to string
+    for k, v in env.items():
+        env[k] = _serialize(v)
     return env
 
 

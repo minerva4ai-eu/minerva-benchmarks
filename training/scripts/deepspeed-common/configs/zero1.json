@@ -5,6 +5,7 @@
   "optimizer": {
         "type": "AdamW",
         "params": {
+            "torch_adam": true,
             "lr": "auto",
             "betas": "auto",
             "eps": "auto",

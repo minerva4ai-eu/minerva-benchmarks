@@ -25,8 +25,9 @@ def register_configs():
 
     # framework YAMLs
     cs.store(group="framework", name="accelerate", node=FrameworkConfig)
-    cs.store(group="framework", name="deepspeed", node=FrameworkConfig)
     cs.store(group="framework", name="torchrun", node=FrameworkConfig)
+    cs.store(group="framework", name="deepspeed", node=FrameworkConfig)
+    cs.store(group="framework", name="deepspeed-accelerate", node=FrameworkConfig)
 
     # arch YAMLs
     cs.store(group="arch", name="MN5", node=HPCArchitecture)

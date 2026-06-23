@@ -7,10 +7,10 @@ import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import (
-    FlopCounter,
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
 from shared.data import load_and_prepare_raw_dataset
+from shared.flops import mfu_callback_from_hf_config
 from shared.utils import (
     count_parameters,
     get_fsdp_layer_to_wrap,
@@ -128,7 +128,7 @@ def main():
         dataloader_num_workers=args.dataloader_num_workers,
         data_seed=32,
         dataloader_persistent_workers=args.dataloader_num_workers > 1,
-        dataloader_pin_memory=False,
+        dataloader_pin_memory=True,
         dataloader_prefetch_factor=8,
         # FSDP Config (unchanged)
         fsdp="full_shard auto_wrap",
@@ -170,27 +170,20 @@ def main():
 
         print_rank(f"Loading Model... dtype: {dtype}")
 
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
-            attn_implementation="flash_attention_2",
-        )
-        # if is_main_process():
-        #    model = AutoModelForCausalLM.from_pretrained(
-        #        model_name,
-        #        torch_dtype=dtype,
-        #        low_cpu_mem_usage=True,
-        #        attn_implementation="flash_attention_2",
-        #    )
-        # else:
-        #    config = AutoConfig.from_pretrained(model_name)
-        #    with init_on_device(torch.device("meta")):
-        #        model = AutoModelForCausalLM.from_config(
-        #            config,
-        #            torch_dtype=dtype,
-        #            attn_implementation="flash_attention_2",
-        #        )
+        if args.enable_compile:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+            )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                attn_implementation="flash_attention_2",
+            )
+        print_rank("Model Loaded")
 
         ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
         print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
@@ -205,8 +198,13 @@ def main():
         #    print_rank(0, f"{i[0]} -> {i[1].device}")
         # print_rank(0, ":::::::::")
 
-        flop_counter = FlopCounter(model)
-
+        # flop_counter = FlopCounter(model)
+        flopsCallback_megatronLM = mfu_callback_from_hf_config(
+            model,
+            tokenizer,
+            gpu_peak_flops=peak_gpu_tflops,
+            seq_length=args.max_length,
+        )
         # CHANGED: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
         # CHANGED: If you need a custom formatting function instead of dataset_text_field, pass:
         #   formatting_func=lambda x: [f"### Input: {x['input']}\n### Output: {x['output']}"]
@@ -217,7 +215,7 @@ def main():
             eval_dataset=eval_dataset,
             # data_collator=collate_fn,  # REMOVED: SFTTrainer manages this internally
             processing_class=tokenizer,  # CHANGED: 'tokenizer' param renamed in TRL ≥0.12
-            callbacks=[monitor],
+            callbacks=[monitor, flopsCallback_megatronLM],
             peak_gpu_tflops=peak_gpu_tflops,
             # TODO: Uncomment if using a formatting function instead of dataset_text_field:
             # formatting_func=your_formatting_func,
@@ -237,7 +235,6 @@ def main():
         trainer.train()
         total_finetune_time = time.time() - start_time
 
-        flop_counter.summary()
         stop_flag["stop"] = True
         time.sleep(2)
 

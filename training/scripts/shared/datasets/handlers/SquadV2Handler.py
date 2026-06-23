@@ -138,7 +138,8 @@ class SquadV2Handler(DatasetHandler):
 
 class SquadV2RawDataset(RawTextDataset):
     def __init__(self,
-        path: str | list[str] ):
+        path: str | list[str],
+        data: Optional[pd.DataFrame]):
         # Load dataset from parquet
         if path:
             if isinstance(path, str):
@@ -192,6 +193,7 @@ class SquadV2RawDataset(RawTextDataset):
 
     @staticmethod
     def from_data(
-        data: pd.DataFrame,
+        data: list[dict[str, str]],
     ):
-        pass
+
+        return HFDataset.from_list(data)
