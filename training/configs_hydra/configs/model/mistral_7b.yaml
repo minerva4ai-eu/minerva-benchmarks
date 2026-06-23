@@ -39,6 +39,7 @@ frameworks_supported:
   - torchrun
   - accelerate
   - deepspeed
+  - deepspeed-accelerate
 parallelism_supported:
   - fsdp
   - zero2

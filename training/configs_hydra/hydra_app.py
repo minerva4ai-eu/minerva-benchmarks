@@ -46,7 +46,7 @@ RESET = "\033[0m"
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
 MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed"]
+FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
 DATASETS = ["alpaca", "squadv2"]
 
 ################################################################
@@ -104,6 +104,9 @@ def generate_valid_combos(
                 + f"\n\t· dataset: {dataset}"
             )
             if framework not in cfg.model.frameworks_supported:
+                print(
+                    f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
+                )
                 continue
 
             for parallelism in cfg.model.parallelism_supported:

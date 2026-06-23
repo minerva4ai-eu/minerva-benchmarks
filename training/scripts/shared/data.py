@@ -69,8 +69,10 @@ def parse_dataset_paths(
     """
     print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
     print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
-    train_files = train_files or json.loads(os.environ.get("DATASET_TRAIN", "[]"))
-    validation_files = validation_files or json.loads(
+    if train_files is None:
+        train_files = json.loads(os.environ.get("DATASET_TRAIN", "[]"))
+    if validation_files is None:
+        validation_files= json.loads(
         os.environ.get("DATASET_VALIDATION", "[]")
     )
     print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
