@@ -89,7 +89,6 @@ class MegatronFlopsCallback(TrainerCallback):
         vocab_size,
         max_len: int,
         num_gpus=1,
-        gradient_accumulation_enabled=False,
     ):
         self.num_layers = num_layers
         self.hidden_size = hidden_size
@@ -98,7 +97,6 @@ class MegatronFlopsCallback(TrainerCallback):
         self.num_gpus = num_gpus
         self._t0 = None
         self.max_len = max_len
-        self.accumulation_enabled = gradient_accumulation_enabled
 
     def on_step_begin(self, args, state, control, **kwargs):
         torch.cuda.synchronize()
@@ -271,7 +269,6 @@ class PerformanceTrackingTrainer(Trainer):
         HuggingFace Trainer calls this as:
             training_step(model, inputs, num_items_in_batch)
         """
-
         # ------------------------------
         # Step custom metrics
         # ------------------------------
@@ -479,6 +476,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
 
         self.total_tokens_this_gpu = 0
         self.total_tokens_global = 0
+        self.batches_seen_this_gpu = 0
 
         self.last_logged_flops_this_gpu = 0
         self.flops_accumulated = 0
@@ -512,10 +510,13 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         self.step_interval_time = 0.00001  # avoid division by zero in first step
         self.last_log_timestamp = None
 
-        print_rank(0, ":::::::::")
-        for i in kwargs["model"].named_parameters():
-            print_rank(0, f"{i[0]} -> {i[1].device}")
-        print_rank(0, ":::::::::")
+        print_rank(":::::::::")
+        layer_limit = 10
+        for idx, i in enumerate(kwargs["model"].named_parameters()):
+            print_rank(f"{i[0]} -> {i[1].device}")
+            if idx == layer_limit:
+                break
+        print_rank(":::::::::")
 
     def get_train_dataloader(self):
         if self.custom_train_dataloader is not None:
@@ -571,11 +572,13 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 )
 
             # Batch size info
-            # logs["effective_batch_size"] = (
-            #    self.args.per_device_train_batch_size
-            #    * self.args.gradient_accumulation_steps
-            #    * self.args.world_size
-            # )
+            logs[f"D{os.environ['RANK']}:seen_batches"] = self.batches_seen_this_gpu
+            logs[f"D{os.environ['RANK']}:seen_tokens"] = self.total_tokens_this_gpu
+            logs["effective_batch_size"] = (
+                self.args.per_device_train_batch_size
+                * self.args.gradient_accumulation_steps
+                * self.args.world_size
+            )
         if self.logged_flops_this_gpus:
             logs["TFLOPs/sec/GPU"] = f"{self.logged_flops_this_gpus[-1] / 1e12:.2f}"
         if self.logged_mfu_this_gpus:
@@ -611,6 +614,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             tokens_in_batch = 0
 
         # add to running counter
+        self.batches_seen_this_gpu += 1
         self.total_tokens_this_gpu += tokens_in_batch
 
         step_start = time.time()

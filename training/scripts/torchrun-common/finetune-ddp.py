@@ -5,18 +5,20 @@ import time
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import PerformanceTrackingTrainer
-from shared.data import load_dataset
+from shared.custom_train import PerformanceTrackingSFTTrainer
+from shared.data import load_and_prepare_raw_dataset
+from shared.flops import mfu_callback_from_hf_config
 from shared.utils import (
     count_parameters,
     print_rank,
     save_summary_stats_json,
 )
-from torch.utils.data import DataLoader, DistributedSampler
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    TrainingArguments,
+)
+from trl.trainer.sft_config import (
+    SFTConfig,
 )
 from utils import parse_args
 
@@ -41,10 +43,6 @@ def main():
     else:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
-        # world_size = int(os.environ.get("GPU_NODE", 1)) * int(
-        #    os.environ.get("SLURM_NNODES", 1)
-        # )
-
     torch.cuda.empty_cache()
 
     model_name = args.model
@@ -63,11 +61,14 @@ def main():
     # ---------------------------------------------------------------------
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
-    train_dataset, eval_dataset, collate_fn, _ = load_dataset(
-        dataset_name=args.dataset,
-        dataset_path=args.data,
-        tokenizer=tokenizer,
-        max_length=MAX_LENGTH,
+    # train_dataset, eval_dataset, collate_fn, _ = load_dataset(
+    #    dataset_name=args.dataset,
+    #    dataset_path=args.data,
+    #    tokenizer=tokenizer,
+    #    max_length=MAX_LENGTH,
+    # )
+    train_dataset, eval_dataset = load_and_prepare_raw_dataset(
+        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
     )
 
     # --- Precision selection ---
@@ -79,7 +80,8 @@ def main():
         dtype = torch.float32
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
-    training_args = TrainingArguments(
+
+    training_args = SFTConfig(
         output_dir=output_dir,
         overwrite_output_dir=True,
         per_device_train_batch_size=BATCH_SIZE,
@@ -102,7 +104,16 @@ def main():
         data_seed=32,
         dataloader_persistent_workers=args.dataloader_num_workers > 1,
         dataloader_pin_memory=True,
-        dataloader_prefetch_factor=4,
+        dataloader_prefetch_factor=8,
+        # --- SFT-specific args ---
+        max_length=MAX_LENGTH,  # replaces manual truncation in collator
+        dataset_text_field="text",  # TODO: set to your dataset's text column name
+        # OR remove and use formatting_func below
+        packing=True,  # set True to pack short sequences for efficiency
+        dataset_kwargs={"skip_prepare_dataset": False},
+        # TODO: If your dataset is already tokenized (input_ids present), set:
+        #   dataset_kwargs={"skip_prepare_dataset": True}
+        #   and remove dataset_text_field above.
         # torch model compilation
         **(
             {
@@ -114,45 +125,12 @@ def main():
             else {}
         ),
     )
+    training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
+    if args.max_steps is not None:
+        training_args.max_steps = int(args.max_steps)
+
     try:
-        # ---------------------------------------------------------------------
-        # Handle dataset path (string or dict)
-        # ---------------------------------------------------------------------
-        train_dataset, eval_dataset, collate_fn, _ = load_dataset(
-            dataset_name=args.dataset,
-            dataset_path=args.data,
-            tokenizer=tokenizer,
-            max_length=MAX_LENGTH,
-        )
-        train_sampler = DistributedSampler(train_dataset, shuffle=True)
-        eval_sampler = DistributedSampler(eval_dataset, shuffle=False)
-
-        train_dataloader = DataLoader(
-            train_dataset,
-            batch_size=BATCH_SIZE,
-            sampler=train_sampler,
-            shuffle=False,
-            num_workers=args.dataloader_num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn,
-            persistent_workers=True,
-        )
-        eval_dataloader = DataLoader(
-            eval_dataset,
-            batch_size=BATCH_SIZE,
-            sampler=eval_sampler,
-            shuffle=False,
-            num_workers=args.dataloader_num_workers,
-            pin_memory=True,
-            collate_fn=collate_fn,
-            persistent_workers=True,
-        )
-
-        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
-        if args.max_steps is not None:
-            training_args.max_steps = int(args.max_steps)
-
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPU_NODE", 1)))
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
         # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
@@ -167,23 +145,42 @@ def main():
         )
 
         print_rank(f"Loading Model... dtype: {dtype}")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            torch_dtype=dtype,
-            low_cpu_mem_usage=True,
-            device_map=None,  # Trainer will put model on device
-            # attn_implementation="flash_attention_2",
-        )
+        if args.enable_compile:
+            # torch._dynamo.exc.BackendCompilerFailed: backend='compile_fn' raised:
+            # NotImplementedError: DDPOptimizer backend: Found a higher order op in the graph. This is not supported.
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                device_map=None,  # Trainer will put model on device
+            )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                low_cpu_mem_usage=True,
+                device_map=None,  # Trainer will put model on device
+                attn_implementation="flash_attention_2",
+            )
         print_rank("Model Loaded")
 
-        trainer = PerformanceTrackingTrainer(
+        flops_callback = mfu_callback_from_hf_config(
+            model,
+            tokenizer,
+            gpu_peak_flops=peak_gpu_tflops,
+            seq_length=args.max_length,
+        )
+        trainer = PerformanceTrackingSFTTrainer(
             model=model,
             args=training_args,
-            train_dataloader=train_dataloader,
-            eval_dataloader=eval_dataloader,
-            data_collator=collate_fn,
-            tokenizer=tokenizer,
-            callbacks=[monitor],
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            # data_collator=collate_fn,
+            processing_class=tokenizer,
+            callbacks=[
+                monitor,
+                flops_callback,
+            ],
             peak_gpu_tflops=peak_gpu_tflops,
         )
 
