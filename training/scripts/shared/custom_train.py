@@ -40,6 +40,9 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
         print(f"[ RANK {device_rank} ]: {msg}")
 
 
+FLOPS = []
+
+
 def compute_tflops_per_step(
     batch_size: int,
     seq_len: int,
@@ -121,6 +124,7 @@ class MegatronFlopsCallback(TrainerCallback):
             num_gpus=self.num_gpus,
         )
 
+        FLOPS.append(tflops)
         print(f"Step {state.global_step:>6} | {tflops:.1f} TFLOP/s per GPU")
 
 
@@ -323,6 +327,10 @@ class PerformanceTrackingTrainer(Trainer):
     def _finalize_flop_counts(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         global_average_flops = 0
+
+        # !! Temp fix for logged FLOPS !!
+        self.logged_flops_this_gpus = FLOPS
+
         local_avg_flops = sum(self.logged_flops_this_gpus) / len(
             self.logged_flops_this_gpus if self.logged_flops_this_gpus else 0
         )

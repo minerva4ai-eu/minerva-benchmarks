@@ -11,6 +11,7 @@ scripts:
   shared: scripts/shared
   copy_files:
     - scripts/accelerate-common/gpu_monitor.py
+    - scripts/accelerate-common/accelerate_config.yaml
     - scripts/accelerate-common/utils.py
     - scripts/gpu_plots.py
     - ${framework.scripts.run}

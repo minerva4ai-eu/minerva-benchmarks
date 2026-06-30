@@ -39,18 +39,32 @@ export NODE_RANK=$SLURM_PROCID
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix}python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+
+
+head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$MASTER_ADDR" hostname --ip-address)
+accelerate_config_path="accelerate_config.yaml"
+
+# Update Accelerate config placeholders
+sed -i "s/{{MASTER_IP}}/$head_node_ip/g" "$accelerate_config_path"
+sed -i "s/{{NUM_NODES}}/$NNODES/g" "$accelerate_config_path"
+sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
+sed -i "s/machine_rank: 0/machine_rank: $NODE_RANK/g" "$accelerate_config_path"
 
 #    --precision $PRECISION \ accelerate launch
+#    --multi-gpu \
+#    --machine_rank $SLURM_NODEID \
+#    --rdzv_backend c10d \
+#    --main_process_ip $MASTER_ADDR \
+#    --main_process_port $MASTER_PORT \
+#    --num_processes $NUM_PROCS \
+#    --num_machines $NNODES \
+#    --same-network \
 echo "EXECUTION_MODE: $EXECUTION_MODE"
 train_command_min_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
-    --multi-gpu \
+    --config_file $accelerate_config_path \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
-    --main_process_ip $MASTER_ADDR \
-    --main_process_port $MASTER_PORT \
-    --num_processes $NUM_PROCS \
-    --num_machines $NNODES \
       $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data '$DATASET_PATH' \

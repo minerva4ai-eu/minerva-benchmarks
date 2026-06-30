@@ -153,14 +153,14 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "DATASET_PATH": d.path,
         **(
             {
-                "DATASET_TRAIN": cfg.dataset.train,
+                "DATASET_TRAIN": str(cfg.dataset.train),
             }
             if cfg.dataset.train is not None
             else {}
         ),
         **(
             {
-                "DATASET_VALIDATION": cfg.dataset.validation,
+                "DATASET_VALIDATION": str(cfg.dataset.validation),
             }
             if cfg.dataset.validation is not None
             else {}

@@ -147,7 +147,7 @@ def main():
             {
                 "torch_compile": True,
                 "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune-no-cudagraphs",
+                "torch_compile_mode": "max-autotune",
             }
             if bool(args.enable_compile)
             else {}
@@ -174,6 +174,7 @@ def main():
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype=dtype,
+                device_map=None,  # Trainer will put model on device
                 low_cpu_mem_usage=True,
             )
         else:
@@ -181,6 +182,7 @@ def main():
                 model_name,
                 torch_dtype=dtype,
                 low_cpu_mem_usage=True,
+                device_map=None,  # Trainer will put model on device
                 attn_implementation="flash_attention_2",
             )
         print_rank("Model Loaded")
@@ -230,7 +232,10 @@ def main():
         gpu_stats_during, stop_flag = start_gpu_monitor(
             interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
         )
-
+        print_rank(
+            rank, f"Accelerator FSDP plugin: {trainer.accelerator.state.fsdp_plugin}"
+        )
+        print_rank(rank, f"Distributed type: {trainer.accelerator.distributed_type}")
         start_time = time.time()
         trainer.train()
         total_finetune_time = time.time() - start_time

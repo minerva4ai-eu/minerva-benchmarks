@@ -32,7 +32,9 @@ class SquadV2Handler(DatasetHandler):
                 path = path.replace('"', "")
                 path = [path]
             frames = [pd.read_parquet(file_path) for file_path in path]
-            self.data = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+            self.data = (
+                pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+            )
             return
         assert isinstance(data, pd.DataFrame), (
             "Data provided must be of type 'pandas.DataFrame'!!"
@@ -70,11 +72,13 @@ class SquadV2Handler(DatasetHandler):
         else:
             answer = str(answer_data) if isinstance(answer_data, str) else ""
 
-        templated_text = self.apply_chat_template({
-            "question": question,
-            "context": context,
-            "answer": answer,
-        })
+        templated_text = self.apply_chat_template(
+            {
+                "question": question,
+                "context": context,
+                "answer": answer,
+            }
+        )
 
         if self.pad_maxlength:
             enc = self.tokenizer(
@@ -87,13 +91,19 @@ class SquadV2Handler(DatasetHandler):
 
         else:
             enc = self.tokenizer(
-                templated_text, truncation=True, max_length=self.max_length, return_tensors="pt"
+                templated_text,
+                truncation=True,
+                max_length=self.max_length,
+                return_tensors="pt",
             )
         return enc.input_ids.squeeze(0), enc.attention_mask.squeeze(0)
 
     def apply_chat_template(self, item: dict) -> str:
         messages = [
-            {"role": "user", "content": f"Question: {item['question']}\n\nContext: {item['context']}"},
+            {
+                "role": "user",
+                "content": f"Question: {item['question']}\n\nContext: {item['context']}",
+            },
             {"role": "assistant", "content": item["answer"]},
         ]
         return self.tokenizer.apply_chat_template(messages, tokenize=False)
@@ -135,16 +145,16 @@ class SquadV2Handler(DatasetHandler):
 
 
 class SquadV2RawDataset(RawTextDataset):
-    def __init__(self,
-        path: str | list[str],
-        data: Optional[pd.DataFrame]):
+    def __init__(self, path: str | list[str]):
         # Load dataset from parquet
         if path:
             if isinstance(path, str):
                 path = path.replace('"', "")
                 path = [path]
             frames = [pd.read_parquet(file_path) for file_path in path]
-            self.data = pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+            self.data = (
+                pd.concat(frames, ignore_index=True) if len(frames) > 1 else frames[0]
+            )
             return
         assert isinstance(self.data, pd.DataFrame), (
             "Data provided must be of type 'pandas.DataFrame'!!"

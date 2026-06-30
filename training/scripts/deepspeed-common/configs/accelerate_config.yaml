@@ -6,7 +6,7 @@
 # ALL DeepSpeed settings (ZeRO stage, mixed precision, gradient clipping, etc.)
 # must be in ds_config.json - NOT here.
 #
-# IMPORTANT: Placeholders {{...}} are replaced at runtime by slurm_wrap.sh
+# IMPORTANT: Placeholders {{...}} are replaced at runtime
 # ============================================================================
 
 compute_environment: LOCAL_MACHINE
