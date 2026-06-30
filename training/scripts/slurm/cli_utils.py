@@ -57,12 +57,12 @@ session = PromptSession(
 )
 
 
-try:
-    with open(HISTORY_FILE_PATH, "a") as f:
-        pass
-    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
-except Exception as e:
-    print(f"DEBUG: history file FAILED: {e}")
+# try:
+#    with open(HISTORY_FILE_PATH, "a") as f:
+#        pass
+#    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
+# except Exception as e:
+#    print(f"DEBUG: history file FAILED: {e}")
 # Prevent Enter from submitting (we just want to move to the next line)
 # @bindings.add("enter")
 # def _(event):
@@ -245,15 +245,25 @@ STATUS_OPTIONS = [
         default=str(RUNS_DIR),
         # validator=lambda x: isinstance(x, int) and x > 0,
     ),
-    OptionConfig(name="--nodes", prompt="nodes", validator=lambda x: int(x) >= 1),
-    OptionConfig(name="--model", prompt="model", validator=lambda x: int(x) >= 1),
     OptionConfig(
-        name="--framework", prompt="framework", validator=lambda x: int(x) >= 1
+        name="--model",
+        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
+    ),
+    OptionConfig(
+        name="--framework",
+        prompt="framework (space-separated, e.g. 'vllm sglang')",
     ),
     OptionConfig(
         name="--parallelism-type",
-        prompt="parallelism-type",
-        validator=lambda x: int(x) >= 1,
+        prompt="parallelism-type (space-separated, e.g. 'ddp fsdp')",
+    ),
+    OptionConfig(
+        name="--nodes",
+        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
+    ),
+    OptionConfig(
+        name="--state",
+        prompt="state (space-separated SLURM states, e.g. 'running pending failed')",
     ),
 ]
 
@@ -277,6 +287,22 @@ CANCEL_OPTIONS = [
         name="--run-id",
         prompt="run-id",
         required=True,
+    ),
+    OptionConfig(
+        name="--model",
+        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
+    ),
+    OptionConfig(
+        name="--framework",
+        prompt="framework (space-separated, e.g. 'vllm sglang')",
+    ),
+    OptionConfig(
+        name="--parallelism-type",
+        prompt="parallelism-type (space-separated, e.g. 'dp fsdp')",
+    ),
+    OptionConfig(
+        name="--nodes",
+        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
     ),
 ]
 

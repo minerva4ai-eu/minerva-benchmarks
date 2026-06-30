@@ -15,19 +15,24 @@ Config Generation → Combo Validation → Launch Folder Creation → Script Sta
 The CLI is invoked via the shell wrapper `minerva-cli.sh`:
 
 ```bash
-./minerva-cli.sh <command> [options]
+bash minerva-cli.sh <command> [options]
 ```
 
-This script wraps the Python CLI inside a Singularity container with the necessary bind mounts:
+The script supports two execution modes controlled by the `USE_SINGULARITY` variable (default: `0`):
+
+### Singularity Mode (`USE_SINGULARITY=1`)
+
+Wraps the Python CLI inside a Singularity container with the necessary bind mounts:
 
 ```bash
 singularity exec --env CWD="$PWD" \
-    --bind "$HOME":"$HOME" \
+    --bind "$HOME":"/tmp_home" \
     --bind "$PWD":"$PWD" \
     --bind /etc/passwd:/etc/passwd \
     --bind /etc/group:/etc/group \
     --bind $(which sbatch):/usr/local/bin/sbatch \
     --bind $(which sacct):/usr/local/bin/sacct \
+    --bind $(which scancel):/usr/local/bin/scancel \
     --bind /var/run/munge:/var/run/munge \
     --bind /etc/munge:/etc/munge \
     --bind /etc/slurm:/etc/slurm \
@@ -41,15 +46,24 @@ singularity exec --env CWD="$PWD" \
 
 **Bind mounts ensure the container can:**
 - Access the user's home directory and current working directory
-- Execute SLURM commands (`sbatch`, `sacct`)
+- Execute SLURM commands (`sbatch`, `sacct`, `scancel`)
 - Communicate with the SLURM daemon via munge socket and SLURM config files
+
+### Virtualenv Mode (`USE_SINGULARITY=0`, default)
+
+Activates the local Python virtual environment and runs the CLI directly:
+
+```bash
+source "envs/cli/.venv/bin/activate"
+python -m scripts.slurm.cli $cli_args
+```
 
 ## Commands
 
 ### `run` — Generate and Submit Jobs
 
 ```bash
-./minerva-cli.sh run [OPTIONS]
+bash minerva-cli.sh run [OPTIONS]
 ```
 
 Generates all valid benchmark configurations and submits them as SLURM jobs.
@@ -59,40 +73,171 @@ Generates all valid benchmark configurations and submits them as SLURM jobs.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--dry-run` | `False` | Generate configs and build launch folders without submitting jobs |
+| `--per-model-jobs` | `False` | Chain job dependencies per model (each model's jobs complete before the next starts) |
 | `--configs-path` | `./configs_hydra/configs` | Path to the Hydra config directory |
 | `--config-name` | `base` | Base config name to compose (e.g., `base`, `base-MN5`) |
-| `--output` | `benchmark-runs/` | Output directory for generated configs and results |
+| `--runs-dir` | `benchmark-runs/` | Output directory for generated configs and results |
+| `--yaml` | `None` | Run a specific benchmark configuration by providing the path to a BenchmarkConfig YAML file. Can be repeated for multiple configs, e.g., `--yaml path1.yaml --yaml path2.yaml` |
+
+**Examples:**
+
+```bash
+# Generate and submit all valid jobs
+bash minerva-cli.sh run
+
+# Dry run — generate configs without submitting
+bash minerva-cli.sh run --dry-run
+
+# Use MN5-specific config
+bash minerva-cli.sh run --config-name base-MN5
+
+# Custom output directory
+bash minerva-cli.sh run --runs-dir /path/to/results/
+
+# Run specific YAML configs
+bash minerva-cli.sh run --yaml config1.yaml --yaml config2.yaml
+
+# Per-model job dependency chaining
+bash minerva-cli.sh run --per-model-jobs
+```
+
+### `rerun` — Rerun Jobs
+
+```bash
+bash minerva-cli.sh rerun --run-date DD-MM-YYYY --run-id N [OPTIONS]
+```
+
+Reruns jobs from a previous run. Supports rerunning all, only failed, or only pending jobs.
+
+**Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--run-date` | Yes | Date of the original run in `DD-MM-YYYY` format |
+| `--run-id` | Yes | Serial ID of the run on the provided date |
+| `--runs-dir` | No | Output directory (default: `benchmark-runs/`) |
+| `--all` | No | Rerun all jobs from the run |
+| `--only-failed` | No | Rerun only failed jobs |
+| `--only-pending` | No | Rerun only pending jobs |
+| `--yaml` | No | Re-run specific YAML configs. Rerun reuses scripts from the original run-id without copying them again. |
+
+**Examples:**
+
+```bash
+# Rerun all failed jobs from run_id-1 on 29-06-2026
+bash minerva-cli.sh rerun --run-date 29-06-2026 --run-id 1 --only-failed
+
+# Rerun all jobs from a specific run
+bash minerva-cli.sh rerun --run-date 29-06-2026 --run-id 1 --all
+
+# Rerun specific YAML configs
+bash minerva-cli.sh rerun --run-date 29-06-2026 --run-id 1 --yaml config.yaml
+```
+
+### `status` — Check Job Status
+
+```bash
+bash minerva-cli.sh status --run-date DD-MM-YYYY --run-id N [OPTIONS]
+```
+
+Prints a summary of all run statuses with optional filtering by model, framework, parallelism, nodes, or SLURM state.
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--run-date` | Date of the run (`DD-MM-YYYY`) |
+| `--run-id` | Serial ID of the run |
+| `--rerun-id` | Optional: check status of a specific rerun |
+| `--runs-dir` | Output directory (default: `benchmark-runs/`) |
+| `--model` | Filter by model name(s), space-separated |
+| `--framework` | Filter by framework name(s), space-separated |
+| `--parallelism-type` | Filter by parallelism type(s), space-separated |
+| `--nodes` | Filter by number of nodes (exact match), space-separated |
+| `--state` | Filter by SLURM job state (e.g., `running`, `pending`, `failed`) |
+
+**Examples:**
+
+```bash
+# Status of all jobs in run_id-1
+bash minerva-cli.sh status --run-date 29-06-2026 --run-id 1
+
+# Filter by model and state
+bash minerva-cli.sh status --run-date 29-06-2026 --run-id 1 --model llama3-7b --state running
+
+# Check a specific rerun
+bash minerva-cli.sh status --run-date 29-06-2026 --run-id 1 --rerun-id 2
+```
+
+### `cancel` — Cancel Jobs
+
+```bash
+bash minerva-cli.sh cancel --run-date DD-MM-YYYY --run-id N [OPTIONS]
+```
+
+Cancels all running and pending jobs for a given run. Supports filtering by model, framework, parallelism, and nodes.
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--run-date` | Date of the run (`DD-MM-YYYY`) |
+| `--run-id` | Serial ID of the run |
+| `--runs-dir` | Output directory (default: `benchmark-runs/`) |
+| `--model` | Filter by model name(s), space-separated |
+| `--framework` | Filter by framework name(s), space-separated |
+| `--parallelism-type` | Filter by parallelism type(s), space-separated |
+| `--nodes` | Filter by number of nodes (exact match), space-separated |
 
 **Example:**
 
 ```bash
-# Generate and submit all valid jobs
-./minerva-cli.sh run
+# Cancel all running/pending jobs in run_id-1
+bash minerva-cli.sh cancel --run-date 29-06-2026 --run-id 1
 
-# Dry run — generate configs without submitting
-./minerva-cli.sh run --dry-run
-
-# Use MN5-specific config
-./minerva-cli.sh run --config-name base-MN5
-
-# Custom output directory
-./minerva-cli.sh run --output /path/to/results/
+# Cancel only llama3-7b jobs
+bash minerva-cli.sh cancel --run-date 29-06-2026 --run-id 1 --model llama3-7b
 ```
 
-### `monitor` — Monitor Running Jobs
+### Interactive Mode
+
+Run the CLI without arguments to enter interactive mode:
 
 ```bash
-./minerva-cli.sh monitor [OPTIONS]
+bash minerva-cli.sh
 ```
 
-Monitors the status of submitted SLURM jobs with a color-coded dashboard.
+This launches a REPL loop with prompt-based argument collection:
+
+```
+MINERVA benchmarks CLI — interactive mode
+Type 'help' for available commands, 'quit' to exit.
+
+minerva-benchmarks > run
+
+  -- run options --
+    configs-path (default='./configs_hydra/configs'): 
+    config-name (default='base'): 
+    runs-dir (default='benchmark-runs/'): 
+    dry-run? [y/N]: n
+    per-model-jobs? [y/N]: n
+```
+
+Available interactive commands: `run`, `rerun`, `status`, `cancel`, `help`, `quit`/`exit`.
+
+You can also pass a single command as an argument to enter interactive mode for that command:
+
+```bash
+bash minerva-cli.sh run
+```
 
 ## Subpackage Structure
 
 ```
 scripts/slurm/
 ├── __init__.py
-├── cli.py              # Click CLI group with run/monitor commands
+├── cli.py              # Click CLI group with run/rerun/status/cancel commands + interactive mode
+├── cli_utils.py        # Interactive prompt utilities, OptionConfig dataclasses, argument parsing
 ├── submitter.py        # Job submission logic: folder creation, script copying, env building
 ├── monitor.py          # SLURM state dashboard with status icons
 └── utils.py            # ANSI colors, Unicode icons, JSONL I/O, YAML loading
@@ -115,16 +260,19 @@ def cli():
 ```python
 @cli.command()
 @click.option("--dry-run", is_flag=True)
+@click.option("--per-model-jobs", is_flag=True)
 @click.option("--configs-path", default="./configs_hydra/configs")
 @click.option("--config-name", default="base")
-@click.option("--output", default="benchmark-runs/")
-def run(dry_run, configs_path, config_name, output):
+@click.option("--runs-dir", default="benchmark-runs/")
+@click.option("--yaml", "yamls", multiple=True, default=None,
+    help='Run a benchmark configuration by providing the path to BenchmarkConfig file.')
+def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
     """Generate all valid configs and submit all pending jobs."""
 ```
 
 **Detailed execution flow:**
 
-1. **Generate valid configs**: Calls `generate_valid_combos()` from `configs_hydra.hydra_app` to produce `(valid, skipped)` tuples. This iterates over all `(model, framework, dataset)` combinations, validates them with constraint rules, and expands training hyperparameters.
+1. **Load configurations**: Either loads YAML configs from `--yaml` paths, or calls `generate_valid_combos()` from `configs_hydra.hydra_app` to produce `(valid, skipped)` tuples. This iterates over all `(model, framework, dataset)` combinations, validates them with constraint rules, and expands training hyperparameters.
 
 2. **Create monitor directory**: Creates a unique run ID and monitor directory: `benchmark-runs/slurm-monitor/{date}/run_id-{N}/`. This directory tracks all jobs submitted in this run.
 
@@ -147,9 +295,9 @@ def run(dry_run, configs_path, config_name, output):
 
 4. **Track job IDs**: All submitted job IDs are recorded in `jobs_submitted.jsonl` for dependency management and monitoring.
 
-**Job dependency chaining**: When submitting multiple jobs, the system can chain dependencies using `--dependency=afterok:<job_id>` to ensure jobs run in a specific order (e.g., per-model-jobs mode where each model's jobs must complete before the next model starts).
+**Job dependency chaining (`--per-model-jobs`)**: When submitting multiple jobs, the system can chain dependencies using `--dependency=afterok:<job_id>` to ensure jobs run in a specific order. With `--per-model-jobs`, jobs are grouped by model and each model's jobs must complete before the next model starts.
 
-**Repeat mechanism**: If `cfg.experiment.repeat` is set to N > 1, the system submits N identical jobs with different `REPEAT_ID` values (0 to N-1) to account for run-to-run variability.
+**Repeat mechanism**: If `cfg.experiment.repeat` is set to N > 1, the system submits N identical jobs with different `REPEAT_ID` values (1 to N) to account for run-to-run variability.
 
 **Dry-run vs actual submission**:
 - **Dry-run** (`--dry-run`): Generates configs, builds launch folders, copies scripts, saves YAML configs — but does NOT submit any jobs. Useful for validating the config generation pipeline.
@@ -157,12 +305,63 @@ def run(dry_run, configs_path, config_name, output):
 
 **Tracking file**: `jobs_submitted.jsonl` records each submitted job with:
 ```json
-{"job_id": "12345", "model": "llama3_8b", "framework": "accelerate", "parallelism": "ddp", "dataset": "alpaca", "config_path": "benchmark-runs/.../config.yaml"}
+{"job_id": "12345", "cfg_id": "llama3_8b/accelerate/ddp/alpaca", "dependency": "12344", "launch_folder": "benchmark-runs/.../launch-1", "yaml_filename": "config.yaml"}
 ```
 
-### `monitor` Command
+### `rerun` Command
 
-Provides real-time status updates on running jobs using the SLURM state dashboard from `monitor.py`.
+```python
+@cli.command()
+@click.option("--run-date", required=True)
+@click.option("--run-id", required=True)
+@click.option("--runs-dir", default="benchmark-runs/")
+@click.option("--all", is_flag=True)
+@click.option("--only-failed", is_flag=True)
+@click.option("--only-pending", is_flag=True)
+@click.option("--yaml", "yamls", multiple=True, default=None)
+def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
+    """Rerun all, failed, pending jobs, or a specific run/combo by id."""
+```
+
+Reruns jobs from a previous run. Unlike `run`, rerun reuses scripts from the original run-id without copying them again. Supports filtering by `--all`, `--only-failed`, `--only-pending`, or specific `--yaml` configs.
+
+**Rerun tracking**: Resubmitted jobs are logged in `jobs_resubmitted-rerun_id-{N}.jsonl` within the original run's monitor directory.
+
+### `status` Command
+
+```python
+@cli.command()
+@click.option("--run-date", required=True)
+@click.option("--run-id", required=True)
+@click.option("--rerun-id", required=False)
+@click.option("--runs-dir", default="benchmark-runs/")
+@click.option("--model", default=None)
+@click.option("--framework", default=None)
+@click.option("--parallelism-type", default=None)
+@click.option("--nodes", default=None)
+@click.option("--state", default=None)
+def status(run_date, run_id, rerun_id, runs_dir, model, framework, parallelism, nodes, state):
+    """Print a summary of all run statuses."""
+```
+
+Prints a summary of all run statuses with optional filtering. Config-based filtering (model, framework, parallelism, nodes) uses AND logic — a job must match ALL specified filters. State filtering uses SLURM job states.
+
+### `cancel` Command
+
+```python
+@cli.command()
+@click.option("--run-date", required=True)
+@click.option("--run-id", required=True)
+@click.option("--runs-dir", default="benchmark-runs/")
+@click.option("--model", default=None)
+@click.option("--framework", default=None)
+@click.option("--parallelism-type", default=None)
+@click.option("--nodes", default=None)
+def cancel(run_date, run_id, runs_id, model, framework, parallelism, nodes):
+    """Cancel all running and pending jobs for a given run."""
+```
+
+Cancels all running and pending jobs for a given run using `scancel`. Supports the same filtering options as `status`. Only jobs in `running` or `pending` state are cancelled; others are skipped with a message.
 
 ---
 
@@ -187,7 +386,7 @@ Creates the per-experiment directory structure:
 | `runs_dir` | `Path` | Output directory for benchmark results |
 | `run_id` | `str` | Unique run identifier (e.g., `run_id-1`) |
 | `dry` | `bool` | If True, only generates YAML config without creating launch folder |
-| `repeat_id` | `int` | Repeat iteration number |
+| `repeat_id` | `int` | Repeat iteration number (required when not in dry-run mode) |
 
 ### `copy_scripts(cfg, dest)`
 
@@ -231,6 +430,67 @@ Constructs the environment dictionary passed to the SLURM job. Includes:
 | `ZERO_STAGE` | Framework config | DeepSpeed ZeRO stage (if applicable) |
 
 ---
+
+## `cli_utils.py` — Interactive Prompt Utilities
+
+Provides interactive prompt-based argument collection using `prompt_toolkit`.
+
+### Key Components
+
+**`OptionConfig` dataclass**: Defines CLI options for interactive prompting:
+
+```python
+@dataclass
+class OptionConfig:
+    name: str                    # CLI flag, e.g. "--configs-path"
+    prompt: str                  # Text shown to user
+    default: Optional[str] = None
+    required: bool = False
+    validator: Optional[Callable[[str], bool]] = None
+    error_msg: str = "Invalid input."
+    transform: Optional[Callable[[str], Any]] = None
+```
+
+**`BoolOptionConfig`**: Extends `OptionConfig` for boolean flags with `condition_is_true` callback.
+
+**`CommaSeparatedOptionConfig`** / **`SpaceSeparatedOptionConfig`**: For multi-value options.
+
+**`prompt_options_interactive(options)`**: Iterates over a list of `OptionConfig`, prompts the user for each value, validates input, and returns aggregated CLI args.
+
+**Option configurations**:
+- `RUN_OPTIONS`: Options for the `run` command
+- `RERUN_OPTIONS`: Options for the `rerun` command
+- `STATUS_OPTIONS`: Options for the `status` command
+- `CANCEL_OPTIONS`: Options for the `cancel` command
+
+**Utility functions**:
+- `read_user_input()`: Interactive prompt with history file (`~/.minerva-history`)
+- `is_valid_date(value, fmt)`: Validates date format (`DD-MM-YYYY`)
+- `str2date2str(value, fmt)`: Normalizes date strings
+
+## `cli.py` — Click CLI
+
+### CLI Group
+
+```python
+@click.group()
+def cli():
+    pass
+```
+
+### Entry Point
+
+```python
+def cli_entry():
+    if len(sys.argv) == 1:
+        interactive_loop()          # No args → interactive mode
+    elif len(sys.argv) == 2:
+        if sys.argv[1] in ["help", "--help", "-h"]:
+            cli()                   # Help → show CLI help
+        interactive_loop(sys.argv[1])  # Single command → interactive for that command
+    else:
+        cli()                       # Multiple args → direct Click invocation
+```
 
 ## `monitor.py` — SLURM State Dashboard
 
@@ -302,10 +562,12 @@ def load_yaml(filepath):
 
 ---
 
+---
+
 ## Job Lifecycle
 
 ```
-1. User runs: ./minerva-cli.sh run
+1. User runs: bash minerva-cli.sh run
         ↓
 2. generate_valid_combos() → (valid_configs, skipped_reasons)
         ↓
@@ -320,7 +582,11 @@ def load_yaml(filepath):
    - Training scripts execute
    - Results saved to output directory
         ↓
-5. ./minerva-cli.sh monitor → displays job status dashboard
+5. bash minerva-cli.sh status --run-date DD-MM-YYYY --run-id N
+        ↓
+6. bash minerva-cli.sh rerun --run-date DD-MM-YYYY --run-id N --only-failed
+        ↓
+7. bash minerva-cli.sh cancel --run-date DD-MM-YYYY --run-id N
 ```
 
 ## Directory Structure Created
@@ -328,10 +594,12 @@ def load_yaml(filepath):
 ```
 benchmark-runs/
 └── {machine}/                    # e.g., bsc-mn5-acc
-    └── {date}/                   # e.g., 10-06-2026
+    └── {date}/                   # e.g., 29-06-2026
         └── slurm-monitor/
             └── {date}/
                 └── run_id-{N}/
+                    ├── jobs_submitted.jsonl
+                    └── jobs_resubmitted-rerun_id-{M}.jsonl
         └── {model}/{framework}/{dataset}/
             └── nodes-{N}/
                 └── run_id-{N}/
