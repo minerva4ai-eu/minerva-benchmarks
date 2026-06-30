@@ -19,8 +19,10 @@ def register_configs():
     # model YAMLs
     cs.store(group="trainings", name="combinations", node=TrainArgsConfig)
 
-    cs.store(group="model", name="llama3_8b", node=ModelConfig)
+    cs.store(group="model", name="gemma3_1b", node=ModelConfig)
+    cs.store(group="model", name="gemma3_12b", node=ModelConfig)
     cs.store(group="model", name="mistral_7b", node=ModelConfig)
+    cs.store(group="model", name="llama3_8b", node=ModelConfig)
     cs.store(group="model", name="llama3_70b", node=ModelConfig)
 
     # framework YAMLs

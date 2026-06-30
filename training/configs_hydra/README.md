@@ -19,7 +19,7 @@ The system generates **all valid training configurations** by computing the Cart
 MODELS × FRAMEWORKS × DATASETS × PARALLELISM_STRATEGIES × TRAINING_HYPERPARAMETERS
 ```
 
-For example, with 4 models, 3 frameworks, 2 datasets, and an average of 3 parallelism strategies each, the generator produces **24 base configs**. Each base config is then expanded by the training hyperparameters (batch sizes × precisions × learning rates × gradient accumulations × optimizers × gradient checkpointing options), potentially yielding **hundreds of individual benchmark jobs**.
+For example, with 5 models (`llama3_8b`, `gemma3_1b`, `gemma3_12b`, `mistral_7b`, `llama3_70b`), 3 frameworks (`accelerate`, `torchrun`, `deepspeed-accelerate`), and 2 datasets (`alpaca`, `squadv2`), the generator produces **30 base configs** (before constraint filtering). Each base config is then expanded by the training hyperparameters (batch sizes × precisions × gradient accumulations × learning rates × optimizers × gradient checkpointing × enable_compile), potentially yielding **hundreds of individual benchmark jobs**.
 
 All invalid combinations are filtered out by constraint rules before any jobs are submitted, ensuring that only feasible configurations reach the SLURM scheduler.
 
@@ -85,7 +85,7 @@ Defines model-specific parameters:
 
 **Validation**: MoE models require `active_params_billions`, `num_experts`, and `top_k_experts`. Architecture type is validated against the `ArchitectureType` enum.
 
-**Currently registered models**: `llama3_8b`, `gemma3_1b`, `gemma3_12b`, `mistral_7b`. Each has a corresponding YAML file in `configs/model/` with architecture dimensions and GPU requirements. Machine-specific path overrides are stored in `*-MN5.yaml` files.
+**Currently registered models**: `llama3_8b`, `mistral_7b`, `llama3_70b`. Each has a corresponding YAML file in `configs/model/` with architecture dimensions and GPU requirements. Machine-specific path overrides are stored in `*-MN5.yaml` files. Note: `gemma3_1b` and `gemma3_12b` have YAML files but are not yet registered in `dataclasses_hydra/__init__.py`.
 
 ### `FrameworkConfig` (`framework.py`)
 
@@ -93,7 +93,7 @@ Defines framework-specific settings:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | `str` | Framework name (`torchrun`, `accelerate`, `deepspeed`) |
+| `name` | `str` | Framework name (`torchrun`, `accelerate`, `deepspeed`, `deepspeed-accelerate`) |
 | `parallelism_name` | `str` | Current parallelism strategy (set at composition time) |
 | `parallelism` | `Dict[str, ParallelismSpec]` | Map of parallelism strategy → GPU constraints |
 | `scripts` | `ScriptsConfig` | Paths to run script, finetune script, shared code, and files to copy |
@@ -160,6 +160,7 @@ Defines training hyperparameter combinations that the generator expands into ind
 | `gradient_checkpointing` | `List[bool]` | `[True]`, `[False]`, or `[True, False]` |
 | `steps` | `Optional[List[int]]` | Max training steps (mutually exclusive with epochs) |
 | `epochs` | `Optional[List[int]]` | Training epochs (mutually exclusive with steps) |
+| `enable_compile` | `List[bool]` | Enable PyTorch compile (`True`/`False`) |
 
 ---
 
@@ -224,29 +225,39 @@ YAML files are organized by Hydra group and registered in `dataclasses_hydra/__i
 ```
 configs/
 ├── base.yaml              # Root config — defines defaults, machine, experiment settings
-├── base-MN5.yaml          # MN5-specific overrides of base.yaml
+├── MN5.yaml               # MN5-specific overrides (extends base, adds arch + slurm)
+├── MN5-singularity.yaml   # MN5 with Singularity container config
+├── MN5-uv-venv.yaml       # MN5 with uv venv Python environment
 ├── arch/
-│   └── MN5.yaml           # MareNostrum5 GPU specs (MI300A, VRAM, TFLOPs)
+│   └── MN5.yaml           # MareNostrum5 GPU specs (H100-SXM, 64GB VRAM, TFLOPs)
 ├── dataset/
 │   ├── base.yaml          # Base dataset template
 │   ├── alpaca.yaml        # Alpaca instruction-tuning dataset
-│   └── squadv2.yaml       # SQuAD v2 question-answering dataset
+│   ├── alpaca-MN5.yaml    # MN5-specific path override for Alpaca
+│   ├── squadv2.yaml       # SQuAD v2 question-answering dataset
+│   └── squadv2-MN5.yaml   # MN5-specific path override for SQuAD v2
 ├── framework/
-│   ├── base.yaml          # Base framework template
-│   ├── accelerate.yaml    # HuggingFace Accelerate (none, ddp, fsdp)
+│   ├── base.yaml          # Base framework template (empty)
+│   ├── accelerate.yaml    # HuggingFace Accelerate (ddp, fsdp)
 │   ├── deepspeed.yaml     # Microsoft DeepSpeed (zero1, zero2, zero3, zero3-offload)
+│   ├── deepspeed-accelerate.yaml  # DeepSpeed with Accelerate integration (zero1, zero2, zero3, zero3-offload)
 │   └── torchrun.yaml      # PyTorch native (none, ddp, fsdp)
 ├── model/
-│   ├── base_training.yaml # Base model template
+│   ├── base_training.yaml # Base model template + training hyperparameter combinations
 │   ├── llama3_8b.yaml     # LLaMA 3 8B (dense)
+│   ├── llama3_8b-MN5.yaml # MN5-specific path override
 │   ├── llama3_70b.yaml    # LLaMA 3 70B (dense)
+│   ├── llama3_70b-MN5.yaml
 │   ├── mistral_7b.yaml    # Mistral 7B (dense)
-│   └── *-MN5.yaml         # Machine-specific model path overrides
+│   ├── mistral_7b-MN5.yaml
+│   ├── gemma3_1b.yaml     # Gemma 3 1B (dense)
+│   ├── gemma3_1b-MN5.yaml
+│   ├── gemma3_12b.yaml    # Gemma 3 12B (dense)
+│   └── gemma3_12b-MN5.yaml
 ├── slurm/
 │   ├── base.yaml          # Base SLURM template (empty — values filled by overrides)
 │   └── MN5.yaml           # MareNostrum5 SLURM settings (account, QoS, partition, 4 GPUs/node)
-└── trainings/
-    └── combinations.yaml  # Training hyperparameter combos (batch_sizes, precisions, LR, etc.)
+└── trainings/             # (not used — training combos are in base_training.yaml)
 ```
 
 ### Config Composition
@@ -255,31 +266,37 @@ Hydra resolves configs through a **defaults list** in `base.yaml`. The defaults 
 
 ```yaml
 defaults:
-  - trainings: combinations    # Load training hyperparameters
   - model: base_training       # Load base model template
   - framework: base            # Load base framework template
   - dataset: base              # Load base dataset template
   - _self_                     # Merge base.yaml's own fields last
 ```
 
-The `_self_` key ensures that `base.yaml`'s own fields take precedence over any conflicting fields from the included configs. This is important for fields like `machine`, `experiment`, and `slurm` that are defined in `base.yaml` but may also be overridden by machine-specific configs.
+Note: Training hyperparameters are loaded via `base_training.yaml` (not a separate `trainings` group). The `_self_` key ensures that `base.yaml`'s own fields take precedence over any conflicting fields from the included configs.
 
-The `base-MN5.yaml` extends `base` and adds architecture/SLURM overrides:
+The `MN5.yaml` extends `base` and adds architecture/SLURM overrides:
 
 ```yaml
 defaults:
   - base                       # Start with base.yaml
   - arch: MN5                  # Override with MN5 GPU specs
   - slurm: MN5                 # Override with MN5 SLURM settings
-  - _self_                     # Merge base-MN5.yaml's own fields last
+  - _self_                     # Merge MN5.yaml's own fields last
 ```
+
+Machine-specific environment configurations are available as additional layers:
+
+- `MN5-singularity.yaml` — extends `MN5` with Singularity container path and args
+- `MN5-uv-venv.yaml` — extends `MN5` with uv virtual environment path
+
+These can be used as the `config_name` when composing configs to select the desired runtime environment.
 
 **Variable interpolation** is supported throughout the config system using Hydra's interpolation syntax `${group.field}`. This allows configs to reference values from other groups without duplication:
 
 ```yaml
 # In framework/accelerate.yaml
 run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
-finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}-SFTTrainer.py
+finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
 
 # In slurm/MN5.yaml
 gres: gpu:${arch.node.gpus_per_node}
@@ -289,43 +306,52 @@ scripts:
   run: scripts/deepspeed-common/run-deepspeed.sh
   finetune: scripts/deepspeed-common/finetune-deepspeed-pure.py
   copy_files:
-    - scripts/deepspeed-common/configs/accelerate_config.yaml
-    - scripts/deepspeed-common/configs/zero${deepspeed.zero_stage}.json
+    - scripts/deepspeed-common/gpu_monitor.py
+    - scripts/deepspeed-common/utils.py
+    - scripts/gpu_plots.py
+    - scripts/deepspeed-common/configs
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}
+
+# In framework/deepspeed-accelerate.yaml
+scripts:
+  run: scripts/deepspeed-common/run-deepspeed-accelerate.sh
+  finetune: scripts/deepspeed-common/finetune-deepspeed-accelerate.py
 ```
 
 When composing a config, Hydra resolves all interpolations to produce a fully concrete `BenchmarkConfig` object.
 
 ### Training Combinations Expansion
 
-The `TrainArgsConfig` defines hyperparameter lists that are expanded into individual experiments via **Cartesian product**. For example, if `combinations.yaml` specifies:
+Training hyperparameter combinations are defined in `configs/model/base_training.yaml` under the `combinations` key. The `TrainArgsConfig` defines hyperparameter lists that are expanded into individual experiments via **Cartesian product**. For example, if `base_training.yaml` specifies:
 
 ```yaml
-trainings:
-  batch_sizes: [1, 2, 4]
-  precisions: [bf16]
-  grad_accums: [1, 2]
-  lr: [1e-5, 2e-5]
-  optimizer: [adamw]
-  gradient_checkpointing: [True]
-  steps: [100]
+combinations:
+  batch_sizes: [1, 4, 8]
+  precisions: ["bf16"]
+  grad_accums: [8, 16]
+  lr: [2e-5]
+  optimizer: ["adamw"]
+  gradient_checkpointing: [False]
+  steps: [50]
+  enable_compile: [False, True]
 ```
 
-The generator produces `3 × 1 × 2 × 2 × 1 × 1 × 1 = 12` individual configs, each with a unique combination of hyperparameters.
+The generator produces `3 × 1 × 2 × 1 × 1 × 1 × 1 × 2 = 24` individual configs, each with a unique combination of hyperparameters.
 
 **Mutual exclusivity**: `steps` and `epochs` are mutually exclusive — you cannot specify both in the same config. If both are provided, the config is skipped.
 
 ### `single_gpu_also_valid` Logic
 
-Some architectures support both single-GPU and multi-node configurations. The `single_gpu_also_valid` flag in the architecture config controls whether 1-GPU configs are generated in addition to full-node configs:
+Some architectures support both single-GPU and multi-node configurations. The `single_gpu_also_valid` flag in the `machine` config (not architecture) controls whether 1-GPU configs are generated in addition to full-node configs:
 
 ```yaml
-# In arch/MN5.yaml
-node:
-  gpus_per_node: 4
-  single_gpu_also_valid: true
+# In base.yaml or MN5.yaml
+machine:
+  single_gpu_also_valid: True
 ```
 
-When `single_gpu_also_valid` is `true`, the generator produces configs for both 1 GPU and 4 GPUs (nodes × gpus_per_node). When `false`, only full-node configs are generated. This is useful for architectures where single-GPU testing is meaningful (e.g., for quick validation) but not for production-scale training.
+When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpus: 1` AND running on 1 node, the generator produces configs for both 1 GPU and 4 GPUs (nodes × gpus_per_node). When `false`, only full-node configs are generated. This is useful for architectures where single-GPU testing is meaningful (e.g., for quick validation) but not for production-scale training.
 
 ### Adding a New Model
 
@@ -363,10 +389,10 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
 2. **Register the model** in `dataclasses_hydra/__init__.py` by adding it to the `MODELS` list:
 
    ```python
-   MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "phi3_3b"]
+   MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b", "phi3_3b"]
    ```
 
-   Note: The dataclass schema (`ModelConfig`) is already registered in `__init__.py`. You only need to add the model name to the `MODELS` list to make it available for config generation.
+   Note: The dataclass schema (`ModelConfig`) is already registered in `__init__.py`. You need to add both a `cs.store()` call for the model name AND add it to the `MODELS` list in `hydra_app.py`.
 
 3. **(Optional) Add machine-specific overrides** at `configs/model/<name>-MN5.yaml` to override the model path for a specific machine:
 
