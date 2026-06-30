@@ -44,3 +44,7 @@ parallelism_supported:
   - fsdp
   - zero2
   - zero3
+
+combinations:
+  batch_sizes: [4, 8]
+  grad_accums: [8]
