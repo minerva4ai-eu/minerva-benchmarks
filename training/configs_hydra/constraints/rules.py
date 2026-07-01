@@ -6,10 +6,49 @@ from omegaconf import DictConfig
 from .base import ConstraintRule, RuleResult
 
 
+class CPUSupportRule(ConstraintRule):
+    """Rule to handle CPU-specific configurations and validations."""
+    
+    # Assuming a minimum of 256GB RAM per node for CPU runs
+    MIN_MEMORY_PER_NODE_GB = 256
+    
+    def check(self, c: DictConfig) -> RuleResult:
+        # Check if this is a CPU run
+        if c.arch.gpu.accelerator_type != "cpu":
+            # Not a CPU run, skip this rule
+            return RuleResult(True, "cpu_support_rule", "Not a CPU run, skipping")
+        
+        # For CPU runs, we need to check if the model can fit in system memory
+        # rather than GPU VRAM
+        
+        # Calculate total memory needed (simplified approach)
+        total_params_gb = c.model.total_params_billions * 4  # Rough estimate: 4 bytes per parameter for fp32
+        
+        # Add some overhead for gradients and optimizer states (typically 3x the model size)
+        total_memory_needed_gb = total_params_gb * 4
+        
+        # Calculate available memory
+        nodes = c.slurm.sbatch.nodes
+        total_available_memory_gb = nodes * self.MIN_MEMORY_PER_NODE_GB
+        
+        if total_memory_needed_gb > total_available_memory_gb:
+            return RuleResult(
+                False,
+                "cpu_support_rule",
+                f"Model requires ~{total_memory_needed_gb:.1f} GB memory, but only {total_available_memory_gb} GB available across {nodes} nodes"
+            )
+            
+        return RuleResult(True, "cpu_support_rule", f"Model fits in {total_available_memory_gb} GB available memory")
+
+
 class ParallelismGPUFloor(ConstraintRule):
     """ZeRO/FSDP/DDP require >1 GPU. 'none' requires exactly 1."""
 
     def check(self, c: BenchmarkConfig) -> RuleResult:
+        # Skip GPU floor check for CPU runs
+        if c.arch.gpu.accelerator_type == "cpu":
+            return RuleResult(True, "parallelism_gpu_floor", "CPU run, skipping GPU floor check")
+            
         gpus = c.slurm.sbatch.nodes * c.slurm.sbatch.gpus_per_node
 
         _p = list(c.framework.parallelism.keys())
@@ -46,6 +85,18 @@ class FrameworkParallelismValidityRule(ConstraintRule):
         return "framework_parallelism_validity_check"
 
     def check(self, c: DictConfig) -> RuleResult:
+        # For CPU runs, we might want to allow different parallelism options
+        if c.arch.gpu.accelerator_type == "cpu":
+            framework_parallelism = list(c.framework.parallelism.keys())[0]
+            # Allow 'none' and 'ddp' for CPU runs
+            if framework_parallelism not in ['none', 'ddp']:
+                return RuleResult(
+                    False,
+                    self.rule_name,
+                    f"Parallelism '{framework_parallelism}' is not recommended for CPU runs! Use 'none' or 'ddp' instead."
+                )
+            return RuleResult(True, "parallelism_framework_cpu", "Valid parallelism for CPU run")
+            
         supported_parallelisms, framework_parallelism = (
             c.model.parallelism_supported,
             list(c.framework.parallelism.keys())[0],
@@ -100,6 +151,9 @@ class MinNodesMemoryRule(ConstraintRule):
     SAFETY_MARGIN = 0.85
 
     def check(self, c: DictConfig) -> RuleResult:
+        # Skip GPU memory check for CPU runs
+        if c.arch.gpu.accelerator_type == "cpu":
+            return RuleResult(True, "min_nodes_memory", "CPU run, skipping GPU memory check")
 
         min_gpus, breakdown = self._min_gpus_required(c)
         if min_gpus == -1:
@@ -260,6 +314,7 @@ class MinNodesMemoryRule(ConstraintRule):
 
 # Registry — just add new rules here, no other changes needed
 ALL_RULES = [
+    CPUSupportRule(),
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
     MinNodesMemoryRule(),

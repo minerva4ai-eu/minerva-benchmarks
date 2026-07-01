@@ -41,25 +41,43 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
+# For CPU runs, ensure we don't pass GPU-specific settings
+if [ "$GPUS_PER_NODE" -eq "0" ]; then
+    export NPROC_PER_NODE=1
+    export NUM_PROCS=$NNODES
+fi
+
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
-source activate-env-variables-per-supercomputer.sh
+# source activate-env-variables-per-supercomputer.sh
+
+# Adjust precision for CPU runs - bf16 is not supported on CPU
+adjusted_precision=$PRECISION
+if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
+    adjusted_precision="fp32"
+    echo "⚠️  WARNING: bf16 not supported on CPU, switching to fp32"
+fi
+
+# For CPU runs, FSDP might not be appropriate, so we'll use a simpler approach
+if [ "$GPUS_PER_NODE" -eq "0" ]; then
+    echo "⚠️  WARNING: FSDP not recommended for CPU runs, consider using 'none' or 'ddp' parallelism instead"
+fi
 
 train_command_min_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
-  --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-  --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-  $TRAIN_SCRIPT \
-    --model $MODEL_PATH \
-    --data '$DATASET_PATH' \
-    --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
-    --batch_size $BATCH_SIZE \
-    --max_length $MAX_MODEL_LENGTH \
-    ${EPOCHS:+--epochs "$EPOCHS"} \
-    ${STEPS:+--max_steps "$STEPS"} \
-    --precision $PRECISION \
-    --lr $LR \
-    --gradient_accumulation_steps $GRAD_ACCUM \
-    --dataloader_num_workers 4 \
-    --dataset $DATASET  "
+    --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
+    --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
+    $TRAIN_SCRIPT \
+      --model $MODEL_PATH \
+      --data '$DATASET_PATH' \
+      --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
+      --batch_size $BATCH_SIZE \
+      --max_length $MAX_MODEL_LENGTH \
+      ${EPOCHS:+--epochs "$EPOCHS"} \
+      ${STEPS:+--max_steps "$STEPS"} \
+      --precision $adjusted_precision \
+      --lr $LR \
+      --gradient_accumulation_steps $GRAD_ACCUM \
+      --dataloader_num_workers 4 \
+      --dataset $DATASET  "
 
 train_command_max_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
@@ -72,7 +90,7 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
       --max_length $MAX_MODEL_LENGTH \
       ${EPOCHS:+--epochs "$EPOCHS"} \
       ${STEPS:+--max_steps "$STEPS"} \
-      --precision $PRECISION \
+      --precision $adjusted_precision \
       --lr $LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
       --dataloader_num_workers 4 \

@@ -103,6 +103,10 @@ case "$MACHINE" in
         export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
         ;;
 
+    bsc-mn5-gpp)
+        export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
+        ;;
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

@@ -23,3 +23,5 @@ experiment:
   repeat: 1                       # Do not change, default value for all benchmarks across computers
   yaml_filename:                  # Do not fill in, value filled during compose runtime
   env:                            # Fill in with environment variable to be available on runtime
+    DISABLE_MONITORING: "True"    # Disable monitoring for performance comparisons (callbacks introduce overhead)
+    # Example: DISABLE_MONITORING: "True"  # Disable monitoring for performance comparisons

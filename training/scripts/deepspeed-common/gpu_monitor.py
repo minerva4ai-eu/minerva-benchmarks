@@ -49,6 +49,19 @@ def start_gpu_monitor(interval_sec=5, n_gpus: int = 1):
 
 def get_gpu_stats(n_gpus: int = 1):
     """Return average and peak GPU memory, utilization, and power (GB, %, W)."""
+    import os
+    
+    # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
+    disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
+    
+    # If monitoring is disabled, return dummy stats immediately
+    if disable_monitoring:
+        return {
+            "mem_used": [0] * n_gpus,
+            "util": [0] * n_gpus,
+            "power": [0] * n_gpus,
+        }
+    
     stats = {"mem_used": [], "util": [], "power": []}
     try:
         pynvml.nvmlInit()

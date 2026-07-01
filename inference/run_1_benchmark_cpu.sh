@@ -106,7 +106,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                 echo "Setting up $LAUNCH_FOLDER"
                 mkdir -p "$LAUNCH_FOLDER"
                 
-                # cp scripts/vllm/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
+                cp scripts/vllm/gpu_summary_monitor-$MACHINE_TYPE.py "$LAUNCH_FOLDER"
                 cp scripts/activate-env-per-supercomputer.sh "$LAUNCH_FOLDER"
                 cp scripts/activate-env-variables-per-supercomputer.sh "$LAUNCH_FOLDER"
 

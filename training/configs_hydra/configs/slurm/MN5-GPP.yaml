@@ -1,0 +1,16 @@
+defaults:
+  - base
+  - _self_
+
+account: bsc99
+qos: gp_bench 
+partition: gpp
+
+sbatch:
+  gpus_per_node: 0
+  cpus_per_gpu: 112
+  cpus_per_task: 112
+  tasks_per_node: 1
+  extra_args:
+    - "--exclusive"
+    - "--time=02:00:00"

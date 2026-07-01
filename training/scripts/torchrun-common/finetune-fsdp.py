@@ -5,7 +5,6 @@ import time
 import psutil
 import torch
 import torch.distributed as dist
-from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import (
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
@@ -90,7 +89,11 @@ def main():
 
     # Model dtype
     # --- Precision selection ---
-    if args.precision == "fp16":
+    # Check if we're running on CPU and adjust precision accordingly
+    if not torch.cuda.is_available() and args.precision in ["bf16", "fp16"]:
+        print(f"⚠️  WARNING: {args.precision} not supported on CPU, switching to fp32")
+        dtype = torch.float32
+    elif args.precision == "fp16":
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
@@ -165,7 +168,18 @@ def main():
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
 
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
+        # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
+        disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
+        
+        # Initialize GPU monitoring components only if monitoring is enabled
+        monitor = None
+        if not disable_monitoring:
+            try:
+                from gpu_monitor import GPUMonitorCallback
+                monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
+            except ImportError as e:
+                print_rank(rank, f"Warning: Could not import gpu_monitor: {e}")
+                monitor = None
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
         # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
@@ -212,13 +226,21 @@ def main():
         #    print_rank(0, f"{i[0]} -> {i[1].device}")
         # print_rank(0, ":::::::::")
 
-        # flop_counter = FlopCounter(model)
-        flopsCallback_megatronLM = mfu_callback_from_hf_config(
-            model,
-            tokenizer,
-            gpu_peak_flops=peak_gpu_tflops,
-            seq_length=args.max_length,
-        )
+        # Prepare callbacks list
+        callbacks = []
+        if monitor is not None:
+            callbacks.append(monitor)
+            
+        # Add MFU callback only if peak FLOPS info is available and monitoring is enabled
+        if peak_gpu_tflops is not None and not disable_monitoring:
+            flopsCallback_megatronLM = mfu_callback_from_hf_config(
+                model,
+                tokenizer,
+                gpu_peak_flops=peak_gpu_tflops,
+                seq_length=args.max_length,
+            )
+            callbacks.append(flopsCallback_megatronLM)
+            
         # CHANGED: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
         # CHANGED: If you need a custom formatting function instead of dataset_text_field, pass:
         #   formatting_func=lambda x: [f"### Input: {x['input']}\n### Output: {x['output']}"]
@@ -229,7 +251,7 @@ def main():
             eval_dataset=eval_dataset,
             # data_collator=collate_fn,  # REMOVED: SFTTrainer manages this internally
             processing_class=tokenizer,  # CHANGED: 'tokenizer' param renamed in TRL ≥0.12
-            callbacks=[monitor, flopsCallback_megatronLM],
+            callbacks=callbacks,
             peak_gpu_tflops=peak_gpu_tflops,
             # TODO: Uncomment if using a formatting function instead of dataset_text_field:
             # formatting_func=your_formatting_func,
@@ -241,19 +263,29 @@ def main():
         #    print_rank(rank, f"{i[0]} -> {i[1].device}")
         # print_rank(rank, ":::::::::")
 
-        # Start GPU monitor
-        gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
-        )
+        # Start GPU monitor only if monitoring is enabled
+        gpu_stats_during = {"mem": [], "util": [], "power": [], "timestamps": []}
+        stop_flag = {"stop": False}
+        if not disable_monitoring:
+            try:
+                from gpu_monitor import start_gpu_monitor
+                gpu_stats_during, stop_flag = start_gpu_monitor(
+                    interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+                )
+            except ImportError as e:
+                print_rank(rank, f"Warning: Could not import gpu_monitor: {e}")
 
         # Train Model
         start_time = time.time()
         trainer.train()
         total_finetune_time = time.time() - start_time
 
-        # Stop GPU monitor
-        stop_flag["stop"] = True
-        time.sleep(2)  # give it a moment to exit cleanly
+        # Stop GPU monitor only if monitoring is enabled
+        # Re-check environment variable DISABLE_MONITORING - "True" means disable monitoring
+        disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
+        if not disable_monitoring and stop_flag is not None:
+            stop_flag["stop"] = True
+            time.sleep(2)  # give it a moment to exit cleanly
 
         trainable_params, total_params, trainable_pct = count_parameters(model)
 
@@ -309,32 +341,25 @@ def main():
             if total_training_time_secs
             else None
         )
+        # Calculate GPU power only if monitoring is enabled
+        # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
+        disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
+        
         avg_gpu_power_watts = (
             sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
-            if gpu_stats_during["power"]
+            if gpu_stats_during["power"] and not disable_monitoring
             else None
         )
         tokens_per_sec_per_watt_global = (
             training_throughput_tokens_per_sec_global / avg_gpu_power_watts
-            if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
+            if training_throughput_tokens_per_sec_global and avg_gpu_power_watts and not disable_monitoring
             else None
         )
 
-        save_summary_stats_json(
-            summary={
-                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
-                "total_gpus": world_size,
-                "model": model_name,
-                "dataset": data,
-                "framework": "accelerate",
-                "parallelism_type": "fsdp",
-                "batch_size": training_args.per_device_train_batch_size,
-                "gradient_accumulation": training_args.gradient_accumulation_steps,
-                "trainable_parameters": trainable_params,
-                "total_trainable_parameters": total_params,
-                "trainable_parameters_percentage": trainable_pct,
-                "learning_rate": training_args.learning_rate,
+        # Only include GPU stats when monitoring is enabled
+        gpu_stats = {}
+        if not disable_monitoring:
+            gpu_stats = {
                 "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
                 / len(gpu_stats_during["mem"])
                 if gpu_stats_during["mem"]
@@ -353,6 +378,33 @@ def main():
                 "peak_gpu_power_watts": max(gpu_stats_during["power"])
                 if gpu_stats_during["power"]
                 else None,
+            }
+        else:
+            gpu_stats = {
+                "avg_gpu_memory_gb": None,
+                "peak_gpu_memory_gb": None,
+                "avg_gpu_utilization_percent": None,
+                "peak_gpu_utilization_percent": None,
+                "avg_gpu_power_watts": None,
+                "peak_gpu_power_watts": None,
+            }
+
+        save_summary_stats_json(
+            summary={
+                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
+                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
+                "total_gpus": world_size,
+                "model": model_name,
+                "dataset": data,
+                "framework": "accelerate",
+                "parallelism_type": "fsdp",
+                "batch_size": training_args.per_device_train_batch_size,
+                "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "trainable_parameters": trainable_params,
+                "total_trainable_parameters": total_params,
+                "trainable_parameters_percentage": trainable_pct,
+                "learning_rate": training_args.learning_rate,
+                **gpu_stats,
                 "total_execution_time_hours": total_training_time_secs / 3600,
                 "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
                 "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
