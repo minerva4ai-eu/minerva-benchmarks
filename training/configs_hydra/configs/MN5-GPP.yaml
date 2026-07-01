@@ -1,0 +1,15 @@
+# Base configuration for benchmark experiments
+defaults:
+  - base
+  - arch: MN5-GPP
+  - slurm: MN5-GPP
+  - _self_
+
+machine:
+  name: bsc-mn5-gpp # actual name of super computer running benchmarks
+  name_pattern: MN5-GPP # configuration files naming convention pattern
+  env:
+    MODEL_NUM_LAYERS: ${model.num_layers}
+    MODEL_HIDDEN_SIZE: ${model.hidden_dim}
+    MODEL_INTERMEDIATE_SIZE: ${model.ffn_intermediate_dim}
+                        

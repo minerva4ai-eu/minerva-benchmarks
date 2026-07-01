@@ -44,12 +44,25 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
+# For CPU runs, ensure we don't pass GPU-specific settings
+if [ "$GPUS_PER_NODE" -eq "0" ]; then
+    export NPROC_PER_NODE=1
+    export NUM_PROCS=$NNODES
+fi
+
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"
 echo "NUM_PROCS: {$NUM_PROCS}"
 echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
+
+# Adjust precision for CPU runs - bf16 is not supported on CPU
+adjusted_precision=$PRECISION
+if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
+    adjusted_precision="fp32"
+    echo "⚠️  WARNING: bf16 not supported on CPU, switching to fp32"
+fi
 
 train_command="${runtime_prefix:+$runtime_prefix} torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
@@ -62,7 +75,7 @@ train_command="${runtime_prefix:+$runtime_prefix} torchrun \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs "$EPOCHS"} \
         ${STEPS:+--max_steps "$STEPS"} \
-        --precision $PRECISION \
+        --precision $adjusted_precision \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 4 \

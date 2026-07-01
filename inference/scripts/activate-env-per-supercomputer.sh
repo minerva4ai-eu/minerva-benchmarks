@@ -29,6 +29,14 @@ case "$MACHINE" in
         export CUDA_HOME=/cineca/prod/CUDA/12.1
         ;;
 
+    bsc-mn5-gpp)
+        # How to activate miniforge environment in mn5-gpp.
+        module load $MODULES
+        source activate $ENVIRONMENT
+        export PATH=$ENVIRONMENT/bin:$PATH
+        which python
+        ;;
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

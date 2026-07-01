@@ -195,6 +195,10 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     # Merge machine-specific environment variables
     if cfg.machine.env:
         env.update(**cfg.machine.env)
+    
+    # Merge experiment-specific environment variables
+    if cfg.experiment.env:
+        env.update(**cfg.experiment.env)
 
     def _serialize(value):
         if value is None:

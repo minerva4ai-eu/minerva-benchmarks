@@ -1,6 +1,8 @@
 #!/bin/bash
 
-CLI_CONTAINER_PATH="./envs/cli/singularity-uv.sif"
+CLI_CONTAINER_PATH="/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-ncclIB.sif"
+# CLI_CONTAINER_PATH="/gpfs/scratch/bsc99/ai_operations/images_registry/minerva-benchmark/training/singularity_uv-runtime-app.sif"
+# # # CLI_CONTAINER_PATH="./envs/cli/singularity-uv.sif"
 
 # Load singularity module only if not already available
 if ! singularity --version &> /dev/null; then

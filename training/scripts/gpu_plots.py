@@ -196,6 +196,13 @@ def logtimeit(func):
 
 @logtimeit
 def get_gpu_metrics() -> list[list[str]]:
+    # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
+    disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
+    
+    # If monitoring is disabled, return empty list immediately
+    if disable_monitoring:
+        return []
+
     query = ",".join(query_fields)
     cmd = f"nvidia-smi --query-gpu={query} --format=csv,noheader,nounits"
 

@@ -45,9 +45,14 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
-DATASETS = ["alpaca", "squadv2"]
+MODELS = ["gemma3_1b"]
+FRAMEWORKS = ["torchrun"]
+DATASETS = ["alpaca"]
+
+# Test configurations for development
+TEST_MODELS = ["gemma3_1b"]
+TEST_FRAMEWORKS = ["torchrun"]
+TEST_DATASETS = ["alpaca"]
 
 ################################################################
 
@@ -58,19 +63,43 @@ console = Console()
 def single_gpu_config(cfg: BenchmarkConfig) -> bool:
     """Replicates your GPU_CONFIGS=(1 $GPUS_PER_NODE)
     logic for experiments on 1 node that require also
-    single GPU run"""
+    single GPU run. For CPU runs, this function should return False."""
+    # For CPU runs, we don't need single GPU configurations
+    if cfg.arch.gpu.accelerator_type == "cpu":
+        return False
+        
+    # For single node with specific parallelism that requires exactly 1 GPU
     if (
         cfg.machine.single_gpu_also_valid
         and (cfg.slurm.sbatch.nodes == 1)
         and (cfg.framework.parallelism[cfg.framework.parallelism_name]["min_gpus"] == 1)
     ):
         return True
+    
+    # For "none" parallelism, which can work with 0-1 GPUs, use single GPU for consistency
+    if (
+        cfg.machine.single_gpu_also_valid
+        and (cfg.slurm.sbatch.nodes == 1)
+        and (cfg.framework.parallelism_name == "none")
+        and (cfg.framework.parallelism["none"]["max_gpus"] >= 1)
+    ):
+        return True
+        
     return False
 
 
 def generate_valid_combos(
-    config_path: str, config_name: str, outpath: str
+    config_path: str, config_name: str, outpath: str, mini_mode: bool = False
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
+    """Generate valid benchmark configurations.
+    
+    Args:
+        config_path: Path to the configuration directory
+        config_name: Name of the base configuration
+        outpath: Output path for generated configurations
+        mini_mode: If True, generates a reduced set of configurations with fewer
+                   combinations and shorter training runs (5 steps) for development testing
+    """
     valid, skipped = [], []
 
     register_configs()
@@ -84,7 +113,17 @@ def generate_valid_combos(
         config_dir=os.path.abspath(config_path), version_base="1.3"
     ):
         raw_total = 0
-        for model, framework, dataset in product(MODELS, FRAMEWORKS, DATASETS):
+        # Use test configurations if mini_mode is enabled
+        if mini_mode:
+            model_list = TEST_MODELS
+            framework_list = TEST_FRAMEWORKS
+            dataset_list = TEST_DATASETS
+        else:
+            model_list = MODELS
+            framework_list = FRAMEWORKS
+            dataset_list = DATASETS
+            
+        for model, framework, dataset in product(model_list, framework_list, dataset_list):
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
@@ -151,22 +190,42 @@ def generate_valid_combos(
                         + f"\n\tslurm.partition: '{tmp_cfg.slurm.partition}'{RESET}"
                     )
 
+                # Determine which combinations to use based on mini_mode flag
+                if mini_mode:
+                    # For mini mode, use reduced combinations
+                    batch_sizes = [min(cfg.model.combinations.batch_sizes)] if cfg.model.combinations.batch_sizes else [4]
+                    grad_accums = [min(cfg.model.combinations.grad_accums)] if cfg.model.combinations.grad_accums else [1]
+                    precisions = [cfg.model.combinations.precisions[0]] if cfg.model.combinations.precisions else ["bf16"]
+                    lr_values = [cfg.model.combinations.lr[0]] if cfg.model.combinations.lr else [2e-5]
+                    optimizers = [cfg.model.combinations.optimizer[0]] if cfg.model.combinations.optimizer else ["adamw"]
+                    steps = [2]  # Reduced steps for testing
+                    enable_compile = [False]  # Disable compilation for faster startup
+                else:
+                    # Use full combinations for normal runs
+                    batch_sizes = cfg.model.combinations.batch_sizes
+                    grad_accums = cfg.model.combinations.grad_accums
+                    precisions = cfg.model.combinations.precisions
+                    lr_values = cfg.model.combinations.lr
+                    optimizers = cfg.model.combinations.optimizer
+                    steps = cfg.model.combinations.steps
+                    enable_compile = cfg.model.combinations.enable_compile
+                
                 for (
                     bs,
                     grad_acc,
                     precision,
                     lr,
                     optimizer,
+                    step_count,
+                    compile_flag,
+                ) in product(
+                    batch_sizes,
+                    grad_accums,
+                    precisions,
+                    lr_values,
+                    optimizers,
                     steps,
                     enable_compile,
-                ) in product(
-                    cfg.model.combinations.batch_sizes,
-                    cfg.model.combinations.grad_accums,
-                    cfg.model.combinations.precisions,
-                    cfg.model.combinations.lr,
-                    cfg.model.combinations.optimizer,
-                    cfg.model.combinations.steps,
-                    cfg.model.combinations.enable_compile,
                 ):
                     # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
                     # to each experiment combination
@@ -175,19 +234,30 @@ def generate_valid_combos(
                     tmp_cfg.model.training.precision = precision
                     tmp_cfg.model.training.lr = lr
                     tmp_cfg.model.training.optimizer = optimizer
-                    tmp_cfg.model.training.steps = steps
-                    tmp_cfg.model.training.enable_compile = enable_compile
+                    tmp_cfg.model.training.steps = step_count
+                    tmp_cfg.model.training.enable_compile = compile_flag
                     tmp_cfg.experiment.output_dir = outpath
                     # Will bee used later to take care of configuration
                     # of 1 node and 1 gpu
 
                     # Get min number of nodes to run based on model and hpc architecture
-                    min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
-                    candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
-                        tmp_cfg.arch.node.gpus_per_node,
-                        max_gpus_scale=tmp_cfg.model.max_gpus_scale,
-                    )
-                    nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
+                    # For CPU runs, we use a simpler approach
+                    if tmp_cfg.arch.gpu.accelerator_type == "cpu":
+                        # For CPU runs, we'll test with 1, 2, 4, 8 nodes
+                        nodes_to_run = [1, 2, 4, 8]
+                        # Limit to max_gpus_scale which for CPU runs represents max nodes
+                        nodes_to_run = [n for n in nodes_to_run if n <= tmp_cfg.model.max_gpus_scale]
+                    else:
+                        min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
+                        candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
+                            tmp_cfg.arch.node.gpus_per_node,
+                            max_gpus_scale=tmp_cfg.model.max_gpus_scale,
+                        )
+                        nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
+                    
+                    # In mini mode, limit to maximum of 2 nodes for faster testing
+                    if mini_mode:
+                        nodes_to_run = [n for n in nodes_to_run if n <= 2]
 
                     for nodes in nodes_to_run:
                         tmp_cfg.slurm.sbatch.nodes = nodes
@@ -201,15 +271,25 @@ def generate_valid_combos(
                         experiment_parameters = (
                             f"bs{bs}"
                             + f"-grad_accum{grad_acc}"
-                            + f"-compile{enable_compile}"
+                            + f"-compile{compile_flag}"
                             + f"-prec{precision}"
-                            + f"-steps{steps}"
+                            + f"-steps{step_count}"
                         )
 
+                        # For "none" parallelism, limit to 1 node to match single-node behavior
+                        if tmp_cfg.framework.parallelism_name == "none" and nodes > 1:
+                            # Skip this configuration as "none" parallelism should be single-node
+                            continue
+
                         # By default, if config is using 1 node,
-                        # all cfg.arch.node.gpus_per_node will ne utilized
-                        # Unless, perallelism defines min_gpus = 1
-                        if single_gpu_config(tmp_cfg):
+                        # all cfg.arch.node.gpus_per_node will be utilized
+                        # Unless, parallelism defines min_gpus = 1
+                        # For CPU runs, we don't need GPU allocation
+                        if tmp_cfg.arch.gpu.accelerator_type == "cpu":
+                            tmp_cfg.slurm.sbatch.gpus_per_node = 0
+                            if hasattr(tmp_cfg.slurm.sbatch, 'gres'):
+                                delattr(tmp_cfg.slurm.sbatch, 'gres')
+                        elif single_gpu_config(tmp_cfg):
                             tmp_cfg.slurm.sbatch.gpus_per_node = 1
                             tmp_cfg.slurm.sbatch.gres = "gpu:1"
 
@@ -222,22 +302,35 @@ def generate_valid_combos(
                             + f" | nodes:{nodes}"
                             + f" | gpus:{total_gpus}"
                             + f" | bs:{bs}"
-                            + f" | grad_accum:{total_gpus}"
-                            + f" | compilation: {enable_compile}"
+                            + f" | grad_accum:{grad_acc}"
+                            + f" | compilation: {compile_flag}"
                             + f" | precision:{precision}"
-                            + f" | steps:{steps}"
+                            + f" | steps:{step_count}"
                         )
 
-                        tmp_cfg.id = (
-                            f"{tmp_cfg.machine.name}"
-                            + f"_{tmp_cfg.model.name}"
-                            + f"_{tmp_cfg.framework.name}"
-                            + f"_{tmp_cfg.framework.parallelism_name}"
-                            + f"_{tmp_cfg.dataset.name}"
-                            + f"_nodes-{nodes}"
-                            + f"_gpus-{total_gpus}"
-                            + f"--{experiment_parameters}"
-                        )
+                        # Create configuration ID
+                        if tmp_cfg.arch.gpu.accelerator_type == "cpu":
+                            tmp_cfg.id = (
+                                f"{tmp_cfg.machine.name}"
+                                + f"_{tmp_cfg.model.name}"
+                                + f"_{tmp_cfg.framework.name}"
+                                + f"_{tmp_cfg.framework.parallelism_name}"
+                                + f"_{tmp_cfg.dataset.name}"
+                                + f"_nodes-{nodes}"
+                                + f"_cpus-{tmp_cfg.slurm.sbatch.cpus_per_task * nodes}"
+                                + f"--{experiment_parameters}"
+                            )
+                        else:
+                            tmp_cfg.id = (
+                                f"{tmp_cfg.machine.name}"
+                                + f"_{tmp_cfg.model.name}"
+                                + f"_{tmp_cfg.framework.name}"
+                                + f"_{tmp_cfg.framework.parallelism_name}"
+                                + f"_{tmp_cfg.dataset.name}"
+                                + f"_nodes-{nodes}"
+                                + f"_gpus-{total_gpus}"
+                                + f"--{experiment_parameters}"
+                            )
                         yaml_filename = (
                             f"{parallelism}--{experiment_parameters}" + ".yaml"
                         )
@@ -313,6 +406,11 @@ def get_parser():
         default="no-config-path-provided",
         required=True,
     )
+    parser.add_argument(
+        "--mini-mode",
+        action="store_true",
+        help="Enable mini mode with reduced combinations and steps for development",
+    )
     return parser
 
 
@@ -330,4 +428,5 @@ if __name__ == "__main__":
         config_path=os.path.abspath(args.config_path),
         config_name=args.config_name,
         outpath="./benchmarks_to_run",
+        mini_mode=args.mini_mode,
     )

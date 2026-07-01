@@ -44,23 +44,6 @@ export VLLM_LOGGING_LEVEL=INFO
 export VLLM_ALLREDUCE_USE_SYMM_MEM=0
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
-
-##################################################
-### Node discovery
-##################################################
-
-nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
-nodes_array=($nodes)
-
-head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
-
-port=6379
-ip_head=$head_node_ip:$port
-export ip_head
-
-echo "Head node: $head_node ($head_node_ip)"
-
 ##################################################
 ### Run vLLM inside Singularity
 ##################################################
@@ -90,6 +73,7 @@ fi
 export NUM_NODES=${#NODES[@]}
 export NODELIST=$(IFS=,; echo "${NODES[*]}")
 export MASTER_ADDR="${NODES[0]}"
+export MACHINE_TYPE
 
 
 ##################################################
@@ -133,6 +117,11 @@ srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=AL
       fi
       if [ "$DISABLE_CUSTOM_ALL_REDUCE" -eq 1 ]; then
           ENGINE_EXTRA_ARGS+=(--disable-custom-all-reduce)
+      fi
+      # Error without this flag: [multiproc_executor.py:888] ValueError: Available memory on node 0 (108.22/125.65 GiB) on startup is less than desired CPU memory utilization (0.92, 115.59 GiB). On the CPU backend, the `--gpu-memory-utilization` flag controls the fraction of CPU memory reserved (despite its name). To resolve: decrease `--gpu-memory-utilization` (e.g. `--gpu-memory-utilization 0.5`) or reduce CPU memory used by other processes.
+      if [ "$MACHINE_TYPE" = "cpu" ]; then
+          echo here in machine type cpu
+          ENGINE_EXTRA_ARGS+=(--gpu-memory-utilization 0.5)
       fi
 
       echo "[$(hostname)] Node rank: $NODE_RANK / '"$NUM_NODES"'"

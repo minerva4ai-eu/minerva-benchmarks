@@ -1,0 +1,12 @@
+# Base configuration for benchmark experiments on GPP (CPU) partition
+defaults:
+  - MN5-GPP
+  - _self_
+
+machine:
+  modules:
+  - singularity
+  singularity_container: /gpfs/scratch/bsc99/ai_operations/images_registry/minerva-benchmark/training/singularity_uv-runtime-app.sif
+  singularity_binds:
+  singularity_args:
+    - "--network=host"

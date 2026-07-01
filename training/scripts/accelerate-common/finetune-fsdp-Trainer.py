@@ -96,7 +96,11 @@ def main():
 
     # Model dtype
     # --- Precision selection ---
-    if args.precision == "fp16":
+    # Check if we're running on CPU and adjust precision accordingly
+    if not torch.cuda.is_available() and args.precision in ["bf16", "fp16"]:
+        print(f"⚠️  WARNING: {args.precision} not supported on CPU, switching to fp32")
+        dtype = torch.float32
+    elif args.precision == "fp16":
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16

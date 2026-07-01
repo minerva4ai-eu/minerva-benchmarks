@@ -44,6 +44,11 @@ def cli():
     default=RUNS_DIR,
 )
 @click.option(
+    "--mini-mode",
+    is_flag=True,
+    help="Enable mini mode with reduced combinations and steps for development",
+)
+@click.option(
     "--yaml",
     "yamls",
     multiple=True,
@@ -53,7 +58,7 @@ def cli():
         + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
     ),
 )
-def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
+def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, mini_mode, yamls):
     assert not (dry_run and per_model_jobs), (
         f"{u.RED}'--dry-run' & '--per-model-jobs' cannot be combined!{u.RESET}"
     )
@@ -88,7 +93,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
                 raise e
     else:
         valid, _ = generate_valid_combos(
-            config_path=configs_path, config_name=config_name, outpath=runs_dir
+            config_path=configs_path, config_name=config_name, outpath=runs_dir, mini_mode=mini_mode
         )
 
     run_date = datetime.now().date().strftime("%d-%m-%Y")
