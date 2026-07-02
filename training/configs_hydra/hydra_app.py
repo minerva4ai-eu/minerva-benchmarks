@@ -45,8 +45,10 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
+# MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
+# FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
+MODELS = ["gemma3_1b"]
+FRAMEWORKS = ["accelerate"]
 DATASETS = ["alpaca", "squadv2"]
 
 ################################################################
@@ -88,13 +90,14 @@ def generate_valid_combos(
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
-
+            print(_init_cfg)
+            print()
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
-                    f"model={model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={framework}",
-                    f"dataset={dataset}-{_init_cfg.machine.name_pattern}",
+                    f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
+                    f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.name_pattern}",
+                    f"dataset={_init_cfg.machine.name_pattern}/{dataset}-{_init_cfg.machine.name_pattern}",
                 ],
             )
             print(
@@ -103,6 +106,7 @@ def generate_valid_combos(
                 + f"\n\t· framework: {framework}"
                 + f"\n\t· dataset: {dataset}"
             )
+            print(cfg)
             if framework not in cfg.model.frameworks_supported:
                 print(
                     f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"

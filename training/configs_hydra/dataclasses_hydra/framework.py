@@ -40,6 +40,8 @@ VALID_FRAMEWORKS = frozenset({"torchrun", "accelerate", "deepspeed"})
 @dataclass
 class FrameworkConfig:
     name: str = MISSING
+    python_environment: str | None = None
+    singularity_container: str | None = None
     parallelism_name: str = ""
     parallelism: Dict[str, ParallelismSpec] = field(default_factory=dict)
     scripts: ScriptsConfig = field(default_factory=ScriptsConfig)

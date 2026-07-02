@@ -4,3 +4,4 @@ defaults:
 
 path: /gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-1b-it
 max_gpus_scale: 8
+

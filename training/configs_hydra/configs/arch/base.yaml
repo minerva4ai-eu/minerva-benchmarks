@@ -1,0 +1,23 @@
+gpu:
+  name: ??                                      # Must fill in
+  accelerator_type: ??                          # Must fill in
+  vram_gb: ??                                   # Must fill in
+  theoretical_peak_fp64_tflops: ??
+  theoretical_peak_fp64_tensor_tflops: ??
+  theoretical_peak_fp32_tflops: ??
+  theoretical_peak_tf32_tensor_tflops: ??
+  theoretical_peak_fp16_tensor_tflops: ??
+  theoretical_peak_bf16_tensor_tflops: ??
+  theoretical_peak_fp8_tensor_tflops: ??
+  theoretical_peak_int8_tensor_tops: ??
+
+comm:
+  internode_comm: ??
+  internode_comm_bandwidth_GBs: ??
+  intranode_comm: ??
+  intranode_comm_bandwidth_GBs: ??
+
+node:
+  gpus_per_node: ??
+
+

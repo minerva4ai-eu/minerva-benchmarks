@@ -1,7 +1,3 @@
-defaults:
-  - base
-  - _self_
-
 name: alpaca
 path: "pat/to/dataset"
 task: Instruction-Finetuning

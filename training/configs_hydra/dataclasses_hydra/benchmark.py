@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Literal
 
 from configs_hydra.dataclasses_hydra import arch as a
 from configs_hydra.dataclasses_hydra import dataset as d
@@ -14,8 +14,7 @@ class MachineConfig:
     name: str = MISSING  # actual name of super computer running benchmarks
     name_pattern: str = MISSING  # configuration files naming convention pattern
     modules: List[str] | None = None
-    python_environment: str | None = None
-    singularity_container: str | None = None
+    runtime_env_mode: Literal["venv", "singularity"] = MISSING
     singularity_binds: List[str] | None = None
     singularity_args: List[str] | None = None
     single_gpu_also_valid: bool = MISSING

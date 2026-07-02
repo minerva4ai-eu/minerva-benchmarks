@@ -1,4 +1,6 @@
-name: deepspeed-accelerate
+defaults:
+  - base
+  - _self_
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:
