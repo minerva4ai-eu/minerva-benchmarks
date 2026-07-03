@@ -1,3 +1,7 @@
+defaults:
+  - base
+  - _self_
+
 name: torchrun
 
 parallelism_name: "" # Will be filled in during composing time

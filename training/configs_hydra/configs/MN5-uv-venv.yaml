@@ -4,5 +4,7 @@ defaults:
   - _self_
 
 machine:
-  python_environment: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv"
+  runtime_env_mode: venv
+  modules:
+    - cuda/12.8
  

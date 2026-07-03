@@ -34,5 +34,5 @@ parallelism_supported:
   - zero3
 
 combinations:
-  batch_sizes: [8, 16]
-  grad_accums: [8, 16]
+  batch_sizes: [8]
+  grad_accums: [8]

@@ -1,8 +1,8 @@
 # Base configuration for benchmark experiments
 defaults:
-  - base
   - arch: MN5
   - slurm: MN5
+  - base
   - _self_
 
 machine:

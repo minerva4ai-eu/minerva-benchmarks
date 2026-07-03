@@ -1,0 +1,17 @@
+name: ??                      #
+python_environment: ??        #
+singularity_container: ??     #
+
+parallelism_name: ""                           # Will be filled in during composing time
+parallelism:
+  parallelism_1: { min_gpus: 2, max_gpus: 8}
+  parallelism_2: { min_gpus: 2, max_gpus: 8}
+
+scripts:
+  run: path to slurm launch script
+  finetune: path to python finetune script
+  shared: scripts/shared
+  copy_files:
+    - file to copy no.1
+    - file to copy no.2
+    - etc.

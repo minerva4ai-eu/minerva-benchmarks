@@ -1,4 +1,10 @@
+defaults:
+  - base
+  - _self_
+
 name: accelerate
+python_environment:
+singularity_container: /gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-ncclIB.sif
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:

@@ -92,9 +92,9 @@ def generate_valid_combos(
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
-                    f"model={model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={framework}",
-                    f"dataset={dataset}-{_init_cfg.machine.name_pattern}",
+                    f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
+                    f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.name_pattern}",
+                    f"dataset={_init_cfg.machine.name_pattern}/{dataset}-{_init_cfg.machine.name_pattern}",
                 ],
             )
             print(

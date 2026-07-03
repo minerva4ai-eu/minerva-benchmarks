@@ -107,14 +107,15 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
 
-    if cfg.machine.singularity_container:
-        execution_mode = "singularity"
-    elif cfg.machine.python_environment:
-        execution_mode = "venv"
-    else:
-        raise ExecussionEnvironmentSelectionError(
-            "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
-        )
+    execution_mode = cfg.machine.runtime_env_mode
+    # if cfg.framework.singularity_container:
+    #    execution_mode = "singularity"
+    # elif cfg.framework.python_environment:
+    #    execution_mode = "venv"
+    # else:
+    #    raise ExecussionEnvironmentSelectionError(
+    #        "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
+    #    )
 
     env = {
         **os.environ,
@@ -126,14 +127,14 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "EXECUTION_MODE": execution_mode,
         **(
             {
-                "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
+                "ENVIRONMENT_FINETUNING": cfg.framework.python_environment,
             }
-            if cfg.machine.python_environment is not None
+            if cfg.framework.python_environment is not None
             else {}
         ),
         **(
             {
-                "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
+                "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
                 "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
                 if cfg.machine.singularity_binds
                 else "",
@@ -141,7 +142,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
                 if cfg.machine.singularity_args
                 else "",
             }
-            if cfg.machine.singularity_container is not None
+            if cfg.framework.singularity_container is not None
             else {}
         ),
         "NODES": str(s.sbatch.nodes),

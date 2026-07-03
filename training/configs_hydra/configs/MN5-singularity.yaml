@@ -4,10 +4,9 @@ defaults:
   - _self_
 
 machine:
+  runtime_env_mode: singularity
   modules:
   - singularity
-  singularity_container: /gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-ncclIB.sif
-  singularity_binds:
   singularity_args:
     - "--nv"
     - "--network=host"
