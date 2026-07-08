@@ -42,6 +42,14 @@ case "$MACHINE" in
         export CUDA_LAUNCH_BLOCKING=1
         ;;
 
+    idris-jeanzay-h100)
+        module load $MODULES
+        source activate $ENVIRONMENT
+        export PATH=$ENVIRONMENT/bin:$PATH
+        which python
+        ;;
+
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1

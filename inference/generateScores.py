@@ -6,13 +6,19 @@ import pandas as pd
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
 
-
 import socket
 hostname = socket.gethostname()
-env_file = ".env-leonardo" if "leonardo" in hostname else ".env-bsc-mn5-acc"
-load_dotenv(env_file)
+if "leonardo" in hostname:
+    env_file = ".env-leonardo"
+elif "jean-zay" in hostname:
+    env_file = ".env-idris-jeanzay-h100"
+elif os.getenv("BSC_MACHINE", None) == "mn5":
+    env_file = ".env-bsc-mn5-acc"
+else:
+    env_file = "Define your logic to detect .env-MACHINE file."
+    print(env_file)
 
-#load_dotenv(".env")
+load_dotenv(env_file)
 
 
 BASE_DIR = os.getcwd()  # Adjust if needed
@@ -20,9 +26,15 @@ BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
+MACHINE = os.getenv("MACHINE", "Add to .env file")
+MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
 MODEL_TYPE_MAP = json.load(
-    open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json"))
+    open(os.path.join(BASE_DIR, "configs", "model_type_map.json"))
 )
+if "leonardo" in hostname:
+    MODEL_TYPE_MAP = json.load(
+        open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json"))
+    )
 
 INPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 OUTPUT_FILE = (

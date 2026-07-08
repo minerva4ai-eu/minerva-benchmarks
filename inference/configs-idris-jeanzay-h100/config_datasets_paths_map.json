@@ -1,0 +1,5 @@
+{
+  "sharegpt": "/lustre/fsmisc/dataset/HuggingFace/anon8231489123/ShareGPT_Vicuna_unfiltered/ShareGPT_V3_unfiltered_cleaned_split.json",
+  "sonnet": "/lustre/fsmisc/dataset/HuggingFace/zhyncs/sonnet/sonnet.txt",
+  "example_dataset": "/path/to/example_dataset"
+}

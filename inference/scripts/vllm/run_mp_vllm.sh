@@ -98,15 +98,15 @@ export MASTER_ADDR="${NODES[0]}"
 ##################################################
 echo "BINDINGS_SINGULARITY: $BINDINGS_SINGULARITY"
 
+#  --env VLLM_ENABLE_CUDA_COMPATIBILITY="1" \
+#  --env VLLM_CUDA_COMPATIBILITY_PATH="/usr/local/cuda-13.0/compat" \
+#  --env LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat" \
+#  --env TRITON_PTXAS_PATH="/usr/local/cuda-13.0/compat/ptxas" \
 srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=ALL \
  singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS \
   -B "$MODEL_PATH":"$MODEL_PATH" \
   --env LC_ALL="C" \
   --env LANG="C.UTF-8" \
-  --env VLLM_ENABLE_CUDA_COMPATIBILITY="1" \
-  --env VLLM_CUDA_COMPATIBILITY_PATH="/usr/local/cuda-13.0/compat" \
-  --env LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat" \
-  --env TRITON_PTXAS_PATH="/usr/local/cuda-13.0/compat/ptxas" \
   "$VLLM_IMAGE" \
   bash -c '
       echo "SLURM_NODEID=$SLURM_NODEID"
@@ -126,9 +126,7 @@ srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=AL
       if [ "$ENABLE_CHUNKED_PREFILL" -eq 1 ]; then
           ENGINE_EXTRA_ARGS+=(--enable-chunked-prefill)
       fi
-      if [ "$ENFORCE_EAGER" -eq 1 ]; then
-          ENGINE_EXTRA_ARGS+=(--enforce-eager)
-      fi
+      ENGINE_EXTRA_ARGS+=(--enforce-eager)
       if [ "$ENABLE_EXPERT_PARALLEL" -eq 1 ]; then
           ENGINE_EXTRA_ARGS+=(--enable-expert-parallel)
       fi
@@ -221,16 +219,16 @@ for conc in "${concurrencies[@]}"; do
     ##################################################
     # GPU MONITOR (inside container)
     ##################################################
-    #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
-    python gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+            python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
     ##################################################
     # BENCHMARK (inside container)
     ##################################################
     # #python3 $BENCHMARK_FILE \
-    #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
-    python $BENCHMARK_FILE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+            python3 $BENCHMARK_FILE \
             --backend vllm \
             --host localhost \
             --port $PORT \

@@ -1,0 +1,5 @@
+{
+  "Text Generation": "/lustre/fsmisc/dataset/HuggingFace_Models/BSC-LT/",
+  "Embedding": "/path/to/embedding/models",
+  "Vision": "/path/to/vision/models"
+}
