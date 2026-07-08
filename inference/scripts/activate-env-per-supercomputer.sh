@@ -14,7 +14,6 @@ if [ $# -ne 1 ]; then
 fi
 
 ENVIRONMENT="$1"
-
 case "$MACHINE" in
     bsc-mn5-acc)
         # How to activate miniforge environment in mn5-acc.
@@ -24,9 +23,11 @@ case "$MACHINE" in
         which python
         ;;
 
-    leonardo)
-        export COMPILER=nvhpc
-        export CUDA_HOME=/cineca/prod/CUDA/12.1
+    idris-jeanzay-h100)
+        module load $MODULES
+        source activate $ENVIRONMENT
+        export PATH=$ENVIRONMENT/bin:$PATH
+        which python
         ;;
 
     *)

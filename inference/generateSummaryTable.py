@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 
 import socket
 hostname = socket.gethostname()
-
 if "leonardo" in hostname:
     env_file = ".env-leonardo"
+elif "jean-zay" in hostname:
+    env_file = ".env-idris-jeanzay-h100"
 elif os.getenv("BSC_MACHINE", None) == "mn5":
     env_file = ".env-bsc-mn5-acc"
 else:
@@ -19,7 +20,6 @@ else:
     print(env_file)
 
 load_dotenv(env_file)
-
 
 BASE_DIR =  os.getcwd() # Adjust if needed
 BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
