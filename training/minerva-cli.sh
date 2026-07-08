@@ -29,6 +29,8 @@ singularity exec --env CWD="$PWD" \
     --bind /usr/lib64/slurm:/usr/lib64/slurm \
     --bind /usr/lib64/libmunge.so.2:/usr/lib64/libmunge.so.2 \
     --bind "$SLURM_CONF_CACHE":/run/slurm/conf \
+    --bind /dev/infiniband:/dev/infiniband \
+    --bind /etc/libibverbs.d:/etc/libibverbs.d \
     "$CLI_CONTAINER_PATH" bash -c "cd $PWD && python -m scripts.slurm.cli $cli_args"
 
 exit 0
