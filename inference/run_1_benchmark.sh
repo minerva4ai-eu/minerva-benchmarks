@@ -115,6 +115,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -128,7 +134,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     run_mp_vllm.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -191,6 +197,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -204,7 +216,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -269,6 +281,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -281,7 +299,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"

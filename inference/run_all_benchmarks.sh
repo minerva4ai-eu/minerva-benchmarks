@@ -7,7 +7,7 @@
 #######################################################
 FRAMEWORKS=("vllm" "sglang") # "deepspeed") # Add other frameworks if needed
 DATASETS=("sharegpt" "sonnet")  # Add more datasets if needed
-MODELS=("ALIA-40b" "ALIA-40b-instruct-2605") # "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct") # "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "ALIA-40b-instruct-2605") # Add your models here
+MODELS=("ALIA-40b-instruct-2605") # "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct") # "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "ALIA-40b-instruct-2605") # Add your models here
 NUMBER_OF_NODES=(1 2 4)
 MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
 REPEATS=3               # Number of runs per configuration
@@ -114,6 +114,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -127,7 +133,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     --exclusive \
                     run_mp_vllm.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
@@ -191,6 +197,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -204,7 +216,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     --exclusive \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
@@ -270,6 +282,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -282,7 +300,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
-                    --constraint=$CONSTRAINT \
+                    $CONSTRAINTARG \
                     --exclusive \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
