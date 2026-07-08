@@ -5,13 +5,13 @@
 #######################################################
 # RUN ALL BENCHMARKS
 #######################################################
-FRAMEWORKS=("vllm" "sglang") # "deepspeed") # Add other frameworks if needed
+FRAMEWORKS=("vllm" "sglang" "deepspeed") # Add other frameworks if needed
 DATASETS=("sharegpt" "sonnet")  # Add more datasets if needed
-MODELS=("ALIA-40b-instruct-2605") # "Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct") # "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "ALIA-40b-instruct-2605") # Add your models here
+MODELS=("Llama-3.1-8B-Instruct" "Llama-3.3-70B-Instruct" "Llama-3.1-405B-Instruct" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3" "ALIA-40b-instruct-2605") # Add your models here
 NUMBER_OF_NODES=(1 2 4)
 MAX_MODEL_LENGTHS=(4096 16384 32768) # (2048 4096 8192 16384 32768)
 REPEATS=3               # Number of runs per configuration
-MACHINE="idris-jeanzay-h100"
+MACHINE="bsc-mn5-acc" # or "leonardo" or "idris-jeanzay-h100"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables

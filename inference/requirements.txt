@@ -1,0 +1,4 @@
+# Minimal deps for the post-processing scripts (generateSummaryTable.py, generateScores.py).
+# The benchmark/serving environments are defined in envs-yaml/ instead.
+pandas==2.2.3
+python-dotenv==1.0.1

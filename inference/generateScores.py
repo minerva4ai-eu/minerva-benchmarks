@@ -29,8 +29,12 @@ PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
 MACHINE = os.getenv("MACHINE", "Add to .env file")
 MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
 MODEL_TYPE_MAP = json.load(
-    open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "model_type_map.json"))
+    open(os.path.join(BASE_DIR, "configs", "model_type_map.json"))
 )
+if "leonardo" in hostname:
+    MODEL_TYPE_MAP = json.load(
+        open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json"))
+    )
 
 INPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
 OUTPUT_FILE = (

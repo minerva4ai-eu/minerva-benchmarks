@@ -31,6 +31,8 @@ MACHINE = os.getenv("MACHINE", "Add to .env file")
 MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
 MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "model_type_map.json")))
 OUTPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
+if "leonardo" in hostname:
+    MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json")))
 
 CSV_HEADERS = [
     "Supercomputer", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",
@@ -86,7 +88,7 @@ def extract_additional_args(path: str):
     ADDITIONAL_ARGS = ""
     # Extract config file (get additional args).
 
-    config_file = f"config-{SUPCOMPUTER_NAME}.json"
+    config_file = "config.json"
     if os.path.exists(os.path.join(path, config_file)):
         with open(os.path.join(path, config_file)) as json_file:
             json_config_data = json.load(json_file)
@@ -106,12 +108,12 @@ def extract_config_from_path(path):
     benchmark_filename = os.path.basename(BENCHMARK_FILE)
 
     nodes_match = re.search(r"Nodes_(\d+)", node_gpu_part)
-    total_gpus_used = re.search(r"GPUs_(\d+)", node_gpu_part)
+    gpus_used_per_node = re.search(r"GPUs_(\d+)", node_gpu_part)
     tensor = re.search(r"TP_(\d+)", node_gpu_part)
     pipeline = re.search(r"PP_(\d+)", node_gpu_part)
     max_model_length = re.search(r"MaxModelLength_(\d+)", node_gpu_part)
 
-    if not nodes_match or not total_gpus_used:
+    if not nodes_match or not gpus_used_per_node:
         print("Nodes/GPUs not match")
         return None
 
@@ -120,7 +122,8 @@ def extract_config_from_path(path):
         return None
     
     nodes = int(nodes_match.group(1))
-    total_gpus_used = int(total_gpus_used.group(1))
+    gpus_used_per_node = int(gpus_used_per_node.group(1))
+    total_gpus_used = nodes * gpus_used_per_node
     tensor = int(tensor.group(1))
     pipeline = int(pipeline.group(1))
     max_model_length = int(max_model_length.group(1))
