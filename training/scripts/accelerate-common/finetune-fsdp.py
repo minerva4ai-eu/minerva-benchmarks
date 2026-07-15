@@ -2,6 +2,11 @@ import gc
 import os
 import time
 
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# sys.path.append("..")
+
 import psutil
 import torch
 import torch.distributed as dist
@@ -36,6 +41,10 @@ def is_main_process():
 
 
 def main():
+    # Get main id
+    jobid = os.environ["SLURM_JOB_ID"]
+    jobstepid = os.environ["SLURM_STEP_ID"]
+    
     if dist.is_initialized():
         rank = dist.get_rank()
         world_size = dist.get_world_size()
@@ -85,11 +94,7 @@ def main():
         "backward_prefetch": "backward_post",
     }
 
-    # Check if we're running on CPU and adjust precision accordingly
-    if not torch.cuda.is_available() and args.precision in ["bf16", "fp16"]:
-        print(f"⚠️  WARNING: {args.precision} not supported on CPU, switching to fp32")
-        dtype = torch.float32
-    elif args.precision == "fp16":
+    if args.precision == "fp16":
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
@@ -151,7 +156,7 @@ def main():
             {
                 "torch_compile": True,
                 "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune-no-cudagraphs",
+                "torch_compile_mode": "max-autotune",
             }
             if bool(args.enable_compile)
             else {}
@@ -178,6 +183,7 @@ def main():
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype=dtype,
+                device_map=None,  # Trainer will put model on device
                 low_cpu_mem_usage=True,
             )
         else:
@@ -185,6 +191,7 @@ def main():
                 model_name,
                 torch_dtype=dtype,
                 low_cpu_mem_usage=True,
+                device_map=None,  # Trainer will put model on device
                 attn_implementation="flash_attention_2",
             )
         print_rank("Model Loaded")
@@ -234,7 +241,10 @@ def main():
         gpu_stats_during, stop_flag = start_gpu_monitor(
             interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
         )
-
+        print_rank(
+            rank, f"Accelerator FSDP plugin: {trainer.accelerator.state.fsdp_plugin}"
+        )
+        print_rank(rank, f"Distributed type: {trainer.accelerator.distributed_type}")
         start_time = time.time()
         trainer.train()
         total_finetune_time = time.time() - start_time
@@ -354,7 +364,7 @@ def main():
                 "avg_gpu_flops": avg_gpu_flops,
                 "avg_gpu_mfu": avg_gpu_mfu,
             },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
         )
 
         del trainer, model
@@ -380,7 +390,7 @@ def main():
                 "learning_rate": training_args.learning_rate,
                 "error": str(e),
             },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
         )
         print_rank(rank, "Fine-tuning failed to complete!")
         raise e

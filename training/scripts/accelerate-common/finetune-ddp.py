@@ -2,6 +2,10 @@ import gc
 import os
 import time
 
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+# # sys.path.append("../..")
+
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
@@ -36,6 +40,10 @@ def is_main_process():
 
 # --- Main ---
 def main():
+    # Get main id
+    jobid = os.environ["SLURM_JOB_ID"]
+    jobstepid = os.environ["SLURM_STEP_ID"]
+
     # Get rank
     if dist.is_initialized():
         rank = dist.get_rank()
@@ -72,11 +80,7 @@ def main():
     )
 
     # --- Precision selection ---
-    # Check if we're running on CPU and adjust precision accordingly
-    if not torch.cuda.is_available() and args.precision in ["bf16", "fp16"]:
-        print(f"⚠️  WARNING: {args.precision} not supported on CPU, switching to fp32")
-        dtype = torch.float32
-    elif args.precision == "fp16":
+    if args.precision == "fp16":
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
@@ -318,7 +322,7 @@ def main():
                 "avg_gpu_flops": avg_gpu_flops,
                 "avg_gpu_mfu": avg_gpu_mfu,
             },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
         )
 
         del trainer, model
@@ -343,7 +347,7 @@ def main():
                 "learning_rate": training_args.learning_rate,
                 "error": str(e),
             },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
         )
 
         print_rank(rank, "Fine-tuning failed to complete!")

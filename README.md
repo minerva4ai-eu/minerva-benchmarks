@@ -7,7 +7,7 @@ The repository covers two independent benchmark suites:
 - **Inference Benchmarks**: Serving, throughput, latency, and GPU utilization.
 - **Training & Fine-Tuning Benchmarks**: DDP/FSDP scaling, throughput, memory, and time-to-train.
 
-Each benchmark suite is **self-contained** and organized per supercomputer.
+Benchmarks are configured per supercomputer.
 
 ---
 
@@ -16,8 +16,7 @@ Each benchmark suite is **self-contained** and organized per supercomputer.
 ```text
 minerva-benchmarks/
 ├── inference/     # Inference & serving benchmarks
-│   ├── inference-MN5/
-│   ├── inference-Leonardo/
+│   ├── scripts/
 │   └── README.md
 ├── training/      # Training & fine-tuning benchmarks
 │   ├── training-MN5/
@@ -32,7 +31,7 @@ minerva-benchmarks/
 
 ### Inference Benchmarks
 
-See: [inference/README.md](training/inference-MN5/README.md)
+See: [inference/README.md](training/README.md)
 
 Covers:
 
@@ -43,7 +42,7 @@ Covers:
 
 ### Training & Fine-Tuning Benchmarks
 
-See: [training/training_MN5/README.md](training/training_MN5/README.md)
+See: [training/training_MN5/README.md](training/README.md)
 
 Covers:
 
