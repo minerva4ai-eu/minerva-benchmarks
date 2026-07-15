@@ -7,7 +7,7 @@ The repository covers two independent benchmark suites:
 - **Inference Benchmarks**: Serving, throughput, latency, and GPU utilization.
 - **Training & Fine-Tuning Benchmarks**: DDP/FSDP scaling, throughput, memory, and time-to-train.
 
-Each benchmark suite is **self-contained** and organized per supercomputer.
+Benchmarks are configured per supercomputer.
 
 ---
 

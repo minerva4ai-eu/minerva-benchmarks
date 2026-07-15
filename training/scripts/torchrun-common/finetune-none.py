@@ -1,7 +1,12 @@
 import os
 import time
 
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+# sys.path.append("../..")
+
 import torch
+from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingSFTTrainer
 from shared.data import load_and_prepare_raw_dataset
 from shared.flops import mfu_callback_from_hf_config
@@ -32,12 +37,11 @@ def is_main_process():
 
 # --- Main ---
 def main():
-    # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
-    disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
-    
-    force_cpu = torch.cuda.is_available() == False
-    
-    device = torch.device("cpu" if force_cpu else ("cuda" if torch.cuda.is_available() else "cpu"))
+    # Get main id
+    jobid = os.environ["SLURM_JOB_ID"]
+    jobstepid = os.environ["SLURM_STEP_ID"]
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_name = args.model
     data = args.data
     output_dir = args.output_dir
@@ -65,12 +69,7 @@ def main():
     )
 
     # --- Precision selection ---
-    # Check if we're running on CPU and adjust precision accordingly
-    if force_cpu or (not torch.cuda.is_available() and args.precision in ["bf16", "fp16"]):
-        if args.precision in ["bf16", "fp16"]:
-            print(f"⚠️  WARNING: {args.precision} not supported on CPU, switching to fp32")
-        dtype = torch.float32
-    elif args.precision == "fp16":
+    if args.precision == "fp16":
         dtype = torch.float16
     elif args.precision == "bf16":
         dtype = torch.bfloat16
@@ -91,8 +90,8 @@ def main():
         logging_steps=args.logging_steps,
         save_strategy="no",
         save_total_limit=1,
-        fp16=True if (args.precision == "fp16" and not force_cpu) else False,
-        bf16=True if (args.precision == "bf16" and not force_cpu) else False,
+        fp16=True if args.precision == "fp16" else False,
+        bf16=True if args.precision == "bf16" else False,
         optim="adamw_torch",
         logging_dir=f"{output_dir}/logs",
         report_to="none",
@@ -103,7 +102,7 @@ def main():
         dataloader_num_workers=args.dataloader_num_workers,
         data_seed=32,
         dataloader_persistent_workers=args.dataloader_num_workers > 1,
-        dataloader_pin_memory=False if force_cpu else True,
+        dataloader_pin_memory=True,
         dataloader_prefetch_factor=8,
         # --- SFT-specific args ---
         max_length=MAX_LENGTH,  # replaces manual truncation in collator
@@ -121,7 +120,7 @@ def main():
                 "torch_compile_backend": "inductor",
                 "torch_compile_mode": "max-autotune-no-cudagraphs",
             }
-            if (bool(args.enable_compile) and not force_cpu)
+            if bool(args.enable_compile)
             else {}
         ),
     )
@@ -129,21 +128,19 @@ def main():
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
         print(f"Loading Model... dtype: {dtype}")
-        # Load model with device_map to avoid CUDA initialization when forcing CPU
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=dtype,
-            device_map="cpu" if force_cpu else None,
         )
-        # Only move to device if not already placed by device_map
-        if not force_cpu:
-            model.to(device)
+        model.to(device)
         print("Model Loaded")
 
         # Conditionally add either epochs or max_steps
         training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
         if args.max_steps is not None:
             training_args.max_steps = int(args.max_steps)
+
+        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
 
         # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
         # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
@@ -156,37 +153,12 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        # Only add GPU monitor callback on GPU machines and only if monitoring is enabled
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
-        # Only add MFU callback when peak FLOPS info is available and monitoring is enabled
-        callbacks = []
-        if n_gpus > 0 and not disable_monitoring:
-            try:
-                from gpu_monitor import GPUMonitorCallback
-                monitor = GPUMonitorCallback(n_gpus=n_gpus)
-                callbacks.append(monitor)
-            except ImportError as e:
-                print(f"Warning: Could not import gpu_monitor: {e}")
-                # Continue without GPU monitoring if import fails
-                pass
-            
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
-        if peak_gpu_tflops is not None and not disable_monitoring and n_gpus > 0:
-            flopsCallback_megatronLM = mfu_callback_from_hf_config(
-                model,
-                tokenizer,
-                gpu_peak_flops=peak_gpu_tflops,
-                seq_length=args.max_length,
-            )
-            callbacks.append(flopsCallback_megatronLM)
-            
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
-        # Set peak_gpu_tflops to None when running on CPU
-        trainer_peak_gpu_tflops = None if force_cpu else peak_gpu_tflops
-        
+        flopsCallback_megatronLM = mfu_callback_from_hf_config(
+            model,
+            tokenizer,
+            gpu_peak_flops=peak_gpu_tflops,
+            seq_length=args.max_length,
+        )
         trainer = PerformanceTrackingSFTTrainer(
             model=model,
             args=training_args,
@@ -194,39 +166,26 @@ def main():
             eval_dataset=eval_dataset,
             # data_collator=collate_fn,
             processing_class=tokenizer,
-            callbacks=callbacks,
-            peak_gpu_tflops=trainer_peak_gpu_tflops,
+            callbacks=[
+                monitor,
+                flopsCallback_megatronLM,
+            ],
+            peak_gpu_tflops=peak_gpu_tflops,
         )
 
-        # Start GPU monitor only on GPU machines and only if monitoring is enabled
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
-        if n_gpus > 0 and not disable_monitoring:
-            try:
-                from gpu_monitor import start_gpu_monitor
-                gpu_stats_during, stop_flag = start_gpu_monitor(
-                    interval_sec=5, n_gpus=n_gpus
-                )
-            except ImportError as e:
-                print(f"Warning: Could not import gpu_monitor: {e}")
-                # For CPU runs or when monitoring is disabled, create dummy stats and stop flag
-                gpu_stats_during = {"mem": [], "util": [], "power": [], "timestamps": []}
-                stop_flag = {"stop": False}
-        else:
-            # For CPU runs or when monitoring is disabled, create dummy stats and stop flag
-            gpu_stats_during = {"mem": [], "util": [], "power": [], "timestamps": []}
-            stop_flag = {"stop": False}
+        # Start GPU monitor
+        gpu_stats_during, stop_flag = start_gpu_monitor(
+            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+        )
 
         # Train Model
         start_time = time.time()
         trainer.train()
         total_finetune_time = time.time() - start_time
 
-        # Stop GPU monitor only on GPU machines and only if monitoring is enabled
-        # Re-check environment variable DISABLE_MONITORING - "True" means disable monitoring
-        if n_gpus > 0 and not disable_monitoring:
-            stop_flag["stop"] = True
-            time.sleep(2)  # give it a moment to exit cleanly
+        # Stop GPU monitor
+        stop_flag["stop"] = True
+        time.sleep(2)  # give it a moment to exit cleanly
 
         # Get params
         trainable_params, total_params, trainable_pct = count_parameters(model)
@@ -261,18 +220,9 @@ def main():
                 total_training_time_secs / training_args.num_train_epochs
             )
             avg_epoch_time_hours = avg_epoch_time_sec / 3600
-            # Safely calculate steps per epoch
-            try:
-                # Try to get the train dataloader from the trainer
-                train_dataloader = trainer.get_train_dataloader()
-                steps_per_epoch = len(train_dataloader)
-            except:
-                # Fallback: estimate based on dataset size and batch size
-                steps_per_epoch = max(1, len(train_dataset) // (
-                    training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps
-                ))
-            
-            avg_step_time_sec = avg_epoch_time_sec / steps_per_epoch if steps_per_epoch > 0 else 0
+            avg_step_time_sec = avg_epoch_time_sec / len(
+                train_dataloader
+            )  # approximate
             avg_step_time_hours = avg_step_time_sec / 3600
 
         # ---- Compute derived metrics ----
@@ -296,7 +246,7 @@ def main():
         )
         avg_gpu_power_watts = (
             sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
-            if gpu_stats_during["power"] and len(gpu_stats_during["power"]) > 0
+            if gpu_stats_during["power"]
             else None
         )
         tokens_per_sec_per_watt_global = (
@@ -304,46 +254,12 @@ def main():
             if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
             else None
         )
-        # Only include GPU stats on GPU machines and only if monitoring is enabled
-        gpu_stats = {}
-        if n_gpus > 0 and not disable_monitoring:
-            gpu_stats = {
-                "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
-                / len(gpu_stats_during["mem"])
-                if gpu_stats_during["mem"] and len(gpu_stats_during["mem"]) > 0
-                else None,
-                "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
-                if gpu_stats_during["mem"] and len(gpu_stats_during["mem"]) > 0
-                else None,
-                "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
-                / len(gpu_stats_during["util"])
-                if gpu_stats_during["util"] and len(gpu_stats_during["util"]) > 0
-                else None,
-                "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
-                if gpu_stats_during["util"] and len(gpu_stats_during["util"]) > 0
-                else None,
-                "avg_gpu_power_watts": avg_gpu_power_watts,
-                "peak_gpu_power_watts": max(gpu_stats_during["power"])
-                if gpu_stats_during["power"] and len(gpu_stats_during["power"]) > 0
-                else None,
-            }
-        else:
-            gpu_stats = {
-                "avg_gpu_memory_gb": None,
-                "peak_gpu_memory_gb": None,
-                "avg_gpu_utilization_percent": None,
-                "peak_gpu_utilization_percent": None,
-                "avg_gpu_power_watts": None,
-                "peak_gpu_power_watts": None,
-            }
-            
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
         save_summary_stats_json(
             summary={
                 "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-                "num_gpus_per_node": n_gpus,
-                "total_gpus": 0 if force_cpu else (int(os.environ.get("SLURM_NNODES", 1)) * n_gpus),
+                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
+                "total_gpus": int(os.environ.get("SLURM_NNODES", 1))
+                * int(os.environ.get("GPU_NODE", 1)),
                 "model": model_name,
                 "dataset": data,
                 "framework": "torchrun",
@@ -354,7 +270,24 @@ def main():
                 "total_trainable_parameters": total_params,
                 "trainable_parameters_percentage": trainable_pct,
                 "learning_rate": training_args.learning_rate,
-                **gpu_stats,
+                "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
+                / len(gpu_stats_during["mem"])
+                if gpu_stats_during["mem"]
+                else None,
+                "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
+                if gpu_stats_during["mem"]
+                else None,
+                "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
+                / len(gpu_stats_during["util"])
+                if gpu_stats_during["util"]
+                else None,
+                "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
+                if gpu_stats_during["util"]
+                else None,
+                "avg_gpu_power_watts": avg_gpu_power_watts,
+                "peak_gpu_power_watts": max(gpu_stats_during["power"])
+                if gpu_stats_during["power"]
+                else None,
                 "total_execution_time_hours": total_training_time_secs / 3600,
                 "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
                 "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
@@ -373,16 +306,14 @@ def main():
                 "avg_gpu_flops": avg_gpu_flops,
                 "avg_gpu_mfu": avg_gpu_mfu,
             },
-            output_file=os.path.join(output_dir, "training_summary_0.json"),
+            output_file=os.path.join(output_dir, f"training_summary_job{jobid}-step{jobstepid}.json"),
         )
         print("Fine-tuning completed successfully.")
     except Exception as e:
-        n_gpus = 0 if force_cpu else int(os.environ.get("GPUS_PER_NODE", 1))
-        
         save_summary_stats_json(
             summary={
                 "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-                "num_gpus_per_node": n_gpus,
+                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
                 "model": model_name,
                 "dataset": data,
                 "framework": "torchrun",
@@ -395,7 +326,7 @@ def main():
                 "learning_rate": training_args.learning_rate,
                 "error": str(e),
             },
-            output_file=os.path.join(output_dir, "training_summary_0.json"),
+            output_file=os.path.join(output_dir, f"training_summary_job{jobid}-step{jobstepid}.json"),
         )
 
         print("Fine-tuning failed to complete!")
