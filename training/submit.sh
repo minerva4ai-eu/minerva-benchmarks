@@ -77,7 +77,7 @@ if $DRY_RUN; then
         mapfile -t parallelisms < <(echo $CONFIG_DATA | jq -r ".models.\"$model_name\".parallelism_supported[]")
         
         # Launch with Rule Check
-        mapfile -t configs < <(parallel -k "if check_config $model_name {}; then echo $model_name {}; fi" ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: ${node_configs[@]} ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${enable_bf16[@]} ::: ${lrs[@]} ::: $(seq $trials))
+        mapfile -t configs < <(parallel -k "if ! check_config $model_name {}; then echo $model_name {}; fi" ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: ${node_configs[@]} ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${enable_bf16[@]} ::: ${lrs[@]} ::: $(seq $trials))
         
         # Pretty Print
         echo "Generated ${#configs[@]} total configurations for model: $model_name"

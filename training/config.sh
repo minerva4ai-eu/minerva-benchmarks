@@ -75,10 +75,10 @@ check_config() {
         FRAMEWORK=$2
     fi
     if [[ -z $PARALLELISM ]]; then
-        PARALLELISM=$2
+        PARALLELISM=$3
     fi
     if [[ -z $NUMBER_OF_NODES ]]; then
-        NUMBER_OF_NODES=$2
+        NUMBER_OF_NODES=$4
     fi
     
     echo Checking configs

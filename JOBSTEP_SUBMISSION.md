@@ -1,8 +1,8 @@
-# Step-Based Job Submission Optimization
+# Job-Step Submission
 
-This document explains the new step-based job submission approach implemented in `minerva-benchmarks` to optimize benchmark execution.
+This document explains a task launch approach with a job-step submission to address bottlenecks in benchmark execution.
 
-## Overview
+## Motivation
 
 The previous approach in `minerva-benchmarks` submits each benchmark configuration as a separate SLURM job, which can lead to:
 
@@ -31,7 +31,7 @@ The previous approach in `minerva-benchmarks` submits each benchmark configurati
 
 The new step-based approach addresses these issues by:
 
-1. Submitting a single master job with configuration-wise steps
+1. Submitting a single main job with configuration-wise steps
 2. Shared and isolated environment setup
 3. Simplifying resource management/monitoring
 
@@ -79,48 +79,28 @@ The new step-based approach addresses these issues by:
     UnkillableStepTimeout   = 360 sec
     ```
 
-## Implementation Details
-
-### Training Benchmarks
-
-1. **General entrypoint**: The CLI (`main.sh`) has the same subcommands `run`, `status`, and `cancel`
-2. **Workers**: Each configuration gets a dedicated `work.sh` launch that encapsulates its environment and execution logic
-3. **Main Job**: GNU `parallel` and `srun` to execute all configurations as steps in machine-specific job scripts
-
-### Inference Benchmarks
-
-1. **Worker**: #TODO
-2. **Main Job**: #TODO
-
 ## Usage
 
 ### Training Benchmarks
 
 Examine configurations:
 ```bash
-./main.sh run --dry-run --config-name MN5
+./main.sh submit --config-name MN5 --dry-run
 ```
 
 Submit benchmark:
 ```bash
-./main.sh run --config-name MN5 --config-env singularity
+./main.sh submit --config-name MN5 --config-env singularity
 ```
 
 Submit subset:
 ```bash
-./main.sh run --config-name MN5 --mini-mode
+./main.sh submit --config-name MN5 --mini-mode
 ```
 
 ### Inference Benchmarks
 
 #TODO
-
-## Benefits
-
-1. **Reduced Queue Time**: Only one job submission instead of many
-2. **Lower Overhead**: Shared environment setup and resource allocation
-3. **More Configurations**: Steps can be scheduled more efficiently
-4. **Simplified Management**: Single job to monitor instead of many
 
 ## Compatibility
 
@@ -128,7 +108,7 @@ The step-based approach does not change the underlying benchmark execution logic
 
 > This is not an official proprosal to change the exiting functionalities for CLI and Configuration; given the objective of optimizing the task submission, the developer thought it easier to focus on this in isolation, and planned for subsequent steps for integrating with existing functionalities with python and it's dependencies.
 
-### Major changes
+### Major placeholders
 1. Configurations: minimize config file reading/writing 
     - machine-specific configurations in job script (`$CONFIG_NAME.job`)
     - cross-machine configurations in a single JSON (`benchmark.json`)
@@ -139,30 +119,79 @@ The step-based approach does not change the underlying benchmark execution logic
     - eliminate errors with CPU
     - plotting is done outside of main run
 
+## Benefits
+
+1. **Reduced Queue Time**: Only one job submission instead of many
+2. **Lower Overhead**: Shared environment setup and resource allocation
+3. **More Configurations**: Steps can be scheduled more efficiently
+4. **Simplified Management**: Single job to monitor instead of many
 
 ## References
 
+### GNU parallel
+A powerful tool to launch tasks simultaneously with a combination of arguments
+- [GNU Parallel manual](https://www.gnu.org/software/parallel/man.html)
+    ```
+    parallel -j 15 'sleep $(($RANDOM %3)); echo {}' ::: $(seq 5) ::: a b c
+    ```
+    Installation:
+    ```
+    # Get source code
+    wget http://ftp.gnu.org/gnu/parallel/parallel-20260522.tar.bz2
+    tar -xjf parallel-20260522.tar.bz2
+
+    # Build
+    ./configure --prefix=/path/to/installdir
+    make
+    make install
+    ```
+
+### GNU parallel with slurm
 - [PEARC 24 Tutorial](https://github.com/ketancmaheshwari/pearc24tut)
 - [U Chicago User Guide - Tutorial](https://docs.rcc.uchicago.edu/tutorials/kicp/#gnu-parallel)
 - [U Chicago User Guide - Slurm](https://docs.rcc.uchicago.edu/slurm/sbatch/#gnu-parallel)
 - [U Luxembourg Tutorial - Sequential](https://ulhpc-tutorials.readthedocs.io/en/latest/sequential/basics/)
-- [U Luxembourg Tutorial - Distributed](https://ulhpc-tutorials.readthedocs.io/en/latest/sequential/basics/)
+- [U Luxembourg Tutorial - Distributed](https://ulhpc-tutorials.readthedocs.io/en/latest/sequential/manytasks-manynodes/)
 - [U Berkeley User Guide](https://docs-research-it.berkeley.edu/services/high-performance-computing/user-guide/running-your-jobs/gnu-parallel/)
 - [U Colorado Boulder Docs](https://curc.readthedocs.io/en/latest/software/GNUParallel.html)
+- [SC Wales](https://portal.supercomputing.wales/index.php/index/slurm/interactive-use-job-arrays/batch-submission-of-serial-jobs-for-parallel-execution/)
+
+    Exercise:
+    ```
+    #!/bin/bash
+    #SBATCH -c 4
+    #SBATCH -t 10:00
+    #SBATCH -J spar_test
+    #SBATCH -o ./job_outputs/slurm-%j-%x.out
+
+    module load parallel
+
+    runner_fn() {
+        echo args: $@
+        TIMEVAL=$(( $(( $(($RANDOM %3))*10 )) + 5 ))
+        srun -n 1 -c $1 sleep $TIMEVAL && echo $2
+    }
+    export -f runner_fn
+
+    parallel -j 0 runner_fn {} ::: 1 2 4 ::: uno dos tres
+    ```
+    ```
+    [username@machname ~]$ squeue -s
+            STEPID     NAME PARTITION     USER      TIME NODELIST
+        43613735.0    sleep       gpp bsc07951      0:06 gs02r3b02
+        43613735.3    sleep       gpp bsc07951      0:06 gs02r3b02
+        43613735.4    sleep       gpp bsc07951      0:00 gs02r3b02
+    43613735.batch    batch       gpp bsc07951      0:11 gs02r3b02
+    43613735.extern   extern       gpp bsc07951      0:11 gs02r3b02
+    [username@machname ~]$ sacct -j 43613735 --noheader -o jobid | wc -l
+    9
+    ```
+
 
 ## TODO
 
 - [ ] Clarify SBATCH parameters
 - [ ] Implement `status` and `cancel`
 - [ ] Implement inference
-    - [ ] main job
-    - [ ] CLI
-- [ ] Refactor monitoring (and plotting)
+- [ ] Review monitoring (and plotting)
 - [ ] Implement DeepSpeed
-
-# Questions
-- Do we want dry-run in the job?
-- Do we want `plot` in the CLI?
-- Are there plans to benchmark different environments (eg torch 2.8 vs 2.13)?
-- Do we want to define levels of logging?
-- Do we want `setup` in the CLI (build environment)?
