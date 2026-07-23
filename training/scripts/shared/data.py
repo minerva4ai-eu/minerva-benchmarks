@@ -25,32 +25,34 @@ class CollateFnError(Exception):
 def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[str]:
     if dataset_root is None or dataset_files is None:
         return None
-    if isinstance(dataset_files, list):
-        dataset_full_paths = []
-        for item in dataset_files:
-            if os.path.isabs(str(item)):
-                dataset_full_paths.append(str(item))
-                continue
-            full_path = os.path.join(str(dataset_root), str(item))
-            assert os.path.exists(full_path), (
-                "Train/validation files should be absolute or direct subpaths of the dataset root path! "
-                + f"Could not join paths:\n\t- {dataset_root}"
-                + f"Could not join paths:\n\t- {dataset_root}"
-            )
-            dataset_full_paths.append(str(full_path))
-        return dataset_full_paths
-
-    if os.path.isabs(str(dataset_file)):
-        return str(dataset_file)
-    full_path = os.path.join(str(dataset_root), str(dataset_file))
-
-    assert os.path.exists(full_path), (
-        "Train/validation files should be absolute or direct subpaths of the dataset root path! "
-        + f"Could not join paths:\n\t- {dataset_root}"
-        + f"Could not join paths:\n\t- {dataset_root}"
+    assert isinstance(dataset_files, list), (
+        f"_resolve_dataset_files() | dataset_files input arg must be 'list[str]', received {type(dataset_files)}"
     )
+    dataset_full_paths = []
+    for item in dataset_files:
+        if os.path.isabs(str(item)):
+            dataset_full_paths.append(str(item))
+            continue
+        full_path = os.path.join(str(dataset_root), str(item))
+        assert os.path.exists(full_path), (
+            "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+            + f"Could not join paths:\n\t- {dataset_root}"
+            + f"Could not join paths:\n\t- {dataset_root}"
+        )
+        dataset_full_paths.append(str(full_path))
+    return dataset_full_paths
 
-    return full_path
+    # if os.path.isabs(str(dataset_file)):
+    #    return str(dataset_file)
+    # full_path = os.path.join(str(dataset_root), str(dataset_file))
+    #
+    # assert os.path.exists(full_path), (
+    #    "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+    #    + f"Could not join paths:\n\t- {dataset_root}"
+    #    + f"Could not join paths:\n\t- {dataset_root}"
+    # )
+
+    # return full_path
 
 
 def parse_dataset_paths(
