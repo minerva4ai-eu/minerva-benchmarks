@@ -2,6 +2,10 @@ defaults:
   - base
   - _self_
 
+name: deepspeed-accelerate
+python_environment:
+singularity_container: 
+
 parallelism_name: "" # Will be filled in during composing time
 parallelism:
   zero1: { min_gpus: 2 }

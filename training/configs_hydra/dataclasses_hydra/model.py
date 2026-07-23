@@ -89,7 +89,6 @@ class ModelConfig:
 
     name: str = MISSING  # MISSING = must be provided, no default
     path: str = MISSING
-    params_billions: float = MISSING
     architecture_type: str = MISSING
 
     # architecture dims — used by memory rule

@@ -74,8 +74,3 @@ def get_gpu_stats(n_gpus: int = 1):
         stats["power"] = [0] * n_gpus
 
     return stats
-
-
-
-
-

@@ -95,6 +95,8 @@ def generate_valid_combos(
                     f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
                     f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.name_pattern}",
                     f"dataset={_init_cfg.machine.name_pattern}/{dataset}-{_init_cfg.machine.name_pattern}",
+                    f"slurm={_init_cfg.machine.name_pattern}",
+                    f"arch={_init_cfg.machine.name_pattern}",
                 ],
             )
             print(
@@ -222,7 +224,7 @@ def generate_valid_combos(
                             + f" | nodes:{nodes}"
                             + f" | gpus:{total_gpus}"
                             + f" | bs:{bs}"
-                            + f" | grad_accum:{total_gpus}"
+                            + f" | grad_accum:{grad_acc}"
                             + f" | compilation: {enable_compile}"
                             + f" | precision:{precision}"
                             + f" | steps:{steps}"

@@ -1,23 +1,23 @@
 gpu:
   name: ??                                      # Must fill in
   accelerator_type: ??                          # Must fill in
-  vram_gb: ??                                   # Must fill in
-  theoretical_peak_fp64_tflops: ??
-  theoretical_peak_fp64_tensor_tflops: ??
-  theoretical_peak_fp32_tflops: ??
-  theoretical_peak_tf32_tensor_tflops: ??
-  theoretical_peak_fp16_tensor_tflops: ??
-  theoretical_peak_bf16_tensor_tflops: ??
-  theoretical_peak_fp8_tensor_tflops: ??
-  theoretical_peak_int8_tensor_tops: ??
+  vram_gb: 0                                    # Must fill in
+  theoretical_peak_fp64_tflops: 0
+  theoretical_peak_fp64_tensor_tflops: 0
+  theoretical_peak_fp32_tflops: 0
+  theoretical_peak_tf32_tensor_tflops: 0
+  theoretical_peak_fp16_tensor_tflops: 0
+  theoretical_peak_bf16_tensor_tflops: 0
+  theoretical_peak_fp8_tensor_tflops: 0
+  theoretical_peak_int8_tensor_tops: 0
 
 comm:
-  internode_comm: ??
-  internode_comm_bandwidth_GBs: ??
-  intranode_comm: ??
-  intranode_comm_bandwidth_GBs: ??
+  internode_comm: 0
+  internode_comm_bandwidth_GBs: 0
+  intranode_comm: 0
+  intranode_comm_bandwidth_GBs: 0
 
 node:
-  gpus_per_node: ??
+  gpus_per_node: 0
 
 

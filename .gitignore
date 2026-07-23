@@ -40,3 +40,5 @@ training/.torchcompile_cache/*
 training/training_MN5
 
 *copy
+
+*configs_/

@@ -99,6 +99,11 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
                 )
                 raise e
     else:
+        if config_name == DEFAULT_CONFIG_NAME:
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}!WARNING! Argument '--config-name' is defaulting to '{DEFAULT_CONFIG_NAME}'...{u.RESET}"
+            )
+            exit(1)
         valid, _ = generate_valid_combos(
             config_path=configs_path, config_name=config_name, outpath=runs_dir
         )
@@ -229,11 +234,6 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
     return
 
 
-class InvalidRerun(Exception):
-    def __init__(self, msg: str):
-        super().__init__(msg)
-
-
 @cli.command()
 @click.option(
     "--run-date",
@@ -287,7 +287,7 @@ class InvalidRerun(Exception):
         "If you wish to apply or try changes made on the original scripts, use the 'run' subcommand instead."
     ),
 )
-def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
+def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
     """Re-submit jobs from a previous benchmark run.
 
     Reuses scripts from the original run without re-copying them. Can rerun
@@ -305,7 +305,7 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
         raise ValueError(
             f"{u.RED}Provided invalid '--run-date' value '{run_date}'.Either faulty format or future timestamp!"
         )
-    run_monitor_folder = f"{output}/slurm-monitor/{run_date}/run_id-{run_id}"
+    run_monitor_folder = f"{runs_dir}/slurm-monitor/{run_date}/run_id-{run_id}"
     run_monitor_path = f"{run_monitor_folder}/jobs_submitted.jsonl"
 
     rerun_id = 1
@@ -316,96 +316,116 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
         rerun_logs = f"jobs_resubmitted-rerun_id-{rerun_id}.jsonl"
         rerun_monitor_path = os.path.join(run_monitor_folder, rerun_logs)
 
+    rerun_id = f"run_id-{run_id}--rerun_id-{rerun_id}"
+
     run_jobs = m.load_all(run_monitor_path)
-    _combos = run_jobs
 
     mode = "all"
     if not yamls:
         assert sum([all, only_failed, only_pending]) == 1, (
             f"{u.RED}Only one of '--all', '--only-failed' or '--only-pending' must be provided!{u.RESET}"
         )
+    cfgs_to_rerun = []
     if yamls:
         mode = "yamls"
-        _combos = []
-        if isinstance(yamls, tuple) and len(yamls) == 1:
-            yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
-        for y in yamls:
-            click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
 
-            try:
-                _cfg: "BenchmarkConfig" = DictConfig(u.load_yaml(y))
-                output = Path(_cfg.experiment.output_dir)
-                _combos.append(_cfg)
-                click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
-            except FileNotFoundError:
-                click.echo(
-                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config could NOT be FOUND!{u.RESET}"
-                )
-                continue
-            except Exception as e:
-                click.echo(
-                    f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read file...{u.RESET}"
-                )
-                raise e
+        assert isinstance(yamls, tuple) and len(yamls) == 1, (
+            f"\t{u.FAILURE_HEAVY} {u.RED}No YAML benchmark configurations provided to rerun!{u.RESET}"
+        )
 
-    combos = _combos
-    if only_failed:
-        mode = "only_failed"
-        slurm_mode = [
-            "node_fail",
-            "out_of_memory",
-            "cancelled",
-            "timeout",
-            "failed",
-            "stopped",
-            "suspended",
-        ]
-        combos = [
-            rj
-            for rj in sorted(_combos, key=lambda j: j["id"])
-            if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
-        ]
-
-    if only_pending:
-        mode = "only_pending"
-        slurm_mode = [
-            "pending",
-        ]
-        combos = [
-            rj
-            for rj in sorted(_combos, key=lambda j: j["id"])
-            if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
-        ]
-
-    rerun_id = f"run_id-{run_id}--rerun_id-{rerun_id}"
-    cfgs_to_rerun = []
-    for job in combos:
-        config_dir = "/".join(job["launch_folder"].split("/")[:-2])
-
+        yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
         try:
-            cfg: "BenchmarkConfig" = DictConfig(
-                u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
-            )
-            click.echo(
-                f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config '{job['yaml_filename']}' FOUND in [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+            cfgs_to_rerun.extend(
+                [
+                    (
+                        DictConfig(u.load_yaml(y)),
+                        job["launch_folder"],
+                        job["launch_folder"].replace(f"run_id-{run_id}", rerun_id),
+                    )
+                    for y in yamls
+                    for job in run_jobs
+                    if job["yaml_filename"] in y
+                ]
             )
         except FileNotFoundError:
             click.echo(
-                f"\t{u.FAILURE_HEAVY} {u.RED}YAML config '{job['yaml_filename']}' could NOT be FOUND!{u.RESET}"
+                f"\t{u.FAILURE_HEAVY} {u.RED}YAML config could NOT be FOUND!{u.RESET}"
             )
-            continue
+
         except Exception as e:
             click.echo(
-                f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read YAML '{job['yaml_filename']}'{u.RESET}"
+                f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read file...{u.RESET}"
             )
             raise e
-        cfgs_to_rerun.append(cfg)
-    click.echo(f"\n{u.YELLOW}Resubmitting {len(combos)} jobs (mode={mode})...{u.RESET}")
+
+        assert len(yamls) == len(cfgs_to_rerun), (
+            f"\t{u.FAILURE_HEAVY} {u.RED}Number of YAMLs to rerun is not equal to the number of registered jobs found in '{run_monitor_path}'{u.RESET}"
+        )
+    else:
+        if only_failed:
+            mode = "only_failed"
+            slurm_mode = [
+                "node_fail",
+                "out_of_memory",
+                "cancelled",
+                "timeout",
+                "failed",
+                "stopped",
+                "suspended",
+            ]
+            run_jobs = [
+                rj
+                for rj in sorted(run_jobs, key=lambda j: j["id"])
+                if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
+            ]
+
+        if only_pending:
+            mode = "only_pending"
+            slurm_mode = [
+                "pending",
+            ]
+            run_jobs = [
+                rj
+                for rj in sorted(run_jobs, key=lambda j: j["id"])
+                if m.get_job_info(rj["id"]).status_meta["code_complete"] in slurm_mode
+            ]
+
+        cfgs_to_rerun = []
+        for job in run_jobs:
+            config_dir = u.get_cfg_folder_from_launch(job["launch_folder"])
+            try:
+                cfg: "BenchmarkConfig" = DictConfig(
+                    u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
+                )
+                click.echo(
+                    f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config '{job['yaml_filename']}' FOUND in [date|runid]: [{run_date}|run_id-{run_id}]{u.RESET}"
+                )
+            except FileNotFoundError:
+                click.echo(
+                    f"\t{u.FAILURE_HEAVY} {u.RED}YAML config '{job['yaml_filename']}' could NOT be FOUND!{u.RESET}"
+                )
+                return
+            except Exception:
+                click.echo(
+                    f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read YAML '{job['yaml_filename']}'{u.RESET}"
+                )
+                return
+            cfgs_to_rerun.append(
+                (
+                    cfg,
+                    job["launch_folder"],
+                    job["launch_folder"].replace(f"run_id-{run_id}", rerun_id),
+                )
+            )
+    click.echo(
+        f"\n{u.YELLOW}Resubmitting {len(cfgs_to_rerun)} jobs (mode={mode}) | {rerun_id}...{u.RESET}"
+    )
 
     cfgs_seen = set()
     jobs_resubmitted = []
     dependency_jobid = ""
-    for cfg in cfgs_to_rerun:
+    for cfg, old_launchf, new_launchf in cfgs_to_rerun:
+        u.copy_launch_folder(old_launchf, new_launchf)
         for repeat_id in range(1, cfg.experiment.repeat + 1):
             job_desc = {
                 "id": None,
@@ -419,22 +439,15 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
                     f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                 )
                 continue
-            rerun_launch_folder = build_launch_folder(
-                cfg=cfg,
-                base_dir=BASE_DIR,
-                runs_dir=output,
-                run_id=rerun_id,
-                repeat_id=repeat_id,
-            )
             dependency_jobid = submit_job(
                 cfg=cfg,
-                launch_folder=Path(rerun_launch_folder),
+                launch_folder=Path(new_launchf),
                 repeat_id=repeat_id,
                 dependency=dependency_jobid,
             )
             job_desc["id"] = dependency_jobid
             job_desc["cfg_id"] = cfg.id
-            job_desc["launch_folder"] = job["launch_folder"]
+            job_desc["launch_folder"] = new_launchf
             job_desc["yaml_filename"] = cfg.experiment.yaml_filename
             jobs_resubmitted.append(job_desc)
             cfgs_seen.add(cfg.id)

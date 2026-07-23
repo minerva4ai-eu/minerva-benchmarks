@@ -3,6 +3,8 @@ defaults:
   - _self_
 
 name: torchrun
+python_environment:
+singularity_container: 
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:

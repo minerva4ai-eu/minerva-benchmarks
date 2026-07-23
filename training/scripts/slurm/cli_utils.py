@@ -95,6 +95,7 @@ class OptionConfig:
     validator: Optional[Callable[[str], bool]] = None  # Return True if valid
     error_msg: str = "Invalid input."  # Shown when validator fails
     transform: Optional[Callable[[str], Any]] = None  # Transform before storing
+    exit_after: Optional[bool] = False
 
 
 @dataclass
@@ -130,6 +131,13 @@ RUN_OPTIONS = [
         prompt="runs-dir",
         default=str(RUNS_DIR),
     ),
+    OptionConfig(
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
+        exit_after=True,
+    ),
     BoolOptionConfig(
         name="--dry-run",
         prompt="dry-run? [y/N]",
@@ -137,7 +145,8 @@ RUN_OPTIONS = [
         transform=lambda x: x.lower(),
         validator=lambda x: x in ("y", "n"),
         error_msg="--dry-run can only be y or n!",
-        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui", "ja"),
+        exit_after=True,
     ),
     BoolOptionConfig(
         name="--per-model-jobs",
@@ -148,17 +157,13 @@ RUN_OPTIONS = [
         error_msg="--per-model-jobs can only be y or n!",
         condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
-    ),
 ]
 
 
-def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
+def is_valid_date(value: str | None, fmt: str = "%d-%m-%Y") -> bool | None:
 
+    if not value:
+        return True
     try:
         date = datetime.strptime(value, fmt)
         if date.date() > datetime.now().date():
@@ -168,12 +173,21 @@ def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
         return False
 
 
-def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
+def str2date2str(value: str | None, fmt: str = "%d-%m-%Y") -> str | None:
+    if not value:
+        return value
     date = datetime.strptime(value, fmt).date()
     return date.strftime(fmt)
 
 
 RERUN_OPTIONS = [
+    OptionConfig(
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
+        exit_after=True,
+    ),
     OptionConfig(
         name="--runs-dir",
         prompt="runs-dir",
@@ -190,12 +204,6 @@ RERUN_OPTIONS = [
     OptionConfig(
         name="--run-id",
         prompt="run-id",
-    ),
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
     ),
     BoolOptionConfig(
         name="--all",
@@ -361,8 +369,11 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                     if opt.condition_is_true(value):
                         run_args.extend([opt.name])
                     i += 1
-                    continue
-                run_args.extend([opt.name, value])
+                else:
+                    run_args.extend([opt.name, value])
+
+            if opt.exit_after and value != opt.default:
+                break
             i += 1
 
         except KeyboardInterrupt:

@@ -1,7 +1,5 @@
 # Base configuration for benchmark experiments
 defaults:
-  - arch: MN5
-  - slurm: MN5
   - base
   - _self_
 
@@ -16,10 +14,9 @@ machine:
     NCCL_NVLS_ENABLE: "0"
     NCCL_IB_DISABLE: "0"
     CUDA_VISIBLE_DEVICES: "0,1,2,3"
-    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
     CUDA_LAUNCH_BLOCKING: "1"
-
-    MODEL_NUM_LAYERS: ${model.num_layers}
-    MODEL_HIDDEN_SIZE: ${model.hidden_dim}
-    MODEL_INTERMEDIATE_SIZE: ${model.ffn_intermediate_dim}
-                        
+    
+    # Copied from base.yaml to avoid overwritting
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
+    TORCHINDUCTOR_CACHE_DIR: "training-benchmarks-cache/.torch-inductor-cache"
+    TRITON_CACHE_DIR: "training-benchmarks-cache/.triton-cache"                        

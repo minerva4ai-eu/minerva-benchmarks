@@ -4,16 +4,23 @@ defaults:
   - model: base_training
   - framework: base
   - dataset: base
-  #- slurm: base
+  - slurm: base
+  - arch: base
   - _self_
-id:
+id: -100
 machine:
   name: ??? # self given name, must coincide with .env-{machine.name} file
   name_pattern: ???
-  modules:                        # space separated modules to load
-  runtime_env_mode:               # Must provide either "venv" or "singularity"
+  modules:                        # list of modules to load
+    - module1 
+    - module2
+  runtime_env_mode: ???           # Must provide either "venv" or "singularity"
   singularity_binds:              # singularity binds to apply on runtime
+    - "/path/host:/path/container"
+    - "/another/path/host:/another/path/container"
   singularity_args:               # extra singularity arguments to apply on runtine
+    - "-x xxxxx"
+    - "-y yyyyy"
   single_gpu_also_valid: True     # include single GPUs experiments, where it applies
 
 experiment:
@@ -22,3 +29,6 @@ experiment:
   repeat: 1                       # Do not change, default value for all benchmarks across computers
   yaml_filename:                  # Do not fill in, value filled during compose runtime
   env:                            # Fill in with environment variable to be available on runtime
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
+    TORCHINDUCTOR_CACHE_DIR: "training-benchmarks-cache/.torch-inductor-cache"
+    TRITON_CACHE_DIR: "training-benchmarks-cache/.triton-cache"

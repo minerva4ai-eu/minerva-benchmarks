@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -18,26 +17,6 @@ class ExecussionEnvironmentSelectionError(ValueError):
         super().__init__(*args)
 
 
-def get_cfg_folder(
-    cfg: BenchmarkConfig,
-    base_dir: Path,
-    runs_dir: Path,
-):
-
-    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
-    results_dir = os.path.join(base_dir.absolute(), runs_dir)
-    machine_results_base = os.path.join(results_dir, cfg.machine.name)
-    date_folder = os.path.join(
-        machine_results_base,
-        datetime.now().strftime("%d-%m-%Y"),
-    )
-    cfg_path = os.path.join(
-        date_folder,
-        parameters_combo,
-    )
-    return cfg_path
-
-
 def build_launch_folder(
     cfg: BenchmarkConfig,
     base_dir: Path,
@@ -46,8 +25,7 @@ def build_launch_folder(
     dry: Optional[bool] = False,
     repeat_id: Optional[int] = None,
 ) -> Path:
-
-    combo_path = get_cfg_folder(cfg, base_dir, runs_dir)
+    combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
     experiment_config_dir = os.path.join(combo_path, "yaml-configs")
     experiment_config_path = os.path.join(
         experiment_config_dir, cfg.experiment.yaml_filename
@@ -188,7 +166,6 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
-        "TORCHINDUCTOR_CACHE_DIR": f"{cfg.experiment.output_dir}/.torch-inductor-cache",
         "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
         "TOKENIZERS_PARALLELISM": str(False),
     }
