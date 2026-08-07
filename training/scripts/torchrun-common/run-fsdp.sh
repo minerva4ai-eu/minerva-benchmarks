@@ -81,11 +81,11 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
 
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     train_command_max_overlap="$train_command_max_overlap --enable_compile"
-    train_command_min_overlap="$train_command_min_overlap --enable_compile"
+    # train_command_min_overlap="$train_command_min_overlap --enable_compile"
 fi
 
 # Launch Run
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &
     monitor_pid=\$!
@@ -94,7 +94,6 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     sleep 5
 
     # Run training in foreground (this blocks until done)
-    $train_command_min_overlap
 
     $train_command_max_overlap
 

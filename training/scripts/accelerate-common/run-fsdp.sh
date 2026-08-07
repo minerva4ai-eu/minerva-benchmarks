@@ -16,7 +16,7 @@ training_activate_runtime_environment
 
 # Get Arguments
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-mkdir -p $OUTPUT_DIR
+mkdir -p "$OUTPUT_DIR"
 
 # Print Arguments Received
 echo "LAUNCH_FOLDER: {$LAUNCH_FOLDER}, DATASET: {$DATASET}, DATASET_PATH: {$DATASET_PATH}"
@@ -106,7 +106,7 @@ echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     echo "Compile enabled!"
     train_command_max_overlap="$train_command_max_overlap --enable_compile"
-    train_command_min_overlap="$train_command_min_overlap --enable_compile"
+    #train_command_min_overlap="$train_command_min_overlap --enable_compile"
 fi
 
 echo "NODE_RANK: {$NODE_RANK}"
@@ -125,8 +125,6 @@ srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     sleep 5
     
     # Run training in foreground (this blocks until done)
-    $train_command_min_overlap
-
     $train_command_max_overlap
 
     kill -SIGTERM \"\$monitor_pid\"
@@ -134,10 +132,6 @@ srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Wait for the monitor to clean up and exit
     wait \"\$monitor_pid\"
 "
-
-
-
-
 
 echo "FSDP Job Completed."
 
