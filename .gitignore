@@ -20,24 +20,15 @@ inference/results/deepspeed/
 # But do not ignore CSV files directly inside inference/results/
 # !inference/results/*.csv
 
-results/deepspeed/*
-results/vllm/*
-results/sglang/*
-results/vllm-1/*
-results/sglang-1/*
-
 inference/results/deepspeed/*
 inference/results/sglang/*
 inference/results/vllm/*
 
-inference/inference-MN5/analytics-*/
-inference/inference-MN5/benchmarks-vllm-10122025/*
-
 training/benchmark-runs*
 training/configs_hydra/benchmarks_to_run/*
 
-training/.torchcompile_cache/*
-training/training_MN5
+*/.torchcompile_cache/*
+*/.triton-cache/*
 
 *copy
 
