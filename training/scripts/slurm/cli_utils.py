@@ -1,9 +1,10 @@
 # benchmark/cli.py
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 import click
 import scripts.slurm.utils as u
@@ -90,12 +91,12 @@ def read_user_input(
 class OptionConfig:
     name: str  # CLI flag, e.g. "--configs-path"
     prompt: str  # Text shown to user
-    default: Optional[str] = None  # Default value (None = not added to args)
+    default: str | None = None  # Default value (None = not added to args)
     required: bool = False  # Force non-empty input
-    validator: Optional[Callable[[str], bool]] = None  # Return True if valid
+    validator: Callable[[str], bool] | None = None  # Return True if valid
     error_msg: str = "Invalid input."  # Shown when validator fails
-    transform: Optional[Callable[[str], Any]] = None  # Transform before storing
-    exit_after: Optional[bool] = False
+    transform: Callable[[str], Any] | None = None  # Transform before storing
+    exit_after: bool | None = False
 
 
 @dataclass
@@ -129,7 +130,7 @@ RUN_OPTIONS = [
     OptionConfig(
         name="--runs-dir",
         prompt="runs-dir",
-        default=str(RUNS_DIR),
+        default=f"{RUNS_DIR}-[config-name]",
     ),
     OptionConfig(
         name="--yaml",
@@ -191,7 +192,7 @@ RERUN_OPTIONS = [
     OptionConfig(
         name="--runs-dir",
         prompt="runs-dir",
-        default=str(RUNS_DIR),
+        default=f"{RUNS_DIR}-[config-name]",
     ),
     OptionConfig(
         name="--run-date",

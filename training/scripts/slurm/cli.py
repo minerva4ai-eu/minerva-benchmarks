@@ -4,7 +4,7 @@ import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import click
 import scripts.slurm.monitor as m
@@ -47,6 +47,7 @@ def cli():
     "--config-name",
     default=DEFAULT_CONFIG_NAME,
     help="Base config name to compose (e.g., 'base', 'base-MN5').",
+    required=True,
 )
 @click.option(
     "--runs-dir",
@@ -76,6 +77,9 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
+    if config_name != DEFAULT_CONFIG_NAME:
+        runs_dir = f"{runs_dir}-{config_name}"
+
     valid = []
     if yamls:
         if isinstance(yamls, tuple) and len(yamls) == 1:
@@ -84,7 +88,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
             click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
 
             try:
-                _cfg: "BenchmarkConfig" = DictConfig(u.load_yaml(y))
+                _cfg: BenchmarkConfig = DictConfig(u.load_yaml(y))
                 runs_dir = Path(_cfg.experiment.output_dir)
                 valid.append(_cfg)
                 click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
@@ -137,7 +141,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
         valid_models = set([c.model.name for c in valid])
         cfgs_per_model = {}
         for m in valid_models:
-            if m not in cfgs_per_model.keys():
+            if m not in cfgs_per_model:
                 cfgs_per_model[m] = []
             cfgs_per_model[m].extend([cfg for cfg in valid if cfg.model.name == m])
         for model, model_cfgs in cfgs_per_model.items():
@@ -394,7 +398,7 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
         for job in run_jobs:
             config_dir = u.get_cfg_folder_from_launch(job["launch_folder"])
             try:
-                cfg: "BenchmarkConfig" = DictConfig(
+                cfg: BenchmarkConfig = DictConfig(
                     u.load_yaml(os.path.join(config_dir, job["yaml_filename"]))
                 )
                 click.echo(
@@ -455,7 +459,7 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
         u.write_jsonl(d=jobs_resubmitted, p=rerun_monitor_path)
 
 
-def _parse_space_separated(value: Optional[str]) -> Optional[set]:
+def _parse_space_separated(value: str | None) -> set | None:
     """Parse a space-separated string into a set of values, or return None."""
     if not value:
         return None
@@ -467,11 +471,11 @@ def _filter_jobs_by_config(
     runs_dir: str,
     run_date: str,
     run_id: str,
-    rerun_id: Optional[int],
-    model_names: Optional[set] = None,
-    framework_names: Optional[set] = None,
-    parallelism_names: Optional[set] = None,
-    nodes_values: Optional[set] = None,
+    rerun_id: int | None,
+    model_names: set | None = None,
+    framework_names: set | None = None,
+    parallelism_names: set | None = None,
+    nodes_values: set | None = None,
 ) -> list[dict]:
     """
     Filter jobs by loading their YAML configs and matching against provided criteria.
