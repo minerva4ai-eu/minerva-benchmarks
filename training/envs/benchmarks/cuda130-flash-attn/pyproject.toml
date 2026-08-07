@@ -1,5 +1,5 @@
 [project]
-name = "training-env-cuda128"
+name = "training-env-cuda130"
 version = "0.1.0"
 requires-python = "==3.12.*"
 dependencies = [
@@ -26,8 +26,7 @@ dependencies = [
   "sentencepiece",
   "tiktoken",
   "tokenizers",
-  "torch",
-  "torchaudio",
+  "torch==2.12.1",
   "torchvision",
   "torchao",
   "torchdata",
@@ -49,19 +48,23 @@ dependencies = [
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [[tool.uv.index]]
-name = "astral-cu128"
-url = "https://wheels.astral.sh/simple/cu128"
+name = "astral-cu130"
+url = "https://wheels.astral.sh/simple/cu130"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
-torchaudio = { index = "pytorch-cu128" }
-triton = { index = "pytorch-cu128" }
-flash-attn = { index = "astral-cu128" }
+torch = { index = "pytorch-cu130" }
+torchvision = { index = "pytorch-cu130" }
+triton = { index = "pytorch-cu130" }
+flash-attn = { index = "astral-cu130" }
 
+#[tool.uv.extra-build-dependencies]
+#flash-attn = ["setuptools", "torch"]
+
+#[tool.uv]
+#no-build-isolation-package = ["flash-attn", "deepspeed"]
