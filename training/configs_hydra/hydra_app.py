@@ -93,7 +93,7 @@ def generate_valid_combos(
                 config_name,
                 overrides=[
                     f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.name_pattern}",
+                    f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.framework_name_pattern}",
                     f"dataset={_init_cfg.machine.name_pattern}/{dataset}-{_init_cfg.machine.name_pattern}",
                     f"slurm={_init_cfg.machine.name_pattern}",
                     f"arch={_init_cfg.machine.name_pattern}",
@@ -296,7 +296,7 @@ def _print_summary(
     table.add_row("Total combos", str(total))
     table.add_row("[green]Valid[/green]", str(len(valid)))
     table.add_row("[yellow]Skipped[/yellow]", str(len(skipped)))
-    print("")
+    print()
     console.print(table)
     # ToDo: Write summary file for failed or skipped configurations
 

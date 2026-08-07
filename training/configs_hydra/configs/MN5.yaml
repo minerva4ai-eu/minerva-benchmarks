@@ -6,6 +6,7 @@ defaults:
 machine:
   name: bsc-mn5-acc # actual name of super computer running benchmarks
   name_pattern: MN5 # configuration files naming convention pattern
+  framework_name_pattern: None
   env:
     NCCL_NET: IB
     NCCL_SOCKET_IFNAME: ib0,ib1,ib2,ib3
@@ -15,8 +16,9 @@ machine:
     NCCL_IB_DISABLE: "0"
     CUDA_VISIBLE_DEVICES: "0,1,2,3"
     CUDA_LAUNCH_BLOCKING: "1"
-    
+experiment:
+  env:
     # Copied from base.yaml to avoid overwritting
     PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
-    TORCHINDUCTOR_CACHE_DIR: "training-benchmarks-cache/.torch-inductor-cache"
-    TRITON_CACHE_DIR: "training-benchmarks-cache/.triton-cache"                        
+    TORCHINDUCTOR_CACHE_DIR: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/.torch-inductor-cache"
+    TRITON_CACHE_DIR: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/.triton-cache"                        

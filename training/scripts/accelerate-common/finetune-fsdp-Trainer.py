@@ -118,7 +118,7 @@ def main():
 
     training_args = TrainingArguments(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         per_device_train_batch_size=BATCH_SIZE,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         learning_rate=args.lr,
@@ -285,9 +285,9 @@ def main():
             trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
         )
 
-        avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
+        avg_gpu_flops = trainer.state.average_flops_custom
         # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
-        avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
+        avg_gpu_mfu = trainer.state.average_mfu_custom
         # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
 
         if training_args.max_steps:

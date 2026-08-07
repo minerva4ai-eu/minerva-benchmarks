@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List
 
 from configs_hydra.dataclasses_hydra import arch as a
 from configs_hydra.dataclasses_hydra import dataset as d
@@ -19,12 +18,15 @@ class EnvMode(str, Enum):
 class MachineConfig:
     name: str = MISSING  # actual name of super computer running benchmarks
     name_pattern: str = MISSING  # configuration files naming convention pattern
-    modules: List[str] | None = None
+    framework_name_pattern: str = (
+        MISSING  # naming convention pattern specific for framework configurations
+    )
+    modules: list[str] | None = None
     runtime_env_mode: EnvMode = MISSING
-    singularity_binds: List[str] | None = None
-    singularity_args: List[str] | None = None
+    singularity_binds: list[str] | None = None
+    singularity_args: list[str] | None = None
     single_gpu_also_valid: bool = MISSING
-    env: Dict[str, str] = field(
+    env: dict[str, str] = field(
         default_factory=dict
     )  # machine-specific environment variables
 
@@ -35,7 +37,7 @@ class ExperimentConfig:
     output_dir: str = "results/"
     repeat: int = 1
     yaml_filename: str | None = ""
-    env: Dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

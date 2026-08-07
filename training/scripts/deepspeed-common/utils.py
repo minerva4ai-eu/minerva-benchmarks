@@ -21,7 +21,10 @@ def parse_args():
     )
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument(
-        "--warmup_ratio", type=float, default=0, help="Warmup ratio for learning rate"
+        "--warmup_ratio",
+        type=float,
+        default=0.05,
+        help="Warmup ratio for learning rate",
     )
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
     parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")

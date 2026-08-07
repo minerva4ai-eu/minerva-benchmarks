@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -22,8 +21,8 @@ def build_launch_folder(
     base_dir: Path,
     runs_dir: Path,
     run_id: str,
-    dry: Optional[bool] = False,
-    repeat_id: Optional[int] = None,
+    dry: bool | None = False,
+    repeat_id: int | None = None,
 ) -> Path:
     combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
     experiment_config_dir = os.path.join(combo_path, "yaml-configs")
@@ -173,6 +172,8 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     # Merge machine-specific environment variables
     if cfg.machine.env:
         env.update(**cfg.machine.env)
+    if cfg.experiment.env:
+        env.update(**cfg.experiment.env)
 
     def _serialize(value):
         if value is None:

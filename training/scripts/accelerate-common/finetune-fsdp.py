@@ -108,7 +108,7 @@ def main():
     # SFTConfig is a drop-in superset of TrainingArguments with SFT-specific fields.
     training_args = SFTConfig(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         per_device_train_batch_size=BATCH_SIZE,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         gradient_checkpointing=False,
