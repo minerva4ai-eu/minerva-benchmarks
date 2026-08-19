@@ -17,8 +17,26 @@ benchmarks/
 
 - **Singularity** (or Apptainer) installed and accessible
 - **Docker** installed and running (Singularity uses Docker as the bootstrap source)
+- **uv** installed (for local development)
 - NVIDIA GPU drivers installed on the host
 - Sufficient disk space (~10-15 GB recommended, due to CUDA toolkit + PyTorch)
+
+---
+
+## Automated Installation (Recommended)
+
+Instead of following the steps below manually, you can use the automated scripts:
+
+```bash
+# From the training/ directory
+cd install
+
+# Install all Python environments (including benchmarks)
+bash install-all-envs.sh
+
+# Build all Singularity containers (including benchmarks)
+bash build-all-singularity.sh
+```
 
 ---
 

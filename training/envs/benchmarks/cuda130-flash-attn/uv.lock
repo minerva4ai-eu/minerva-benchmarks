@@ -2005,7 +2005,7 @@ requires-dist = [
     { name = "tensorboardx" },
     { name = "tiktoken" },
     { name = "tokenizers" },
-    { name = "torch", specifier = "==2.12.1", index = "https://download.pytorch.org/whl/cu130" },
+    { name = "torch", index = "https://download.pytorch.org/whl/cu130" },
     { name = "torchao" },
     { name = "torchdata" },
     { name = "torchmetrics" },

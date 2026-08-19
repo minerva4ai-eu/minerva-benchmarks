@@ -15,7 +15,25 @@ cli/
 
 - **Singularity** (or Apptainer) installed and accessible via `module load singularity` or directly in PATH
 - **Docker** installed and running (Singularity uses Docker as the bootstrap source)
+- **uv** installed (for local development)
 - Sufficient disk space (~5–10 GB recommended)
+
+---
+
+## Automated Installation (Recommended)
+
+Instead of following the steps below manually, you can use the automated scripts:
+
+```bash
+# From the training/ directory
+cd install
+
+# Install all Python environments (including CLI)
+bash install-all-envs.sh
+
+# Build all Singularity containers (including CLI)
+bash build-all-singularity.sh
+```
 
 ---
 

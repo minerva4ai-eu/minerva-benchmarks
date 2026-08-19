@@ -11,12 +11,48 @@ The MINERVA project operates across two distinct computing contexts:
 
 These contexts have different requirements. Local development needs speed and flexibility. HPC execution needs reproducibility, isolation, and compatibility with cluster infrastructure. This directory provides tools to bridge both worlds.
 
-## Overview
+## Table of Contents
+
+- [Philosophy](#philosophy)
+- [Overview](#overview)
+- [Environment Types](#environment-types)
+  - [benchmarks/ — Training Benchmark Environment](#benchmarks--training-benchmark-environment)
+  - [cli/ — Command-Line Interface Environment](#cli--command-line-interface-environment)
+- [Build Choices](#build-choices)
+  - [Why `uv`?](#why-uv)
+  - [Why Singularity?](#why-singularity)
+  - [The Two Approaches](#the-two-approaches)
+- [Quick Start](#quick-start)
+  - [Automated Installation (Recommended)](#automated-installation-recommended)
+  - [Local Development](#local-development)
+  - [Build Singularity Container](#build-singularity-container)
+- [Using the Environments](#using-the-environments)
+  - [Running Benchmarks](#running-benchmarks)
+  - [Direct Singularity Execution](#direct-singularity-execution)
+  - [GPU Access](#gpu-access)
+- [Directory Structure](#directory-structure)
+  - [benchmarks/cuda121-flash-attn/](#benchmarkscuda121-flash-attn)
+  - [cli/](#cli)
+- [Key Dependencies](#key-dependencies)
+  - [Benchmarks Environment](#benchmarks-environment)
+  - [CLI Environment](#cli-environment)
+- [Dependency Management](#dependency-management)
+  - [Updating Dependencies](#updating-dependencies)
+  - [Rebuilding Containers](#rebuilding-containers)
+- [Adding a New CUDA Version](#adding-a-new-cuda-version)
+- [Troubleshooting](#troubleshooting)
+- [See Also](#see-also)
+
+---
+
+## Philosophy
 
 ```
 envs/
-├── benchmarks/                    # Training benchmark environment
-│   └── cuda121-flash-attn/        # CUDA 12.1 + flash attention
+├── benchmarks/                    # Training benchmark 
+│   ├── cuda121-flash-attn/        # CUDA 12.1 + flash attn
+│   ├── cuda128-flash-attn/        # CUDA 12.8 + flash attn 
+│   └── cuda130-flash-attn/        # CUDA 13.0 + flash attn 
 │       ├── pyproject.toml
 │       ├── uv.lock
 │       └── singularity_uv-runtime.def
@@ -122,6 +158,23 @@ Builds a Singularity container image that bundles the Python environment with al
 ---
 
 ## Quick Start
+
+### Automated Installation (Recommended)
+
+The `install/` directory provides scripts to install all environments and build all containers in one step:
+
+```bash
+# From the training/ directory
+cd install
+
+# Install all Python environments (uv sync)
+bash install-all-envs.sh
+
+# Build all Singularity containers
+bash build-all-singularity.sh
+```
+
+Both scripts can be run from either `training/` or `training/install/`.
 
 ### Local Development
 
@@ -310,8 +363,10 @@ Run `uv lock --upgrade` to resolve conflicts. Check that `pyproject.toml` depend
 
 ## See Also
 
-- [benchmarks/how-to-build.md](benchmarks/how-to-build.md) — Detailed build instructions for training environment
-- [cli/how-to-build.md](cli/how-to-build.md) — Detailed build instructions for CLI environment
+- [install/install-all-envs.sh](../install/install-all-envs.sh) — Install all Python environments with `uv`
+- [install/build-all-singularity.sh](../install/build-all-singularity.sh) — Build all Singularity containers
+- [envs/benchmarks/how-to-build.md](benchmarks/how-to-build.md) — Detailed build instructions for training environment
+- [envs/cli/how-to-build.md](cli/how-to-build.md) — Detailed build instructions for CLI environment
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system (references container path)
 - [scripts/README.md](../scripts/README.md) — Training scripts (run inside containers)
 - [scripts/slurm/README.md](../scripts/slurm/README.md) — SLURM submission (uses containers)
