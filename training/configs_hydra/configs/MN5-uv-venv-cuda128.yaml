@@ -1,0 +1,11 @@
+# Base configuration for benchmark experiments
+defaults:
+  - MN5
+  - _self_
+
+machine:
+  runtime_env_mode: venv
+  modules:
+    - cuda/12.8
+  framework_name_pattern: MN5-cuda128
+ 

@@ -1,0 +1,9 @@
+name: "dataset name"                  # Must be filled
+path: "pat/to/dataset"                # Must be filled
+train:                                # Provide only is train and validation files are pre-split
+  #- train_0.anyextention             # example, DO NOT uncomment
+  #- train_1.anyextention             # example, DO NOT uncomment
+validation:                           # Provide only is train and validation files are pre-split
+  #- valid_0.anyextention             # example, DO NOT uncomment
+task: "Name of training task type"    # Must be filled
+max_seq_len: 0                        # Must be filled

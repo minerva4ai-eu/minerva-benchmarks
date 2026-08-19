@@ -1,0 +1,24 @@
+defaults:
+  - base
+  - _self_
+
+name: accelerate
+python_environment:
+singularity_container: 
+
+parallelism_name: "" # Will be filled in during composing time
+parallelism:
+  ddp: { min_gpus: 2 }
+  fsdp: { min_gpus: 2 }
+
+scripts:
+  run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
+  finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
+  shared: scripts/shared
+  copy_files:
+    - scripts/accelerate-common/gpu_monitor.py
+    - scripts/accelerate-common/accelerate_config.yaml
+    - scripts/accelerate-common/utils.py
+    - scripts/gpu_plots.py
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}

@@ -1,0 +1,8 @@
+name: squadv2
+path: "path to parquet files"
+task: ""
+train:
+  - "train-00000-of-00001.parquet"
+validation:
+  - "validation-00000-of-00001.parquet"
+max_seq_len: 1024

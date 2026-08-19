@@ -1,0 +1,70 @@
+[project]
+name = "training-env-cuda130"
+version = "0.1.0"
+requires-python = "==3.12.*"
+dependencies = [
+  "setuptools",
+  "accelerate",
+  "bitsandbytes",
+  "datasets",
+  "deepspeed",
+  "einops",
+  "evaluate",
+  "huggingface-hub",
+  "hydra-core",
+  "kagglehub",
+  "lightning",
+  "matplotlib",
+  "memray",
+  "numpy",
+  "pandas",
+  "peft",
+  "ray",
+  "scikit-learn",
+  "scipy",
+  "seaborn",
+  "sentencepiece",
+  "tiktoken",
+  "tokenizers",
+  "torch==2.12.1",
+  "torchvision",
+  "torchao",
+  "torchdata",
+  "torchmetrics",
+  "torchtune",
+  "transformers",
+  "triton",
+  "trl",
+  "safetensors",
+  "tensorboardx",
+  "rich",
+  "pyyaml",
+  "python-dotenv",
+  "tqdm",
+  "psutil",
+  "prompt-toolkit2",
+  "flash-attn",
+  "pynvml",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "astral-cu130"
+url = "https://wheels.astral.sh/simple/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+torchvision = { index = "pytorch-cu130" }
+triton = { index = "pytorch-cu130" }
+flash-attn = { index = "astral-cu130" }
+
+#[tool.uv.extra-build-dependencies]
+#flash-attn = ["setuptools", "torch"]
+
+#[tool.uv]
+#no-build-isolation-package = ["flash-attn", "deepspeed"]

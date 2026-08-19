@@ -1,0 +1,5 @@
+defaults:
+  - alpaca
+  - _self_
+
+path: /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json

@@ -1,0 +1,24 @@
+defaults:
+  - base
+  - _self_
+
+name: torchrun
+python_environment:
+singularity_container: 
+
+parallelism_name: "" # Will be filled in during composing time
+parallelism:
+  none: { min_gpus: 1, max_gpus: 1 }
+  ddp: { min_gpus: 2 }
+  fsdp: { min_gpus: 2 }
+
+scripts:
+  run: scripts/torchrun-common/run-${framework.parallelism_name}.sh
+  finetune: scripts/torchrun-common/finetune-${framework.parallelism_name}.py
+  shared: scripts/shared
+  copy_files:
+    - scripts/torchrun-common/gpu_monitor.py
+    - scripts/torchrun-common/utils.py
+    - scripts/gpu_plots.py
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}

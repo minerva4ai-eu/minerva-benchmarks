@@ -1,0 +1,35 @@
+defaults:
+  - base_training
+  - _self_
+
+name: gemma3_12b # MUST BE same as the filename
+path: /path/to/gemma3_12b
+# architecture dims — used by memory rule
+total_params_billions: 12.0
+architecture_type: dense
+num_layers:           46
+hidden_dim:           3840
+ffn_intermediate_dim: 15360
+num_attention_heads:  16
+num_kv_heads:         8        # GQA — 2 query heads share each KV head
+head_dim:             256      # hidden_dim / num_attention_heads = 3840 / 16 (rounded)
+# attention
+attention_type:       gqa      # grouped query attention — alternates local/global
+# tokenizer
+vocab_size:           262144
+tokenizer_type:       sentencepiece
+# GPU requirements — constraint metadata
+max_gpus_scale: 8
+frameworks_supported:
+  - torchrun
+  - accelerate
+  - deepspeed
+  - deepspeed-accelerate
+parallelism_supported:
+  - fsdp
+  - zero2
+  - zero3
+      
+combinations:
+  batch_sizes: [4, 8]
+  grad_accums: [8]

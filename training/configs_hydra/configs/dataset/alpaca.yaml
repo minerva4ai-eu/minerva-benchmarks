@@ -1,0 +1,4 @@
+name: alpaca
+path: "pat/to/dataset"
+task: Instruction-Finetuning
+max_seq_len: 1024

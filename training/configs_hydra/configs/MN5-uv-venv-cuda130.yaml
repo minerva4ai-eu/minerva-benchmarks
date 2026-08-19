@@ -1,0 +1,10 @@
+# Base configuration for benchmark experiments
+defaults:
+  - MN5
+  - _self_
+
+machine:
+  runtime_env_mode: venv
+  framework_name_pattern: MN5-cuda130
+  modules:
+ 

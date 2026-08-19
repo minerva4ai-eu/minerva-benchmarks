@@ -1,0 +1,36 @@
+# Base configuration for benchmark experiments
+# Must be imported, as per the MN5.yaml example
+defaults:
+  - model: base_training
+  - framework: base
+  - dataset: base
+  - slurm: base
+  - arch: base
+  - _self_
+id: -100
+machine:
+  name: ??? # self given name, must coincide with .env-{machine.name} file
+  name_pattern: ???
+  modules:                        # list of modules to load
+    - module1 
+    - module2
+  runtime_env_mode: ???           # Must provide either "venv" or "singularity"
+  singularity_binds:              # singularity binds to apply on runtime
+    - "/path/host:/path/container"
+    - "/another/path/host:/another/path/container"
+  singularity_args:               # extra singularity arguments to apply on runtine
+    - "-x xxxxx"
+    - "-y yyyyy"
+  single_gpu_also_valid: True     # include single GPUs experiments, where it applies
+
+experiment:
+  name: "benchmark_run"           # Do not change here, only in inherited configuration
+  output_dir: "results/"          # DEPRECATED(?), overwritten by RUNS_DIR global variable in 'hydra_app.py'
+  repeat: 1                       # Do not change, default value for all benchmarks across computers
+  yaml_filename:                  # Do not fill in, value filled during compose runtime
+  env:                            # Fill in with environment variable to be available on runtime
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
+    # Change into absolute path, otherwise caches
+    # will be created locally on each code run directory copy
+    TORCHINDUCTOR_CACHE_DIR: "absolute path to minerva-benchmarks/training/.torch-inductor-cache" 
+    TRITON_CACHE_DIR: "absolute path to minerva-benchmarks/training/.triton-cache"

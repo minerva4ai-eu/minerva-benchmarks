@@ -1,0 +1,51 @@
+defaults:
+  - base_training
+  - _self_
+
+name: llama3_8b # MUST BE same as the filename
+path: /path/to/llama3_8b
+
+# architecture dims — used by memory rule
+total_params_billions: 8.03
+architecture_type: dense
+num_layers:           32
+hidden_dim:           4096
+ffn_intermediate_dim: 14336
+num_attention_heads:  32
+num_kv_heads:         8        # GQA — 4 query heads share each KV head
+head_dim:             128      # hidden_dim / num_attention_heads = 4096 / 32
+
+# attention
+attention_type:       gqa      # grouped query attention
+#sliding_window:       null     # no sliding window
+
+# positional encoding
+#rope_theta:           500000.0
+#max_position_embeddings: 131072   # 128k context (3.1), 8192 for base 3.0
+
+# tokenizer
+vocab_size:           128256
+tokenizer_type:       tiktoken
+
+# normalization
+#norm_type:            rms_norm
+#norm_eps:             1.0e-5
+#activation_function:  silu     # SwiGLU
+
+# GPU requirements — constraint metadata
+#min_gpus: 1
+max_gpus_scale: 8
+frameworks_supported:
+  - torchrun
+  - accelerate
+  - deepspeed
+  - deepspeed-accelerate
+parallelism_supported:
+  - fsdp
+  - zero2
+  - zero3
+
+
+combinations:
+  batch_sizes: [4, 8]
+  grad_accums: [8]

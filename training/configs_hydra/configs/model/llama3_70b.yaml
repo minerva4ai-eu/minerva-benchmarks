@@ -1,0 +1,48 @@
+defaults:
+  - base_training
+  - _self_
+
+name: llama3_70b # MUST BE same as the filename
+path: /path/to/llama3_70b
+
+# transformer dims
+total_params_billions: 70.6      # Llama 2 was ~68.9B
+architecture_type: dense
+num_layers:           80         # Llama 2 was also 80
+hidden_dim:           8192       # Llama 2 was also 8192
+ffn_intermediate_dim: 28672      # Llama 2 was also 28672
+num_attention_heads:  64         # Llama 2 was also 64
+num_kv_heads:         8          # GQA — 8:1 ratio (Llama 2 was also 8)
+head_dim:             128        # 8192 / 64
+
+# attention
+attention_type:       gqa
+#sliding_window:       null     
+
+# positional encoding
+#rope_theta:           500000.0   # Llama 2 was 10000.0
+#max_position_embeddings: 8192    # Llama 2 was 2048 (Llama 3.1 bumped this to 128k)
+
+# tokenizer
+vocab_size:           128256     # Llama 2 used a 32000 size vocabulary
+tokenizer_type:       tiktoken   # Llama 2 used sentencepiece
+
+# normalization
+#norm_type:            rms_norm
+#norm_eps:             1.0e-5
+#activation_function:  silu       # SwiGLU
+
+max_gpus_scale: 32
+frameworks_supported:
+  - torchrun
+  - accelerate
+  - deepspeed
+  - deepspeed-accelerate
+parallelism_supported:
+  - fsdp
+  - zero3
+
+
+combinations:
+  batch_sizes: [1, 2]
+  grad_accums: [8]
