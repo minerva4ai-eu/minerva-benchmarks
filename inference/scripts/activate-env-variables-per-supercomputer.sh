@@ -99,6 +99,23 @@ case "$MACHINE" in
         export ADDITIONAL_SINGULARITY_ARGS="--nv"
         ;;
 
+    cines-adastra-mi250 | cines-adastra-mi300)
+        export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+        export NCCL_NET_GDR_LEVEL=3
+ 
+        export BINDINGS_SINGULARITY="/sys,/dev,/proc,/lus,/lus/scratch/BCINES/dci/salaun/tmp:/tmp,/opt/software/libfabric/1.23.1,/opt/software/modulefiles/aws-ofi-rccl/1.18.0_rocm7,/usr/lib64/libcxi.so.1"
+        export ADDITIONAL_SINGULARITY_ARGS="--rocm --writable-tmpfs"
+
+        export TMPDIR="/lus/scratch/BCINES/dci/salaun/tmp"
+        export VLLM_RPC_BASE_PATH="$SCRATCH/vllm/tmp/.cache"
+        export VLLM_CACHE_ROOT="$SCRATCH/vllm/tmp/.vllm/cache"
+        export XDG_CACHE_HOME="$SCRATCH/vllm/tmp/.xdg/cache"
+
+        mkdir -p $VLLM_RPC_BASE_PATH $VLLM_CACHE_ROOT $XDG_CACHE_HOME
+
+        export NCCL_NET_PLUGIN="/opt/software/modulefiles/aws-ofi-rccl/1.18.0_rocm7/librccl-net.so"
+        export APPTAINERENV_LD_LIBRARY_PATH="/opt/software/modulefiles/aws-ofi-rccl/1.18.0_rocm7:/opt/software/libfabric/1.23.1/lib64:/usr/lib64"
+        ;;
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
