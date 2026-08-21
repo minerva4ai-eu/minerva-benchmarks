@@ -38,7 +38,7 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     if dist.is_initialized():
         device_rank = dist.get_rank()
     else:
-        device_rank = int(os.environ["RANK"])
+        device_rank = os.environ.get("RANK")
     if rank is None or device_rank == rank:
         print(f"[ RANK {device_rank} ]: {msg}")
 
@@ -180,7 +180,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         print_rank(0, f"Model architecure: \n{kwargs['model']}")
         print_rank(0, f"Number of model parameters: {self._num_params / 1e9:.2f}B")
         print_rank(
-            int(os.environ["RANK"]),
+            os.environ.get("RANK"),
             f"Number of model parameters on this GPU: {self._num_params_this_gpu / 1e9:.2f}B",
         )
 
@@ -228,7 +228,10 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 return
 
             # Cumulative tokens processed
-            rank = dist.get_rank()
+            if dist.is_available() and dist.is_initialized():
+                rank = dist.get_rank()
+            else:
+                rank = 0  # Default to rank 0 for single-process/non-initialized runs
             if "loss" in logs:
                 logs["loss"] = f"{logs['loss']:.4f}"
             if "grad_norm" in logs:
@@ -252,8 +255,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 )
 
             # Batch size info
-            logs[f"D{os.environ['RANK']}:seen_batches"] = self.batches_seen_this_gpu
-            logs[f"D{os.environ['RANK']}:seen_tokens"] = self.total_tokens_this_gpu
+            logs[f"D{os.environ.get('RANK')}:seen_batches"] = self.batches_seen_this_gpu
+            logs[f"D{os.environ.get('RANK')}:seen_tokens"] = self.total_tokens_this_gpu
             logs["effective_batch_size"] = (
                 self.args.per_device_train_batch_size
                 * self.args.gradient_accumulation_steps
@@ -463,7 +466,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 )
                 if torch.cuda.is_available():
                     print(
-                        f"Average FLOPs per GPU: {self.global_average_flops / dist.get_world_size() / 1e12:.2f} TFLOPs/sec/GPU"
+                        f"Average FLOPs per GPU: {self.global_average_flops / int(os.environ.get('WORLD_SIZE', 1)) / 1e12:.2f} TFLOPs/sec/GPU"
                     )
                 # print(f"Average MFU across all GPUs: {self.global_average_mfu:.2f}%")
                 if torch.cuda.is_available():

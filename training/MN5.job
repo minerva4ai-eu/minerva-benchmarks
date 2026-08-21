@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH -A bsc99
 #SBATCH -q acc_bench
-#SBATCH -N 4
+#SBATCH -N 2
 #SBATCH --gres=gpu:4
 #SBATCH --ntasks-per-node=4
 #SBATCH -c 20
-#SBATCH -t 10:00:00
+#SBATCH -t 10-00:00:00
 
-# #SBATCH -D $HOME/minerva-benchmarks/training
+# #SBATCH -D /home/bsc/bsc079516/minerva-benchmarks/training
 #SBATCH -J minerva_train
 #SBATCH -o ./job_outputs/%j/slurm-%x.out
 
@@ -41,12 +41,11 @@ source config.sh
 declare -A paths
 paths["gemma3_1b"]="/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-1b-it"
 paths["llama3_8b"]="/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.1-8B-Instruct"
-paths["alpaca"]="/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
-paths["venv"]="/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv"
+paths["alpaca"]="/gpfs/scratch/bsc99/ai_operations/MINERVA/minerva_benchmarking/training/training_MN5/datasets/alpaca-cleaned/alpaca_data_cleaned.json"
+paths["venv"]="envs/benchmarks/cuda121-flash-attn/.venv"
 paths["singularity"]="/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime-ncclIB.sif"
 export MINERVAPATHS=$(declare -p paths)
 export CONTAINER_ARGS="--nv --network=host"
-CONTAINER_ARGS+=" -B `pwd`"
 CONTAINER_ARGS+=" -B /gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets"
 CONTAINER_ARGS+=" -B /gpfs/scratch/bsc99/ai_operations/models_registry/models_registry"
 export CONTAINER_PATH=${paths["singularity"]}
@@ -54,16 +53,10 @@ export CONTAINER_PATH=${paths["singularity"]}
 export GPU_PEAK_TFLOPS=989
 
 # Defaults (if ran without CLI)
-if [[ -z $CONFIG_ENV ]]; then 
-    CONFIG_ENV="singularity"
-fi
 if [[ -z $CONFIGS_PATH ]]; then 
     export CONFIGS_PATH="."
 fi
 get_config
-
-# TODO: add config
-export MAX_MODEL_LENGTH=1024
 
 if [[ -z $OUT_DIR ]]; then 
     export OUT_DIR="results"
@@ -73,7 +66,7 @@ fi
 if [[ $CONFIG_ENV == "singularity" ]]; then
     module load singularity
 else
-    module load cuda/12.1 miniforge
+    module load uv
     source ${paths["venv"]}/bin/activate
     which python
 fi
@@ -86,6 +79,8 @@ echo CONFIG_DATA=${CONFIG_DATA[@]}
 echo CONFIG_ENV=$CONFIG_ENV
 echo
 echo model_names=${model_names[@]}
+echo frameworks=${frameworks[@]}
+echo parallelisms=${parallelisms[@]}
 echo dataset_names=${dataset_names[@]}
 echo node_configs=${node_configs[@]}
 echo batch_sizes=${batch_sizes[@]}
@@ -93,23 +88,16 @@ echo grad_accums=${grad_accums[@]}
 echo enable_compile=${enable_compile[@]}
 echo precisions=${precisions[@]}
 echo lrs=${lrs[@]}
+echo max_lengths=${max_lengths[@]}
 echo STEPS=$STEPS
 echo EPOCHS=$EPOCHS
 echo trials=$trials
 
 
-# Design choice: levels of parallization with rule check
 
-# Rule Check: Model-Framework-Parallelism
-for model_name in "${model_names[@]}"; do
-    mapfile -t frameworks < <(echo $CONFIG_DATA | jq -r ".models.\"$model_name\".frameworks_supported[]")
-    mapfile -t parallelisms < <(echo $CONFIG_DATA | jq -r ".models.\"$model_name\".parallelism_supported[]")
+ncombos=$((${#model_names[@]} * ${#frameworks[@]} * ${#parallelisms[@]} * ${#node_configs[@]} * ${#dataset_names[@]} * ${#batch_sizes[@]} * ${#grad_accums[@]} * ${#enable_compile[@]} * ${#precisions[@]} * ${#lrs[@]} * ${#max_lengths[@]} * $trials))
+echo "Checking $ncombos configurations"
 
-    ncombos=$((${#frameworks[@]} * ${#parallelisms[@]} * ${#node_configs[@]} * ${#dataset_names[@]} * ${#batch_sizes[@]} * ${#grad_accums[@]} * ${#enable_compile[@]} * ${#precisions[@]} * ${#lrs[@]} * $trials))
-    echo "Checking $ncombos configurations for model: $model_name"
-
-    # Use script that calls srun to do checks in order to avoid srun steps with invalid configurations
-    parallel -j 0 ./work.sh $model_name {} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: ${node_configs[@]} ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: $(seq $trials)
-    # parallel -j 0 --joblog joblog.txt ./work.sh $model_name {} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: $(seq $max_nodes) ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: $(seq $trials)
-
-done
+# Use script that calls srun to do checks in order to avoid srun steps with invalid configurations
+parallel -j 0 ./work.sh {} ::: ${model_names[@]} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: ${node_configs[@]} ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: ${max_lengths[@]} ::: $(seq $trials)
+# parallel -j 0 --joblog joblog.txt ./work.sh $model_name {} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: $(seq $max_nodes) ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: $(seq $trials)

@@ -1,65 +1,17 @@
 {
-    "models": {
-        "gemma3_1b": {
-            "total_params_billions": 1.0,
-            "architecture_type": "dense",
-            "num_layers": 18,
-            "hidden_dim": 2048,
-            "ffn_intermediate_dim": 16384,
-            "num_attention_heads": 8,
-            "num_kv_heads": 1,
-            "head_dim": 256,
-            "attention_type": "mqa",
-            "vocab_size": 256000,
-            "tokenizer_type": "sentencepiece",
-            "frameworks_supported": [
-                "torchrun", 
-                "accelerate", 
-                "deepspeed", 
-                "deepspeed-accelerate"
-            ],
-            "parallelism_supported": [
-                "none", 
-                "ddp", 
-                "fsdp", 
-                "zero1", 
-                "zero2", 
-                "zero3"]
-        },
-        "llama3_8b": {
-            "total_params_billions": 8.03,
-            "architecture_type": "dense",
-            "num_layers": 32,
-            "hidden_dim": 4096,
-            "ffn_intermediate_dim": 14336,
-            "num_attention_heads": 32,
-            "num_kv_heads": 8,
-            "head_dim": 128,
-            "attention_type": "gqa",
-            "vocab_size": 128256,
-            "tokenizer_type": "tiktoken",
-            "frameworks_supported": [
-                "torchrun",
-                "accelerate",
-                "deepspeed",
-                "deepspeed-accelerate"
-            ],
-            "parallelism_supported": [
-                "fsdp",
-                "zero2",
-                "zero3"
-            ]
-        }
-    },
+    "models": ["gemma3_1b"],
     "training": {
+        "frameworks": ["torchrun", "accelerate"],
+        "parallelisms": ["none", "ddp", "fsdp"],
         "datasets": ["alpaca"],
-        "node_configs": [1, 2],
-        "batch_sizes": [1, 4, 8, 16],
-        "enable_compile": [true, false],
-        "precisions": ["bf16", "fp32", "fp16"],
-        "grad_accums": [8, 16],
-        "steps": 3,
+        "node_configs": [1],
+        "batch_sizes": [4],
+        "enable_compile": [false],
+        "precisions": ["bf16"],
+        "grad_accums": [8],
+        "steps": 50,
         "lrs": [2e-5],
+        "max_lengths": [2048],
         "trials": 1
     }
 }
