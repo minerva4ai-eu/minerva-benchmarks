@@ -1,5 +1,5 @@
 {
-  "Text Generation": "/lus/work/BCINES/dci/SHARED/Models/*/",
-  "Embedding": "/lus/work/BCINES/dci/SHARED/Models/*/",
+  "Text Generation": "/lus/work/BCINES/dci/SHARED/Models/flat/",
+  "Embedding": "/lus/work/BCINES/dci/SHARED/Models/flat/",
   "Vision": "/path/to/vision/models"
 }
