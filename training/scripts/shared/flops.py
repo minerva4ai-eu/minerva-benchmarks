@@ -302,10 +302,10 @@ class MFUCallback(TrainerCallback):
         if logs is None or self._step_start_time is None:
             return
 
-        logs[f"D{os.environ['RANK']}:TFLOPs/sec/GPU"] = (
+        logs[f"D{os.environ.get('RANK')}:TFLOPs/sec/GPU"] = (
             f"{self.state.tflops_this_gpu[-1]:.2f}"
         )
-        logs[f"D{os.environ['RANK']}:mfu"] = f"{self.state.mfu_this_gpu[-1]:.2f}%"
+        logs[f"D{os.environ.get('RANK')}:mfu"] = f"{self.state.mfu_this_gpu[-1]:.2f}%"
 
 
 # ---------------------------------------------------------------------------

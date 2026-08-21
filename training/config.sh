@@ -37,7 +37,9 @@ get_config() {
     CONFIG_DATA=$(jq -r '.' $CONFIG_FILE)
 
     # Store arrays
-    mapfile -t model_names < <(echo ${CONFIG_DATA[@]} | jq -r '.models | keys[]')
+    mapfile -t model_names < <(echo ${CONFIG_DATA[@]} | jq -r '.models[]')
+    mapfile -t frameworks < <(echo ${CONFIG_DATA[@]} | jq -r '.training.frameworks[]')
+    mapfile -t parallelisms < <(echo ${CONFIG_DATA[@]} | jq -r '.training.parallelisms[]')
     mapfile -t dataset_names < <(echo ${CONFIG_DATA[@]} | jq -r '.training.datasets[]')
     mapfile -t node_configs < <(echo ${CONFIG_DATA[@]} | jq -r '.training.node_configs[]')
     mapfile -t batch_sizes < <(echo ${CONFIG_DATA[@]} | jq -r '.training.batch_sizes[]')
@@ -45,6 +47,7 @@ get_config() {
     mapfile -t enable_compile < <(echo ${CONFIG_DATA[@]} | jq -r '.training.enable_compile[]')
     mapfile -t precisions < <(echo ${CONFIG_DATA[@]} | jq -r '.training.precisions[]')
     mapfile -t lrs < <(echo ${CONFIG_DATA[@]} | jq -r '.training.lrs[]')
+    mapfile -t max_lengths < <(echo ${CONFIG_DATA[@]} | jq -r '.training.max_lengths[]')
     # enable_flash_attention=$(echo ${CONFIG_DATA[@]} | jq -r '.training.enable_flash_attention[]')
 
     # Store scalars
@@ -52,25 +55,13 @@ get_config() {
     export EPOCHS=$(echo ${CONFIG_DATA[@]} | jq '.training.epochs')
     trials=$(echo ${CONFIG_DATA[@]} | jq '.training.trials')
 
-
-    # Mini Mode for testing
-    if [[ $MINI_MODE == true ]]; then
-        echo "Running in mini mode"
-        model_names=(${model_names[0]})
-        dataset_names=(${dataset_names[0]})
-        batch_sizes=(${batch_sizes[-1]})
-        grad_accums=(${grad_accums[-1]})
-        precisions=(${precisions[0]})
-        enable_bf16=(${enable_bf16[0]})
-        STEPS=2
-        lrs=(${lrs[0]})
-        trials=1
-    fi
-
 }
 
 check_config() {
     # For Dry Run
+    if [[ -z $MODEL ]]; then
+        MODEL=$1
+    fi
     if [[ -z $FRAMEWORK ]]; then
         FRAMEWORK=$2
     fi
@@ -89,6 +80,7 @@ check_config() {
         return 0
     fi
 
+    # TODO: check accelerate none
     # Rule Check: Framework-Parallelism
     if [[ $PARALLELISM == "none" && $FRAMEWORK != "torchrun" ]]; then
         echo "Skipping parallelism $PARALLELISM with distributed framework $FRAMEWORK (setup only in torchrun)"
@@ -103,8 +95,15 @@ check_config() {
         return 0
     fi
 
+    # TODO: Check CPU
+    # Rule Check: Model-Parallelism
+    if [[ $MODEL != gemma3_1b && ( $PARALLELISM == none || $PARALLELISM == ddp ) ]]; then
+        echo "Skipping compile with model $MODEL (only gemma3_1b fits on a single GPU)"
+        return 0
+    fi
+
     # Rule Check: Slurm-Node
-    if [[ $SLURM_JOB_NUM_NODES -gt 0 && $SLURM_JOB_NUM_NODES < $NUMBER_OF_NODES ]]; then
+    if [[ -n $SLURM_JOB_NUM_NODES && $SLURM_JOB_NUM_NODES -lt $NUMBER_OF_NODES ]]; then
         echo "Skipping num_node=$NUMBER_OF_NODES on job with only $SLURM_JOB_NUM_NODES"
         return 0
     fi

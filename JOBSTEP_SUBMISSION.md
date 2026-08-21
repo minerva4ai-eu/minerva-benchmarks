@@ -79,23 +79,30 @@ The new step-based approach addresses these issues by:
     UnkillableStepTimeout   = 360 sec
     ```
 
+## Benefits
+
+1. **Reduced Queue Time**: Only one job submission instead of many
+2. **Lower Overhead**: Shared environment setup and resource allocation
+3. **More Configurations**: Steps can be scheduled more efficiently
+4. **Simplified Management**: Single job to monitor instead of many
+
 ## Usage
 
 ### Training Benchmarks
 
-Examine configurations:
+Write configuration files:
 ```bash
-./main.sh submit --config-name MN5 --dry-run
+./minerva-cli.sh run --config-name MN5-uv-venv-cuda130 --dry-run
 ```
 
-Submit benchmark:
+Run benchmark:
 ```bash
-./main.sh submit --config-name MN5 --config-env singularity
+./minerva-cli.sh run --config-name MN5-uv-venv-cuda130
 ```
 
-Submit subset:
+Run configuration:
 ```bash
-./main.sh submit --config-name MN5 --mini-mode
+./minerva-cli.sh run --yaml /home/bsc/bsc079516/minerva_backup/minerva-benchmarks/training/benchmark-runs-MN5-uv-venv-cuda130/bsc-mn5-acc/19-08-2026/gemma_1b/torchrun/none/alpaca/nodes-1/yaml-configs/none--bs8-grad_accum8-compileFalse-precbf16-steps50.yaml
 ```
 
 ### Inference Benchmarks
@@ -104,88 +111,20 @@ Submit subset:
 
 ## Compatibility
 
-The step-based approach does not change the underlying benchmark execution logic. However, configuration is heavily related to task launching, so these definitions along with the CLI are modified (python dependencies for the CLI and Configuration are removed). Monitoring is also modified here and being discussed in terms of overhead affecting performance.
+The step-based approach does not change the underlying benchmark execution logic. Monitoring is also modified here and being discussed in terms of overhead affecting performance.
 
-> This is not an official proprosal to change the exiting functionalities for CLI and Configuration; given the objective of optimizing the task submission, the developer thought it easier to focus on this in isolation, and planned for subsequent steps for integrating with existing functionalities with python and it's dependencies.
+> Consider changing the exiting functionalities for CLI and Configuration
 
-### Major placeholders
+### Separation of Concerns
 1. Configurations: minimize config file reading/writing 
     - machine-specific configurations in job script (`$CONFIG_NAME.job`)
     - cross-machine configurations in a single JSON (`benchmark.json`)
 2. CLI: flexibility and control
     - orchestrate configuration and submission
     - Global and local environments are set at the appropriate levels
-3. Monitoring: "separation of concerns"
+3. Monitoring:
     - eliminate errors with CPU
-    - plotting is done outside of main run
-
-## Benefits
-
-1. **Reduced Queue Time**: Only one job submission instead of many
-2. **Lower Overhead**: Shared environment setup and resource allocation
-3. **More Configurations**: Steps can be scheduled more efficiently
-4. **Simplified Management**: Single job to monitor instead of many
-
-## References
-
-### GNU parallel
-A powerful tool to launch tasks simultaneously with a combination of arguments
-- [GNU Parallel manual](https://www.gnu.org/software/parallel/man.html)
-    ```
-    parallel -j 15 'sleep $(($RANDOM %3)); echo {}' ::: $(seq 5) ::: a b c
-    ```
-    Installation:
-    ```
-    # Get source code
-    wget http://ftp.gnu.org/gnu/parallel/parallel-20260522.tar.bz2
-    tar -xjf parallel-20260522.tar.bz2
-
-    # Build
-    ./configure --prefix=/path/to/installdir
-    make
-    make install
-    ```
-
-### GNU parallel with slurm
-- [PEARC 24 Tutorial](https://github.com/ketancmaheshwari/pearc24tut)
-- [U Chicago User Guide - Tutorial](https://docs.rcc.uchicago.edu/tutorials/kicp/#gnu-parallel)
-- [U Chicago User Guide - Slurm](https://docs.rcc.uchicago.edu/slurm/sbatch/#gnu-parallel)
-- [U Luxembourg Tutorial - Sequential](https://ulhpc-tutorials.readthedocs.io/en/latest/sequential/basics/)
-- [U Luxembourg Tutorial - Distributed](https://ulhpc-tutorials.readthedocs.io/en/latest/sequential/manytasks-manynodes/)
-- [U Berkeley User Guide](https://docs-research-it.berkeley.edu/services/high-performance-computing/user-guide/running-your-jobs/gnu-parallel/)
-- [U Colorado Boulder Docs](https://curc.readthedocs.io/en/latest/software/GNUParallel.html)
-- [SC Wales](https://portal.supercomputing.wales/index.php/index/slurm/interactive-use-job-arrays/batch-submission-of-serial-jobs-for-parallel-execution/)
-
-    Exercise:
-    ```
-    #!/bin/bash
-    #SBATCH -c 4
-    #SBATCH -t 10:00
-    #SBATCH -J spar_test
-    #SBATCH -o ./job_outputs/slurm-%j-%x.out
-
-    module load parallel
-
-    runner_fn() {
-        echo args: $@
-        TIMEVAL=$(( $(( $(($RANDOM %3))*10 )) + 5 ))
-        srun -n 1 -c $1 sleep $TIMEVAL && echo $2
-    }
-    export -f runner_fn
-
-    parallel -j 0 runner_fn {} ::: 1 2 4 ::: uno dos tres
-    ```
-    ```
-    [username@machname ~]$ squeue -s
-            STEPID     NAME PARTITION     USER      TIME NODELIST
-        43613735.0    sleep       gpp bsc07951      0:06 gs02r3b02
-        43613735.3    sleep       gpp bsc07951      0:06 gs02r3b02
-        43613735.4    sleep       gpp bsc07951      0:00 gs02r3b02
-    43613735.batch    batch       gpp bsc07951      0:11 gs02r3b02
-    43613735.extern   extern       gpp bsc07951      0:11 gs02r3b02
-    [username@machname ~]$ sacct -j 43613735 --noheader -o jobid | wc -l
-    9
-    ```
+    - do plotting outside of main run
 
 
 ## TODO
