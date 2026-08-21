@@ -1,0 +1,19 @@
+name: megatron-nemo
+
+parallelism_name: "" # Will be filled in during composing time
+parallelism:
+  dp: { min_gpus: 2 }
+  pp: { min_gpus: 2 }
+  tp: { min_gpus: 2, max_gpus: 8}
+  cp: { min_gpus: 2}
+
+scripts:
+  run: scripts/nemo-megatron-common/run-jz_nemo_megatron_7B.slurm
+  finetune: scripts/nemo-megatron-common/nemo_megatron.py
+  shared: scripts/shared
+  copy_files:
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}
+    - scripts/nemo-megatron-common/utils
+
+singularity_container: /lustre/fsn1/singularity/images/ssos027/nemo_2509.sif

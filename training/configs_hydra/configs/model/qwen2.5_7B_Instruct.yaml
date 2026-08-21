@@ -1,0 +1,41 @@
+defaults:
+  - base_training
+  - _self_
+
+name: qwen2.5_7B_Instruct # MUST BE same as the filename
+path: "/lustre/fswork/projects/idris/sos/ssos027/LLM-FT-IDRIS-Benchmark/nemo_ckpt"
+# transformer dims
+total_params_billions: 7.61
+architecture_type: dense
+num_layers:           28
+hidden_dim:           3584
+ffn_intermediate_dim: 18944
+num_attention_heads:  28
+num_kv_heads:         4        # GQA
+head_dim:             128      # 3584 / 28
+
+# attention
+attention_type:       gqa
+
+# tokenizer
+vocab_size:           152064
+
+# GPU requirements — constraint metadata
+max_gpus_scale: 64
+frameworks_supported:
+  - nemo-megatron
+parallelism_supported:
+  - dp
+  - tp
+  - pp
+  - cp
+
+combinations:
+  batch_sizes: [1]
+  precisions: ["bf16"]
+  grad_accums: [8]
+  lr: [2e-5]
+  optimizer: ["adamw"]
+  gradient_checkpointing: [False] # TODO: Implement parameterization
+  steps: [50]
+  enable_compile: [False]
