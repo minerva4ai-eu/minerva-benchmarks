@@ -8,8 +8,8 @@ echo "serve.sh: LAUNCH_FOLDER: $LAUNCH_FOLDER"
 echo "serve.sh: ADDITIONAL_ARGS: ${ADDITIONAL_ARGS[*]}"
 
 # Create Temporal directories
-TMPDIR=$CUR_DIR/tmp
-mkdir $TMPDIR
+# TMPDIR=$CUR_DIR/tmp #Defined in activate-env-variables-per-supercomputer.sh
+mkdir -p $TMPDIR
 chmod -R 777 $TMPDIR
 export SINGULARITY_CACHEDIR=$TMPDIR
 export SINGULARITY_TMPDIR=$TMPDIR
@@ -19,7 +19,7 @@ if [[ "$MODEL_PATH" == *"gemma-3-12b-it"* ]]; then
     # Run without --pp-size and --tp
     $CUR_DIR/wrapper_singularity.sh
     # $SINGULARITY_EXEC_COMMAND \
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS -C $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
       python3 -m sglang.launch_server \
         --model-path "$MODEL_PATH" \
         --context-length "$MAX_MODEL_LENGTH" \
@@ -34,7 +34,7 @@ elif [[ "$MODEL_PATH" == *"Llama-3.1-405B"* || "$MODEL_PATH" == *"Llama-3.1-405B
     # Run with --pp-size and --tp
     $CUR_DIR/wrapper_singularity.sh
     # $SINGULARITY_EXEC_COMMAND \
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS -C $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
       python3 -m sglang.launch_server \
         --model-path "$MODEL_PATH" \
         --pp-size "$PIPELINE_PARALLEL" \
@@ -51,11 +51,11 @@ elif [[ "$MODEL_PATH" == *"Llama-3.1-405B"* || "$MODEL_PATH" == *"Llama-3.1-405B
 elif [[ "$MODEL_PATH" == *"Mistral-7B-Instruct-v0.3"* ]]; then
     # Run with --pp-size and --tp
     $CUR_DIR/wrapper_singularity.sh
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS -C $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
       python3 -m sglang.launch_server \
         --model-path "$MODEL_PATH" \
-        --pp-size "$TENSOR_PARALLEL" \
-        --tp-size "$PIPELINE_PARALLEL" \
+        --tp-size "$TENSOR_PARALLEL" \
+        --pp-size "$PIPELINE_PARALLEL" \
         --context-length "$MAX_MODEL_LENGTH" \
         --port "$PORT" \
         --grammar-backend "xgrammar" \
@@ -68,7 +68,7 @@ else
     # Run with --pp-size and --tp-size
     $CUR_DIR/wrapper_singularity.sh
     # $SINGULARITY_EXEC_COMMAND \
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS -C $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
       python3 -m sglang.launch_server \
         --model-path "$MODEL_PATH" \
         --pp-size "$PIPELINE_PARALLEL" \
@@ -111,12 +111,12 @@ for conc in "${concurrencies[@]}"; do
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
     
     # Run in GPU monitor in background.
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
             python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
     # Run benchmark stressing the sglang server.
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
             python3 $BENCHMARK_FILE \
             --backend sglang \
             --host localhost \
