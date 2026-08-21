@@ -6,7 +6,7 @@ PARENT_DIR=$(dirname "$SCRIPT_ABSPATH")
 SCRIPT_NAME=$(basename "$SCRIPT_ABSPATH")
 
 source "$PARENT_DIR/utils.sh"
-echo -e "$LOGO_MAIN"
+echo -e "$INSTALLATION_LOGO_MAIN"
 
 if  [[ "$(basename "$PWD")" != "training" && "$(basename "$PWD")" != "install" ]];then
     echo -e "$RED>> Error:'$SCRIPT_NAME' must be executed inside minerva-benchmarks/training or minerva-benchmarks/training/install$RESET"

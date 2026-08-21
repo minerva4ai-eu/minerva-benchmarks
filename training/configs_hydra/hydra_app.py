@@ -88,13 +88,13 @@ def generate_valid_combos(
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
-
+            framework_pattern = f"{framework}-{_init_cfg.machine.framework_name_pattern}"
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
                     f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={_init_cfg.machine.name_pattern}/{framework}-{_init_cfg.machine.framework_name_pattern}",
-                    f"dataset={_init_cfg.machine.name_pattern}/{dataset}-{_init_cfg.machine.name_pattern}",
+                    f"framework={framework_pattern}",
+                    f"dataset={dataset}",
                     f"slurm={_init_cfg.machine.name_pattern}",
                     f"arch={_init_cfg.machine.name_pattern}",
                 ],
@@ -102,7 +102,7 @@ def generate_valid_combos(
             print(
                 f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
                 + f"\n\t· model: {model}"
-                + f"\n\t· framework: {framework}"
+                + f"\n\t· framework: {framework_pattern}"
                 + f"\n\t· dataset: {dataset}"
             )
             if framework not in cfg.model.frameworks_supported:
@@ -116,19 +116,19 @@ def generate_valid_combos(
 
                 if parallelism not in cfg.framework.parallelism.keys():
                     continue
-                # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
-                # print(f"parallelism: \n{parallelism}")
+                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+                #print(f"parallelism: \n{parallelism}")
                 parallelism_spex = cfg.framework.parallelism[parallelism]
 
                 target_parallelism = OmegaConf.create(
                     DictConfig({parallelism: parallelism_spex})
                 )
-                # print(f"target_parallelism: \n{target_parallelism}")
-                # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+                #print(f"target_parallelism: \n{target_parallelism}")
+                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
                 tmp_cfg.framework.parallelism_name = parallelism
                 tmp_cfg.framework.parallelism = target_parallelism
-                # print(f"\tCreating configuration for parallelism {parallelism}:")
-                #  print(OmegaConf.to_yaml(cfg))
+                #print(f"\tCreating configuration for parallelism {parallelism}:")
+                #print(OmegaConf.to_yaml(cfg))
 
                 # Make sure that slurm directives for 'qos'/'partition'
                 # & 'constraint' are provided accordingly

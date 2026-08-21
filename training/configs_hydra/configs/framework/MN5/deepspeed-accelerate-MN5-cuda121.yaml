@@ -1,6 +1,0 @@
-defaults:
-  - deepspeed-accelerate
-  - _self_
-
-python_environment: /gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv
-singularity_container: /gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif

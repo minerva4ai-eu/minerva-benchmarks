@@ -7,6 +7,16 @@ from .framework import FrameworkConfig
 from .model import ModelConfig, TrainArgsConfig
 from .slurm import SlurmConfig
 
+from omegaconf import OmegaConf
+
+from pathlib import Path
+
+# 1. Define and register the custom resolver
+# This must happen BEFORE the @hydra.main decorator executes
+OmegaConf.register_new_resolver(
+    "abs_path", 
+    lambda relative_path: str(Path.cwd() / relative_path)
+)
 
 def register_configs():
 

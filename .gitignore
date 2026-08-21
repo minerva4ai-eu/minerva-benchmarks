@@ -26,10 +26,12 @@ inference/results/vllm/*
 
 training/benchmark-runs*
 training/configs_hydra/benchmarks_to_run/*
+training/datasets/*
+training/models/*
 
 */.torchcompile_cache/*
 */.triton-cache/*
 
 *copy
 
-*configs_/
+
