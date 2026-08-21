@@ -48,19 +48,7 @@ if [ "$GPUS_PER_NODE" -eq "0" ]; then
 fi
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
-# source activate-env-variables-per-supercomputer.sh
-
-# Adjust precision for CPU runs - bf16 is not supported on CPU
-adjusted_precision=$PRECISION
-if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
-    adjusted_precision="fp32"
-    echo "⚠️  WARNING: bf16 not supported on CPU, switching to fp32"
-fi
-
-# For CPU runs, FSDP might not be appropriate, so we'll use a simpler approach
-if [ "$GPUS_PER_NODE" -eq "0" ]; then
-    echo "⚠️  WARNING: FSDP not recommended for CPU runs, consider using 'none' or 'ddp' parallelism instead"
-fi
+source activate-env-variables-per-supercomputer.sh
 
 train_command_min_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
@@ -90,7 +78,7 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} torchrun \
       --max_length $MAX_MODEL_LENGTH \
       ${EPOCHS:+--epochs "$EPOCHS"} \
       ${STEPS:+--max_steps "$STEPS"} \
-      --precision $adjusted_precision \
+      --precision $PRECISION \
       --lr $LR \
       --gradient_accumulation_steps $GRAD_ACCUM \
       --dataloader_num_workers 4 \
@@ -112,7 +100,6 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
     sleep 5
 
     # Run training in foreground (this blocks until done)
-    $train_command_min_overlap
 
     $train_command_max_overlap
 

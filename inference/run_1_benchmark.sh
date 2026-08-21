@@ -11,7 +11,7 @@ MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") #
 NUMBER_OF_NODES=(2)
 MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc"
+MACHINE="bsc-mn5-acc" # or "leonardo" or "idris-jeanzay-h100"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
@@ -115,6 +115,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -128,6 +134,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    $CONSTRAINTARG \
                     run_mp_vllm.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH" "$MACHINE" "$MACHINE_TYPE")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -190,6 +197,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -203,6 +216,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    $CONSTRAINTARG \
                     deepspeed-mii_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"
@@ -267,6 +281,12 @@ for framework in "${FRAMEWORKS[@]}"; do
                 else
                   DEPENDENCY=""
                 fi
+                
+                # Needed for Jean Zay
+                CONSTRAINTARG=""
+                if [[ "$MACHINE" == *jeanzay* ]]; then
+                    CONSTRAINTARG="--constraint=$CONSTRAINT"
+                fi
 
                 JOB_ID=$(sbatch --parsable \
                     --chdir=$(pwd) \
@@ -279,6 +299,7 @@ for framework in "${FRAMEWORKS[@]}"; do
                     -q $QOS \
                     --time=$TIME_LIMIT \
                     --partition=$PARTITION_NAME \
+                    $CONSTRAINTARG \
                     sglang_configurable_benchmarking_serve.sh "$LAUNCH_FOLDER" "$BENCHMARK_FILE" "$DATASET" "$DATASET_PATH")
 
                 echo "Submitted job $JOB_ID for $LAUNCH_FOLDER"

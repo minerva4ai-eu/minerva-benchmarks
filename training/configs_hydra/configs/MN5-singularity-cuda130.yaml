@@ -1,0 +1,14 @@
+# Base configuration for benchmark experiments
+defaults:
+  - MN5
+  - _self_
+
+machine:
+  runtime_env_mode: singularity
+  framework_name_pattern: cuda130
+  modules:
+  - singularity
+  singularity_args:
+    - "--nv"
+    - "--network=host"
+  singularity_binds:

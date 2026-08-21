@@ -6,9 +6,20 @@ import re
 
 # You need to have activated your virtual enviornment.
 from dotenv import load_dotenv
-load_dotenv(".env")
 
+import socket
+hostname = socket.gethostname()
+if "leonardo" in hostname:
+    env_file = ".env-leonardo"
+elif "jean-zay" in hostname:
+    env_file = ".env-idris-jeanzay-h100"
+elif os.getenv("BSC_MACHINE", None) == "mn5":
+    env_file = ".env-bsc-mn5-acc"
+else:
+    env_file = "Define your logic to detect .env-MACHINE file."
+    print(env_file)
 
+load_dotenv(env_file)
 
 BASE_DIR =  os.getcwd() # Adjust if needed
 BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
@@ -16,8 +27,12 @@ SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")
 PARTITION_NAME = os.getenv("PARTITION_NAME", "Add to .env file")
 BENCHMARK_FILE = os.getenv("BENCHMARK_FILE", "Add to .env file")
-MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, "configs", "model_type_map.json")))
+MACHINE = os.getenv("MACHINE", "Add to .env file")
+MACHINE_TYPE = os.getenv("MACHINE_TYPE", "Add to .env file")
+MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{MACHINE}", "model_type_map.json")))
 OUTPUT_FILE = f"results/full_benchmark_summary_{SUPCOMPUTER_NAME}_{PARTITION_NAME}.csv"
+if "leonardo" in hostname:
+    MODEL_TYPE_MAP = json.load(open(os.path.join(BASE_DIR, f"configs-{SUPCOMPUTER_NAME}", "model_type_map.json")))
 
 CSV_HEADERS = [
     "Supercomputer", "Partition", "Model", "Dataset/Model Type", "Dataset", "Framework", "Benchmark Type",

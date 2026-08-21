@@ -6,10 +6,11 @@
 module load $MODULES
 
 # Tmp dir
-# Create Temporal directories
+# Create Temporal directories (tolerate pre-existing dir / files owned by
+# previous runs from other users; we only need our own subdirs to be writable).
 TMPDIR=$CUR_DIR/tmp
-mkdir $TMPDIR
-chmod -R 777 $TMPDIR
+mkdir -p "$TMPDIR"
+chmod 777 "$TMPDIR" 2>/dev/null || true
 export SINGULARITY_CACHEDIR=$TMPDIR
 export SINGULARITY_TMPDIR=$TMPDIR
 
@@ -56,7 +57,7 @@ ENABLE_CHUNKED_PREFILL=${ENABLE_CHUNKED_PREFILL:-0}
 ENABLE_EXPERT_PARALLEL=${ENABLE_EXPERT_PARALLEL:-0}
 ENFORCE_EAGER=${ENFORCE_EAGER:-0}
 DISABLE_CUSTOM_ALL_REDUCE=${DISABLE_CUSTOM_ALL_REDUCE:-0}
-export ENABLE_PREFIX_CACHING ENABLE_CHUNKED_PREFILL ENFORCE_EAGER DISABLE_CUSTOM_ALL_REDUCE
+export ENABLE_PREFIX_CACHING ENABLE_CHUNKED_PREFILL ENABLE_EXPERT_PARALLEL ENFORCE_EAGER DISABLE_CUSTOM_ALL_REDUCE
 
 # Disable allreduce+rms fusion path that can require multicast-capable symmetric memory
 #export COMPILATION_CONFIG='{"pass_config":{"fuse_allreduce_rms":true}}'
@@ -81,15 +82,15 @@ export MACHINE_TYPE
 ##################################################
 echo "BINDINGS_SINGULARITY: $BINDINGS_SINGULARITY"
 
+#  --env VLLM_ENABLE_CUDA_COMPATIBILITY="1" \
+#  --env VLLM_CUDA_COMPATIBILITY_PATH="/usr/local/cuda-13.0/compat" \
+#  --env LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat" \
+#  --env TRITON_PTXAS_PATH="/usr/local/cuda-13.0/compat/ptxas" \
 srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=ALL \
  singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS \
   -B "$MODEL_PATH":"$MODEL_PATH" \
   --env LC_ALL="C" \
   --env LANG="C.UTF-8" \
-  --env VLLM_ENABLE_CUDA_COMPATIBILITY="1" \
-  --env VLLM_CUDA_COMPATIBILITY_PATH="/usr/local/cuda-13.0/compat" \
-  --env LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat" \
-  --env TRITON_PTXAS_PATH="/usr/local/cuda-13.0/compat/ptxas" \
   "$VLLM_IMAGE" \
   bash -c '
       echo "SLURM_NODEID=$SLURM_NODEID"
@@ -109,9 +110,7 @@ srun --nodes="$NUM_NODES" --ntasks-per-node=1 --nodelist="$NODELIST" --export=AL
       if [ "$ENABLE_CHUNKED_PREFILL" -eq 1 ]; then
           ENGINE_EXTRA_ARGS+=(--enable-chunked-prefill)
       fi
-      if [ "$ENFORCE_EAGER" -eq 1 ]; then
-          ENGINE_EXTRA_ARGS+=(--enforce-eager)
-      fi
+      ENGINE_EXTRA_ARGS+=(--enforce-eager)
       if [ "$ENABLE_EXPERT_PARALLEL" -eq 1 ]; then
           ENGINE_EXTRA_ARGS+=(--enable-expert-parallel)
       fi
@@ -209,16 +208,16 @@ for conc in "${concurrencies[@]}"; do
     ##################################################
     # GPU MONITOR (inside container)
     ##################################################
-    #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
-    python gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+            python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
     ##################################################
     # BENCHMARK (inside container)
     ##################################################
     # #python3 $BENCHMARK_FILE \
-    #singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
-    python $BENCHMARK_FILE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+            python3 $BENCHMARK_FILE \
             --backend vllm \
             --host localhost \
             --port $PORT \

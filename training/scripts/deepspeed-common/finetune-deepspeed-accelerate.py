@@ -77,7 +77,7 @@ def main():
     trainable_params, total_params, trainable_pct = 0, 0, 0
     training_args = SFTConfig(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,  # effective batch size
@@ -85,7 +85,7 @@ def main():
         # gradient_checkpointing_kwargs={"use_reentrant": False},
         learning_rate=args.lr,
         weight_decay=args.weight_decay,
-        # warmup_ratio=args.warmup_ratio,
+        warmup_ratio=args.warmup_ratio,
         logging_steps=args.logging_steps,
         save_strategy="no",
         save_total_limit=1,

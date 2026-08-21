@@ -2,10 +2,6 @@ import gc
 import os
 import time
 
-import sys
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# # sys.path.append("../..")
-
 import torch
 import torch.distributed as dist
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
@@ -91,7 +87,7 @@ def main():
 
     training_args = SFTConfig(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         per_device_train_batch_size=BATCH_SIZE,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         learning_rate=args.lr,

@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
 
 from configs_hydra.dataclasses_hydra import arch as a
 from omegaconf import MISSING
@@ -19,17 +18,17 @@ class ArchitectureType(str, Enum):
 class TrainArgsConfig:
     """Holds lists — generator expands these into individual combos."""
 
-    batch_sizes: List[int]  # field(default_factory=lambda: [1, 4, 8])
-    precisions: List[str] = MISSING  # field(default_factory=lambda: ["bf16"])
-    grad_accums: List[int] = MISSING  # field(default_factory=lambda: [1])
-    lr: List[float] = MISSING  # field(default_factory=lambda: [1e-4])
-    optimizer: List[str] = MISSING  # field(default_factory=lambda: ["adamw"])
-    gradient_checkpointing: List[bool] = (
+    batch_sizes: list[int]  # field(default_factory=lambda: [1, 4, 8])
+    precisions: list[str] = MISSING  # field(default_factory=lambda: ["bf16"])
+    grad_accums: list[int] = MISSING  # field(default_factory=lambda: [1])
+    lr: list[float] = MISSING  # field(default_factory=lambda: [1e-4])
+    optimizer: list[str] = MISSING  # field(default_factory=lambda: ["adamw"])
+    gradient_checkpointing: list[bool] = (
         MISSING  # field(default_factory=lambda: [True, False])
     )
-    steps: Optional[List[int]] = MISSING  # field(default_factory=lambda: [50])
-    epochs: Optional[List[int]] = MISSING  # field(default_factory=lambda: [1])
-    enable_compile: Optional[List[bool]] = MISSING
+    steps: list[int] | None = MISSING  # field(default_factory=lambda: [50])
+    epochs: list[int] | None = MISSING  # field(default_factory=lambda: [1])
+    enable_compile: list[bool] | None = MISSING
 
     def __post_init__(self):
         bad_precisions = set(self.precisions) - VALID_PRECISIONS
@@ -75,8 +74,8 @@ class ModelTrainingComboConfig:
     max_model_length: int = MISSING
     lr: float = MISSING
     optimizer: str = "adamw"
-    steps: Optional[int] = None
-    epochs: Optional[int] = None
+    steps: int | None = None
+    epochs: int | None = None
     gradient_checkpointing: bool = True
     enable_compile: bool = MISSING
 
@@ -89,7 +88,6 @@ class ModelConfig:
 
     name: str = MISSING  # MISSING = must be provided, no default
     path: str = MISSING
-    params_billions: float = MISSING
     architecture_type: str = MISSING
 
     # architecture dims — used by memory rule
@@ -106,13 +104,13 @@ class ModelConfig:
 
     # GPU requirements — constraint metadata
     max_gpus_scale: int = MISSING
-    frameworks_supported: List[str] = field(default_factory=list)
-    parallelism_supported: List[str] = field(default_factory=list)
+    frameworks_supported: list[str] = field(default_factory=list)
+    parallelism_supported: list[str] = field(default_factory=list)
 
     # MoE-specific — only required when architecture_type == "moe"
-    active_params_billions: Optional[float] = None
-    num_experts: Optional[int] = None
-    top_k_experts: Optional[int] = None
+    active_params_billions: float | None = None
+    num_experts: int | None = None
+    top_k_experts: int | None = None
 
     def __post_init__(self):
         # validate + normalise — converts plain string from YAML to enum

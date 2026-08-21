@@ -43,6 +43,9 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
         print(f"[ RANK {device_rank} ]: {msg}")
 
 
+FLOPS = []
+
+
 def compute_tflops_per_step(
     batch_size: int,
     seq_len: int,

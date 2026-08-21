@@ -1,9 +1,10 @@
 # benchmark/cli.py
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 import click
 import scripts.slurm.utils as u
@@ -57,12 +58,12 @@ session = PromptSession(
 )
 
 
-try:
-    with open(HISTORY_FILE_PATH, "a") as f:
-        pass
-    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
-except Exception as e:
-    print(f"DEBUG: history file FAILED: {e}")
+# try:
+#    with open(HISTORY_FILE_PATH, "a") as f:
+#        pass
+#    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
+# except Exception as e:
+#    print(f"DEBUG: history file FAILED: {e}")
 # Prevent Enter from submitting (we just want to move to the next line)
 # @bindings.add("enter")
 # def _(event):
@@ -90,11 +91,12 @@ def read_user_input(
 class OptionConfig:
     name: str  # CLI flag, e.g. "--configs-path"
     prompt: str  # Text shown to user
-    default: Optional[str] = None  # Default value (None = not added to args)
+    default: str | None = None  # Default value (None = not added to args)
     required: bool = False  # Force non-empty input
-    validator: Optional[Callable[[str], bool]] = None  # Return True if valid
+    validator: Callable[[str], bool] | None = None  # Return True if valid
     error_msg: str = "Invalid input."  # Shown when validator fails
-    transform: Optional[Callable[[str], Any]] = None  # Transform before storing
+    transform: Callable[[str], Any] | None = None  # Transform before storing
+    exit_after: bool | None = False
 
 
 @dataclass
@@ -128,7 +130,14 @@ RUN_OPTIONS = [
     OptionConfig(
         name="--runs-dir",
         prompt="runs-dir",
-        default=str(RUNS_DIR),
+        default=f"{RUNS_DIR}-[config-name]",
+    ),
+    OptionConfig(
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
+        exit_after=True,
     ),
     BoolOptionConfig(
         name="--dry-run",
@@ -137,7 +146,8 @@ RUN_OPTIONS = [
         transform=lambda x: x.lower(),
         validator=lambda x: x in ("y", "n"),
         error_msg="--dry-run can only be y or n!",
-        condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
+        condition_is_true=lambda x: x in ("y", "yes", "si", "oui", "ja"),
+        exit_after=True,
     ),
     BoolOptionConfig(
         name="--per-model-jobs",
@@ -148,17 +158,13 @@ RUN_OPTIONS = [
         error_msg="--per-model-jobs can only be y or n!",
         condition_is_true=lambda x: x in ("y", "yes", "si", "oui"),
     ),
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
-    ),
 ]
 
 
-def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
+def is_valid_date(value: str | None, fmt: str = "%d-%m-%Y") -> bool | None:
 
+    if not value:
+        return True
     try:
         date = datetime.strptime(value, fmt)
         if date.date() > datetime.now().date():
@@ -168,16 +174,25 @@ def is_valid_date(value: str, fmt: str = "%d-%m-%Y") -> bool:
         return False
 
 
-def str2date2str(value: str, fmt: str = "%d-%m-%Y") -> str:
+def str2date2str(value: str | None, fmt: str = "%d-%m-%Y") -> str | None:
+    if not value:
+        return value
     date = datetime.strptime(value, fmt).date()
     return date.strftime(fmt)
 
 
 RERUN_OPTIONS = [
     OptionConfig(
+        name="--yaml",
+        prompt="yamls (',' comma separated)",
+        validator=lambda x: "--yaml" in x,
+        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
+        exit_after=True,
+    ),
+    OptionConfig(
         name="--runs-dir",
         prompt="runs-dir",
-        default=str(RUNS_DIR),
+        default=f"{RUNS_DIR}-[config-name]",
     ),
     OptionConfig(
         name="--run-date",
@@ -190,12 +205,6 @@ RERUN_OPTIONS = [
     OptionConfig(
         name="--run-id",
         prompt="run-id",
-    ),
-    OptionConfig(
-        name="--yaml",
-        prompt="yamls (',' comma separated)",
-        validator=lambda x: "--yaml" in x,
-        transform=lambda x: " ".join([f"--yaml {_x}" for _x in x.split(",")]),
     ),
     BoolOptionConfig(
         name="--all",
@@ -245,15 +254,25 @@ STATUS_OPTIONS = [
         default=str(RUNS_DIR),
         # validator=lambda x: isinstance(x, int) and x > 0,
     ),
-    OptionConfig(name="--nodes", prompt="nodes", validator=lambda x: int(x) >= 1),
-    OptionConfig(name="--model", prompt="model", validator=lambda x: int(x) >= 1),
     OptionConfig(
-        name="--framework", prompt="framework", validator=lambda x: int(x) >= 1
+        name="--model",
+        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
+    ),
+    OptionConfig(
+        name="--framework",
+        prompt="framework (space-separated, e.g. 'vllm sglang')",
     ),
     OptionConfig(
         name="--parallelism-type",
-        prompt="parallelism-type",
-        validator=lambda x: int(x) >= 1,
+        prompt="parallelism-type (space-separated, e.g. 'ddp fsdp')",
+    ),
+    OptionConfig(
+        name="--nodes",
+        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
+    ),
+    OptionConfig(
+        name="--state",
+        prompt="state (space-separated SLURM states, e.g. 'running pending failed')",
     ),
 ]
 
@@ -277,6 +296,22 @@ CANCEL_OPTIONS = [
         name="--run-id",
         prompt="run-id",
         required=True,
+    ),
+    OptionConfig(
+        name="--model",
+        prompt="model (space-separated, e.g. 'llama3-7b mistral-7b')",
+    ),
+    OptionConfig(
+        name="--framework",
+        prompt="framework (space-separated, e.g. 'vllm sglang')",
+    ),
+    OptionConfig(
+        name="--parallelism-type",
+        prompt="parallelism-type (space-separated, e.g. 'dp fsdp')",
+    ),
+    OptionConfig(
+        name="--nodes",
+        prompt="nodes (space-separated exact match, e.g. '4 8 16')",
     ),
 ]
 
@@ -335,8 +370,11 @@ def prompt_options_interactive(options: list[OptionConfig]) -> list[str]:
                     if opt.condition_is_true(value):
                         run_args.extend([opt.name])
                     i += 1
-                    continue
-                run_args.extend([opt.name, value])
+                else:
+                    run_args.extend([opt.name, value])
+
+            if opt.exit_after and value != opt.default:
+                break
             i += 1
 
         except KeyboardInterrupt:

@@ -596,7 +596,7 @@ if __name__ == "__main__":
             hfcfg, tokenizer, gpu_peak_flops=H100, seq_length=4096
         )
         c = cb.cfg
-        fl = cb._flops_per_batch(batch_size=4)
+        fl = cb._tflops_per_batch(batch_size=4)
         mfu = fl / 0.5 / (H100 * 8) * 100
 
         name = path.split("/")[-2]

@@ -32,10 +32,71 @@ case "$MACHINE" in
         export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
         export CUDA_LAUNCH_BLOCKING=1
         ;;
+    idris-jeanzay-h100)
+        # NCCL variables
+        #export NCCL_NET=IB
+        #export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
+        #export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_4,mlx5_5
+        #export NCCL_DEBUG=TRACE
+        #export NCCL_NVLS_ENABLE=0
+        #export NCCL_IB_DISABLE=0
+        export NCCL_DEBUG=WARN
+        export NCCL_IB_DISABLE=0
+        export NCCL_IB_HCA=mlx5
+        export NCCL_IB_TIMEOUT=23
+        export NCCL_IB_RETRY_CNT=10
+        export NCCL_NET_GDR_LEVEL=2
+        export NCCL_SOCKET_IFNAME=$IB_IFACE
+        export NCCL_ASYNC_ERROR_HANDLING=1
+        export NCCL_P2P_DISABLE=0
 
+        # Singularity variables
+        # export SINGULARITY_EXEC_COMMAND="singularity exec -B /gpfs:/gpfs --nv -C $SGLANG_IMAGE"
+        # export SINGULARITY_EXEC_COMMAND="singularity exec -B /gpfs:/gpfs --no-home --nv -C $SGLANG_IMAGE"
+        export BINDINGS_SINGULARITY="/lustre:/lustre,$CUR_DIR/tmp:/tmp"
+        export ADDITIONAL_SINGULARITY_ARGS="--nv"
+        # -C only works with SGLang.
+        
+        # Added from Emile / LUMI's branch
+        export VLLM_RPC_BASE_PATH="/lustre/fsn1/projects/rech/rxy/uoh41kt/tmp/.cache"
+	export VLLM_CACHE_ROOT="/lustre/fsn1/projects/rech/rxy/uoh41kt/tmp/.vllm/cache"
+	export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/rxy/uoh41kt/tmp/.xdg/cache"
+	export TRITON_CACHE_DIR="/lustre/fsn1/projects/rech/rxy/uoh41kt/tmp/triton"
+	export TORCHINDUCTOR_CACHE_DIR="/lustre/fsn1/projects/rech/rxy/uoh41kt/tmp/inductor"
+	mkdir -p $VLLM_RPC_BASE_PATH $VLLM_CACHE_ROOT $XDG_CACHE_HOME $TRITON_CACHE_DIR $TORCHINDUCTOR_CACHE_DIR
+        
+        # CUDA DEVICES
+        export CUDA_VISIBLE_DEVICES="0,1,2,3"
+
+        # PYTORCH
+        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        export CUDA_LAUNCH_BLOCKING=1
+        ;;
+    
     leonardo)
-        export COMPILER=nvhpc
-        export CUDA_HOME=/cineca/prod/CUDA/12.1
+        # Load CUDA module
+        
+        #source $ENVIRONMENT/bin/activate
+        #export PATH=$ENVIRONMENT/bin:$PATH
+        #export CUDA_HOME=$CUDA_ROOT
+        export NCCL_NET=IB
+        export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
+        export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_4,mlx5_5
+        export NCCL_DEBUG=TRACE
+        export NCCL_NVLS_ENABLE=0
+        export NCCL_IB_DISABLE=0
+        # CUDA DEVICES
+        export CUDA_VISIBLE_DEVICES="0,1,2,3"
+
+        # PYTORCH
+        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+        export CUDA_LAUNCH_BLOCKING=1
+        # NOTE: on Leonardo the real $HOME is /leonardo/home/userinternal/$USER
+        # (and /leonardo/home/$USER does not exist), so bind the writable tmp dir
+        # onto the *actual* $HOME inside the container, otherwise vLLM/flashinfer
+        # crash trying to write to ~/.cache (read-only file system).
+        export BINDINGS_SINGULARITY="/leonardo_scratch:/leonardo_scratch,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:$HOME,/leonardo_work:/leonardo_work"
+        export ADDITIONAL_SINGULARITY_ARGS="--nv"
         ;;
 
     bsc-mn5-gpp)

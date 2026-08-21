@@ -1,0 +1,28 @@
+# ============================================================================
+# Accelerate FSDP Configuration
+# ============================================================================
+#
+# This config tells Accelerate to use FSDP for distributed training.
+#
+# IMPORTANT: Placeholders {{...}} are replaced at runtime
+# ============================================================================
+
+compute_environment: LOCAL_MACHINE
+debug: false
+
+# Distributed configuration (replaced at runtime)
+distributed_type: FSDP
+num_machines: {{NUM_NODES}}
+num_processes: {{NUM_GPUS}}
+machine_rank: 0
+
+# Master node configuration (replaced at runtime)
+main_process_ip: {{MASTER_IP}}
+main_process_port: 12345
+
+
+# General settings (not DeepSpeed-specific)
+use_cpu: false
+downcast_bf16: "no"
+same_network: true
+

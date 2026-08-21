@@ -2,11 +2,6 @@ import gc
 import os
 import time
 
-import sys
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-# sys.path.append("..")
-
 import psutil
 import torch
 import torch.distributed as dist
@@ -117,7 +112,7 @@ def main():
     # SFTConfig is a drop-in superset of TrainingArguments with SFT-specific fields.
     training_args = SFTConfig(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         per_device_train_batch_size=BATCH_SIZE,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         gradient_checkpointing=False,

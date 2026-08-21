@@ -3,9 +3,7 @@ import json
 import os
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -18,36 +16,15 @@ class ExecussionEnvironmentSelectionError(ValueError):
         super().__init__(*args)
 
 
-def get_cfg_folder(
-    cfg: BenchmarkConfig,
-    base_dir: Path,
-    runs_dir: Path,
-):
-
-    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
-    results_dir = os.path.join(base_dir.absolute(), runs_dir)
-    machine_results_base = os.path.join(results_dir, cfg.machine.name)
-    date_folder = os.path.join(
-        machine_results_base,
-        datetime.now().strftime("%d-%m-%Y"),
-    )
-    cfg_path = os.path.join(
-        date_folder,
-        parameters_combo,
-    )
-    return cfg_path
-
-
 def build_launch_folder(
     cfg: BenchmarkConfig,
     base_dir: Path,
     runs_dir: Path,
     run_id: str,
-    dry: Optional[bool] = False,
-    repeat_id: Optional[int] = None,
+    dry: bool | None = False,
+    repeat_id: int | None = None,
 ) -> Path:
-
-    combo_path = get_cfg_folder(cfg, base_dir, runs_dir)
+    combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
     experiment_config_dir = os.path.join(combo_path, "yaml-configs")
     experiment_config_path = os.path.join(
         experiment_config_dir, cfg.experiment.yaml_filename
@@ -107,14 +84,15 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
 
-    if cfg.machine.singularity_container:
-        execution_mode = "singularity"
-    elif cfg.machine.python_environment:
-        execution_mode = "venv"
-    else:
-        raise ExecussionEnvironmentSelectionError(
-            "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
-        )
+    execution_mode = cfg.machine.runtime_env_mode
+    # if cfg.framework.singularity_container:
+    #    execution_mode = "singularity"
+    # elif cfg.framework.python_environment:
+    #    execution_mode = "venv"
+    # else:
+    #    raise ExecussionEnvironmentSelectionError(
+    #        "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
+    #    )
 
     env = {
         **os.environ,
@@ -126,14 +104,14 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "EXECUTION_MODE": execution_mode,
         **(
             {
-                "ENVIRONMENT_FINETUNING": cfg.machine.python_environment,
+                "ENVIRONMENT_FINETUNING": cfg.framework.python_environment,
             }
-            if cfg.machine.python_environment is not None
+            if cfg.framework.python_environment is not None
             else {}
         ),
         **(
             {
-                "SINGULARITY_CONTAINER": cfg.machine.singularity_container,
+                "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
                 "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
                 if cfg.machine.singularity_binds
                 else "",
@@ -141,7 +119,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
                 if cfg.machine.singularity_args
                 else "",
             }
-            if cfg.machine.singularity_container is not None
+            if cfg.framework.singularity_container is not None
             else {}
         ),
         "NODES": str(s.sbatch.nodes),
@@ -153,14 +131,14 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "DATASET_PATH": d.path,
         **(
             {
-                "DATASET_TRAIN": cfg.dataset.train,
+                "DATASET_TRAIN": str(cfg.dataset.train),
             }
             if cfg.dataset.train is not None
             else {}
         ),
         **(
             {
-                "DATASET_VALIDATION": cfg.dataset.validation,
+                "DATASET_VALIDATION": str(cfg.dataset.validation),
             }
             if cfg.dataset.validation is not None
             else {}
@@ -187,7 +165,6 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
         ),
-        "TORCHINDUCTOR_CACHE_DIR": f"{cfg.experiment.output_dir}/.torch-inductor-cache",
         "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
         "TOKENIZERS_PARALLELISM": str(False),
     }
@@ -195,8 +172,6 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
     # Merge machine-specific environment variables
     if cfg.machine.env:
         env.update(**cfg.machine.env)
-    
-    # Merge experiment-specific environment variables
     if cfg.experiment.env:
         env.update(**cfg.experiment.env)
 

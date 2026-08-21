@@ -1,10 +1,6 @@
 import os
 import time
 
-import sys
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# sys.path.append("../..")
-
 import torch
 from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
 from shared.custom_train import PerformanceTrackingSFTTrainer
@@ -80,7 +76,7 @@ def main():
 
     training_args = SFTConfig(
         output_dir=output_dir,
-        overwrite_output_dir=True,
+        # overwrite_output_dir=True,
         # num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.batch_size,

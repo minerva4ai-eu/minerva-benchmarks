@@ -57,13 +57,6 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
-# Adjust precision for CPU runs - bf16 is not supported on CPU
-adjusted_precision=$PRECISION
-if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
-    adjusted_precision="fp32"
-    echo "⚠️  WARNING: bf16 not supported on CPU, switching to fp32"
-fi
-
 train_command="${runtime_prefix:+$runtime_prefix} torchrun \
       --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
       --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
@@ -75,7 +68,7 @@ train_command="${runtime_prefix:+$runtime_prefix} torchrun \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs "$EPOCHS"} \
         ${STEPS:+--max_steps "$STEPS"} \
-        --precision $adjusted_precision \
+        --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 4 \

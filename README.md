@@ -15,12 +15,21 @@ Benchmarks are configured per supercomputer.
 
 ```text
 minerva-benchmarks/
-├── inference/     # Inference & serving benchmarks
-│   ├── scripts/
+├── analytics/       # Analytics, dashboards, and data visualization
+│   ├── data/        # Benchmark result CSVs
+├── inference/       # Inference & serving benchmarks
+│   ├── benchmarks/  # Benchmark scripts (serving, latency, throughput, etc.)
+│   ├── configs-*/   # Per-supercomputer configurations
+│   ├── envs-sing-imgs/  # Singularity image definitions
+│   ├── envs-yaml/       # Conda/YAML environment specs
+│   ├── scripts/       # Per-framework scripts (vLLM, SGLang, DeepSpeed-MII)
+│   ├── run_*.sh       # Benchmark runner scripts
 │   └── README.md
-├── training/      # Training & fine-tuning benchmarks
-│   ├── training-MN5/
-│   ├── training-Leonardo/
+├── training/        # Training & fine-tuning benchmarks
+│   ├── configs_hydra/     # OmegaConf/Hydra-based configuration system
+│   ├── envs/              # Training environment definitions
+│   ├── scripts/           # Per-framework training scripts
+│   ├── minerva-cli.sh     # CLI entry point
 │   └── README.md
 └── README.md
 ```
@@ -31,32 +40,44 @@ minerva-benchmarks/
 
 ### Inference Benchmarks
 
-See: [inference/README.md](training/README.md)
+See: [inference/README.md](inference/README.md)
 
 Covers:
 
 * vLLM, DeepSpeed-MII, SGLang
-* Serving benchmarks
-* GPU monitoring
-* Result aggregation
+* Serving, latency, throughput, and prefix caching benchmarks
+* GPU monitoring and utilization tracking
+* Result aggregation and scoring
 
 ### Training & Fine-Tuning Benchmarks
 
-See: [training/training_MN5/README.md](training/README.md)
+See: [training/README.md](training/README.md)
 
 Covers:
 
-* HuggingFace Accelerate
-* Torchrun (DDP/FSDP)
-* Dataset handlers
-* Scaling and memory analysis
+* HuggingFace Accelerate (DDP/FSDP)
+* Torchrun (DDP/FSDP/None)
+* DeepSpeed (pure and Accelerate-integrated)
+* Dataset handlers and scaling analysis
+* Hydra-based configuration management
+
+### Analytics
+
+See: [analytics/README.md](analytics/README.md) (when available)
+
+Covers:
+
+* Interactive Plotly dashboards
+* Energy consumption plots
+* Performance plots
+* Cross-system benchmark comparison data
 
 ---
 
 ## 🖥️ Supported Systems
 
-Benchmarks are organized per system (e.g. MareNostrum5, Leonardo).
-Each system directory contains its own configuration, scripts, and results.
+Benchmarks are organized per system (e.g. MareNostrum5, Leonardo, Jean Zay, Adastra).
+Each system has its own configuration, environment definitions, and scripts.
 
 ---
 

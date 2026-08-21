@@ -1,4 +1,4 @@
-import json
+import ast
 import os
 import random
 from typing import TYPE_CHECKING, Any, Callable, Tuple, cast
@@ -25,32 +25,34 @@ class CollateFnError(Exception):
 def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[str]:
     if dataset_root is None or dataset_files is None:
         return None
-    if isinstance(dataset_files, list):
-        dataset_full_paths = []
-        for item in dataset_files:
-            if os.path.isabs(str(item)):
-                dataset_full_paths.append(str(item))
-                continue
-            full_path = os.path.join(str(dataset_root), str(item))
-            assert os.path.exists(full_path), (
-                "Train/validation files should be absolute or direct subpaths of the dataset root path! "
-                + f"Could not join paths:\n\t- {dataset_root}"
-                + f"Could not join paths:\n\t- {dataset_root}"
-            )
-            dataset_full_paths.append(str(full_path))
-        return dataset_full_paths
-
-    if os.path.isabs(str(dataset_file)):
-        return str(dataset_file)
-    full_path = os.path.join(str(dataset_root), str(dataset_file))
-
-    assert os.path.exists(full_path), (
-        "Train/validation files should be absolute or direct subpaths of the dataset root path! "
-        + f"Could not join paths:\n\t- {dataset_root}"
-        + f"Could not join paths:\n\t- {dataset_root}"
+    assert isinstance(dataset_files, list), (
+        f"_resolve_dataset_files() | dataset_files input arg must be 'list[str]', received {type(dataset_files)}"
     )
+    dataset_full_paths = []
+    for item in dataset_files:
+        if os.path.isabs(str(item)):
+            dataset_full_paths.append(str(item))
+            continue
+        full_path = os.path.join(str(dataset_root), str(item))
+        assert os.path.exists(full_path), (
+            "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+            + f"Could not join paths:\n\t- {dataset_root}"
+            + f"Could not join paths:\n\t- {dataset_root}"
+        )
+        dataset_full_paths.append(str(full_path))
+    return dataset_full_paths
 
-    return full_path
+    # if os.path.isabs(str(dataset_file)):
+    #    return str(dataset_file)
+    # full_path = os.path.join(str(dataset_root), str(dataset_file))
+    #
+    # assert os.path.exists(full_path), (
+    #    "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+    #    + f"Could not join paths:\n\t- {dataset_root}"
+    #    + f"Could not join paths:\n\t- {dataset_root}"
+    # )
+
+    # return full_path
 
 
 def parse_dataset_paths(
@@ -67,16 +69,13 @@ def parse_dataset_paths(
         (train_path, val_path, is_split)
         is_split = True if both train and val are provided
     """
-    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
-    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
-    if train_files is None:
-        train_files = json.loads(os.environ.get("DATASET_TRAIN", "[]"))
-    if validation_files is None:
-        validation_files= json.loads(
-        os.environ.get("DATASET_VALIDATION", "[]")
-    )
-    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
-    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
+
+    if not train_files:
+        train_files = ast.literal_eval(os.environ.get("DATASET_TRAIN", "[]"))
+    if not validation_files:
+        validation_files = ast.literal_eval(os.environ.get("DATASET_VALIDATION", "[]"))
+    print(f"train_files: {train_files}")
+    print(f"validation_files: {validation_files}")
 
     if train_files or validation_files:
         if not train_files or not validation_files:
@@ -99,8 +98,8 @@ def load_dataset(
     dataset_path: str,
     tokenizer: "PreTrainedTokenizer",
     max_length: int,
-    train_files: list[str] | None = None,
-    validation_files: list[str] | None = None,
+    train_files: list[str] = [],
+    validation_files: list[str] = [],
 ) -> Tuple["DatasetHandler| Subset", "DatasetHandler | Subset", Callable, Callable]:
 
     if dataset_name not in DATASET_HANDLER_MAP:
@@ -190,11 +189,11 @@ def load_dataset(
 def load_and_prepare_raw_dataset(
     dataset_name: str,
     dataset_path: str,
-    test_size: float,
+    test_size: float = 0,
     shuffle: bool = True,
     seed: int = 42,
-    train_files: list[str] | None = None,
-    validation_files: list[str] | None = None,
+    train_files: list[str] = [],
+    validation_files: list[str] = [],
 ) -> Tuple["Dataset", "Dataset"]:
 
     if dataset_name not in DATASET_MAP:

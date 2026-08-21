@@ -1,19 +1,7 @@
-# =============================================================================
-# Singularity Definition File — uv Installation from pyproject.toml
-# Usage:
-#   singularity build uv_env.sif singularity_uv.def
-#   singularity exec uv_env.sif python script.py
-#
-# Expects: pyproject.toml in the same directory at build time
-# =============================================================================
-
-
 Bootstrap: docker
 From: python:3.11-slim
 
 %labels
-    Author          Alexandros Paliouras
-    Email           alexandros.paliouras@bsc.es
     Version         1.0.0
     Description     MINERVA training benchmarks python environment built with uv from pyproject.toml
                     Envrironment choice is tailored to MareNostrum5

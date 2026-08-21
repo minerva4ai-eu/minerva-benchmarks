@@ -1,7 +1,7 @@
 [project]
 name = "training-env-cuda121"
 version = "0.1.0"
-requires-python = "==3.11.*"
+requires-python = "==3.12.*"
 dependencies = [
   "setuptools==75.6.0",
   "accelerate==1.10.1",
@@ -53,14 +53,15 @@ name = "pytorch-cu121"
 url = "https://download.pytorch.org/whl/cu121"
 explicit = true
 
+[[tool.uv.index]]
+name = "astral-cu121"
+url = "https://wheels.astral.sh/simple/cu121"
+explicit = true
+
 [tool.uv.sources]
 torch = { index = "pytorch-cu121" }
 torchvision = { index = "pytorch-cu121" }
 torchaudio = { index = "pytorch-cu121" }
 triton = { index = "pytorch-cu121" }
+flash-attn = { index = "astral-cu121" }
 
-[tool.uv.extra-build-dependencies]
-flash-attn = ["setuptools", "torch"]
-
-[tool.uv]
-no-build-isolation-package = ["flash-attn"]

@@ -51,13 +51,6 @@ echo "Will apply runtime prefix '$runtime_prefix'"
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
 
-# Adjust precision for CPU runs - bf16 is not supported on CPU
-adjusted_precision=$PRECISION
-if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
-    adjusted_precision="fp32"
-    echo "⚠️  WARNING: bf16 not supported on CPU, switching to fp32"
-fi
-
 train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data $DATASET_PATH \
@@ -66,7 +59,7 @@ train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
         ${EPOCHS:+--epochs "$EPOCHS"} \
         ${STEPS:+--max_steps "$STEPS"} \
         --max_length $MAX_MODEL_LENGTH \
-        --precision $adjusted_precision \
+        --precision $PRECISION \
         --lr $LR \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --dataloader_num_workers 2 \
@@ -74,10 +67,6 @@ train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
 
 if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
-fi
-
-if [[ $DISABLE_MONITORING == "True" || $DISABLE_MONITORING == "true" ]]; then
-    train_command="$train_command --disable_monitoring"
 fi
 
 # Launch Run

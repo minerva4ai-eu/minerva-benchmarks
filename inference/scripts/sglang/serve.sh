@@ -111,21 +111,24 @@ for conc in "${concurrencies[@]}"; do
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
     
     # Run in GPU monitor in background.
-    python gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
+            python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
     # Run benchmark stressing the sglang server.
-    python $BENCHMARK_FILE --backend 'sglang' \
-        --host 'localhost' \
-        --port $PORT \
-        --model $MODEL_PATH \
-        --dataset-name $DATASET \
-        --dataset-path $DATASET_PATH \
-        --max-concurrency $conc \
-        --num-prompts 1000 \
-        --save-result \
-        --result-filename "$LAUNCH_FOLDER/Concurrency_$conc.json" \
-        > "$LAUNCH_FOLDER/logs_benchmarking_$conc-concurrency.log"
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
+            python3 $BENCHMARK_FILE \
+            --backend sglang \
+            --host localhost \
+            --port $PORT \
+            --model $MODEL_PATH \
+            --dataset-name $DATASET \
+            --dataset-path $DATASET_PATH \
+            --max-concurrency $conc \
+            --num-prompts 1000 \
+            --save-result \
+            --result-filename "$LAUNCH_FOLDER/Concurrency_${conc}.json" \
+            > "$LAUNCH_FOLDER/logs_benchmark_${conc}.log"
 
     # Stop monitoring
     kill "$GPU_MON_PID"

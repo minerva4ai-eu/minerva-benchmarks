@@ -24,7 +24,7 @@ These benchmarks measure:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  User invokes: ./minerva-cli.sh run --config-name base-MN5      │
+│  User invokes: bash minerva-cli.sh run --config-name base-MN5      │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ▼
@@ -150,7 +150,7 @@ See [envs/README.md](envs/README.md) for full environment management details.
 
 ### 2. Configure for Your Machine
 
-Edit `configs_hydra/configs/base.yaml` (or create a machine-specific variant):
+Edit `configs_hydra/configs/base-MN5.yaml` (or create a machine-specific variant):
 
 ```yaml
 machine:
@@ -169,13 +169,13 @@ Ensure `scripts/activate-env-variables-per-supercomputer.sh` has correct NCCL/CU
 
 ```bash
 # Dry run — generate configs without submitting
-./minerva-cli.sh run --dry-run --config-name MN5
+bash minerva-cli.sh run --dry-run --config-name base-MN5
 
 # Submit all valid jobs
-./minerva-cli.sh run --config-name MN5
+bash minerva-cli.sh run --config-name base-MN5
 
 # Monitor running jobs
-./minerva-cli.sh monitor
+bash minerva-cli.sh monitor
 ```
 
 ### 4. Generate Summary
@@ -192,8 +192,7 @@ The benchmark system uses [Hydra](https://hydra.cc/) for config composition. Key
 
 | File | Purpose |
 |------|---------|
-| `configs_hydra/configs/base.yaml` | Base config (container path, SLURM settings) |
-| `configs_hydra/configs/MN5.yaml` | Machine-specific config (container path, SLURM settings) |
+| `configs_hydra/configs/base-MN5.yaml` | Machine-specific base config (container path, SLURM settings) |
 | `configs_hydra/configs/model/*.yaml` | Model definitions (architecture dims, GPU requirements) |
 | `configs_hydra/configs/framework/*.yaml` | Framework specs (parallelism, script paths) |
 | `configs_hydra/configs/dataset/*.yaml` | Dataset definitions (path, task type, seq length) |
