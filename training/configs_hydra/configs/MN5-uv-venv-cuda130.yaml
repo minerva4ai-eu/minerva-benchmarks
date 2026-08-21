@@ -5,6 +5,6 @@ defaults:
 
 machine:
   runtime_env_mode: venv
-  framework_name_pattern: MN5-cuda130
+  framework_name_pattern: cuda130
   modules:
  

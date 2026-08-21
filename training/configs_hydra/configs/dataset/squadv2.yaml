@@ -1,5 +1,5 @@
 name: squadv2
-path: "path to parquet files"
+path: ${abs_path:datasets/squad_v2}
 task: ""
 train:
   - "train-00000-of-00001.parquet"
