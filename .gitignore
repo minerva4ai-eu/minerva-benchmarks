@@ -21,8 +21,16 @@ inference/results/deepspeed/*
 inference/results/sglang/*
 inference/results/vllm/*
 
-inference/analytics-*/
-inference/benchmarks-vllm-10122025/*
+training/benchmark-runs*
+training/configs_hydra/benchmarks_to_run/*
+training/datasets/*
+training/models/*
 
-results/*
-inference/benchmarks/datasets/*
+*/.torchcompile_cache/*
+*/.triton-cache/*
+
+*copy
+
+job_outputs/
+outputs/
+profiler/

@@ -18,10 +18,3 @@ sbatch:
   extra_args:
     - "--exclusive"                       # Not touch
     - "--time=00:30:00"                   # Not touch
-
-srun:                                     # Field not implemented
-  gpus_per_node: 0
-  cpus_per_gpu: 0
-  nodes: 0
-  cpus_per_task: 0
-  tasks_per_node: 0

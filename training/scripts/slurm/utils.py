@@ -2,6 +2,10 @@ import json
 
 import yaml
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ANSI Escape Codes for Terminal Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -76,9 +80,49 @@ def load_yaml(filepath):
             # safe_load automatically converts YAML into native Python dicts/lists
             config = yaml.safe_load(file)
             return config
-    except FileNotFoundError:
-        print(f"Error: The file {filepath} was not found.")
-        return {}
-    except yaml.YAMLError as exc:
-        print(f"Error parsing YAML file: {exc}")
-        return {}
+    except FileNotFoundError as e:
+        print(f"{__name__}.load_yaml() | Error: The file '{filepath}' was not found.")
+        raise e
+    except yaml.YAMLError as e:
+        print(f"{__name__}.load_yaml() | Error parsing YAML file: '{filepath}'")
+        raise e
+
+
+def get_cfg_folder(
+    cfg: BenchmarkConfig,
+    base_dir: Path,
+    runs_dir: Path,
+):
+
+    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    results_dir = os.path.join(base_dir.absolute(), runs_dir)
+    machine_results_base = os.path.join(results_dir, cfg.machine.name)
+    date_folder = os.path.join(
+        machine_results_base,
+        datetime.now().strftime("%d-%m-%Y"),
+    )
+    cfg_path = os.path.join(
+        date_folder,
+        parameters_combo,
+    )
+    logger.debug("cfg_path = %s", cfg_path)
+    return cfg_path
+
+
+def get_cfg_folder_from_launch(launch_path: str):
+
+    config_dir = "/".join(launch_path.split("/")[:-2])
+    config_dir = os.path.join(config_dir, "yaml-configs")
+
+    return config_dir
+
+
+def copy_launch_folder(source: str, target: str):
+    copytree(
+        source,
+        target,
+        ignore=ignore_patterns(
+            "*.err", "*.out", "__pycache__", "*/outputs/*", "*/profiler/*"
+        ),
+        dirs_exist_ok=True,
+    )
