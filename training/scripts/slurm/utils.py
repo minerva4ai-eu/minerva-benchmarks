@@ -7,6 +7,10 @@ from shutil import copytree, ignore_patterns
 import yaml
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ANSI Escape Codes for Terminal Colors
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -105,6 +109,7 @@ def get_cfg_folder(
         date_folder,
         parameters_combo,
     )
+    logger.debug("cfg_path = %s", cfg_path)
     return cfg_path
 
 

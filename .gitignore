@@ -34,4 +34,6 @@ training/models/*
 
 *copy
 
-
+job_outputs/
+outputs/
+profiler/

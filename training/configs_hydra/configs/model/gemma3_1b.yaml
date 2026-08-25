@@ -22,16 +22,8 @@ tokenizer_type:       sentencepiece
 max_gpus_scale: 4
 frameworks_supported:
   - torchrun
-  - accelerate
-  - deepspeed
-  - deepspeed-accelerate
 parallelism_supported:
   - none
-  - ddp
-  - fsdp
-  - zero1
-  - zero2
-  - zero3
 
 combinations:
   batch_sizes: [8]

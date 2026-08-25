@@ -19,6 +19,4 @@ machine:
 experiment:
   env:
     # Copied from base.yaml to avoid overwritting
-    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
-    TORCHINDUCTOR_CACHE_DIR: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/.torch-inductor-cache"
-    TRITON_CACHE_DIR: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/.triton-cache"                        
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"                 

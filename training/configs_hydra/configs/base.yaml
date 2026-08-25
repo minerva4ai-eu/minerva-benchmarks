@@ -30,7 +30,3 @@ experiment:
   yaml_filename:                  # Do not fill in, value filled during compose runtime
   env:                            # Fill in with environment variable to be available on runtime
     PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
-    # Change into absolute path, otherwise caches
-    # will be created locally on each code run directory copy
-    TORCHINDUCTOR_CACHE_DIR: "absolute path to minerva-benchmarks/training/.torch-inductor-cache" 
-    TRITON_CACHE_DIR: "absolute path to minerva-benchmarks/training/.triton-cache"

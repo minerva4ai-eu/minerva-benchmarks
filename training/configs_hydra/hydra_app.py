@@ -12,6 +12,7 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
+import yaml
 
 # Color Codes
 GREEN = "\033[92m"
@@ -27,6 +28,9 @@ BG_RED = "\033[41m"
 # Reset Code (turns colors back to normal)
 RESET = "\033[0m"
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 ##############################################################
 # All configuration modules to be included are written below #
@@ -45,38 +49,32 @@ RESET = "\033[0m"
 #   MODELS = ["new_model_config"]
 #   FRAMEWORKS = ["torchrun", "deepspeed"]
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
-DATASETS = ["alpaca", "squadv2"]
+# MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
+# FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
+# DATASETS = ["alpaca", "squadv2"]
+
+MODELS = ["gemma3_1b"]
+FRAMEWORKS = ["torchrun", "accelerate"]
+DATASETS = ["alpaca"]
 
 ################################################################
 
 
 console = Console()
 
-
-def single_gpu_config(cfg: BenchmarkConfig) -> bool:
-    """Replicates your GPU_CONFIGS=(1 $GPUS_PER_NODE)
-    logic for experiments on 1 node that require also
-    single GPU run"""
-    if (
-        cfg.machine.single_gpu_also_valid
-        and (cfg.slurm.sbatch.nodes == 1)
-        and (cfg.framework.parallelism[cfg.framework.parallelism_name]["min_gpus"] == 1)
-    ):
-        return True
-    return False
-
-
+# TODO: check job nodes
 def generate_valid_combos(
     config_path: str, config_name: str, outpath: str
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
+
+    logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
+
     valid, skipped = [], []
 
     register_configs()
     GlobalHydra.instance().clear()
 
-    # outpath = os.path.join(outpath, "bencharks_to_run")
+    # TODO: Don't write if "hydra.errors.MissingConfigException: Cannot find primary config 'MN5-uv-venv-cuda130-flash-attn'. Check that it's in your config search path."
     os.makedirs(outpath, exist_ok=True)
 
     cfg_seen = set()
@@ -88,7 +86,12 @@ def generate_valid_combos(
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
+            logger.debug("_init_cfg = %s", _init_cfg)
             framework_pattern = f"{framework}-{_init_cfg.machine.framework_name_pattern}"
+            # # TODO: reconsider redundant compose
+            # framework_pattern = f"{framework}-{config_name.split('-')[-1]}"
+            # sysname = config_name.split('-')[0]
+            logger.debug("framework_pattern = %s", framework_pattern)
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
@@ -99,12 +102,43 @@ def generate_valid_combos(
                     f"arch={_init_cfg.machine.name_pattern}",
                 ],
             )
+            logger.debug("type(cfg) = %s", type(cfg))
+            for k in cfg.keys():
+                if k == "model":
+                    for k2 in cfg.get(k).keys():
+                        logger.debug("cfg[%s][%s] = %s", k, k2, cfg.get(k).get(k2))
+                else:
+                    logger.debug("cfg[%s] = %s", k, cfg.get(k))
+            logger.debug("cfg = %s", cfg)
+            # FIXME: please
+            try:
+                with open(os.path.join(config_path, "dataset", f"{dataset}-{_init_cfg.machine.name_pattern}.yaml"), "r") as f:
+                    data_config = yaml.safe_load(f)
+                logger.debug("data_config = %s", data_config)
+                cfg.dataset.path = data_config['path']
+                logger.debug("cfg = %s", cfg)
+            except FileNotFoundError:
+                logger.exception("Dataset YAML config not found: config_name=%s, config_path=%s", config_name, config_path)
+                print(
+                    f"\t{u.FAILURE_HEAVY} {u.RED}Dataset YAML config not found: config_name={config_name}, config_path={config_path}{u.RESET}"
+                )
+            except Exception as e:
+                logger.exception("Exception occured while trying to read : config_name=%s, config_path=%s", config_name, config_path)
+                print(
+                    f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read Dataset YAML config: config_name={config_name}, config_path={config_path}...{u.RESET}"
+                )
+                raise e
+
+            logger.debug("cfg[dataset][path] = %s", cfg.get('dataset').get('path'))
+
+            # FIXME: Incorrect path displayed "Composed base configuration from /gpfs/home/bsc/bsc079516/minerva_backup/minerva-benchmarks/training/MN5-uv-venv-cuda130.yaml for:"
             print(
                 f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
                 + f"\n\t· model: {model}"
                 + f"\n\t· framework: {framework_pattern}"
                 + f"\n\t· dataset: {dataset}"
             )
+            # NOTE: all models support all frameworks
             if framework not in cfg.model.frameworks_supported:
                 print(
                     f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
@@ -113,19 +147,27 @@ def generate_valid_combos(
 
             for parallelism in cfg.model.parallelism_supported:
                 tmp_cfg = deepcopy(cfg)
+                # logger.debug("tmp_cfg = %s", tmp_cfg)
+                logger.debug("tmp_cfg.framework = %s", tmp_cfg.framework)
+                # logger.debug("tmp_cfg.framework.parallelism_name = %s", tmp_cfg.framework.parallelism_name)
+                # logger.debug("tmp_cfg.framework.parallelism = %s", tmp_cfg.framework.parallelism)
 
                 if parallelism not in cfg.framework.parallelism.keys():
                     continue
                 #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
                 #print(f"parallelism: \n{parallelism}")
                 parallelism_spex = cfg.framework.parallelism[parallelism]
+                logger.debug("parallelism = %s", parallelism) # e.g. fsdp
+                logger.debug("parallelism_spex = %s", parallelism_spex) # e.g. {'min_gpus': 2, 'max_gpus': 999}
 
                 target_parallelism = OmegaConf.create(
                     DictConfig({parallelism: parallelism_spex})
                 )
+                logger.debug("target_parallelism = %s", target_parallelism) # e.g. {'fsdp': {'min_gpus': 2, 'max_gpus': 999}}
+
                 #print(f"target_parallelism: \n{target_parallelism}")
                 #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
-                tmp_cfg.framework.parallelism_name = parallelism
+                tmp_cfg.framework.parallelism_name = parallelism # FIXME: unused
                 tmp_cfg.framework.parallelism = target_parallelism
                 #print(f"\tCreating configuration for parallelism {parallelism}:")
                 #print(OmegaConf.to_yaml(cfg))
@@ -141,6 +183,7 @@ def generate_valid_combos(
                         f"{RED}Slurm arguments 'slurm.qos' and 'slurm.partition' cannot be 'None'!{RESET}"
                         + f"\n{RED}Values received: '{tmp_cfg.slurm.qos}' & '{tmp_cfg.slurm.partition}'{RESET}"
                     )
+                    # FIXME: don't need both q and p
 
                 if tmp_cfg.slurm.constraint is not None:
                     assert (tmp_cfg.slurm.qos is None) and (
@@ -196,9 +239,9 @@ def generate_valid_combos(
 
                         parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
 
-                        tmp_cfg.slurm.sbatch.chdir = os.path.join(
-                            tmp_cfg.experiment.output_dir, parameters_combo
-                        )
+                        # tmp_cfg.slurm.sbatch.chdir = os.path.join(
+                        #     tmp_cfg.experiment.output_dir, parameters_combo
+                        # )
 
                         experiment_parameters = (
                             f"bs{bs}"
@@ -208,16 +251,21 @@ def generate_valid_combos(
                             + f"-steps{steps}"
                         )
 
-                        # By default, if config is using 1 node,
-                        # all cfg.arch.node.gpus_per_node will ne utilized
-                        # Unless, perallelism defines min_gpus = 1
-                        if single_gpu_config(tmp_cfg):
+                        # # By default, if config is using 1 node,
+                        # # all cfg.arch.node.gpus_per_node will ne utilized
+                        # # Unless, perallelism defines min_gpus = 1
+                        # # NOTE: ^ huh?
+                        # if single_gpu_config(tmp_cfg):
+                        #     tmp_cfg.slurm.sbatch.gpus_per_node = 1
+                        #     tmp_cfg.slurm.sbatch.gres = "gpu:1"
+                        if parallelism == "none":
+                            logger.info("Adjusting gres for parallelism = %s", parallelism)
                             tmp_cfg.slurm.sbatch.gpus_per_node = 1
                             tmp_cfg.slurm.sbatch.gres = "gpu:1"
 
                         total_gpus = (
                             tmp_cfg.slurm.sbatch.gpus_per_node
-                            * tmp_cfg.slurm.sbatch.nodes
+                            * nodes
                         )
                         msg = (
                             f"\t· parallelism: {parallelism}"
@@ -274,11 +322,18 @@ def generate_valid_combos(
                         print(msg)
                         raw_total += 1
 
-                        # MAKE SURE BEFORE DELETE
-                        # tmp_cfg.slurm.sbatch.chdir = run_path
                         tmp_cfg.experiment.yaml_filename = yaml_filename
                         # Resolve all yaml config parameter references before finish
                         OmegaConf.resolve(tmp_cfg)
+                        # logger.debug("tmp_cfg.keys() = %s", tmp_cfg.keys())
+                        for k in tmp_cfg.keys():
+                            if k == "model":
+                                for k2 in tmp_cfg.get(k).keys():
+                                    logger.debug("tmp_cfg[%s][%s] = %s", k, k2, tmp_cfg.get(k).get(k2))
+                            else:
+                                logger.debug("tmp_cfg[%s] = %s", k, tmp_cfg.get(k))
+                        # FIXME: tmp_cfg[trainings] = None
+                        logger.debug("tmp_cfg = %s", tmp_cfg)
                         valid.append(deepcopy(tmp_cfg))
 
     _print_summary(raw_total, valid, skipped)
