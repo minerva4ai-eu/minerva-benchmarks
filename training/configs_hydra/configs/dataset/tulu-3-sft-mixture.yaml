@@ -1,8 +1,8 @@
-defaults:
-  - base
-  - _self_
-
 name: tulu-3-sft-mixture
-path: "/lustre/fswork/projects/idris/sos/ssos027/LLM-FT-IDRIS-Benchmark/sft_megatron_data"
+path: ${abs_path:datasets/tulu-3-sft-mixture}
 task: Instruction-Finetuning
 max_seq_len: 4096
+train:
+  - "training.jsonl"
+validation:
+  - "validation.jsonl"

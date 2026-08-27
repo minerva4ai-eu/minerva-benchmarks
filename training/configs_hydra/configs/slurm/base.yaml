@@ -18,6 +18,7 @@ sbatch:
   extra_args:
     - "--exclusive"                       # Not touch
     - "--time=00:30:00"                   # Not touch
+  logs_folder: "slurm-logs"
 
 srun:                                     # Field not implemented
   gpus_per_node: 0

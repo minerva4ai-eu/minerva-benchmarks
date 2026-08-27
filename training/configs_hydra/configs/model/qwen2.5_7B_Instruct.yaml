@@ -2,8 +2,8 @@ defaults:
   - base_training
   - _self_
 
-name: qwen2.5_7B_Instruct # MUST BE same as the filename
-path: "/lustre/fswork/projects/idris/sos/ssos027/LLM-FT-IDRIS-Benchmark/nemo_ckpt"
+name: qwen2.5_7B_Instruct
+path: path/to/mistral_7b 
 # transformer dims
 total_params_billions: 7.61
 architecture_type: dense
@@ -23,8 +23,8 @@ vocab_size:           152064
 # GPU requirements — constraint metadata
 max_gpus_scale: 64
 frameworks_supported:
-  - nemo-megatron
-parallelism_supported:
+  - megatron-nemo-2509
+megatron_parallelism_supported:
   - dp
   - tp
   - pp
@@ -32,10 +32,10 @@ parallelism_supported:
 
 combinations:
   batch_sizes: [1]
-  precisions: ["bf16"]
   grad_accums: [8]
-  lr: [2e-5]
-  optimizer: ["adamw"]
-  gradient_checkpointing: [False] # TODO: Implement parameterization
-  steps: [50]
-  enable_compile: [False]
+  steps: [25]
+  precisions: 
+  lr: 
+  optimizer: 
+  gradient_checkpointing: 
+  enable_compile:

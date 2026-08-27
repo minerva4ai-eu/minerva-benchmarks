@@ -2,5 +2,6 @@ defaults:
   - deepspeed-accelerate
   - _self_
 
+name: deepspeed-accelerate-cuda121
 python_environment: ${abs_path:envs/benchmarks/cuda121-flash-attn/.venv}
 singularity_container: ${abs_path:envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif}

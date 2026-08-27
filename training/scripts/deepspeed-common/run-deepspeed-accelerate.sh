@@ -6,6 +6,7 @@
 ##################################################
 ###           Load HPC modules                 ###
 ##################################################
+module purge
 if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi

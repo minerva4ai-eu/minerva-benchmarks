@@ -72,8 +72,8 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
     YAML files. Supports dry-run mode for config generation without submission
     and job dependency chaining per model.
     """
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -148,7 +148,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
             dependency_jobid = ""
             for cfg in model_cfgs:
                 if cfg.id in cfgs_seen:
-                    print(
+                    click.echo(
                         f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                     )
                     continue
@@ -197,7 +197,7 @@ def run(dry_run, per_model_jobs, configs_path, config_name, runs_dir, yamls):
             continue
 
         if cfg.id in cfgs_seen:
-            print(
+            click.echo(
                 f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
             )
             continue
@@ -299,8 +299,8 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
     Requires --run-date and --run-id to identify the original run.
     """
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Re-running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -439,7 +439,7 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
                 "yaml_filename": "",
             }
             if cfg.id in cfgs_seen:
-                print(
+                click.echo(
                     f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                 )
                 continue
@@ -459,10 +459,10 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
         u.write_jsonl(d=jobs_resubmitted, p=rerun_monitor_path)
 
 
-def _parse_space_separated(value: str | None) -> set | None:
+def _parse_space_separated(value: str | None) -> set:
     """Parse a space-separated string into a set of values, or return None."""
     if not value:
-        return None
+        return set()
     return set(value.split())
 
 
@@ -615,7 +615,7 @@ def status(
     states = _parse_space_separated(state)
     if state in states:
         if state not in m.SLURM_STATUS_DASHBOARD.keys():
-            print(
+            click.echo(
                 f"{u.RED}Argument '--state' is not valid to filter benchmark jobs for requested run."
                 + f"\n{u.YELLOW}Valid job states: {', '.join(list(m.SLURM_STATUS_DASHBOARD.keys()))}{u.RESET}"
             )
@@ -638,11 +638,11 @@ def status(
             )
             return
 
-    print(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
+    click.echo(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
     s1 = " " * 20
     s2 = " " * 50
     s3 = " " * 49
-    print(f"{u.YELLOW}JOBID | RUNID | DEPJOB")
+    click.echo(f"{u.YELLOW}JOBID | RUNID | DEPJOB{u.RESET}")
     for job in sorted(run_jobs, key=lambda j: j["id"]):
         job_info = m.get_job_info(job["id"])
         if state and state != job_info.status_meta["code_complete"]:
@@ -706,8 +706,8 @@ def cancel(run_date, run_id, runs_id, model, framework, parallelism, nodes):
     Only affects running and pending jobs; completed/failed jobs are ignored.
     """
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Cancelling {u.MAGENTA} MINERVA Benchmarks {u.CYAN} jobs {u.POINT_DIAMOND} {u.RESET}"
     )
 

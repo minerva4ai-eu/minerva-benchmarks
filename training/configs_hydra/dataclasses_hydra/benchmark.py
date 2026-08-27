@@ -18,15 +18,12 @@ class EnvMode(str, Enum):
 class MachineConfig:
     name: str = MISSING  # actual name of super computer running benchmarks
     name_pattern: str = MISSING  # configuration files naming convention pattern
-    framework_name_pattern: str = (
-        MISSING  # naming convention pattern specific for framework configurations
-    )
     modules: list[str] | None = None
     runtime_env_mode: EnvMode = MISSING
     singularity_binds: list[str] | None = None
     singularity_args: list[str] | None = None
     single_gpu_also_valid: bool = MISSING
-    env: dict[str, str] = field(
+    env: dict[str, str] | None = field(
         default_factory=dict
     )  # machine-specific environment variables
 
@@ -37,7 +34,7 @@ class ExperimentConfig:
     output_dir: str = "results/"
     repeat: int = 1
     yaml_filename: str | None = ""
-    env: dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] | None = field(default_factory=dict)
 
 
 @dataclass

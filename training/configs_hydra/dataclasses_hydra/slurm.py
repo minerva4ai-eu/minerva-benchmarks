@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from omegaconf import MISSING
 
@@ -15,7 +14,8 @@ class SbatchConfig:
     gres: str = MISSING
     output: str = MISSING
     error: str = MISSING
-    extra_args: List[str] = field(default_factory=list)
+    logs_folder: str = MISSING
+    extra_args: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.nodes < 1:

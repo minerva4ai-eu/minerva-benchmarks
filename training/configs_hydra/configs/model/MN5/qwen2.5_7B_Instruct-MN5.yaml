@@ -1,0 +1,5 @@
+defaults:
+  - qwen2.5_7B_Instruct
+  - _self_
+
+path: /gpfs/scratch/shared/ai-hub/models/text-models/Qwen/Qwen2.5/Qwen2.5-7B-Instruct

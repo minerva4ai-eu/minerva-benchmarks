@@ -5,7 +5,6 @@ defaults:
 
 machine:
   runtime_env_mode: singularity
-  framework_name_pattern: cuda130
   modules:
   - singularity
   singularity_args:

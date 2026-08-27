@@ -10,8 +10,9 @@ parallelism:
 scripts:
   run: path to slurm launch script
   finetune: path to python finetune script
-  shared: scripts/shared
   copy_files:
     - file to copy no.1
     - file to copy no.2
     - etc.
+
+env:                                         # Machine specific environment variables - similar format to experiment.env

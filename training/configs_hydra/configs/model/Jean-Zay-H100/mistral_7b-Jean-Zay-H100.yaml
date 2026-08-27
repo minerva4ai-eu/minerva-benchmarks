@@ -1,0 +1,6 @@
+defaults:
+  - mistral_7b
+  - _self_
+
+path: "fill in path to model"
+max_gpus_scale: 8

@@ -14,7 +14,6 @@ parallelism:
 scripts:
   run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
   finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
-  shared: scripts/shared
   copy_files:
     - scripts/accelerate-common/gpu_monitor.py
     - scripts/accelerate-common/accelerate_config.yaml
@@ -22,3 +21,7 @@ scripts:
     - scripts/gpu_plots.py
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}
+    - scripts/shared
+datasets_allowed:
+  - alpaca
+  - squadv2

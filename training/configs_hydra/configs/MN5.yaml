@@ -6,7 +6,6 @@ defaults:
 machine:
   name: bsc-mn5-acc # actual name of super computer running benchmarks
   name_pattern: MN5 # configuration files naming convention pattern
-  framework_name_pattern: None
   env:
     NCCL_NET: IB
     NCCL_SOCKET_IFNAME: ib0,ib1,ib2,ib3
@@ -15,7 +14,7 @@ machine:
     NCCL_NVLS_ENABLE: "0"
     NCCL_IB_DISABLE: "0"
     CUDA_VISIBLE_DEVICES: "0,1,2,3"
-    CUDA_LAUNCH_BLOCKING: "1"
+    CUDA_LAUNCH_BLOCKING: "0"
 experiment:
   env:
     # Copied from base.yaml to avoid overwritting

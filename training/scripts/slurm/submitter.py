@@ -5,9 +5,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import click
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 from scripts.slurm import utils as u
 
 
@@ -50,10 +51,6 @@ def build_launch_folder(
 
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
-    # Copy folder with shared among frameworks
-    shutil.copytree(
-        cfg.framework.scripts.shared, os.path.join(dest, "shared"), dirs_exist_ok=True
-    )
 
     shutil.copy(cfg.framework.scripts.run, dest)
     if hasattr(cfg.framework.scripts, "finetune"):
@@ -77,9 +74,12 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         cfg.dataset,
         cfg.slurm,
     )
-    assert isinstance(f.parallelism, DictConfig) and len(f.parallelism) == 1, (
-        f"cfg.framework is expected to be of type DictConfig, but received {type(cfg.framework)} cfg.framework"
-    )
+    # Deprecated check
+    # assert isinstance(f.parallelism, DictConfig) and len(f.parallelism) == 1, (
+    #    f"cfg.framework is expected to be of type DictConfig, but received {type(cfg.framework)} cfg.framework"
+    # )
+    # ToDo: This check should be integrated on the configs composing
+    # in hydra_app.py.
     assert (t.steps is not None) != (t.epochs is not None), (
         "Must provide exactly only one of 'epochs' or 'step'! "
     )
@@ -167,6 +167,19 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         ),
         "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
         "TOKENIZERS_PARALLELISM": str(False),
+        **(
+            {
+                "TP": str(cfg.framework.megatron_parallelism.tp),
+                "PP": str(cfg.framework.megatron_parallelism.pp),
+                "DP": str(cfg.framework.megatron_parallelism.dp),
+                "CP": str(cfg.framework.megatron_parallelism.cp),
+                "SP": str(cfg.framework.megatron_parallelism.cp),
+                "EP": str(cfg.framework.megatron_parallelism.cp),
+            }
+            if cfg.framework.megatron_parallelism
+            else {}
+        ),
+        "LOGS_FOLDER": cfg.slurm.sbatch.logs_folder,
     }
 
     # Merge machine-specific environment variables
@@ -174,6 +187,8 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         env.update(**cfg.machine.env)
     if cfg.experiment.env:
         env.update(**cfg.experiment.env)
+    if cfg.framework.env:
+        env.update(**cfg.framework.env)
 
     def _serialize(value):
         if value is None:
@@ -214,11 +229,12 @@ def submit_job(
         f"--gres=gpu:{s.sbatch.gpus_per_node}",
         f"--cpus-per-task={s.sbatch.cpus_per_gpu}",
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
-        f"--output={s.sbatch.output}",
-        f"--error={s.sbatch.error}",
-        f"--partition={s.partition}",
+        f"--output={s.sbatch.logs_folder.lstrip('/')}/%j/{s.sbatch.output}",
+        f"--error={s.sbatch.logs_folder.lstrip('/')}/%j/{s.sbatch.error}",
         *([f"--dependency={dependency}"] if dependency else []),
     ]
+    if s.partition is not None:
+        cmd.append(f"--partition={s.partition}")
     if s.qos is not None and s.account is not None:
         cmd.extend(
             [
@@ -228,7 +244,7 @@ def submit_job(
         )
 
     if s.constraint is not None:
-        cmd.extend([f"--constraint={s.constraint}"])
+        cmd.append(f"--constraint={s.constraint}")
 
     cmd.extend(
         [
@@ -236,7 +252,7 @@ def submit_job(
             os.path.join(launch_folder, f.scripts.run.split("/")[-1]),
         ]
     )
-    # print("\n".join(cmd))
+    # click.echo("\n".join(cmd))
     job_cfg = (
         f"{m.name}-{f.name}-{f.parallelism_name}"
         + f"-{cfg.dataset.name}"
@@ -254,13 +270,15 @@ def submit_job(
             env=build_env(cfg, launch_folder, repeat_id),
         )
         if result.returncode != 0:
-            print(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}")
-            print(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
+            click.echo(
+                f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}"
+            )
+            click.echo(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
             return "-100"
         job_id = result.stdout.strip()
     except Exception as e:
         raise e
 
     # update_status(cfg, runs_dir, "running", job_id)
-    print(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {job_cfg} {u.RESET}")
+    click.echo(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {job_cfg} {u.RESET}")
     return job_id

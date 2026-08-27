@@ -16,7 +16,6 @@ parallelism:
 scripts:
   run: scripts/deepspeed-common/run-deepspeed-accelerate.sh
   finetune: scripts/deepspeed-common/finetune-deepspeed-accelerate.py
-  shared: scripts/shared
   copy_files:
     - scripts/deepspeed-common/gpu_monitor.py
     - scripts/deepspeed-common/utils.py
@@ -24,3 +23,7 @@ scripts:
     - scripts/deepspeed-common/configs
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}
+    - scripts/shared
+datasets_allowed:
+  - alpaca
+  - squadv2

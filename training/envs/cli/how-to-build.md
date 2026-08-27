@@ -49,60 +49,25 @@ pip install uv
 
 # Or using curl
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or maybe 'uv' is already installed in the form of a module e.g.
+module load uv
 ```
 
 ### Step 2 — Create and activate a local virtual environment
 
 ```bash
-# Create and activate the environment
-uv venv
-source .venv/bin/activate
+# make sure you are inside folder 'training/envs/cli'
+cd training/envs/cli
 
 # Install dependencies from pyproject.toml
 uv sync --locked
 
 # Verify
+python -c "import omegaconf; print(omegaconf.__version__)"
 python -c "import hydra; print(hydra.__version__)"
 ```
 
-### Step 3 — Update dependencies (optional)
-
-```bash
-# Add a new dependency
-uv add <package-name>
-
-# Update all dependencies
-uv lock --upgrade
-
-# Update a specific package
-uv lock --upgrade-package <package-name>
-```
-
----
-
-## Option 2: Build Singularity Container
-
-Use this option to build the Singularity image for execution on HPC clusters.
-
-### Step 1 — Build the Singularity image
-
-```bash
-singularity build singularity-uv.sif singularity-uv.def
-```
-
-This will:
-1. Pull the `python:3.11-slim` Docker base image
-2. Install system dependencies (`git`, `curl`, `build-essential`)
-3. Install `uv` via `pip`
-4. Run `uv sync --locked` to install all Python dependencies from `pyproject.toml`
-5. Produce `singularity-uv.sif`
-
-### Step 2 — Verify the image
-
-```bash
-singularity exec singularity-uv.sif python --version
-singularity exec singularity-uv.sif uv --version
-```
 
 ---
 
@@ -119,8 +84,3 @@ See `pyproject.toml` for the full list:
 
 ---
 
-## Notes
-
-- The Singularity image uses `python:3.11-slim` as the base — no CUDA libraries are included (this is a CLI-only environment).
-- The `uv.lock` file pins exact versions for reproducible builds. Always keep it in sync with `pyproject.toml`.
-- To update dependencies: `uv sync --locked` (after editing `pyproject.toml`).

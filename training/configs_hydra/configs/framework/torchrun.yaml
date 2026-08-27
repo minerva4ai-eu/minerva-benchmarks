@@ -15,10 +15,13 @@ parallelism:
 scripts:
   run: scripts/torchrun-common/run-${framework.parallelism_name}.sh
   finetune: scripts/torchrun-common/finetune-${framework.parallelism_name}.py
-  shared: scripts/shared
   copy_files:
     - scripts/torchrun-common/gpu_monitor.py
     - scripts/torchrun-common/utils.py
     - scripts/gpu_plots.py
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}
+    - scripts/shared
+datasets_allowed:
+  - alpaca
+  - squadv2
