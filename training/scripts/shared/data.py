@@ -16,6 +16,9 @@ if TYPE_CHECKING:
     from torch.utils.data import Dataset
     from transformers import PreTrainedTokenizer
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CollateFnError(Exception):
     def __init__(self, msg: str):
@@ -207,6 +210,11 @@ def load_and_prepare_raw_dataset(
         train_files=train_files,
         validation_files=validation_files,
     )
+
+    logger.debug("dataset_name = %s", dataset_name)
+    logger.debug("dataset_path = %s", dataset_path)
+    logger.debug("train_path = %s", train_path)
+    logger.debug("val_path = %s", val_path)
 
     print_rank(
         f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}"

@@ -22,8 +22,11 @@ tokenizer_type:       sentencepiece
 max_gpus_scale: 4
 frameworks_supported:
   - torchrun
+  - accelerate
 parallelism_supported:
   - none
+  - ddp
+  - fsdp
 
 combinations:
   batch_sizes: [8]

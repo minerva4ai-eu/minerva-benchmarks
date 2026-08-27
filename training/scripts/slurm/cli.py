@@ -12,7 +12,7 @@ import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
 from omegaconf import DictConfig
 from scripts.slurm.cli_utils import *
-from scripts.slurm.submitter import build_launch_folder, submit_job
+from scripts.slurm.submitter import submit_job
 
 if TYPE_CHECKING:
     from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -121,8 +121,11 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
             )
             exit(1)
     
+    # TODO: review output structure
+    runs_dir = f"{runs_dir}-{config_name}"
+    run_date = datetime.now().date().strftime("%d-%m-%Y")
     valid, _ = generate_valid_combos(
-        config_path=configs_path, config_name=config_name, outpath=runs_dir
+        config_path=configs_path, config_name=config_name, outpath=runs_dir, run_date=run_date, dry=dry_run
     )
     if dry_run:
         for cfg in valid:
@@ -130,110 +133,24 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
     else:
         # TODO: Check desired behavior
         if yamls:
-            pring("Use batch mode")
+            print("Use batch mode in HPC")
             exit(1)
 
-        # Sumbit all
-        # TODO: Check desired behavior, dry-run job?
-        runs_dir = f"{runs_dir}-{config_name}"
-        for cfg in valid:
-            logger.info("cfg = %s", cfg)
-            # TODO: already seen already checked?
-            # print(cfg)
-
-            # TODO: check desired behavior
-            # runs_dir = f"{runs_dir}-{config_name}"
-            run_date = datetime.now().date().strftime("%d-%m-%Y")
-            slurm_monitor_dir = os.path.join(runs_dir, "slurm-monitor")
-            date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
-            # os.makedirs(date_monitor_dir, exist_ok=True)
-            run_id = 1
-            short_id = f"run_id-{run_id}"
-            run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-            logger.debug("run_id, short_id = %s, %s", run_id, short_id)
-            # FIXME: traceable
-            while os.path.exists(run_monitor_dir):
-                run_id += 1
-                short_id = f"run_id-{run_id}"
-                logger.debug("run_id, short_id = %s, %s", run_id, short_id)
-                run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-            
-            for repeat_id in range(1, cfg.experiment.repeat + 1):
-                launch_folder = build_launch_folder(
-                    cfg,
-                    base_dir=BASE_DIR,
-                    runs_dir=runs_dir,
-                    run_id=short_id,
-                    repeat_id=repeat_id,
-                )
-                logger.info("launch_folder = %s", launch_folder)
-
+        # # Sumbit all
+        # # TODO: Check desired behavior, dry-run job?
+        # for cfg in valid:
+        #     logger.info("cfg = %s", cfg)
+        #     # TODO: already seen already checked?
+        #     # print(cfg)
+        
         jobid = submit_job(
             cfg_name=config_name,
             config_path=configs_path,
             runs_dir=runs_dir,
-            run_dir=launch_folder,
-            cfgs = valid
+            # run_dir=launch_folder,
+            # cfgs = valid,
+            run_date=run_date
         )
-    # run_date = datetime.now().date().strftime("%d-%m-%Y")
-    # slurm_monitor_dir = os.path.join(runs_dir, "slurm-monitor")
-    # date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
-    # # os.makedirs(date_monitor_dir, exist_ok=True)
-    # run_id = 1
-    # short_id = f"run_id-{run_id}"
-    # run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-    # while os.path.exists(run_monitor_dir):
-    #     run_id += 1
-    #     short_id = f"run_id-{run_id}"
-    #     run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-
-
-    # # jobs_submitted = []
-    # # cfgs_seen = set()
-    
-    # # # Sumbit all jobs interedependent
-    # # for cfg in valid:
-    # #     if dry_run:
-    # #         _ = build_launch_folder(
-    # #             cfg, base_dir=BASE_DIR, runs_dir=runs_dir, run_id=short_id, dry=dry_run
-    # #         )
-    # #         click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
-    # #         continue
-
-    # #     # If the user provides duplicate configs?
-    # #     if cfg.id in cfgs_seen:
-    # #         print(
-    # #             f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate step submission...'{u.RESET}"
-    # #         )
-    # #         continue
-    # #     for repeat_id in range(1, cfg.experiment.repeat + 1):
-    # #         job_desc = {
-    # #             "id": None,
-    # #             "cfg_id": None,
-    # #             "dependency": dependency_jobid,
-    # #             "launch_folder": "",
-    # #             "yaml_filename": "",
-    # #         }
-
-    # #         launch_folder = build_launch_folder(
-    # #             cfg,
-    # #             base_dir=BASE_DIR,
-    # #             runs_dir=runs_dir,
-    # #             run_id=short_id,
-    # #             repeat_id=repeat_id,
-    # #         )
-    # #         job_desc["id"] = dependency_jobid
-    # #         job_desc["cfg_id"] = cfg.id
-    # #         job_desc["launch_folder"] = str(launch_folder.absolute())
-    # #         job_desc["yaml_filename"] = cfg.experiment.yaml_filename
-    # #         jobs_submitted.append(job_desc)
-    # #         cfgs_seen.add(cfg.id)
-    # #     os.makedirs(run_monitor_dir, exist_ok=True)
-
-    # #     u.write_jsonl(
-    # #         d=jobs_submitted,
-    # #         p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
-    # #     )
     return
 
 

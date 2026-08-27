@@ -51,3 +51,4 @@ class BenchmarkConfig(DictConfig):
     machine: MachineConfig
     experiment: ExperimentConfig
     slurm: s.SlurmConfig
+    run_dir: str = "benchmark-runs"

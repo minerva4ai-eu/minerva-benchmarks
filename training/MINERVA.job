@@ -41,9 +41,9 @@ echo "Will apply runtime prefix '$runtime_prefix'"
 # TODO: check
 which python # [cli] if **os.environ in env: /gpfs/home/bsc/bsc079516/minerva-benchmarks/training/envs/cli/.venv/bin/python
 
-# echo MINERVA_WORKDIR=$MINERVA_WORKDIR
-echo YAML_WORKDIR=$YAML_WORKDIR
-echo RUN_DIR=$RUN_DIR
+echo MINERVA_WORKDIR=$MINERVA_WORKDIR
+# echo YAML_WORKDIR=$YAML_WORKDIR
+# echo RUN_DIR=$RUN_DIR
 
 # TODO: load if not empty
 echo MODULES=$MODULES
@@ -94,29 +94,13 @@ runner_fn () {
     "  SLURM_NODEID: $SLURM_NODEID" \
     "  SLURM_PROCID: $SLURM_PROCID"
 
-    # "  MODEL: $MODEL" \
-    # "  DATASET: $DATASET (path: $DATASET_PATH)" \
-    # "  BATCH_SIZE: $BATCH_SIZE" \
-    # "  GRAD_ACCUM: $GRAD_ACCUM" \
-    # "  ENABLE_COMPILE: $ENABLE_COMPILE" \
-    # "  PRECISION: $PRECISION" \
-    # "  TRIAL: $TRIAL" \
-    # "  LR: $LR" \
-    # "  MAX_LENGTH: $MAX_LENGTH" \
-    # "  EPOCHS: $EPOCHS" \
-    # "  STEPS: $STEPS" \
-    # "  RESULTSDIR: $RESULTSDIR" \
-    # "  CONFIG_ENV: $CONFIG_ENV" \
-    # "  CONTAINER_ARGS: $CONTAINER_ARGS" \
-    # "  CONTAINER_PATH: $CONTAINER_PATH" \
-    # "  NPROC: $NPROC"
-    # "  USECPU: $USECPU" \
+    export TORCHINDUCTOR_CACHE_DIR="$TMPDIR/torchinductor_$USER/$SLURM_JOB_ID.$SLURM_STEP_ID"
+    export TENSORBOARD_LOGGING_DIR="$TMPDIR/tensorboard_$SLURM_JOB_ID.$SLURM_STEP_ID"
 
-    # env | grep SLURM
+    # No slurm commands inside the container (only environment variables)
+    export HEAD_NODE=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
+    echo HEAD_NODE=$HEAD_NODE
 
-    # No slurm commands inside the container (environment variables yes)
-    export MASTER_ADDR=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
-    # TODO: ^ change
     export TRAIN_SCRIPT="scripts/$FRAMEWORK-common/finetune-$PARALLELISM.py"
 
     bash scripts/$FRAMEWORK-common/run-$PARALLELISM.sh $1 >> $LOG_DIR/work-step$SLURM_STEP_ID-task$SLURM_PROCID.log 2>&1
@@ -128,8 +112,8 @@ runner_fn () {
 export -f runner_fn
 
 
-# Please
-for yaml_cfg in $(find $YAML_WORKDIR -type f -name "*.yaml"); do
+# TODO: refactor config
+for yaml_cfg in $(find $MINERVA_WORKDIR -type f -name "*.yaml"); do
     echo here
     echo $yaml_cfg
     PARALLELISM=$(basename $(dirname $(dirname $(dirname $(dirname $yaml_cfg)))))
@@ -145,12 +129,6 @@ for yaml_cfg in $(find $YAML_WORKDIR -type f -name "*.yaml"); do
     
     NNODES=$( echo $(basename $(dirname $(dirname $yaml_cfg))) | cut -d"-" -f2)
     echo $NNODES
-
-    export TORCHINDUCTOR_CACHE_DIR=$TMPDIR/torchinductor_$USER/$SLURM_JOB_ID.$SLURM_STEP_ID
-
-    export TENSORBOARD_LOGGING_DIR=$RESULTSDIR/logs/$SLURM_JOB_ID.$SLURM_STEP_ID
-    # export TENSORBOARD_LOGGING_DIR="$RESULTSDIR/tensorboard_$SLURM_JOB_ID.$SLURM_STEP_ID
-
 
     srun \
         -N $NNODES \

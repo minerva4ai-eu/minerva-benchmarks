@@ -1,15 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=DEEPSPEED_DYNAMIC
-
 
 ##################################################
 ###           Load HPC modules                 ###
 ##################################################
-if [ ! -z "$LOAD_MODULES" ]; then
-    eval "$LOAD_MODULES"
-fi
-
 source shared/runtime_environment.sh
 training_activate_runtime_environment
 

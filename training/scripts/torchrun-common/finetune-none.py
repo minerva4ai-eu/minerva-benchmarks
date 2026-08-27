@@ -45,7 +45,6 @@ logger = logging.getLogger(__name__)
 
 
 def is_main_process():
-    # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
     rank = int(os.environ.get("RANK", 0))
     return rank == 0
 
@@ -57,7 +56,12 @@ def main():
     jobstepid = os.environ["SLURM_STEP_ID"]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    logger.info("type(args.yaml_file) = %s", type(args.yaml_file))
+    logger.info("args.yaml_file = %s", args.yaml_file)
+
     configs = parse_config(args.yaml_file)
+
     logger.info("configs = %s", configs)
     model_name = configs['model']['path']
     logger.info("model_name = %s", model_name)
@@ -83,16 +87,19 @@ def main():
     logger.info("epochs = %s", max_length)
     # TODO: fix
     max_length = 1024
-    output_dir = os.path.join(os.environ.get('RUN_DIR'), args.output_dir)
+    run_dir = configs['run_dir']
+    logger.info("run_dir = %s", run_dir)
+    output_dir = os.path.join(run_dir, args.output_dir)
+    logger.info("output_dir = %s", output_dir)
 
     if is_main_process:
         os.makedirs(output_dir, exist_ok=True)
-        print(f"Loading tokenizer... {model_name}")
+        logger.info(f"Loading tokenizer... {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print("Tokenizer Loaded")
+    logger.info("Tokenizer Loaded")
 
     train_dataset, eval_dataset = load_and_prepare_raw_dataset(
         dataset_name=dataset_name, dataset_path=dataset_path, test_size=0.1
@@ -156,13 +163,13 @@ def main():
 
     trainable_params, total_params, trainable_pct = 0, 0, 0
     try:
-        print(f"Loading Model... dtype: {dtype}")
+        logger.info(f"Loading Model... dtype: {dtype}")
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=dtype,
         )
         model.to(device)
-        print("Model Loaded")
+        logger.info("Model Loaded")
 
         # Conditionally add either epochs or max_steps
         training_args.num_train_epochs = epochs if epochs is not None else 1
@@ -301,6 +308,9 @@ def main():
                 "parallelism_type": "none",
                 "batch_size": training_args.per_device_train_batch_size,
                 "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "compile": enable_compile,
+                "precision": precision,
+                "max_length": max_length,
                 "trainable_parameters": trainable_params,
                 "total_trainable_parameters": total_params,
                 "trainable_parameters_percentage": trainable_pct,
@@ -355,6 +365,9 @@ def main():
                 "parallelism_type": "none",
                 "batch_size": training_args.per_device_train_batch_size,
                 "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "compile": enable_compile,
+                "precision": precision,
+                "max_length": max_length,
                 "trainable_parameters": trainable_params,
                 "total_trainable_parameters": total_params,
                 "trainable_parameters_percentage": trainable_pct,

@@ -2,6 +2,7 @@ import argparse
 import ast
 import json
 import os
+import yaml
 
 
 def count_parameters(model):
@@ -19,51 +20,22 @@ def save_summary_stats_json(summary, output_file):
 # --- Argument Parsing ---
 def parse_args():
     parser = argparse.ArgumentParser(
-        # Todo: Fill in description
+        # TODO: Fill in argparse description
         description="ToDo"
     )
     parser.add_argument(
-        "--model", type=str, required=True, help="Path to pretrained model"
+        "--yaml_file", type=str, required=True, help="Path to yaml configuration"
     )
-    parser.add_argument("--data", type=str, required=True, help="Path to JSON dataset")
-    parser.add_argument("--dataset", type=str, required=True, help="Dataset name")
     parser.add_argument(
-        "--output_dir", type=str, default="./output", help="Output directory"
+        "--output_dir", type=str, default="output", help="Output directory"
     )
-    parser.add_argument("--epochs", type=int, default=None, help="Number of epochs")
-    parser.add_argument(
-        "--batch_size", type=int, default=1, help="Per-device batch size"
-    )
-    parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
     parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
-    parser.add_argument(
-        "--enable_steps",
-        type=bool,
-        default=False,
-        help="Enable maximum steps instead of Epochs",
-    )
-    parser.add_argument("--max_steps", type=float, default=None, help="Maximum steps")
-    parser.add_argument("--max_length", type=int, default=1024, help="Max token length")
-    parser.add_argument("--epochs_save_every", type=int, default=1)
-    parser.add_argument(
-        "--gradient_accumulation_steps",
-        type=int,
-        default=16,
-        help="Gradient accumulation steps",
-    )
     parser.add_argument(
         "--dataloader_num_workers",
         type=int,
         default=4,
         help="Number of workers for dataloader",
-    )
-    parser.add_argument(
-        "--precision",
-        type=str,
-        default="fp32",
-        choices=["fp32", "fp16", "bf16"],
-        help="Precision type for model weights (fp32, fp16, bf16)",
     )
     parser.add_argument(
         "--max_comm_comp_overlap",
@@ -75,21 +47,7 @@ def parse_args():
             + "Note: This may increase GPU memory usage, so use with caution on memory-constrained setups."
         ),
     )
-    parser.add_argument(
-        "--enable_compile",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
-    parser.add_argument(
-        "--gradient_checkpointing",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
-
     return parser.parse_args()
-
 
 def parse_dataset_paths(data_arg):
     """
@@ -122,3 +80,10 @@ def parse_dataset_paths(data_arg):
 
     # Otherwise, single dataset path
     return data_arg, None, False
+
+def parse_config(yaml_file):
+    config = {}
+    with open(yaml_file, "r") as f:
+        config = yaml.safe_load(f)
+
+    return config

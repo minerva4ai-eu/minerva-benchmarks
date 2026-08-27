@@ -2,6 +2,10 @@ import gc
 import os
 import time
 
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+# # sys.path.append("../..")
+
 import psutil
 import torch
 import torch.distributed as dist
@@ -21,14 +25,27 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl.trainer.sft_config import (
     SFTConfig,  # CHANGED: replaces TrainingArguments + Trainer
 )
-from utils import parse_args
+from utils import parse_args, parse_config
 
-# parse CLI args
 args = parse_args()
 
-MAX_LENGTH = args.max_length
-BATCH_SIZE = args.batch_size
+import logging
+from datetime import datetime
 
+RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime('%Y%m%d%H%M%S'))
+RUNJD = os.environ.get("SLURM_STEP_ID")
+LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+# FIXME: logging level
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s |  %(levelname)s | %(name)s : %(message)s",
+    handlers=[logging.FileHandler(os.path.join(LOG_DIR, f"minerva-step{RUNJD}.log"))],
+)
+
+logger = logging.getLogger(__name__)
 
 def is_main_process():
     rank = int(os.environ.get("RANK", 0))
@@ -36,9 +53,19 @@ def is_main_process():
 
 
 def main():
+
+    logger.info('localrankvar = %s, rankvar = %s, grouprankvar = %s, rolerankvar = %s, localworldsizevar = %s, worldsizevar = %s', 
+                os.environ.get("LOCAL_RANK", None),
+                os.environ.get("RANK", None),
+                os.environ.get("GROUP_RANK", None),
+                os.environ.get("ROLE_RANK", None),
+                os.environ.get("LOCAL_WORLD_SIZE", None),
+                os.environ.get("WORLD_SIZE", None))
+        
     # Get main id
     jobid = os.environ["SLURM_JOB_ID"]
     jobstepid = os.environ["SLURM_STEP_ID"]
+    jobsteprocid = os.environ["SLURM_PROCID"]
     
     if dist.is_initialized():
         rank = dist.get_rank()
@@ -49,9 +76,41 @@ def main():
 
     torch.cuda.empty_cache()
 
-    model_name = args.model
-    data = args.data
-    output_dir = args.output_dir
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    logger.info("type(args.yaml_file) = %s", type(args.yaml_file))
+    logger.info("args.yaml_file = %s", args.yaml_file)
+
+    configs = parse_config(args.yaml_file)
+    logger.info("configs = %s", configs)
+    model_name = configs['model']['path']
+    logger.info("model_name = %s", model_name)
+    dataset_path = configs['dataset']['path']
+    logger.info("data = %s", dataset_path)
+    dataset_name = configs['dataset']['name']
+    logger.info("dataset = %s", dataset_name)
+    precision = configs['model']['training']['precision']
+    logger.info("precision = %s", precision)
+    batch_size = configs['model']['training']['batch_size']
+    logger.info("batch_size = %s", batch_size)
+    gradient_accumulation_steps = configs['model']['training']['grad_accum']
+    logger.info("gradient_accumulation_steps = %s", gradient_accumulation_steps)
+    lr = configs['model']['training']['lr']
+    logger.info("lr = %s", lr)
+    enable_compile = configs['model']['training']['enable_compile']
+    logger.info("enable_compile = %s", enable_compile)
+    max_steps = configs['model']['training']['steps']
+    logger.info("max_steps = %s", max_steps)
+    epochs = configs['model']['training']['epochs']
+    logger.info("epochs = %s", epochs)
+    max_length = configs['model']['training']['max_model_length']
+    logger.info("epochs = %s", max_length)
+    # TODO: fix
+    max_length = 1024
+    run_dir = configs['run_dir']
+    logger.info("run_dir = %s", run_dir)
+    output_dir = os.path.join(run_dir, args.output_dir)
+    logger.info("output_dir = %s", output_dir)
 
     if is_main_process():
         os.makedirs(output_dir, exist_ok=True)
@@ -68,7 +127,7 @@ def main():
     # If your load_dataset already returns pre-tokenized datasets, set
     # dataset_kwargs={"skip_prepare_dataset": True} in SFTConfig below.
     train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
+        dataset_name=dataset_name, dataset_path=dataset_path, test_size=0.1
     )
 
     # Setup FSDP configuration
@@ -89,9 +148,9 @@ def main():
         "backward_prefetch": "backward_post",
     }
 
-    if args.precision == "fp16":
+    if precision == "fp16":
         dtype = torch.float16
-    elif args.precision == "bf16":
+    elif precision == "bf16":
         dtype = torch.bfloat16
     else:
         dtype = torch.float32
@@ -113,16 +172,16 @@ def main():
     training_args = SFTConfig(
         output_dir=output_dir,
         # overwrite_output_dir=True,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        per_device_train_batch_size=batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         gradient_checkpointing=False,
-        learning_rate=args.lr,
+        learning_rate=lr,
         weight_decay=args.weight_decay,
         logging_steps=args.logging_steps,
         save_strategy="no",
         save_total_limit=1,
-        fp16=args.precision == "fp16",
-        bf16=args.precision == "bf16",
+        fp16=precision == "fp16",
+        bf16=precision == "bf16",
         optim="adamw_torch",
         logging_dir=f"{output_dir}/logs",
         report_to="none",
@@ -138,7 +197,7 @@ def main():
         fsdp="full_shard auto_wrap",
         fsdp_config=fsdp_config,
         # --- SFT-specific args ---
-        max_length=MAX_LENGTH,  # replaces manual truncation in collator
+        max_length=max_length,  # replaces manual truncation in collator
         dataset_text_field="text",  # TODO: set to your dataset's text column name
         #                                   # OR remove and use formatting_func below
         packing=True,  # set True to pack short sequences for efficiency
@@ -153,28 +212,32 @@ def main():
                 "torch_compile_backend": "inductor",
                 "torch_compile_mode": "max-autotune",
             }
-            if bool(args.enable_compile)
+            if bool(enable_compile)
             else {}
         ),
     )
     try:
-        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
-        if args.max_steps is not None:
-            training_args.max_steps = int(args.max_steps)
+        training_args.num_train_epochs = epochs if epochs is not None else 1
+        if max_steps is not None:
+            training_args.max_steps = int(max_steps)
 
         monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
 
-        _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
+        gpu_configs = configs['arch']['gpu']
+        logger.info("gpu_configs = %s", gpu_configs)
+        if precision == 'bf16':
+            _peak_gpu_tflops = gpu_configs.get('theoretical_peak_bf16_tensor_tflops')
         peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
+        logger.info("peak_gpu_tflops = %s", peak_gpu_tflops)
         gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
         print_rank(
             0,
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        print_rank(f"Loading Model... dtype: {dtype}")
+        logger.info(f"Loading Model... dtype: {dtype}")
 
-        if args.enable_compile:
+        if enable_compile:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype=dtype,
@@ -198,7 +261,7 @@ def main():
             print_rank(0, "Disabling model's cache")
             model.config.use_cache = False
 
-        print_rank("Model Loaded")
+        logger.info("Model Loaded")
         # print_rank(0, ":::::::::")
         # for i in model.named_parameters():
         #    print_rank(0, f"{i[0]} -> {i[1].device}")
@@ -209,7 +272,7 @@ def main():
             model,
             tokenizer,
             gpu_peak_flops=peak_gpu_tflops,
-            seq_length=args.max_length,
+            seq_length=max_length,
         )
         # CHANGED: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
         # CHANGED: If you need a custom formatting function instead of dataset_text_field, pass:
@@ -314,11 +377,14 @@ def main():
                 "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
                 "total_gpus": world_size,
                 "model": model_name,
-                "dataset": data,
+                "dataset": dataset_path,
                 "framework": "accelerate",
                 "parallelism_type": "fsdp",
                 "batch_size": training_args.per_device_train_batch_size,
                 "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "compile": enable_compile,
+                "precision": precision,
+                "max_length": max_length,
                 "trainable_parameters": trainable_params,
                 "total_trainable_parameters": total_params,
                 "trainable_parameters_percentage": trainable_pct,
@@ -359,7 +425,7 @@ def main():
                 "avg_gpu_flops": avg_gpu_flops,
                 "avg_gpu_mfu": avg_gpu_mfu,
             },
-            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json"),
         )
 
         del trainer, model
@@ -374,18 +440,21 @@ def main():
                 "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
                 "total_gpus": world_size,
                 "model": model_name,
-                "dataset": data,
+                "dataset": dataset_path,
                 "framework": "accelerate",
                 "parallelism_type": "fsdp",
                 "batch_size": training_args.per_device_train_batch_size,
                 "gradient_accumulation": training_args.gradient_accumulation_steps,
+                "compile": enable_compile,
+                "precision": precision,
+                "max_length": max_length,
                 "trainable_parameters": trainable_params,
                 "total_trainable_parameters": total_params,
                 "trainable_parameters_percentage": trainable_pct,
                 "learning_rate": training_args.learning_rate,
                 "error": str(e),
             },
-            output_file=os.path.join(output_dir, f"job{jobid}-step{jobstepid}-training_summary_{rank}.json"),
+            output_file=os.path.join(output_dir, f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json"),
         )
         print_rank(rank, "Fine-tuning failed to complete!")
         raise e
