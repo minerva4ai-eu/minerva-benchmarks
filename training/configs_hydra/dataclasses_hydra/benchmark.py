@@ -13,13 +13,12 @@ from omegaconf import MISSING, DictConfig
 class MachineConfig:
     name: str = MISSING  # actual name of super computer running benchmarks
     name_pattern: str = MISSING  # configuration files naming convention pattern
-    modules: List[str] | None = None
-    python_environment: str | None = None
-    singularity_container: str | None = None
-    singularity_binds: List[str] | None = None
-    singularity_args: List[str] | None = None
+    modules: list[str] | None = None
+    runtime_env_mode: EnvMode = MISSING
+    singularity_binds: list[str] | None = None
+    singularity_args: list[str] | None = None
     single_gpu_also_valid: bool = MISSING
-    env: Dict[str, str] = field(
+    env: dict[str, str] | None = field(
         default_factory=dict
     )  # machine-specific environment variables
 
@@ -29,7 +28,8 @@ class ExperimentConfig:
     name: str = MISSING
     output_dir: str = "results/"
     repeat: int = 1
-    yaml_filename: str = ""
+    yaml_filename: str | None = ""
+    env: dict[str, str] | None = field(default_factory=dict)
 
 
 @dataclass

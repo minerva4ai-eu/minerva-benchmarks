@@ -4,6 +4,12 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
+module purge
+if [ ! -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi 
+source shared/runtime_environment.sh
+training_activate_runtime_environment
 
 echo yaml_path=$1
 

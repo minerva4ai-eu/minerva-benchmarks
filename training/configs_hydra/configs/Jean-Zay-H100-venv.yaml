@@ -6,4 +6,3 @@ defaults:
 machine:
   name: Jean-Zay-H100 # actual name of super computer running benchmarks
   name_pattern: Jean-Zay-H100 # configuration files naming convention pattern
-  framework_name_pattern: xxx                 

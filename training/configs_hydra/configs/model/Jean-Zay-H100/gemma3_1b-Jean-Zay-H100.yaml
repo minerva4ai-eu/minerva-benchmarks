@@ -1,0 +1,7 @@
+defaults:
+  - gemma3_1b
+  - _self_
+
+path: "fill in path to model"
+max_gpus_scale: 8
+

@@ -68,7 +68,7 @@ def get_peak_flops(cfg: GpuConfig, precision: str) -> int:
 
 @dataclass
 class NodeConfig:
-    gpus_per_node: int = MISSING
+    gpus_per_node: int = 0
 
 
 @dataclass

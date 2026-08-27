@@ -1,0 +1,28 @@
+name: megatron-nemo-2509
+
+parallelism_name: "megatron-nemo-2509"
+parallelism:
+  dp: { min_gpus: 2 }
+  pp: { min_gpus: 2 }
+  tp: { min_gpus: 2 }
+  cp: { min_gpus: 2 }
+  ep: { min_gpus: 2 }
+megatron_parallelism:
+  dp: -1                             # Will be filled in during composing time
+  pp: -1                             # Will be filled in during composing time
+  tp: ${arch.node.gpus_per_node}     # Stable value, equal to 'arch.node.gpus_per_node'
+  cp: -1                             # Will be filled in during composing time
+  ep: -1                             # Will be filled in during composing time
+
+scripts:
+  run: scripts/nemo-megatron-common/run-nemo_megatron.slurm
+  finetune: scripts/nemo-megatron-common/nemo_megatron.py
+  copy_files:
+    - ${framework.scripts.run}
+    - ${framework.scripts.finetune}
+    - scripts/nemo-megatron-common/utils
+
+python_environment: 
+singularity_container: ${abs_path:envs/benchmarks/nemo-2509/singularity_nemo-2509.sif}
+datasets_allowed:
+  - tulu-3-sft-mixture

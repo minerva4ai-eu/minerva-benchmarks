@@ -8,9 +8,10 @@ from pathlib import Path
 import yaml
 from copy import deepcopy
 
+import click
 from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 from scripts.slurm import utils as u
 from scripts.slurm.cli_utils import *
 
@@ -71,21 +72,146 @@ def build_launch_folder(
 
 def build_env(envfig: dict) -> dict:
 
-    env = {**os.environ}
-    # TODO: try-except
-    if envfig.get('machine'):
-        env |= {
-            "MODULES": ' '.join(envfig['machine'].get('modules')) if type(envfig['machine'].get('modules')) == type([]) else envfig['machine'].get('modules'),
-            "EXECUTION_MODE": envfig['machine'].get('runtime_env_mode'),
-            "SINGULARITY_BINDS": " ".join(envfig['machine'].get('singularity_binds')) if type(envfig['machine'].get('singularity_binds')) == type([]) else envfig['machine'].get('singularity_binds'),
-            "SINGULARITY_ARGS": " ".join(envfig['machine'].get('singularity_args')) if type(envfig['machine'].get('singularity_args')) == type([]) else envfig['machine'].get('singularity_args')
-        }
+def copy_scripts(cfg: BenchmarkConfig, dest: Path):
 
-    env |= {
-        "MINERVA_WORKDIR": envfig.get('minerva_workdir'),
+    shutil.copy(cfg.framework.scripts.run, dest)
+    if hasattr(cfg.framework.scripts, "finetune"):
+        shutil.copy(cfg.framework.scripts.finetune, dest)
+
+    for src in list(cfg.framework.scripts.copy_files):
+        src_path = Path(src)
+        if src_path.is_dir():
+            shutil.copytree(
+                src_path, os.path.join(dest, src_path.name), dirs_exist_ok=True
+            )
+        else:
+            shutil.copy(src_path, dest)
+
+
+def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
+    m, t, f, d, s = (
+        cfg.model,
+        cfg.model.training,
+        cfg.framework,
+        cfg.dataset,
+        cfg.slurm,
+    )
+    # Deprecated check
+    # assert isinstance(f.parallelism, DictConfig) and len(f.parallelism) == 1, (
+    #    f"cfg.framework is expected to be of type DictConfig, but received {type(cfg.framework)} cfg.framework"
+    # )
+    # ToDo: This check should be integrated on the configs composing
+    # in hydra_app.py.
+    assert (t.steps is not None) != (t.epochs is not None), (
+        "Must provide exactly only one of 'epochs' or 'step'! "
+    )
+
+    execution_mode = cfg.machine.runtime_env_mode
+    # if cfg.framework.singularity_container:
+    #    execution_mode = "singularity"
+    # elif cfg.framework.python_environment:
+    #    execution_mode = "venv"
+    # else:
+    #    raise ExecussionEnvironmentSelectionError(
+    #        "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
+    #    )
+
+    env = {
+        **os.environ,
+        **(
+            {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
+            if cfg.machine.modules is not None
+            else {}
+        ),
+        "EXECUTION_MODE": execution_mode,
+        **(
+            {
+                "ENVIRONMENT_FINETUNING": cfg.framework.python_environment,
+            }
+            if cfg.framework.python_environment is not None
+            else {}
+        ),
+        **(
+            {
+                "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
+                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+                if cfg.machine.singularity_binds
+                else "",
+                "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
+                if cfg.machine.singularity_args
+                else "",
+            }
+            if cfg.framework.singularity_container is not None
+            else {}
+        ),
+        "NODES": str(s.sbatch.nodes),
+        "GPU_NAME": cfg.arch.gpu.name,
+        "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
+        "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
+        "FRAMEWORK": f.name,
+        "DATASET": d.name,
+        "DATASET_PATH": d.path,
+        **(
+            {
+                "DATASET_TRAIN": str(cfg.dataset.train),
+            }
+            if cfg.dataset.train is not None
+            else {}
+        ),
+        **(
+            {
+                "DATASET_VALIDATION": str(cfg.dataset.validation),
+            }
+            if cfg.dataset.validation is not None
+            else {}
+        ),
+        "MODEL": m.name,
+        "MODEL_PATH": m.path,
+        "PARALLELISM": f.parallelism_name,
+        "PRECISION": t.precision,
+        "BATCH_SIZE": str(t.batch_size),
+        "GRAD_ACCUM": str(t.grad_accum),
+        "MAX_MODEL_LENGTH": str(d.max_seq_len),
+        "LR": str(t.lr),
+        "STEPS": str(t.steps) if t.steps else "-1",
+        "EPOCHS": str(t.epochs) if t.epochs else "-1",
+        "REPEAT_ID": str(run_id),
+        "MACHINE": cfg.machine.name,
+        "LAUNCH_FOLDER": launch_folder.absolute(),
+        "TRAIN_SCRIPT": os.path.join(
+            launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
+        ),
+        "ZERO_STAGE": f.parallelism_name
+        if f.name in ["deepspeed", "deepspeed-accelerate"]
+        else "",
+        "GPU_PEAK_TFLOPS": str(
+            get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
+        ),
+        "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
+        "TOKENIZERS_PARALLELISM": str(False),
+        **(
+            {
+                "TP": str(cfg.framework.megatron_parallelism.tp),
+                "PP": str(cfg.framework.megatron_parallelism.pp),
+                "DP": str(cfg.framework.megatron_parallelism.dp),
+                "CP": str(cfg.framework.megatron_parallelism.cp),
+                "SP": str(cfg.framework.megatron_parallelism.cp),
+                "EP": str(cfg.framework.megatron_parallelism.cp),
+            }
+            if cfg.framework.megatron_parallelism
+            else {}
+        ),
+        "LOGS_FOLDER": cfg.slurm.sbatch.logs_folder,
     }
 
-    # TODO: check
+    # Merge machine-specific environment variables
+    if cfg.machine.env:
+        env.update(**cfg.machine.env)
+    if cfg.experiment.env:
+        env.update(**cfg.experiment.env)
+    if cfg.framework.env:
+        env.update(**cfg.framework.env)
+
     def _serialize(value):
         if value is None:
             return ""
@@ -190,16 +316,18 @@ def submit_job(
     cmd = [
         "sbatch",
         "--parsable",
-        f"--nodes={s['sbatch']['nodes']}",
-        f"--gres={s['sbatch']['gres']}",
-        f"--cpus-per-task={s['sbatch']['cpus_per_task']}",
-        f"--tasks-per-node={s['sbatch']['tasks_per_node']}",
-        f"--output={env_config['minerva_workdir']}/run-%j.out", # TODO: get output from s
-        f"--error={env_config['minerva_workdir']}/run-%j.err",
-        f"--partition={s['partition']}",
+        f"--chdir={launch_folder}",
+        f"--nodes={s.sbatch.nodes}",
+        f"--gres=gpu:{s.sbatch.gpus_per_node}",
+        f"--cpus-per-task={s.sbatch.cpus_per_gpu}",
+        f"--tasks-per-node={s.sbatch.tasks_per_node}",
+        f"--output={s.sbatch.logs_folder.lstrip('/')}/%j/{s.sbatch.output}",
+        f"--error={s.sbatch.logs_folder.lstrip('/')}/%j/{s.sbatch.error}",
+        *([f"--dependency={dependency}"] if dependency else []),
     ]
-    # TODO: check desired behavior, joint condition?
-    if s.get('qos') is not None and s.get('account') is not None:
+    if s.partition is not None:
+        cmd.append(f"--partition={s.partition}")
+    if s.qos is not None and s.account is not None:
         cmd.extend(
             [
                 f"--account={s['account']}",
@@ -207,8 +335,8 @@ def submit_job(
             ]
         )
 
-    if s.get('constraint') is not None:
-        cmd.extend([f"--constraint={s['constraint']}"])
+    if s.constraint is not None:
+        cmd.append(f"--constraint={s.constraint}")
 
     cmd.extend(
         [
@@ -216,8 +344,16 @@ def submit_job(
             "MINERVA.job",
         ]
     )
-    # logger.debug("os.getcwd() = %s", os.getcwd())
-
+    # click.echo("\n".join(cmd))
+    job_cfg = (
+        f"{m.name}-{f.name}-{f.parallelism_name}"
+        + f"-{cfg.dataset.name}"
+        + f"-Nodes_{s.sbatch.nodes}-GPUs_{s.sbatch.gpus_per_node * s.sbatch.nodes}"
+        + f"-Prec_{t.precision}"
+        + f"-BS_{t.batch_size}"
+        + f"-GAS_{t.grad_accum}"
+        + f"-Len_{d.max_seq_len}"
+    )
     try:
         # logger.info("cmd = %s", cmd)
 
@@ -228,8 +364,10 @@ def submit_job(
             env=build_env(env_config)
         )
         if result.returncode != 0:
-            print(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {cfg_name} {u.RESET}")
-            print(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
+            click.echo(
+                f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}"
+            )
+            click.echo(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
             return "-100"
         job_id = result.stdout.strip()
         # job_id = "0"
@@ -237,5 +375,5 @@ def submit_job(
         raise e
 
     # update_status(cfg, runs_dir, "running", job_id)
-    print(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {cfg_name} {u.RESET}")
+    click.echo(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {job_cfg} {u.RESET}")
     return job_id

@@ -87,9 +87,8 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
     Composes valid config combinations from Hydra configs or runs specific
     YAML files. Supports dry-run mode for config examination.
     """
-    logger.info("Running cli...")
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -129,7 +128,73 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
         config_path=configs_path, config_name=config_name, outpath=runs_dir, run_date=run_date, dry=dry_run
     )
     if dry_run:
-        for cfg in valid:
+        click.echo(f"\nSlurm monitor ID: {run_date} | dry-run")
+        click.echo(f"\nDry running {len(valid)} experiment configuration...")
+    else:
+        click.echo(f"\nSlurm monitor ID: {run_date} | {short_id}")
+        click.echo(f"\nSubmitting {len(valid)} jobs...")
+    jobs_submitted = []
+    cfgs_seen = set()
+    # Submit job with depencies per model
+    if per_model_jobs:
+        if dry_run:
+            exit(0)
+        # Group job dependencies per model
+        valid_models = set([c.model.name for c in valid])
+        cfgs_per_model = {}
+        for m in valid_models:
+            if m not in cfgs_per_model:
+                cfgs_per_model[m] = []
+            cfgs_per_model[m].extend([cfg for cfg in valid if cfg.model.name == m])
+        for model, model_cfgs in cfgs_per_model.items():
+            dependency_jobid = ""
+            for cfg in model_cfgs:
+                if cfg.id in cfgs_seen:
+                    click.echo(
+                        f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
+                    )
+                    continue
+                for repeat_id in range(1, cfg.experiment.repeat + 1):
+                    job_desc = {
+                        "id": None,
+                        "cfg_id": None,
+                        "dependency": dependency_jobid,
+                        "launch_folder": "",
+                        "yaml_filename": "",
+                    }
+                    launch_folder = build_launch_folder(
+                        cfg,
+                        base_dir=BASE_DIR,
+                        runs_dir=runs_dir,
+                        run_id=short_id,
+                        repeat_id=repeat_id,
+                    )
+                    dependency_jobid = submit_job(
+                        cfg=cfg,
+                        launch_folder=launch_folder,
+                        repeat_id=repeat_id,
+                        dependency=dependency_jobid,
+                    )
+                    job_desc["id"] = dependency_jobid
+                    job_desc["cfg_id"] = cfg.id
+                    job_desc["launch_folder"] = str(launch_folder.absolute())
+                    job_desc["yaml_filename"] = cfg.experiment.yaml_filename
+                    jobs_submitted.append(job_desc)
+                    cfgs_seen.add(cfg.id)
+        os.makedirs(run_monitor_dir, exist_ok=True)
+
+        u.write_jsonl(
+            d=jobs_submitted,
+            p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
+        )
+        return
+
+    # Sumbit all jobs interedependent
+    for cfg in valid:
+        if dry_run:
+            _ = build_launch_folder(
+                cfg, base_dir=BASE_DIR, runs_dir=runs_dir, run_id=short_id, dry=dry_run
+            )
             click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
     else:
         # TODO: Check desired behavior
@@ -137,20 +202,44 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
             print("Use batch mode in HPC")
             exit(1)
 
-        # # Sumbit all
-        # # TODO: Check desired behavior, dry-run job?
-        # for cfg in valid:
-        #     logger.info("cfg = %s", cfg)
-        #     # TODO: already seen already checked?
-        #     # print(cfg)
-        
-        jobid = submit_job(
-            cfg_name=config_name,
-            config_path=configs_path,
-            runs_dir=runs_dir,
-            # run_dir=launch_folder,
-            # cfgs = valid,
-            run_date=run_date
+        if cfg.id in cfgs_seen:
+            click.echo(
+                f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
+            )
+            continue
+        for repeat_id in range(1, cfg.experiment.repeat + 1):
+            job_desc = {
+                "id": None,
+                "cfg_id": None,
+                "dependency": dependency_jobid,
+                "launch_folder": "",
+                "yaml_filename": "",
+            }
+
+            launch_folder = build_launch_folder(
+                cfg,
+                base_dir=BASE_DIR,
+                runs_dir=runs_dir,
+                run_id=short_id,
+                repeat_id=repeat_id,
+            )
+            dependency_jobid = submit_job(
+                cfg=cfg,
+                launch_folder=launch_folder,
+                repeat_id=repeat_id,
+                dependency=dependency_jobid,
+            )
+            job_desc["id"] = dependency_jobid
+            job_desc["cfg_id"] = cfg.id
+            job_desc["launch_folder"] = str(launch_folder.absolute())
+            job_desc["yaml_filename"] = cfg.experiment.yaml_filename
+            jobs_submitted.append(job_desc)
+            cfgs_seen.add(cfg.id)
+        os.makedirs(run_monitor_dir, exist_ok=True)
+
+        u.write_jsonl(
+            d=jobs_submitted,
+            p=os.path.join(run_monitor_dir, "jobs_submitted.jsonl"),
         )
     return
 
@@ -197,8 +286,8 @@ class InvalidRerun(Exception):
 def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
     """Rerun all, failed, pending jobs, or a specific run/combo by id."""
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Re-running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -317,7 +406,7 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
                 "yaml_filename": "",
             }
             if cfg.id in cfgs_seen:
-                print(
+                click.echo(
                     f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                 )
                 continue
@@ -342,6 +431,65 @@ def rerun(run_date, run_id, output, all, only_failed, only_pending, yamls):
             cfgs_seen.add(cfg.id)
 
         u.write_jsonl(d=jobs_resubmitted, p=rerun_monitor_path)
+
+
+def _parse_space_separated(value: str | None) -> set:
+    """Parse a space-separated string into a set of values, or return None."""
+    if not value:
+        return set()
+    return set(value.split())
+
+
+def _filter_jobs_by_config(
+    run_jobs: list[dict],
+    runs_dir: str,
+    run_date: str,
+    run_id: str,
+    rerun_id: int | None,
+    model_names: set | None = None,
+    framework_names: set | None = None,
+    parallelism_names: set | None = None,
+    nodes_values: set | None = None,
+) -> list[dict]:
+    """
+    Filter jobs by loading their YAML configs and matching against provided criteria.
+    All provided filters use AND logic — a job must match ALL specified filters.
+    Returns the filtered list of jobs.
+    """
+    filtered = []
+    for job in run_jobs:
+        config_dir = "/".join(job["launch_folder"].split("/")[:-2])
+        yaml_path = os.path.join(config_dir, job["yaml_filename"])
+
+        try:
+            cfg: BenchmarkConfig = DictConfig(u.load_yaml(yaml_path))
+        except Exception:
+            # If we can't load the config, skip this job
+            continue
+
+        # Check each filter (AND logic)
+        match = True
+
+        if model_names is not None:
+            if cfg.model.name not in model_names:
+                match = False
+
+        if match and framework_names is not None:
+            if cfg.framework.name not in framework_names:
+                match = False
+
+        if match and parallelism_names is not None:
+            if cfg.framework.parallelism_name not in parallelism_names:
+                match = False
+
+        if match and nodes_values is not None:
+            if str(cfg.slurm.sbatch.nodes) not in nodes_values:
+                match = False
+
+        if match:
+            filtered.append(job)
+
+    return filtered
 
 
 @cli.command()
@@ -412,11 +560,42 @@ def status(run_date, run_id, rerun_id, output, model, framework, parallelism):
         )
         exit(1)
 
-    print(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
+    # Apply config-based filtering
+    model_names = _parse_space_separated(model)
+    framework_names = _parse_space_separated(framework)
+    parallelism_names = _parse_space_separated(parallelism)
+    nodes_values = _parse_space_separated(nodes)
+    states = _parse_space_separated(state)
+    if state in states:
+        if state not in m.SLURM_STATUS_DASHBOARD.keys():
+            click.echo(
+                f"{u.RED}Argument '--state' is not valid to filter benchmark jobs for requested run."
+                + f"\n{u.YELLOW}Valid job states: {', '.join(list(m.SLURM_STATUS_DASHBOARD.keys()))}{u.RESET}"
+            )
+
+    if any([model_names, framework_names, parallelism_names, nodes_values]):
+        run_jobs = _filter_jobs_by_config(
+            run_jobs=run_jobs,
+            runs_dir=runs_dir,
+            run_date=run_date,
+            run_id=run_id,
+            rerun_id=rerun_id,
+            model_names=model_names,
+            framework_names=framework_names,
+            parallelism_names=parallelism_names,
+            nodes_values=nodes_values,
+        )
+        if not run_jobs:
+            click.echo(
+                f"{u.YELLOW}No jobs match the provided filter criteria.{u.RESET}"
+            )
+            return
+
+    click.echo(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
     s1 = " " * 20
     s2 = " " * 50
     s3 = " " * 49
-    print(f"{u.YELLOW}JOBID | RUNID | DEPJOB")
+    click.echo(f"{u.YELLOW}JOBID | RUNID | DEPJOB{u.RESET}")
     for job in sorted(run_jobs, key=lambda j: j["id"]):
         job_info = m.get_job_info(job["id"])
 
@@ -446,8 +625,8 @@ def status(run_date, run_id, rerun_id, output, model, framework, parallelism):
 def cancel(run_date, run_id, runs_id):
     """Cancel all running and pending jobs for a given run."""
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Cancelling {u.MAGENTA} MINERVA Benchmarks {u.CYAN} jobs {u.POINT_DIAMOND} {u.RESET}"
     )
 

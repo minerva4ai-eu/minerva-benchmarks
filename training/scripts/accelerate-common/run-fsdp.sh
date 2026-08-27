@@ -4,6 +4,11 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
+module purge
+echo "LOAD_MODULES: $LOAD_MODULES"
+if [ ! -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
 
 echo yaml_path=$1
 

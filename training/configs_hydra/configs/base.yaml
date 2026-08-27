@@ -3,19 +3,26 @@
 defaults:
   - model: base_training
   - framework: base
-  - dataset: base
-  #- slurm: base
+  - dataset: template
+  - slurm: base
+  - arch: base
   - _self_
 id:
 machine:
-  name: ??? # self given name, must coincide with .env-{machine.name} file
-  name_pattern: ???
-  modules:                        # space separated modules to load
-  python_environment:             # (XOR) path to python virtual environment
-  singularity_container:          # (XOR) path to singularity .sif
+  name: ???                       # self given name, will be used to name benchmark results related folder
+  name_pattern: ???               # Naming pattern for machine specific configs in arch/ model/ and slurm/
+                                  # Is set here deliberately, as convention choice by the benchmarks' author
+                                  # example: MN5 -> model/MN5/gemma_1b-{name_pattern}.yaml == model/MN5/gemma_1b-MN5.yaml
+                                  #          MN5 -> arch/{name_pattern}.yaml == arch/MN5.yaml
+                                  #          MN5 -> slurm/{name_pattern}.yaml == slurm/MN5.yaml
+  modules:                        # list of modules to load, necesary to run training
+    - module1 
+    - module2
+  runtime_env_mode: ???           # Must provide either "venv" or "singularity"
   singularity_binds:              # singularity binds to apply on runtime
   singularity_args:               # extra singularity arguments to apply on runtine
   single_gpu_also_valid: True     # include single GPUs experiments, where it applies
+  env:                            # Machine specific environment variables - similar format to experiment.env
 
 experiment:
   name: "benchmark_run"           # Do not change here, only in inherited configuration
