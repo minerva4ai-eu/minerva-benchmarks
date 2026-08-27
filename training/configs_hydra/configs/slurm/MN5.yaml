@@ -7,7 +7,7 @@ qos: acc_bench
 partition: acc
 
 sbatch:
-  nodes: 1
+  nodes: 4
   gres: "gpu:4"
   gpus_per_node: 4
   cpus_per_task: 20
