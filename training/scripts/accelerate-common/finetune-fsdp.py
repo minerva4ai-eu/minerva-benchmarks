@@ -235,7 +235,11 @@ def main():
             f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
         )
 
-        logger.info(f"Loading Model... dtype: {dtype}")
+        logger.info("Loading Model... dtype: %s", dtype)
+        alm_kwargs = {}
+        if "gemma-3-1b-it" in model_name:
+            logger.info("Untying word embeddings for model = %s", model_name)
+            alm_kwargs |= {"tie_word_embeddings": False}
 
         if enable_compile:
             model = AutoModelForCausalLM.from_pretrained(
@@ -243,6 +247,7 @@ def main():
                 torch_dtype=dtype,
                 device_map=None,  # Trainer will put model on device
                 low_cpu_mem_usage=True,
+                **alm_kwargs
             )
         else:
             model = AutoModelForCausalLM.from_pretrained(
@@ -251,6 +256,7 @@ def main():
                 low_cpu_mem_usage=True,
                 device_map=None,  # Trainer will put model on device
                 attn_implementation="flash_attention_2",
+                **alm_kwargs
             )
         print_rank("Model Loaded")
 

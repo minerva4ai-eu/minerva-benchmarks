@@ -173,7 +173,7 @@ def main():
             {
                 "torch_compile": True,
                 "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune-no-cudagraphs",
+                # "torch_compile_mode": "max-autotune-no-cudagraphs",
             }
             if bool(enable_compile)
             else {}

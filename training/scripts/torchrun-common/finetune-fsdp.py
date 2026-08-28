@@ -245,7 +245,11 @@ def main():
         )
         # model_config = AutoConfig.from_pretrained(model_name)
 
-        logger.info(f"Loading Model... dtype: {dtype}")
+        logger.info("Loading Model... dtype: %s", dtype)
+        alm_kwargs = {}
+        if "gemma-3-1b-it" in model_name:
+            logger.info("Untying word embeddings for model = %s", model_name)
+            alm_kwargs |= {"tie_word_embeddings": False}
         if enable_compile:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
@@ -253,6 +257,7 @@ def main():
                 low_cpu_mem_usage=True,
                 device_map=None,
                 attn_implementation="flash_attention_2",
+                **alm_kwargs
             )
         else:
             model = AutoModelForCausalLM.from_pretrained(
@@ -260,6 +265,7 @@ def main():
                 torch_dtype=dtype,
                 low_cpu_mem_usage=True,
                 device_map=None,
+                **alm_kwargs
             )
 
         ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
