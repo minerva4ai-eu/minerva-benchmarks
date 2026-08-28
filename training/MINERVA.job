@@ -41,6 +41,8 @@ echo "Will apply runtime prefix '$runtime_prefix'"
 # TODO: check
 which python # [cli] if **os.environ in env: /gpfs/home/bsc/bsc079516/minerva-benchmarks/training/envs/cli/.venv/bin/python
 
+export TORCH_LOGS="recompiles"
+
 echo MINERVA_WORKDIR=$MINERVA_WORKDIR
 # echo YAML_WORKDIR=$YAML_WORKDIR
 # echo RUN_DIR=$RUN_DIR
