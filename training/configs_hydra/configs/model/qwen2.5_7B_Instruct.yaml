@@ -22,6 +22,8 @@ vocab_size:           152064
 
 # GPU requirements — constraint metadata
 max_gpus_scale: 64
+
+
 frameworks_supported:
   - megatron-nemo-2509
 megatron_parallelism_supported:

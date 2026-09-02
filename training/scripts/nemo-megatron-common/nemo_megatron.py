@@ -364,10 +364,6 @@ def main() -> None:
     # 2. Distributed Training Setup
     world = args.devices_per_node * args.num_nodes
     rank = int(os.environ.get("RANK", 0))  # Set by torchrun
-    print(f"args.dp_size:{args.dp_size}")
-    print(f"args.pp_size:{args.pp_size}")
-    print(f"args.tp_size:{args.tp_size}")
-    print(f"args.cp_size:{args.cp_size}")
 
     assert args.dp_size * args.pp_size * args.tp_size * args.cp_size == world, (
         f"4D mismatch: DP*PP*TP*CP={args.dp_size * args.pp_size * args.tp_size * args.cp_size} != world={world}"

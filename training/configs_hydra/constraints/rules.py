@@ -3,45 +3,45 @@ from copy import deepcopy
 from functools import cache
 from typing import Literal
 
-from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, EnvMode
 from omegaconf import DictConfig
 
 from .base import ConstraintRule, RuleResult
 
 
-class CPUSupportRule(ConstraintRule):
-    """Rule to handle CPU-specific configurations and validations."""
-    
-    # Assuming a minimum of 256GB RAM per node for CPU runs
-    MIN_MEMORY_PER_NODE_GB = 256
-    
-    def check(self, c: DictConfig) -> RuleResult:
-        # Check if this is a CPU run
-        if c.arch.gpu.accelerator_type != "cpu":
-            # Not a CPU run, skip this rule
-            return RuleResult(True, "cpu_support_rule", "Not a CPU run, skipping")
-        
-        # For CPU runs, we need to check if the model can fit in system memory
-        # rather than GPU VRAM
-        
-        # Calculate total memory needed (simplified approach)
-        total_params_gb = c.model.total_params_billions * 4  # Rough estimate: 4 bytes per parameter for fp32
-        
-        # Add some overhead for gradients and optimizer states (typically 3x the model size)
-        total_memory_needed_gb = total_params_gb * 4
-        
-        # Calculate available memory
-        nodes = c.slurm.sbatch.nodes
-        total_available_memory_gb = nodes * self.MIN_MEMORY_PER_NODE_GB
-        
-        if total_memory_needed_gb > total_available_memory_gb:
+class ExecutionEnvironmentValidityRule(ConstraintRule):
+    """COnfiguration profile cannot run because framework lack of execution environment support"""
+
+    @property
+    def rule_name(
+        self,
+    ):
+        return "execution_env_validity_check"
+
+    def check(self, c: BenchmarkConfig) -> RuleResult:
+        if (
+            c.machine.runtime_env_mode == EnvMode.venv
+            and c.framework.python_environment is None
+        ):
             return RuleResult(
                 False,
-                "cpu_support_rule",
-                f"Model requires ~{total_memory_needed_gb:.1f} GB memory, but only {total_available_memory_gb} GB available across {nodes} nodes"
+                self.rule_name,
+                f"Framework {c.framework.name} doesn't have any value for 'c.framework.python_environment: {c.framework.python_environment}'!",
             )
-            
-        return RuleResult(True, "cpu_support_rule", f"Model fits in {total_available_memory_gb} GB available memory")
+
+        if (
+            c.machine.env == EnvMode.singularity
+            and c.framework.singularity_container is None
+        ):
+            return RuleResult(
+                False,
+                self.rule_name,
+                f"Framework {c.framework.name} doesn't have any value for 'c.framework.singularity_container: {c.framework.singularity_container}'!",
+            )
+        return RuleResult(
+            True,
+            "execution_env_validity_check",
+        )
 
 
 class ParallelismGPUFloor(ConstraintRule):
@@ -49,7 +49,9 @@ class ParallelismGPUFloor(ConstraintRule):
 
     def check(self, c: BenchmarkConfig) -> RuleResult:
         if c.framework.megatron_parallelism:
-            _check = RuleResult(False, "Default fail! Check code for bug!")
+            _check = RuleResult(
+                False, "parallelism_gpu_floor", "Default fail! Check code for bug!"
+            )
             for p, min_max in c.framework.parallelism.items():
                 _c = deepcopy(c)
                 _c.framework.parallelism = {p: min_max}
@@ -98,11 +100,11 @@ class FrameworkParallelismValidityRule(ConstraintRule):
     def check(self, c: BenchmarkConfig) -> RuleResult:
         if c.framework.megatron_parallelism:
             supported_parallelisms, framework_parallelism = (
-                c.model.parallelism_supported,
+                c.model.megatron_parallelism_supported,
                 list(c.framework.parallelism.keys()),
             )
             for supported_parallelism in supported_parallelisms:
-                print(f"{framework_parallelism} ~  {supported_parallelisms}")
+                # print(f"{framework_parallelism} ~  {supported_parallelisms}")
                 if supported_parallelism not in framework_parallelism:
                     return RuleResult(
                         False,
@@ -159,11 +161,6 @@ PARALLELISM_DIVISOR = {
     "zero2": lambda n: 4 * n / (n + 3),
     "zero3": lambda n: n,
 }
-
-# Parallelism strategy names (as keys of c.framework.parallelism) that should
-# be routed through the Megatron-style TP/PP/CP/DP search instead of the
-# single-axis PARALLELISM_DIVISOR path above.
-MEGATRON_PARALLELISM_KEYS = {"tp", ""}
 
 
 def _cfg_get(node, key, default=None):
@@ -571,7 +568,7 @@ class MinNodesMemoryRule(ConstraintRule):
 
 # Registry — just add new rules here, no other changes needed
 ALL_RULES = [
-    CPUSupportRule(),
+    ExecutionEnvironmentValidityRule(),
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
     MinNodesMemoryRule(),
