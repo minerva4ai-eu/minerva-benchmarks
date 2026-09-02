@@ -1,406 +1,422 @@
+import functools
 import gc
+import math
 import os
 import time
 
-import psutil
 import torch
 import torch.distributed as dist
-from gpu_monitor import GPUMonitorCallback, start_gpu_monitor
-from shared.custom_train import (
-    PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
-)
-from shared.data import load_and_prepare_raw_dataset
+from shared.args import get_fsdp_parser
+from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
 from shared.flops import mfu_callback_from_hf_config
+from shared.gpu_monitor import start_gpu_monitor
 from shared.utils import (
-    count_parameters,
-    get_fsdp_layer_to_wrap,
+    is_main_process,
     print_rank,
-    save_summary_stats_json,
+    save_training_summary,
+    setup_distributed,
 )
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl.trainer.sft_config import (
-    SFTConfig,  # CHANGED: replaces TrainingArguments + Trainer
+from torch.distributed._composable.fsdp import MixedPrecisionPolicy, fully_shard
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+    CheckpointImpl,
+    apply_activation_checkpointing,
+    checkpoint_wrapper,
 )
-from utils import parse_args
+from torch.distributed.fsdp import (
+    BackwardPrefetch,
+    FullStateDictConfig,
+    MixedPrecision,
+    ShardingStrategy,
+    StateDictType,
+)
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+)
+from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+from torch.utils.data import DataLoader, DistributedSampler
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    get_linear_schedule_with_warmup,
+)
 
-# parse CLI args
-args = parse_args()
+args = get_fsdp_parser().parse_args()
 
 MAX_LENGTH = args.max_length
 BATCH_SIZE = args.batch_size
 
 
-def is_main_process():
-    # HF/torchrun sets LOCAL_RANK env var; fallback to RANK
-    rank = int(os.environ.get("RANK", 0))
-    return rank == 0
+def load_model(model_path, dtype):
+    """
+    dist.is_initialized() is already True by the time this runs (see setup_distributed
+    above), and ACCELERATE_USE_FSDP / FSDP_CPU_RAM_EFFICIENT_LOADING are exported in the
+    SLURM launch script. That means transformers' internal is_fsdp_enabled() check now
+    correctly evaluates True, and from_pretrained will put non-loading ranks on the meta
+    device automatically -- no need to hand-roll that logic here.
+    """
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=dtype,
+        attn_implementation="flash_attention_2",
+        low_cpu_mem_usage=True,
+    )
+    return model
 
 
-# --- Main ---
-def main():
-    # Get rank
-    if dist.is_initialized():
-        rank = dist.get_rank()
-        world_size = dist.get_world_size()
+def get_transformer_layer_classes(model):
+    """Resolve the actual decoder-layer class(es) generically via _no_split_modules,
+    rather than relying on a hardcoded name lookup."""
+    no_split = getattr(model, "_no_split_modules", None)
+    if not no_split:
+        raise ValueError(
+            "Model has no `_no_split_modules`; set the layer class explicitly instead."
+        )
+    classes = set()
+    for module in model.modules():
+        if type(module).__name__ in no_split:
+            classes.add(type(module))
+    if not classes:
+        raise ValueError(
+            f"Could not find any modules matching {no_split} in the model."
+        )
+    return classes
+
+
+def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False):
+
+    layer_classes = get_transformer_layer_classes(model)
+    print_rank(
+        0, f"FSDP auto-wrap layer classes: {[c.__name__ for c in layer_classes]}"
+    )
+
+    auto_wrap_policy = functools.partial(
+        transformer_auto_wrap_policy,
+        transformer_layer_cls=layer_classes,
+    )
+
+    mixed_precision = MixedPrecision(
+        param_dtype=dtype,
+        reduce_dtype=dtype,
+        buffer_dtype=dtype,
+    )
+
+    # 2. Materialize meta tensors into empty CUDA memory on current rank
+    current_device = torch.cuda.current_device()
+
+    if is_main_process(dist.get_rank()):
+        print_rank(
+            f"BEFORE FSDP WRAP | sample weight sum: {next(model.parameters()).sum().item()}",
+        )
+    torch.cuda.synchronize()
+    if v2:
+        mp_policy = MixedPrecisionPolicy(
+            param_dtype=dtype,
+            reduce_dtype=dtype,
+            # Note: buffer_dtype is automatically handled in v2
+        )
+        layer_classes = tuple(get_transformer_layer_classes(model))
+        # If initialized on meta device:
+        current_device = torch.cuda.current_device()
+
+        for param in model.parameters():
+            if param.is_meta:
+                param.data = torch.empty_like(param.data, device=current_device)
+
+        for module in model.modules():
+            if isinstance(module, layer_classes):
+                fully_shard(
+                    module,
+                    mp_policy=mp_policy,
+                )
+        fully_shard(
+            model,
+            mp_policy=mp_policy,
+        )
+
+        if max_comm_comp_overlap:
+            # Enable backward prefetch explicitly across the fully_shard mesh
+            for module in model.modules():
+                if isinstance(module, layer_classes):
+                    module.set_modules_to_backward_prefetch([])
+        model.config.use_cache = False
+        model.gradient_checkpointing_enable()
     else:
-        rank = int(os.environ["RANK"])
-        world_size = int(os.environ["WORLD_SIZE"])
+        # DEPRECATED: Moved to FSDPv2, wrappign with fully_shard()
+        model = FSDP(
+            model,
+            auto_wrap_policy=auto_wrap_policy,
+            sharding_strategy=ShardingStrategy.FULL_SHARD,
+            mixed_precision=mixed_precision,
+            device_id=current_device,
+            sync_module_states=True,
+            use_orig_params=True,
+            limit_all_gathers=not max_comm_comp_overlap,
+            forward_prefetch=max_comm_comp_overlap,
+            backward_prefetch=(
+                BackwardPrefetch.BACKWARD_PRE
+                if max_comm_comp_overlap
+                else BackwardPrefetch.BACKWARD_POST
+            ),
+        )
+        print_rank("Model FSDP wrapped...")
 
+        # Activation checkpointing, equivalent to fsdp_config["activation_checkpointing"]=True
+        check_fn = lambda submodule: isinstance(submodule, tuple(layer_classes))
+        checkpoint_fn = functools.partial(
+            checkpoint_wrapper,
+            checkpoint_impl=CheckpointImpl.NO_REENTRANT,
+            # checkpoint_impl=CheckpointImpl.REENTRANT,
+        )
+        apply_activation_checkpointing(
+            model, checkpoint_wrapper_fn=checkpoint_fn, check_fn=check_fn
+        )
+
+    print_rank(
+        f"AFTER FSDP WRAP | sample weight sum: {next(model.parameters()).sum().item()}",
+    )
+    print_rank("FSDP Model settings set...")
+    return model
+
+
+def save_model(model, tokenizer, output_dir, rank):
+    save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+    with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, save_policy):
+        state_dict = model.state_dict()
+    if is_main_process(rank):
+        os.makedirs(output_dir, exist_ok=True)
+        # unwrap: model is FSDP(model) with no other wrapper, so .module gives the raw model
+        model.module.save_pretrained(output_dir, state_dict=state_dict)
+        tokenizer.save_pretrained(output_dir)
+        print_rank(0, f"Saved model + tokenizer to {output_dir}")
+    dist.barrier()
+
+
+def main():
+    model_path = args.model
+    model_name = args.model.split("/")[-1]
+    train_path, eval_path = get_train_eval_path(args)
+
+    rank, world_size, local_rank = setup_distributed()
     torch.cuda.empty_cache()
 
-    model_name = args.model
-    data = args.data
     output_dir = args.output_dir
-
-    if is_main_process():
+    if is_main_process(rank):
         os.makedirs(output_dir, exist_ok=True)
-    print_rank(rank, f"Loading tokenizer... {model_name}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+    dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
+        args.precision, torch.float32
+    )
+    print_rank(0, f"Training dtype: {dtype}")
+
+    # --- Tokenizer ---
+    print_rank(rank, f"Loading tokenizer {model_name}...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print_rank(rank, "Tokenizer Loaded")
 
-    # NOTE: SFTTrainer can handle tokenization internally.
-    # load_dataset should return raw (un-tokenized) datasets.
-    # The collate_fn is no longer passed to the trainer — SFTTrainer manages collation.
-    # If your load_dataset already returns pre-tokenized datasets, set
-    # dataset_kwargs={"skip_prepare_dataset": True} in SFTConfig below.
-    train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset, dataset_path=args.data, test_size=0.1
+    train_dataset = load_prepared_packed_dataset(train_path)
+    # eval_dataset = load_prepared_packed_dataset(eval_path)
+
+    print_rank(
+        rank,
+        f"Packed train dataset size: {len(train_dataset)} blocks of {MAX_LENGTH} tokens",
     )
 
-    # Setup FSDP configuration
-    layer = get_fsdp_layer_to_wrap(model_name)
-    fsdp_config = {
-        "transformer_layer_cls_to_wrap": ",".join(layer)
-        if isinstance(layer, list)
-        else layer,
-        "use_orig_params": True,  # needed for torch.compile + param groups
-        "sharding_strategy": "FULL_SHARD",
-        "activation_checkpointing": True,
-        # "fsdp_activation_checkpointing_kwargs": {"use_reentrant": True},
-        "cpu_ram_efficient_loading": True,  # only rank 0 loads from disk to CPU
-        "sync_module_states": True,  # rank 0 broadcasts shards directly to GPU
-        "offload_params": False,
-        "forward_prefetch": False,
-        "limit_all_gathers": True,
-        "backward_prefetch": "backward_post",
-    }
+    sampler = DistributedSampler(
+        train_dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=32
+    )
+    train_dataloader = DataLoader(
+        train_dataset,
+        batch_size=BATCH_SIZE,
+        sampler=sampler,
+        collate_fn=collate_fn,
+        num_workers=args.dataloader_num_workers,
+        pin_memory=True,
+        drop_last=True,
+        persistent_workers=args.dataloader_num_workers > 1,
+        prefetch_factor=4 if args.dataloader_num_workers > 0 else None,
+    )
 
-    # Model dtype
-    # --- Precision selection ---
-    if args.precision == "fp16":
-        dtype = torch.float16
-    elif args.precision == "bf16":
-        dtype = torch.bfloat16
-    else:
-        dtype = torch.float32
+    # --- Model + FSDP ---
+    print_rank(0, f"Loading model {model_path}...")
+    model = load_model(model_path, dtype)
+    print_rank(
+        0, f"Max communication-computation overlap: {args.max_comm_comp_overlap}"
+    )
+    model = wrap_fsdp(
+        model,
+        dtype,
+        max_comm_comp_overlap=args.max_comm_comp_overlap,
+    )
+    print_rank(rank, "Model wrapped with FSDP.")
 
-    if args.max_comm_comp_overlap:
-        fsdp_config["forward_prefetch"] = True
-        fsdp_config["limit_all_gathers"] = False
-        fsdp_config["backward_prefetch"] = "backward_pre"
-        print_rank(
-            rank,
-            "Enabled maximum communication-computation overlap in FSDP config: "
-            + "forward_prefetch=True, limit_all_gathers=False. "
-            + "Note: Monitor GPU memory usage as this may increase it.",
+    if args.enable_compile:
+        print_rank(0, "torch.compile enabled.")
+        model = torch.compile(
+            model, backend="inductor", mode="max-autotune-no-cudagraphs"
         )
+        print_rank(0, "Model compilation finished.")
 
-    trainable_params, total_params, trainable_pct = 0, 0, 0
-    # CHANGED: TrainingArguments → SFTConfig
-    # SFTConfig is a drop-in superset of TrainingArguments with SFT-specific fields.
-    training_args = SFTConfig(
+    # --- Optimizer / schedule ---
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=args.lr, weight_decay=args.weight_decay
+    )
+
+    grad_accum_steps = args.gradient_accumulation_steps
+    steps_per_epoch = math.ceil(len(train_dataloader) / grad_accum_steps)
+    num_epochs = args.epochs if args.epochs is not None else 1
+    num_epochs = 1
+    total_steps = (
+        int(args.max_steps)
+        if args.max_steps is not None
+        else steps_per_epoch * num_epochs
+    )
+
+    lr_scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=max(1, int(0.03 * total_steps)),
+        num_training_steps=total_steps,
+    )
+
+    peak_gpu_tflops = (
+        float(os.environ["GPU_PEAK_TFLOPS"])
+        if os.environ.get("GPU_PEAK_TFLOPS")
+        else None
+    )
+    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
+    print_rank(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {peak_gpu_tflops}")
+
+    gpu_stats_during, stop_flag = start_gpu_monitor(
+        interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+    )
+
+    # --- Training loop ---
+    print_rank("Starting trainining...")
+    model.train()
+    total_tokens_this_gpu = 0
+    global_step = 0
+    start_time = time.time()
+
+    flopsCallback_megatronLM = mfu_callback_from_hf_config(
+        AutoConfig.from_pretrained(model_path),
+        tokenizer,
+        gpu_peak_flops=peak_gpu_tflops,
+        seq_length=args.max_length,
+        trainer_callback=False,
+    )
+
+    print_rank(0, "Beginning of training...")
+    for epoch in range(num_epochs):
+        sampler.set_epoch(epoch)
+        optimizer.zero_grad()
+        if global_step == 0:
+            flopsCallback_megatronLM.on_step_begin()
+        for micro_step, batch in enumerate(train_dataloader):
+            print_rank(
+                0,
+                f"micro_step:{micro_step} - batch_keys:{batch.keys()} - batch_len:{len(batch[list(batch.keys())[0]])}",
+            )
+            batch = {k: v.to(local_rank, non_blocking=True) for k, v in batch.items()}
+
+            outputs = model(**batch)
+            loss = outputs.loss / grad_accum_steps
+            loss.backward()
+
+            total_tokens_this_gpu += batch["input_ids"].numel()
+
+            if (micro_step + 1) % grad_accum_steps == 0:
+                print_rank(
+                    0,
+                    f"global_step:{global_step} ",
+                )
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+                lr_scheduler.step()
+                optimizer.zero_grad()
+                global_step += 1
+
+                flopsCallback_megatronLM.on_step_end(
+                    micro_batch_size=BATCH_SIZE,
+                    world_size=world_size,
+                    gradient_accumulation_steps=grad_accum_steps,
+                    global_step=global_step,
+                )
+
+                if global_step % args.logging_steps == 0:
+                    print_rank(
+                        0,
+                        f"epoch {epoch} step {global_step}/{total_steps} | "
+                        f"loss {outputs.loss.item():.4f} | "
+                        f"lr {lr_scheduler.get_last_lr()[0]:.5e} | "
+                        f"TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f} | "
+                        f"MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]} | "
+                        f"gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
+                    )
+
+                if args.max_steps is not None and global_step >= int(args.max_steps):
+                    break
+
+                flopsCallback_megatronLM.on_step_begin()
+
+        if args.max_steps is not None and global_step >= int(args.max_steps):
+            break
+
+    elapsed_total = time.time() - start_time
+    stop_flag["stop"] = True
+    time.sleep(2)
+
+    # --- Global token count + summary ---
+    tokens_tensor = torch.tensor(total_tokens_this_gpu, device=local_rank)
+    dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
+    total_tokens_global = tokens_tensor.item()
+
+    avg_mfu = (
+        sum(flopsCallback_megatronLM.state.mfu_this_gpu)
+        / len(flopsCallback_megatronLM.state.mfu_this_gpu)
+        if flopsCallback_megatronLM.state.mfu_this_gpu
+        else None
+    )
+    avg_tflops = (
+        sum(flopsCallback_megatronLM.state.tflops_this_gpu)
+        / len(flopsCallback_megatronLM.state.tflops_this_gpu)
+        if flopsCallback_megatronLM.state.tflops_this_gpu
+        else None
+    )
+    summary_log = [
+        f"* Total training time (s): {elapsed_total:.2f}",
+        f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
+        f"* Avg TFLOPs/s/GPU: {avg_tflops}",
+        f"* Avg MFU: {avg_mfu}",
+    ]
+
+    for i in range(world_size):
+        print_rank(i, "=== TRAINING SUMMARY ===")
+        print_rank(i, "\n".join(summary_log))
+
+    save_training_summary(
         output_dir=output_dir,
-        # overwrite_output_dir=True,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        gradient_checkpointing=False,
+        rank=rank,
+        model_name=model_name,
+        dataset_name=args.dataset,
+        framework="torchrun",
+        parallelism_type="fsdp",
+        batch_size=BATCH_SIZE,
+        gradient_accumulation=args.gradient_accumulation_steps,
         learning_rate=args.lr,
-        weight_decay=args.weight_decay,
-        # warmup_ratio=args.warmup_ratio,
-        logging_steps=args.logging_steps,
-        save_strategy="no",
-        save_total_limit=1,
-        fp16=args.precision == "fp16",
-        bf16=args.precision == "bf16",
-        optim="adamw_torch",
-        logging_dir=f"{output_dir}/logs",
-        report_to="none",
-        eval_steps=None,
-        ddp_timeout=1800,
-        # Dataloader is created automatically from trainer
-        dataloader_drop_last=True,
-        dataloader_num_workers=args.dataloader_num_workers,
-        data_seed=32,
-        dataloader_persistent_workers=args.dataloader_num_workers > 1,
-        dataloader_pin_memory=True,
-        dataloader_prefetch_factor=8,
-        # FSDP Config
-        fsdp="full_shard auto_wrap",
-        fsdp_config=fsdp_config,
-        # --- SFT-specific args ---
-        max_length=MAX_LENGTH,  # replaces manual truncation in collator
-        dataset_text_field="text",  # TODO: set to your dataset's text column name
-        #                                   # OR remove and use formatting_func below
-        packing=True,  # set True to pack short sequences for efficiency
-        dataset_kwargs={"skip_prepare_dataset": False},
-        # TODO: If your dataset is already tokenized (input_ids present), set:
-        #   dataset_kwargs={"skip_prepare_dataset": True}
-        #   and remove dataset_text_field above.
-        # torch model compilation
-        **(
-            {
-                "torch_compile": True,
-                "torch_compile_backend": "inductor",
-                "torch_compile_mode": "max-autotune-no-cudagraphs",
-            }
-            if bool(args.enable_compile)
-            else {}
-        ),
+        total_training_time_secs=elapsed_total,
+        total_tokens_this_gpu=total_tokens_this_gpu,
+        total_tokens_global=total_tokens_global,
+        avg_gpu_flops=avg_tflops,
+        avg_gpu_mfu=avg_mfu,
+        gpu_stats=gpu_stats_during,
+        training_loss
     )
-    try:
-        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
-        if args.max_steps is not None:
-            training_args.max_steps = int(args.max_steps)
 
-        monitor = GPUMonitorCallback(n_gpus=int(os.environ.get("GPUS_PER_NODE", 1)))
-
-        # Peak GPU TFLOPs for MFU (bf16/fp16 tensor core peak).
-        # Set PEAK_GPU_TFLOPS env var for your hardware, e.g.:
-        #   A100 SXM4 80GB = 312, H100 SXM5 = 989, MI250X = 383, MI300X = 1307
-
-        _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
-        peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
-        gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-        print_rank(
-            0,
-            f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
-        )
-        # model_config = AutoConfig.from_pretrained(model_name)
-
-        print_rank(f"Loading Model... dtype: {dtype}")
-        if args.enable_compile:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                device_map=None,
-                attn_implementation="flash_attention_2",
-            )
-        else:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                device_map=None,
-            )
-
-        ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
-        print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
-
-        if hasattr(model.config, "use_cache"):
-            print_rank(0, "Disabling model's cache")
-            model.config.use_cache = False
-
-        # model.gradient_checkpointing_enable()
-
-        print_rank("Model Loaded")
-        # print_rank(0, ":::::::::")
-        # for i in model.named_parameters():
-        #    print_rank(0, f"{i[0]} -> {i[1].device}")
-        # print_rank(0, ":::::::::")
-
-        # flop_counter = FlopCounter(model)
-        flopsCallback_megatronLM = mfu_callback_from_hf_config(
-            model,
-            tokenizer,
-            gpu_peak_flops=peak_gpu_tflops,
-            seq_length=args.max_length,
-        )
-        # CHANGED: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
-        # CHANGED: If you need a custom formatting function instead of dataset_text_field, pass:
-        #   formatting_func=lambda x: [f"### Input: {x['input']}\n### Output: {x['output']}"]
-        trainer = PerformanceTrackingSFTTrainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            # data_collator=collate_fn,  # REMOVED: SFTTrainer manages this internally
-            processing_class=tokenizer,  # CHANGED: 'tokenizer' param renamed in TRL ≥0.12
-            callbacks=[monitor, flopsCallback_megatronLM],
-            peak_gpu_tflops=peak_gpu_tflops,
-            # TODO: Uncomment if using a formatting function instead of dataset_text_field:
-            # formatting_func=your_formatting_func,
-        )
-
-        print_rank(rank, "Trainer initialized and model has been wrapped!")
-        # print_rank(rank, ":::::::::")
-        # for i in model.named_parameters():
-        #    print_rank(rank, f"{i[0]} -> {i[1].device}")
-        # print_rank(rank, ":::::::::")
-
-        # Start GPU monitor
-        gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
-        )
-
-        # Train Model
-        start_time = time.time()
-        trainer.train()
-        total_finetune_time = time.time() - start_time
-
-        # Stop GPU monitor
-        stop_flag["stop"] = True
-        time.sleep(2)  # give it a moment to exit cleanly
-
-        trainable_params, total_params, trainable_pct = count_parameters(model)
-
-        # ---- Compute metrics ----
-        log_history = trainer.state.log_history
-        avg_training_loss = avg_validation_loss = None
-        avg_epoch_time_sec = avg_epoch_time_hours = None
-        avg_step_time_sec = avg_step_time_hours = None
-
-        total_training_time_secs = getattr(
-            trainer.state, "total_training_seconds_custom", total_finetune_time
-        )
-        tokens_per_gpu_all_epochs = getattr(
-            trainer.state, "total_tokens_per_gpu_custom", trainer.total_tokens_this_gpu
-        )
-        tokens_global_all_epochs = getattr(
-            trainer.state, "total_tokens_global_custom", trainer.total_tokens_global
-        )
-
-        avg_gpu_flops = getattr(trainer.state, "average_flops_custom")
-        # global_avg_gpu_flops = getattr(trainer.state, "global_average_flops_custom")
-        avg_gpu_mfu = getattr(trainer.state, "average_mfu_custom")
-        # global_avg_gpu_mfu = getattr(trainer.state, "global_average_mfu_custom")
-
-        if training_args.max_steps:
-            avg_step_time_sec = total_training_time_secs / training_args.max_steps
-            avg_step_time_hours = avg_step_time_sec / 3600
-        else:
-            avg_epoch_time_sec = (
-                total_training_time_secs / training_args.num_train_epochs
-            )
-            avg_epoch_time_hours = avg_epoch_time_sec / 3600
-            avg_step_time_sec = avg_epoch_time_sec / len(train_dataset)  # approximate
-            avg_step_time_hours = avg_step_time_sec / 3600
-
-        # ---- Compute derived metrics ----
-        effective_batch_size = (
-            training_args.per_device_train_batch_size
-            * training_args.gradient_accumulation_steps
-            * world_size
-        )
-
-        samples_per_sec = (
-            effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
-        )
-        training_throughput_tokens_per_sec_per_gpu = (
-            tokens_per_gpu_all_epochs / total_training_time_secs
-            if total_training_time_secs
-            else None
-        )
-        training_throughput_tokens_per_sec_global = (
-            tokens_global_all_epochs / total_training_time_secs
-            if total_training_time_secs
-            else None
-        )
-        avg_gpu_power_watts = (
-            sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
-            if gpu_stats_during["power"]
-            else None
-        )
-        tokens_per_sec_per_watt_global = (
-            training_throughput_tokens_per_sec_global / avg_gpu_power_watts
-            if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
-            else None
-        )
-
-        save_summary_stats_json(
-            summary={
-                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
-                "total_gpus": world_size,
-                "model": model_name,
-                "dataset": data,
-                "framework": "accelerate",
-                "parallelism_type": "fsdp",
-                "batch_size": training_args.per_device_train_batch_size,
-                "gradient_accumulation": training_args.gradient_accumulation_steps,
-                "trainable_parameters": trainable_params,
-                "total_trainable_parameters": total_params,
-                "trainable_parameters_percentage": trainable_pct,
-                "learning_rate": training_args.learning_rate,
-                "avg_gpu_memory_gb": sum(gpu_stats_during["mem"])
-                / len(gpu_stats_during["mem"])
-                if gpu_stats_during["mem"]
-                else None,
-                "peak_gpu_memory_gb": max(gpu_stats_during["mem"])
-                if gpu_stats_during["mem"]
-                else None,
-                "avg_gpu_utilization_percent": sum(gpu_stats_during["util"])
-                / len(gpu_stats_during["util"])
-                if gpu_stats_during["util"]
-                else None,
-                "peak_gpu_utilization_percent": max(gpu_stats_during["util"])
-                if gpu_stats_during["util"]
-                else None,
-                "avg_gpu_power_watts": avg_gpu_power_watts,
-                "peak_gpu_power_watts": max(gpu_stats_during["power"])
-                if gpu_stats_during["power"]
-                else None,
-                "total_execution_time_hours": total_training_time_secs / 3600,
-                "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
-                "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
-                "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
-                "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
-                "samples_per_sec": samples_per_sec,
-                "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
-                "total_tokens_global_all_epochs": tokens_global_all_epochs,
-                "avg_training_loss": avg_training_loss,
-                "avg_validation_loss": avg_validation_loss,
-                "total_training_time_hours": total_training_time_secs / 3600,
-                "avg_epoch_training_time_sec": avg_epoch_time_sec,
-                "avg_epoch_training_time_hours": avg_epoch_time_hours,
-                "avg_step_training_time_sec": avg_step_time_sec,
-                "avg_step_training_time_hours": avg_step_time_hours,
-                "avg_gpu_flops": avg_gpu_flops,
-                "avg_gpu_mfu": avg_gpu_mfu,
-            },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
-        )
-
-        del trainer, model
-        gc.collect()  # frees Python objects + their GPU tensor wrappers
-        torch.cuda.empty_cache()  # returns freed CUDA memory back to the OS/driver
-        print_rank(rank, "Fine-tuning completed successfully.")
-    except Exception as e:
-        save_summary_stats_json(
-            summary={
-                "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-                "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
-                "total_gpus": world_size,
-                "model": model_name,
-                "dataset": data,
-                "framework": "accelerate",
-                "parallelism_type": "fsdp",
-                "batch_size": training_args.per_device_train_batch_size,
-                "gradient_accumulation": training_args.gradient_accumulation_steps,
-                "trainable_parameters": trainable_params,
-                "total_trainable_parameters": total_params,
-                "trainable_parameters_percentage": trainable_pct,
-                "learning_rate": training_args.learning_rate,
-                "error": str(e),
-            },
-            output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
-        )
-
-        print_rank(rank, "Fine-tuning failed to complete!")
-        raise e
+    del model, optimizer
+    gc.collect()
+    torch.cuda.empty_cache()
+    print_rank(rank, "Fine-tuning completed successfully.")
 
 
 if __name__ == "__main__":

@@ -73,7 +73,7 @@ echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
 
 train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --config_file $accelerate_config_path \
@@ -92,9 +92,32 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
       --gradient_accumulation_steps $GRAD_ACCUM \
       --dataloader_num_workers 4 \
       --dataset '$DATASET' \
-      --warmup_ratio 0.1 \
       --deepspeed_config_file  $deepspeed_config_path \
       --logging_steps 1 "
+      
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --dataset $DATASET \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
+        --batch_size $BATCH_SIZE \
+        --max_length $MAX_MODEL_LENGTH "
+
+echo "ENABLE_COMPILE: $ENABLE_COMPILE"
+if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
+    echo "Compile enabled!"
+    train_command="$train_command --enable_compile"
+fi
+
+echo "######################################"
+echo "#       Running preparation stage    #"
+echo "######################################"
+    
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+
+echo "#######################################"
+echo "# Running  Accelerate-Deepspeed train #"
+echo "#######################################"
 
 # Launch Run
 srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "

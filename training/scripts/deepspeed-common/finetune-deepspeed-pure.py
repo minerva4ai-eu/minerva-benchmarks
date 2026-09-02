@@ -1,3 +1,4 @@
+import math
 import os
 import time
 
@@ -5,22 +6,29 @@ import deepspeed
 import psutil
 import torch
 import torch.distributed as dist
-from gpu_monitor import start_gpu_monitor
-from shared.data import load_dataset
-from shared.utils import count_parameters, print_rank, save_summary_stats_json
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from utils import parse_args
+from shared.args import get_deepspeed_parser
+from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
+from shared.flops import mfu_callback_from_hf_config
+from shared.gpu_monitor import start_gpu_monitor
+from shared.utils import (
+    is_main_process,
+    print_rank,
+    save_training_summary,
+    setup_distributed,
+)
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+)
+from transformers.integrations.deepspeed import HfDeepSpeedConfig
 
-args = parse_args()
+args = get_deepspeed_parser().parse_args()
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def is_main_process():
-    return int(os.environ["RANK"]) == 0
 
 
 def get_dist_info():
@@ -35,128 +43,61 @@ def reduce_tensor(t: torch.Tensor, world_size: int) -> torch.Tensor:
     return t
 
 
-# ---------------------------------------------------------------------------
-# MFU helpers
-# ---------------------------------------------------------------------------
+def load_model(model_path, dtype, ds_config):
+    # from deepspeed.runtime.zero.stage3 import (
+    #    estimate_zero3_model_states_mem_needs_all_live,
+    # )
+
+    ds_hf_config = HfDeepSpeedConfig(ds_config)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=dtype,
+        attn_implementation="flash_attention_2",
+        low_cpu_mem_usage=True,
+    )
+    # with deepspeed.zero.Init(
+    #    config_dict_or_path=ds_config,
+    #    remote_device="cpu",
+    # ):
+    #    model = AutoModelForCausalLM.from_pretrained(
+    #        model_path,
+    #        torch_dtype=dtype,
+    #        ignore_mismatched_sizes=True,
+    #        low_cpu_mem_usage=True,
+    #    )
+    # estimate_zero3_model_states_mem_needs_all_live(
+    #    model=model,
+    #    num_gpus_per_node=dist.get_world_size(),
+    #    num_nodes=int(os.environ["SLURM_NNODES"]),
+    # )
+    return model
 
 
-def estimate_flops_per_token(model: torch.nn.Module) -> float:
-    """
-    Roughly 6 * num_params FLOPs per token for a dense transformer
-    (forward + backward = 2× forward; forward ≈ 2 * P multiply-adds → 6P total).
-    Returns FLOPs as a float.
-    """
-    num_params = sum(p.numel() for p in model.parameters())
-    return 6.0 * num_params
-
-
-def compute_mfu(
-    flops_per_token: float,
-    tokens_per_step: int,
-    step_time_sec: float,
-    peak_tflops: float,
-) -> float:
-    """Model FLOPs Utilisation in [0, 1]."""
-    if step_time_sec <= 0 or peak_tflops is None:
-        return 0.0
-    achieved_tflops = (flops_per_token * tokens_per_step) / step_time_sec / 1e12
-    return achieved_tflops / peak_tflops
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+# ------#
+# Main  #
+# ------#
 
 
 def main():
-    rank, world_size = get_dist_info()
-    print(f"Rank {rank}/{world_size} started...")
+    model_path = args.model
+    model_name = args.model.split("/")[-1]
+    train_path, eval_path = get_train_eval_path(args)
 
-    zero_stage = os.environ["PARALLELISM"]
-    model_name = args.model
-    data = args.data
+    rank, world_size, local_rank = setup_distributed()
+    torch.cuda.empty_cache()
+
     output_dir = args.output_dir
-
-    if is_main_process():
+    if is_main_process(rank):
         os.makedirs(output_dir, exist_ok=True)
 
-    # ------------------------------------------------------------------
-    # Tokenizer
-    # ------------------------------------------------------------------
-    print_rank(rank, f"Loading tokenizer... {model_name}")
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    print_rank(rank, "Tokenizer loaded")
-
-    # ------------------------------------------------------------------
-    # Dataset
-    # ------------------------------------------------------------------
-    train_dataset, eval_dataset, collate_fn, _ = load_dataset(
-        dataset_name=args.dataset,
-        dataset_path=args.data,
-        tokenizer=tokenizer,
-        max_length=args.max_length,
+    dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
+        args.precision, torch.float32
     )
+    print_rank(0, f"Training dtype: {dtype}")
 
-    # ------------------------------------------------------------------
-    # Distributed sampler + DataLoader
-    # ------------------------------------------------------------------
-    train_sampler = torch.utils.data.distributed.DistributedSampler(
-        train_dataset,
-        num_replicas=world_size,
-        rank=rank,
-        shuffle=True,
-        seed=32,
-        drop_last=True,
-    )
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        sampler=train_sampler,
-        num_workers=args.dataloader_num_workers,
-        pin_memory=True,
-        collate_fn=collate_fn,
-        persistent_workers=args.dataloader_num_workers > 1,
-        prefetch_factor=4 if args.dataloader_num_workers > 0 else None,
-        drop_last=True,
-    )
-
-    # ------------------------------------------------------------------
-    # Model
-    # ------------------------------------------------------------------
-    if args.precision == "fp16":
-        dtype = torch.float16
-    elif args.precision == "bf16":
-        dtype = torch.bfloat16
-    else:
-        dtype = torch.float32
-
-    print_rank(rank, f"Loading model... dtype={dtype}")
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=dtype,
-        low_cpu_mem_usage=True,
-    )
-
-    ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
-    print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
-
-    if hasattr(model.config, "use_cache"):
-        model.config.use_cache = False
-        print_rank(rank, "Disabled model cache")
-
-    if args.gradient_checkpointing:
-        model.gradient_checkpointing_enable()
-        print_rank(rank, "Gradient checkpointing enabled")
-
-    # ------------------------------------------------------------------
-    # DeepSpeed initialisation
-    # The DS config file owns: optimizer, scheduler, ZeRO stage, precision.
-    # We do NOT build an optimizer here — DS reads it from the JSON.
-    # Works identically for ZeRO-1, ZeRO-2, and ZeRO-3.
-    # ------------------------------------------------------------------
-
+    # -----------------------#
+    # Load DeepSpeed Config  #
+    # -----------------------#
     with open(args.deepspeed_config_file, "r") as f:
         import json
 
@@ -165,34 +106,106 @@ def main():
     ds_config["fp16"] = {"enabled": args.precision == "fp16"}
     ds_config["train_micro_batch_size_per_gpu"] = args.batch_size
     ds_config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
-    
+
+    # -----------#
+    # Tokenizer  #
+    # -----------#
+    print_rank(rank, f"Loading tokenizer {model_name}...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    # ---------#
+    # Dataset  #
+    # ---------#
+    train_dataset = load_prepared_packed_dataset(train_path)
+    # eval_dataset = load_prepared_packed_dataset(eval_path)
+
+    print_rank(
+        rank,
+        f"Packed train dataset size: {len(train_dataset)} blocks of {args.max_length} tokens",
+    )
+
+    train_sampler = torch.utils.data.DistributedSampler(
+        train_dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=32
+    )
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=args.batch_size,
+        sampler=train_sampler,
+        collate_fn=collate_fn,
+        num_workers=args.dataloader_num_workers,
+        pin_memory=True,
+        drop_last=True,
+        persistent_workers=args.dataloader_num_workers > 1,
+        prefetch_factor=4 if args.dataloader_num_workers > 0 else None,
+    )
+
+    # -------#
+    # Model  #
+    # -------#
+
+    print_rank(0, f"Loading model '{model_path}' dtype={dtype}")
+    model = load_model(model_path, dtype, ds_config)
+
+    ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
+    print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
+
+    if hasattr(model, "tie_weights"):
+        model.tie_weights()
+    if hasattr(model.config, "use_cache"):
+        model.config.use_cache = False
+        print_rank(rank, "Disabled model cache")
+
+    if args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+        print_rank(rank, "Gradient checkpointing enabled")
+
+    if args.enable_compile:
+        print_rank(0, "torch.compile enabled.")
+        model = torch.compile(model, backend="inductor", mode="default")
+        print_rank(0, "Model compilation finished.")
+
+    # -----------------#
+    # Training config  #
+    # -----------------#
+    grad_accum_steps: int = args.gradient_accumulation_steps
+    steps_per_epoch = math.ceil(len(train_dataloader) / grad_accum_steps)
+
+    logging_steps: int = args.logging_steps
+    num_epochs = args.epochs if args.epochs is not None and args.epochs > 0 else 1
+    total_steps = (
+        int(args.max_steps)
+        if args.max_steps is not None
+        else steps_per_epoch * num_epochs
+    )
+
+    peak_gpu_tflops = (
+        float(os.environ["GPU_PEAK_TFLOPS"])
+        if os.environ.get("GPU_PEAK_TFLOPS")
+        else None
+    )
+    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
+    print_rank(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {peak_gpu_tflops}")
+
+    # ########################################################################
+    # DeepSpeed initialisation                                               #
+    # The DS config file owns: optimizer, scheduler, ZeRO stage, precision.  #
+    # We do NOT build an optimizer here — DS reads it from the JSON.         #
+    # Works identically for ZeRO-1, ZeRO-2, and ZeRO-3.                      #
+    ##########################################################################
+
     print(f"DeepSpeed Config: \n{ds_config}")
 
-    engine, optimizer, _, lr_scheduler = deepspeed.initialize(
+    ########################
+    # Get DeepSpeed Engine #
+    ########################
+    engine, _, _, lr_scheduler = deepspeed.initialize(
         model=model,
         model_parameters=model.parameters(),
         config=ds_config,
     )
     print_rank(rank, "DeepSpeed engine initialised")
-
-    # ------------------------------------------------------------------
-    # Training config
-    # ------------------------------------------------------------------
-    num_epochs: int = args.epochs if args.epochs is not None else 1
-    max_steps: int = int(args.max_steps) if args.max_steps is not None else None
-    grad_accum_steps: int = args.gradient_accumulation_steps
-    logging_steps: int = args.logging_steps
-
-    # FLOPs / MFU setup
-    _peak_tflops_env = os.environ.get("GPU_PEAK_TFLOPS")
-    peak_gpu_tflops = float(_peak_tflops_env) if _peak_tflops_env else None
-    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    flops_per_token = estimate_flops_per_token(model)
-    print_rank(
-        rank,
-        f"GPU_NAME: {gpu_name} | Peak TFLOPS for MFU: {peak_gpu_tflops} | "
-        f"FLOPs/token: {flops_per_token:.3e}",
-    )
 
     # ------------------------------------------------------------------
     # GPU background monitor
@@ -210,58 +223,53 @@ def main():
     tokens_per_gpu_all_epochs: int = 0  # tokens seen by this rank
     tokens_global_all_epochs: int = 0  # sum across all ranks
 
-    step_flops_list: list[float] = []  # per-step achieved TFLOPs
-    step_mfu_list: list[float] = []  # per-step MFU
-
     global_step: int = 0  # optimizer steps taken
     total_training_time_secs: float = 0.0
 
-    trainable_params, total_params, trainable_pct = count_parameters(model)
+    # trainable_params, total_params, trainable_pct = count_parameters(model)
 
     # ------------------------------------------------------------------
     # Training loop
     # ------------------------------------------------------------------
-    print_rank(rank, "Starting training...")
+    print_rank(0, "Starting training...")
+    engine.train()
     train_start = time.time()
 
+    flopsCallback_megatronLM = mfu_callback_from_hf_config(
+        AutoConfig.from_pretrained(model_path),
+        tokenizer,
+        gpu_peak_flops=peak_gpu_tflops,
+        seq_length=args.max_length,
+        trainer_callback=False,
+    )
     training_done = False
+    step_loss = 0
     for epoch in range(num_epochs):
         if training_done:
             break
 
         train_sampler.set_epoch(epoch)
-        engine.train()
 
         micro_step = 0  # counts every forward/backward call
         accum_loss: float = 0.0
         accum_tokens_local: int = 0
 
+        if global_step == 0:
+            flopsCallback_megatronLM.on_step_begin()
         step_start = time.time()
 
-        for batch in train_loader:
+        for micro_step, batch in enumerate(train_dataloader):
             # ---------- move batch to device ----------
-            batch = {
-                k: v.to(engine.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
-
-            # ---------- token counting ---------------
-            # input_ids shape: (B, T); drop padding tokens
-            input_ids = batch.get("input_ids")
-            attention_mask = batch.get("attention_mask")
-            if attention_mask is not None:
-                local_tokens = int(attention_mask.sum().item())
-            else:
-                local_tokens = input_ids.numel()
-            accum_tokens_local += local_tokens
+            batch = {k: v.to(local_rank, non_blocking=True) for k, v in batch.items()}
 
             # ---------- forward + backward -----------
             # engine.backward() handles ZeRO gradient sharding correctly
             # for all stages; never call loss.backward() directly.
             outputs = engine(**batch)
-            loss = outputs.loss / grad_accum_steps
-            engine.backward(loss)
-            accum_loss += loss.item()
+            engine.backward(outputs.loss)
+
+            accum_tokens_local += batch["input_ids"].numel()
+            accum_loss += outputs.loss.item()
 
             micro_step += 1
 
@@ -269,38 +277,34 @@ def main():
             if micro_step % grad_accum_steps == 0:
                 step_time = time.time() - step_start
 
-                # All-reduce token count to get global tokens this step
-                tokens_tensor = torch.tensor(
-                    accum_tokens_local, dtype=torch.long, device=engine.device
-                )
-                reduce_tensor(tokens_tensor, world_size)
-                global_tokens_this_step = int(tokens_tensor.item())
-
                 # engine.step() also clips gradients (configured in DS JSON)
                 engine.step()
+                torch.cuda.empty_cache()
 
-                # ------ MFU / FLOPs ------------------
-                achieved_flops = (
-                    flops_per_token * global_tokens_this_step / step_time / 1e12
-                    if step_time > 0
-                    else 0.0
+                flopsCallback_megatronLM.on_step_end(
+                    micro_batch_size=args.batch_size,
+                    world_size=world_size,
+                    gradient_accumulation_steps=grad_accum_steps,
+                    global_step=global_step,
                 )
-                mfu = (
-                    compute_mfu(
-                        flops_per_token,
-                        global_tokens_this_step,
-                        step_time,
-                        peak_gpu_tflops,
+
+                if global_step % args.logging_steps == 0:
+                    print_rank(
+                        0,
+                        f"epoch {epoch} step {global_step}/{total_steps} | "
+                        f"loss {outputs.loss.item():.4f} | "
+                        f"lr {lr_scheduler.get_last_lr()[0]:.5e} | "
+                        f"TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f} | "
+                        f"MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]} | "
+                        f"gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
                     )
-                    if peak_gpu_tflops
-                    else 0.0
+                # All-reduce token count to get global tokens this step
+                tokens_tensor = torch.tensor(
+                    accum_tokens_local, dtype=torch.float32, device=engine.device
                 )
-                step_flops_list.append(achieved_flops)
-                step_mfu_list.append(mfu)
 
                 # ------ accumulate global metrics ----
                 tokens_per_gpu_all_epochs += accum_tokens_local
-                tokens_global_all_epochs += global_tokens_this_step
 
                 # ------ loss logging -----------------
                 # accum_loss was already divided by grad_accum_steps each step;
@@ -308,16 +312,6 @@ def main():
                 step_loss = accum_loss * grad_accum_steps
                 total_loss_sum += step_loss
                 total_loss_steps += 1
-
-                if is_main_process() and global_step % logging_steps == 0:
-                    print(
-                        f"[Epoch {epoch + 1} | Step {global_step}] "
-                        f"loss={step_loss:.4f}  "
-                        f"tokens_global={global_tokens_this_step}  "
-                        f"TFLOPs={achieved_flops:.2f}  "
-                        f"MFU={mfu * 100:.1f}%  "
-                        f"step_time={step_time:.2f}s"
-                    )
 
                 # ------ reset micro accumulators -----
                 accum_loss = 0.0
@@ -327,32 +321,27 @@ def main():
                 global_step += 1
 
                 # ------ max_steps guard --------------
-                if max_steps is not None and global_step >= max_steps:
+                if args.max_steps is not None and global_step >= args.max_steps:
                     training_done = True
                     break
 
+                flopsCallback_megatronLM.on_step_begin()
         # end of epoch — handle leftover micro-steps (partial accumulation)
         # If micro_step % grad_accum_steps != 0 there are un-stepped gradients;
         # we flush them so the last partial batch isn't silently dropped.
         if not training_done and micro_step % grad_accum_steps != 0:
             step_time = time.time() - step_start
-            tokens_tensor = torch.tensor(
-                accum_tokens_local, dtype=torch.long, device=engine.device
-            )
-            reduce_tensor(tokens_tensor, world_size)
-            global_tokens_this_step = int(tokens_tensor.item())
 
             engine.step()
 
             tokens_per_gpu_all_epochs += accum_tokens_local
-            tokens_global_all_epochs += global_tokens_this_step
 
             step_loss = accum_loss * grad_accum_steps
             total_loss_sum += step_loss
             total_loss_steps += 1
             global_step += 1
 
-    total_training_time_secs = time.time() - train_start
+    elapsed_total = time.time() - train_start
 
     # ------------------------------------------------------------------
     # Stop GPU monitor
@@ -360,112 +349,67 @@ def main():
     stop_flag["stop"] = True
     time.sleep(2)
 
-    # ------------------------------------------------------------------
-    # Aggregate final metrics
-    # ------------------------------------------------------------------
-    avg_training_loss = total_loss_sum / total_loss_steps if total_loss_steps else None
+    # ------------------------#
+    # Aggregate final metrics #
+    # ------------------------#
 
-    avg_gpu_flops = (
-        sum(step_flops_list) / len(step_flops_list) if step_flops_list else None
+    # All-reduce token count to get global tokens this step
+    tokens_tensor = torch.tensor(
+        tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
     )
-    avg_gpu_mfu = sum(step_mfu_list) / len(step_mfu_list) if step_mfu_list else None
-
-    effective_batch_size = args.batch_size * grad_accum_steps * world_size
-
-    avg_step_time_sec = total_training_time_secs / global_step if global_step else None
-    avg_step_time_hours = avg_step_time_sec / 3600 if avg_step_time_sec else None
-
-    if max_steps is None:
-        avg_epoch_time_sec = total_training_time_secs / num_epochs
-        avg_epoch_time_hours = avg_epoch_time_sec / 3600
-    else:
-        avg_epoch_time_sec = None
-        avg_epoch_time_hours = None
-
-    samples_per_sec = (
-        effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
+    reduce_tensor(tokens_tensor, world_size)
+    total_tokens_global = int(tokens_tensor.item())
+    tokens_tensor = torch.tensor(
+        tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
     )
-    training_throughput_tokens_per_sec_per_gpu = (
-        tokens_per_gpu_all_epochs / total_training_time_secs
-        if total_training_time_secs
+    step_loss_tensor = torch.tensor(step_loss, dtype=torch.long, device=engine.device)
+    reduce_tensor(step_loss_tensor, world_size)
+    final_step_loss = int(step_loss_tensor.item()) / dist.get_world_size()
+
+    avg_mfu = (
+        sum(flopsCallback_megatronLM.state.mfu_this_gpu)
+        / len(flopsCallback_megatronLM.state.mfu_this_gpu)
+        if flopsCallback_megatronLM.state.mfu_this_gpu
         else None
     )
-    training_throughput_tokens_per_sec_global = (
-        tokens_global_all_epochs / total_training_time_secs
-        if total_training_time_secs
+    avg_tflops = (
+        sum(flopsCallback_megatronLM.state.tflops_this_gpu)
+        / len(flopsCallback_megatronLM.state.tflops_this_gpu)
+        if flopsCallback_megatronLM.state.tflops_this_gpu
         else None
     )
+    summary_log = [
+        f"* Total training time (s): {elapsed_total:.2f}",
+        f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
+        f"* Avg TFLOPs/s/GPU: {avg_tflops}",
+        f"* Avg MFU: {avg_mfu}",
+    ]
 
-    avg_gpu_power_watts = (
-        sum(gpu_stats_during["power"]) / len(gpu_stats_during["power"])
-        if gpu_stats_during["power"]
-        else None
-    )
-    tokens_per_sec_per_watt_global = (
-        training_throughput_tokens_per_sec_global / avg_gpu_power_watts
-        if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
-        else None
-    )
+    for i in range(world_size):
+        print_rank(i, "=== TRAINING SUMMARY ===")
+        print_rank(i, "\n".join(summary_log))
 
     # ------------------------------------------------------------------
     # Save summary — identical schema to the original
     # ------------------------------------------------------------------
-    save_summary_stats_json(
-        summary={
-            "nodes": int(os.environ.get("SLURM_NNODES", 1)),
-            "num_gpus_per_node": int(os.environ.get("GPU_NODE", 1)),
-            "total_gpus": world_size,
-            "model": model_name,
-            "dataset": data,
-            "framework": "deepspeed",
-            "parallelism_type": zero_stage,
-            "batch_size": args.batch_size,
-            "gradient_accumulation": grad_accum_steps,
-            "trainable_parameters": trainable_params,
-            "total_trainable_parameters": total_params,
-            "trainable_parameters_percentage": trainable_pct,
-            "learning_rate": args.lr,
-            "avg_gpu_memory_gb": (
-                sum(gpu_stats_during["mem"]) / len(gpu_stats_during["mem"])
-                if gpu_stats_during["mem"]
-                else None
-            ),
-            "peak_gpu_memory_gb": (
-                max(gpu_stats_during["mem"]) if gpu_stats_during["mem"] else None
-            ),
-            "avg_gpu_utilization_percent": (
-                sum(gpu_stats_during["util"]) / len(gpu_stats_during["util"])
-                if gpu_stats_during["util"]
-                else None
-            ),
-            "peak_gpu_utilization_percent": (
-                max(gpu_stats_during["util"]) if gpu_stats_during["util"] else None
-            ),
-            "avg_gpu_power_watts": avg_gpu_power_watts,
-            "peak_gpu_power_watts": (
-                max(gpu_stats_during["power"]) if gpu_stats_during["power"] else None
-            ),
-            "total_execution_time_hours": total_training_time_secs / 3600,
-            "training_throughput_tokens_per_sec": training_throughput_tokens_per_sec_global,
-            "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
-            "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
-            "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
-            "samples_per_sec": samples_per_sec,
-            "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
-            "total_tokens_global_all_epochs": tokens_global_all_epochs,
-            "avg_training_loss": avg_training_loss,
-            "avg_validation_loss": None,  # no eval loop; add if needed
-            "total_training_time_hours": total_training_time_secs / 3600,
-            "avg_epoch_training_time_sec": avg_epoch_time_sec,
-            "avg_epoch_training_time_hours": avg_epoch_time_hours,
-            "avg_step_training_time_sec": avg_step_time_sec,
-            "avg_step_training_time_hours": avg_step_time_hours,
-            "avg_gpu_flops": avg_gpu_flops,
-            "avg_gpu_mfu": avg_gpu_mfu,
-        },
-        output_file=os.path.join(output_dir, f"training_summary_{rank}.json"),
+    save_training_summary(
+        output_dir=output_dir,
+        rank=rank,
+        model_name=model_name,
+        dataset_name=args.dataset,
+        framework="accelerate",
+        parallelism_type="fsdp",
+        batch_size=args.batch_size,
+        gradient_accumulation=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        total_training_time_secs=elapsed_total,
+        total_tokens_this_gpu=tokens_per_gpu_all_epochs,
+        total_tokens_global=total_tokens_global,
+        avg_gpu_flops=avg_tflops,
+        avg_gpu_mfu=avg_mfu,
+        gpu_stats=gpu_stats_during,
+        training_loss=final_step_loss,
     )
-
     print_rank(rank, "Fine-tuning completed successfully.")
 
 

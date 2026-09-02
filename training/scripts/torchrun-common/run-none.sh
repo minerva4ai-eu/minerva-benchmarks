@@ -44,7 +44,7 @@ runtime_prefix="$(training_build_runtime_prefix)"
 echo "Will apply runtime prefix '$runtime_prefix'"
 
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
 
 train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
         --model $MODEL_PATH \
@@ -60,9 +60,21 @@ train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT \
         --dataloader_num_workers 2 \
         --dataset '$DATASET'"
 
+
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --dataset $DATASET \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
+        --batch_size $BATCH_SIZE \
+        --max_length $MAX_MODEL_LENGTH "
+
+echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
 fi
+
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
 
 # Launch Run
 srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "

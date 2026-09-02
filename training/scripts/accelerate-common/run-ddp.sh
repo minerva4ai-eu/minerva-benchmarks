@@ -39,7 +39,7 @@ export NODE_RANK=$SLURM_PROCID
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
 echo "EXECUTION_MODE: $EXECUTION_MODE"
 
 train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
@@ -64,6 +64,16 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
         --dataloader_num_workers 4 \
         --dataset '$DATASET' "
 
+
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --dataset $DATASET \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
+        --batch_size $BATCH_SIZE \
+        --max_length $MAX_MODEL_LENGTH "
+
+echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
 fi
@@ -75,7 +85,17 @@ echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
 echo "train_command: {$train_command}"
 
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
+echo "######################################"
+echo "#       Running preparation stage    #"
+echo "######################################"
+    
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+
+echo "######################################"
+echo "#     Running  Accelerate-DDP train  #"
+echo "######################################"
+
+srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
     $gpu_plots_monitor_command &
     monitor_pid=\$!

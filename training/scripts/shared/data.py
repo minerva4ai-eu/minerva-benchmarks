@@ -1,25 +1,27 @@
 import ast
 import os
-import random
-from typing import TYPE_CHECKING, Any, Callable, Tuple, cast
+from typing import TYPE_CHECKING
 
+import torch
+from pandas import DataFrame
 from shared.datasets.config_datasets_handlers_map import (
-    DATASET_HANDLER_MAP,
     DATASET_MAP,
 )
-from shared.datasets.handlers import DatasetHandler
-from shared.utils import print_rank
+from shared.utils import is_local_rank_zero, print_rank
 from sklearn.model_selection import train_test_split
-from torch.utils.data.dataset import Subset
 
 if TYPE_CHECKING:
+    from shared.datasets.handlers import RawTextDataset
     from torch.utils.data import Dataset
-    from transformers import PreTrainedTokenizer
 
 
-class CollateFnError(Exception):
-    def __init__(self, msg: str):
-        super().__init__(msg)
+class DatasetsNotPreparedError(Exception):
+    def __init__(
+        self,
+    ):
+        super().__init__(
+            "Datasets have not been prepared and saved into a pre-tokenized format! Must run '--prepare' first!"
+        )
 
 
 def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[str]:
@@ -41,18 +43,6 @@ def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[
         )
         dataset_full_paths.append(str(full_path))
     return dataset_full_paths
-
-    # if os.path.isabs(str(dataset_file)):
-    #    return str(dataset_file)
-    # full_path = os.path.join(str(dataset_root), str(dataset_file))
-    #
-    # assert os.path.exists(full_path), (
-    #    "Train/validation files should be absolute or direct subpaths of the dataset root path! "
-    #    + f"Could not join paths:\n\t- {dataset_root}"
-    #    + f"Could not join paths:\n\t- {dataset_root}"
-    # )
-
-    # return full_path
 
 
 def parse_dataset_paths(
@@ -93,99 +83,6 @@ def parse_dataset_paths(
     return dataset_path, None, False
 
 
-def load_dataset(
-    dataset_name: str,
-    dataset_path: str,
-    tokenizer: "PreTrainedTokenizer",
-    max_length: int,
-    train_files: list[str] = [],
-    validation_files: list[str] = [],
-) -> Tuple["DatasetHandler| Subset", "DatasetHandler | Subset", Callable, Callable]:
-
-    if dataset_name not in DATASET_HANDLER_MAP:
-        raise ValueError(f"Dataset {dataset_name} not supported.")
-
-    # Get Dataset Handler
-    DatasetHandlerClass = cast(Any, DATASET_HANDLER_MAP[dataset_name])
-
-    train_path, val_path, is_split = parse_dataset_paths(
-        dataset_path,
-        train_files=train_files,
-        validation_files=validation_files,
-    )
-
-    print_rank(
-        f"📂 Dataset input type: {'train/val split' if is_split else 'single dataset'}"
-    )
-    print_rank(f"  Train path: {train_path}")
-    if val_path:
-        print_rank(f"  Validation path: {val_path}")
-
-    if isinstance(train_path, list) and not train_path:
-        raise ValueError("Resolved train dataset file list is empty.")
-    if isinstance(val_path, list) and not val_path:
-        raise ValueError("Resolved validation dataset file list is empty.")
-
-    # Load datasets
-    if is_split and val_path:
-        train_dataset = DatasetHandlerClass(
-            path=train_path,
-            tokenizer=tokenizer,
-            max_length=max_length,
-        )
-        eval_dataset = DatasetHandlerClass(
-            path=val_path,
-            tokenizer=tokenizer,
-            max_length=max_length,
-        )
-        dataset_for_collate = train_dataset
-    else:
-        dataset = DatasetHandlerClass(
-            path=train_path, tokenizer=tokenizer, max_length=max_length
-        )
-        train_size = int(0.9 * len(dataset))
-
-        indices = list(range(len(dataset)))
-        random.shuffle(indices)  # or use a seeded Generator for reproducibility
-        train_indices = indices[:train_size]
-        eval_indices = indices[train_size:]
-
-        train_dataset = DatasetHandlerClass(
-            data=dataset.__raw_items_range__(train_indices),
-            tokenizer=tokenizer,
-            max_length=max_length,
-        )
-        eval_dataset = DatasetHandlerClass(
-            data=dataset.__raw_items_range__(eval_indices),
-            tokenizer=tokenizer,
-            max_length=max_length,
-        )
-        dataset_for_collate = train_dataset
-
-    # Resolve collate_fn() for both cases of if condition above
-    def resolve_collate(
-        ds_obj: "DatasetHandler | Subset", fallback: "DatasetHandler"
-    ) -> Callable:
-        if hasattr(ds_obj, "collate_fn") and isinstance(ds_obj, DatasetHandler):
-            return ds_obj.collate_fn
-        if (
-            isinstance(ds_obj, Subset)
-            and hasattr(ds_obj, "dataset")
-            and hasattr(ds_obj.dataset, "collate_fn")
-        ):
-            return getattr(ds_obj.dataset, "collate_fn")
-        if fallback is not None and hasattr(fallback, "collate_fn"):
-            return getattr(fallback, "collate_fn")
-        raise CollateFnError(
-            "resolve_collate() failed to resolve collatefn()! Exiting..."
-        )
-
-    collate_fn_train = resolve_collate(train_dataset, dataset_for_collate)
-    collate_fn_eval = resolve_collate(eval_dataset, dataset_for_collate)
-
-    return train_dataset, eval_dataset, collate_fn_train, collate_fn_eval
-
-
 def load_and_prepare_raw_dataset(
     dataset_name: str,
     dataset_path: str,
@@ -194,7 +91,8 @@ def load_and_prepare_raw_dataset(
     seed: int = 42,
     train_files: list[str] = [],
     validation_files: list[str] = [],
-) -> Tuple["Dataset", "Dataset"]:
+    return_raw: bool = False,
+) -> tuple["Dataset", "Dataset"] | tuple["RawTextDataset", "RawTextDataset"]:
 
     if dataset_name not in DATASET_MAP:
         raise ValueError(f"Dataset {dataset_name} not supported.")
@@ -217,18 +115,78 @@ def load_and_prepare_raw_dataset(
 
     # Load datasets
     if is_split and val_path:
-        train_dataset = DatasetClass(path=train_path).prepare_text_dataset()
-        eval_dataset = DatasetClass(path=val_path).prepare_text_dataset()
+        train_dataset = DatasetClass(path=train_path)
+        eval_dataset = DatasetClass(path=val_path)
+        if not return_raw:
+            train_dataset = DatasetClass(path=train_path).prepare_text_dataset()
+            eval_dataset = DatasetClass(path=val_path).prepare_text_dataset()
 
         return train_dataset, eval_dataset
 
-    full_dataset = DatasetClass(path=train_path).prepare_text_dataset()
+    full_dataset = DatasetClass(path=train_path)
+    if not return_raw:
+        full_dataset = DatasetClass(path=train_path).prepare_text_dataset()
+        return full_dataset
     train_data, test_data = train_test_split(
-        full_dataset.data.to_pylist(),
+        full_dataset.data.to_dict(orient="records"),
         test_size=test_size,
         shuffle=shuffle,
         random_state=seed,
     )
-    train_dataset = DatasetClass.from_data(train_data)
-    eval_dataset = DatasetClass.from_data(test_data)
+    train_dataset = DatasetClass.from_data(DataFrame.from_records(train_data))
+    eval_dataset = DatasetClass.from_data(DataFrame.from_records(test_data))
+
     return train_dataset, eval_dataset
+
+
+def load_prepared_packed_dataset(path: str):
+
+    from datasets import load_from_disk
+
+    packed = load_from_disk(path)
+    packed.set_format(type="torch", columns=["input_ids", "labels"])
+    return packed
+
+
+def prepare_packed_dataset(
+    raw_dataset: "RawTextDataset",
+    tokenizer,
+    max_length: int,
+    cache_path: str,
+    local_rank: int,
+    prepare: bool = False,
+):
+    """
+    Only local-rank-0 per node does the CPU-heavy tokenize+pack step.
+    Everyone else waits, then loads the cached arrow dataset from disk
+    (memory-mapped -- cheap even when opened by many processes).
+    """
+
+    if not prepare and not os.path.exists(cache_path):
+        raise DatasetsNotPreparedError()
+
+    if is_local_rank_zero(local_rank) and not os.path.exists(cache_path):
+        _ = raw_dataset.prepare_packed_dataset(tokenizer, max_length, cache_path)
+
+
+def collate_fn(batch):
+    input_ids = torch.stack([b["input_ids"] for b in batch])
+    labels = torch.stack([b["labels"] for b in batch])
+    attention_mask = torch.ones_like(input_ids)
+    return {"input_ids": input_ids, "labels": labels, "attention_mask": attention_mask}
+
+
+def get_train_eval_path(args) -> tuple[str, str]:
+
+    model_name = args.model.split("/")[-1]
+    data_dir = "/".join(args.data.split("/")[:-1])
+    if os.path.isdir(args.data):
+        data_dir = args.data
+    prepared_data = os.environ.get(
+        "PRETOKENIZED_DATA_PATH",
+        os.path.join(data_dir, f"{model_name}"),
+    )
+    train_path = os.path.join(prepared_data, f"train-packed-{args.max_length}")
+    eval_path = os.path.join(prepared_data, f"eval-packed-{args.max_length}")
+
+    return train_path, eval_path

@@ -40,7 +40,7 @@ export NODE_RANK=$SLURM_PROCID
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
 
 
 head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$MASTER_ADDR" hostname --ip-address)
@@ -52,35 +52,9 @@ sed -i "s/{{NUM_NODES}}/$NNODES/g" "$accelerate_config_path"
 sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
 sed -i "s/machine_rank: 0/machine_rank: $NODE_RANK/g" "$accelerate_config_path"
 
-#    --precision $PRECISION \ accelerate launch
-#    --multi-gpu \
-#    --machine_rank $SLURM_NODEID \
-#    --rdzv_backend c10d \
-#    --main_process_ip $MASTER_ADDR \
-#    --main_process_port $MASTER_PORT \
-#    --num_processes $NUM_PROCS \
-#    --num_machines $NNODES \
-#    --same-network \
 echo "EXECUTION_MODE: $EXECUTION_MODE"
-train_command_min_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
-    --config_file $accelerate_config_path \
-    --machine_rank $SLURM_NODEID \
-    --rdzv_backend c10d \
-      $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data '$DATASET_PATH' \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
-        --precision $PRECISION \
-        --lr $LR \
-        --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 4 \
-        --dataset $DATASET "
 
-train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
+train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -91,7 +65,7 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch 
        $TRAIN_SCRIPT \
         --model $MODEL_PATH \
         --data '$DATASET_PATH' \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-max-overlap \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
         --batch_size $BATCH_SIZE \
         --max_length $MAX_MODEL_LENGTH \
         ${EPOCHS:+--epochs $EPOCHS} \
@@ -103,11 +77,18 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch 
         --dataset $DATASET \
         --max_comm_comp_overlap"
 
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+        --model $MODEL_PATH \
+        --data $DATASET_PATH \
+        --dataset $DATASET \
+        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
+        --batch_size $BATCH_SIZE \
+        --max_length $MAX_MODEL_LENGTH "
+
 echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     echo "Compile enabled!"
-    train_command_max_overlap="$train_command_max_overlap --enable_compile"
-    #train_command_min_overlap="$train_command_min_overlap --enable_compile"
+    train_command="$train_command --enable_compile"
 fi
 
 echo "NODE_RANK: {$NODE_RANK}"
@@ -115,7 +96,19 @@ echo "NNODES: {$NNODES}"
 echo "NUM_PROCS: {$NUM_PROCS}"
 echo "MASTER_ADDR: {$MASTER_ADDR}"
 echo "MASTER_PORT: {$MASTER_PORT}"
-echo "train_command_min_overlap: {$train_command_min_overlap}"
+echo "train_command: {$train_command}"
+echo "prepare_train_command: {$prepare_train_command}"
+
+
+echo "######################################"
+echo "#       Running preparation stage    #"
+echo "######################################"
+    
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+
+echo "######################################"
+echo "#     Running Accelerate-FSDP train  #"
+echo "######################################"
 
 srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
     # Start monitoring in background
@@ -124,9 +117,10 @@ srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
 
     # Optional: give the monitor time to initialize
     sleep 5
-    
+    export FSDP_CPU_RAM_EFFICIENT_LOADING=True
+
     # Run training in foreground (this blocks until done)
-    $train_command_max_overlap
+    $train_command
 
     kill -SIGTERM \"\$monitor_pid\"
 

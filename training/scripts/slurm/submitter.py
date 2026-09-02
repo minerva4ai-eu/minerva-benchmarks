@@ -160,7 +160,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
             launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
         ),
         "ZERO_STAGE": f.parallelism_name
-        if f.name in ["deepspeed", "deepspeed-accelerate"]
+        if f.name.startswith(("deepspeed", "deepspeed-accelerate"))
         else "",
         "GPU_PEAK_TFLOPS": str(
             get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)

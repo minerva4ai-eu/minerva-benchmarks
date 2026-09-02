@@ -17,9 +17,6 @@ scripts:
   run: scripts/deepspeed-common/run-deepspeed-accelerate.sh
   finetune: scripts/deepspeed-common/finetune-deepspeed-accelerate.py
   copy_files:
-    - scripts/deepspeed-common/gpu_monitor.py
-    - scripts/deepspeed-common/utils.py
-    - scripts/gpu_plots.py
     - scripts/deepspeed-common/configs
     - ${framework.scripts.run}
     - ${framework.scripts.finetune}

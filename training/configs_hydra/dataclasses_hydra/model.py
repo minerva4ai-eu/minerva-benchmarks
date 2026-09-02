@@ -108,7 +108,7 @@ class ModelConfig:
     max_gpus_scale: int = MISSING
     frameworks_supported: list[str] | None = field(default_factory=list)
     parallelism_supported: list[str] | None = field(default_factory=list)
-    megatron_parallelism_supported: list[str] = field(default_factory=list)
+    megatron_parallelism_supported: list[str] | None = field(default_factory=list)
 
     # MoE-specific — only required when architecture_type == "moe"
     active_params_billions: float | None = None

@@ -29,7 +29,6 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass
-from typing import List, Optional, Union
 
 import torch
 from transformers import (
@@ -53,14 +52,14 @@ def num_floating_point_operations(
     num_attention_heads: int,
     vocab_size: int,
     *,
-    num_query_groups: Optional[int] = None,
-    kv_channels: Optional[int] = None,
+    num_query_groups: int | None = None,
+    kv_channels: int | None = None,
     swiglu: bool = False,
     # MoE
-    num_experts: Optional[int] = None,
-    moe_ffn_hidden_size: Optional[int] = None,
+    num_experts: int | None = None,
+    moe_ffn_hidden_size: int | None = None,
     moe_router_topk: int = 1,
-    moe_layer_freq: Union[int, List[int]] = 1,
+    moe_layer_freq: int | list[int] = 1,
     shared_expert_ffn_hidden_size: int = 0,
     # MTP (multi-token prediction)
     mtp_num_layers: int = 0,
@@ -68,8 +67,8 @@ def num_floating_point_operations(
     batch_size: int = 1,
     seq_length: int = 2048,
     # Packed-sequence overrides
-    total_real_tokens: Optional[float] = None,
-    seqlen_squared_sum: Optional[float] = None,
+    total_real_tokens: float | None = None,
+    seqlen_squared_sum: float | None = None,
 ) -> float:
     """Total FLOPs for one global batch (fwd + bwd, ×3 Megatron convention)."""
 
@@ -190,15 +189,15 @@ class ModelFLOPConfig:
     vocab_size: int
     seq_length: int
 
-    num_query_groups: Optional[int] = None  # None → MHA
-    kv_channels: Optional[int] = None  # head_dim override
+    num_query_groups: int | None = None  # None → MHA
+    kv_channels: int | None = None  # head_dim override
     swiglu: bool = False
 
     # MoE
-    num_experts: Optional[int] = None
-    moe_ffn_hidden_size: Optional[int] = None
+    num_experts: int | None = None
+    moe_ffn_hidden_size: int | None = None
     moe_router_topk: int = 1
-    moe_layer_freq: Union[int, List[int]] = 1
+    moe_layer_freq: int | list[int] = 1
     shared_expert_ffn_hidden_size: int = 0
 
     # MTP
@@ -238,7 +237,7 @@ class MFUCallback(TrainerCallback):
         self.cfg = model_config
         self.gpu_peak_flops = gpu_peak_flops
         self.log_key = log_key
-        self._step_start_time: Optional[float] = None
+        self._step_start_time: float | None = None
         self._last_logged_step: int = 0
 
     def _tflops_per_batch(self, batch_size: int) -> float:
@@ -308,6 +307,103 @@ class MFUCallback(TrainerCallback):
         logs[f"D{os.environ['RANK']}:mfu"] = f"{self.state.mfu_this_gpu[-1]:.2f}%"
 
 
+class FLOPsMFUCalculator:
+    """
+    Computes and logs MFU (%) after every logging step.
+
+    Parameters
+    ----------
+    model_config : ModelFLOPConfig
+    gpu_peak_flops : float
+        Peak FLOP/s of ONE GPU (e.g. 989e12 for H100 BF16).
+    log_key : str
+        Key written into the Trainer log dict. Default "mfu".
+    """
+
+    @dataclass
+    class State:
+        tflops_this_gpu: list[float]
+        mfu_this_gpu: list[float]
+
+    def __init__(
+        self,
+        model_config: ModelFLOPConfig,
+        gpu_peak_flops: float,
+        log_key: str = "mfu",
+    ):
+        self.state = self.State([], [])
+        self.cfg = model_config
+        self.gpu_peak_flops = gpu_peak_flops
+        self.log_key = log_key
+        self._step_start_time: float | None = None
+        self._last_logged_step: int = 0
+
+    def _tflops_per_batch(self, batch_size: int) -> float:
+        c = self.cfg
+        return (
+            num_floating_point_operations(
+                num_layers=c.num_layers,
+                hidden_size=c.hidden_size,
+                ffn_hidden_size=c.ffn_hidden_size,
+                num_attention_heads=c.num_attention_heads,
+                vocab_size=c.vocab_size,
+                num_query_groups=c.num_query_groups,
+                kv_channels=c.kv_channels,
+                swiglu=c.swiglu,
+                num_experts=c.num_experts,
+                moe_ffn_hidden_size=c.moe_ffn_hidden_size,
+                moe_router_topk=c.moe_router_topk,
+                moe_layer_freq=c.moe_layer_freq,
+                shared_expert_ffn_hidden_size=c.shared_expert_ffn_hidden_size,
+                mtp_num_layers=c.mtp_num_layers,
+                batch_size=batch_size,
+                seq_length=c.seq_length,
+            )
+            / 1e12
+        )
+
+    def _num_gpus(self) -> int:
+        return torch.cuda.device_count() if torch.cuda.is_available() else 1
+
+    def on_step_begin(
+        self,
+    ):
+        self._step_start_time = time.perf_counter()
+
+    def on_step_end(
+        self,
+        micro_batch_size: int,
+        gradient_accumulation_steps: int,
+        world_size: int,
+        global_step: int,
+    ):
+        elapsed = time.perf_counter() - self._step_start_time
+        if elapsed <= 0:
+            return
+
+        steps = max(global_step - self._last_logged_step, 1)
+        self._last_logged_step = global_step
+
+        global_bs = micro_batch_size * world_size * gradient_accumulation_steps
+        total_flops = self._tflops_per_batch(global_bs) * steps
+        achieved_flops = total_flops / elapsed / world_size
+        mfu = achieved_flops / self.gpu_peak_flops * 100
+        self.state.tflops_this_gpu.append(round(achieved_flops, 2))
+        self.state.mfu_this_gpu.append(round(mfu, 2))
+        return
+
+    def on_log(self, logs: dict[str, str]) -> dict[str, str]:
+        if logs is None or self._step_start_time is None:
+            return
+
+        logs[f"D{os.environ['RANK']}:TFLOPs/sec/GPU"] = (
+            f"{self.state.tflops_this_gpu[-1]:.2f}"
+        )
+        logs[f"D{os.environ['RANK']}:mfu"] = f"{self.state.mfu_this_gpu[-1]:.2f}%"
+
+        return logs
+
+
 # ---------------------------------------------------------------------------
 # Factory — reads AutoConfig and maps every field correctly
 # ---------------------------------------------------------------------------
@@ -328,10 +424,11 @@ def mfu_callback_from_hf_config(
     model_or_config,
     tokenizer_or_config,
     gpu_peak_flops: float,
-    seq_length: Optional[int] = None,
+    seq_length: int | None = None,
     log_key: str = "mfu",
+    trainer_callback: bool = True,
     **kwargs,
-) -> MFUCallback:
+) -> MFUCallback | FLOPsMFUCalculator:
     """
     Build an MFUCallback from a HuggingFace PretrainedConfig (or a model).
 
@@ -474,7 +571,11 @@ def mfu_callback_from_hf_config(
     defaults.update(kwargs)  # user overrides win
 
     flop_cfg = ModelFLOPConfig(**defaults)
-    return MFUCallback(
+    if trainer_callback:
+        return MFUCallback(
+            model_config=flop_cfg, gpu_peak_flops=gpu_peak_flops, log_key=log_key
+        )
+    return FLOPsMFUCalculator(
         model_config=flop_cfg, gpu_peak_flops=gpu_peak_flops, log_key=log_key
     )
 
@@ -602,7 +703,7 @@ if __name__ == "__main__":
         name = path.split("/")[-2]
         print(
             f"{name:<18} {c.num_layers:>6} {c.hidden_size:>6} {c.ffn_hidden_size:>6} "
-            f"{c.num_attention_heads:>5} {str(c.num_query_groups):>4} "
-            f"{str(c.num_experts):>7} {c.moe_router_topk:>4} {str(c.swiglu):>6} "
+            f"{c.num_attention_heads:>5} {c.num_query_groups!s:>4} "
+            f"{c.num_experts!s:>7} {c.moe_router_topk:>4} {c.swiglu!s:>6} "
             f"{fl / 1e12:>16.1f}  {mfu:>20.1f}%"
         )

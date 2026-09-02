@@ -1,5 +1,5 @@
 defaults:
-  - qwen2.5_7B_Instruct
+  - qwen2.5_72B_Instruct
   - _self_
 
-path: "/lustre/fswork/projects/idris/sos/ssos027/LLM-FT-IDRIS-Benchmark/nemo_ckpt"
+path: "path to checkpoint"

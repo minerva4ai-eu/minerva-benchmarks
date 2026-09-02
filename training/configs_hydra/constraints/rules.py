@@ -3,10 +3,45 @@ from copy import deepcopy
 from functools import cache
 from typing import Literal
 
-from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, EnvMode
 from omegaconf import DictConfig
 
 from .base import ConstraintRule, RuleResult
+
+
+class ExecutionEnvironmentValidityRule(ConstraintRule):
+    """COnfiguration profile cannot run because framework lack of execution environment support"""
+
+    @property
+    def rule_name(
+        self,
+    ):
+        return "execution_env_validity_check"
+
+    def check(self, c: BenchmarkConfig) -> RuleResult:
+        if (
+            c.machine.runtime_env_mode == EnvMode.venv
+            and c.framework.python_environment is None
+        ):
+            return RuleResult(
+                False,
+                self.rule_name,
+                f"Framework {c.framework.name} doesn't have any value for 'c.framework.python_environment: {c.framework.python_environment}'!",
+            )
+
+        if (
+            c.machine.env == EnvMode.singularity
+            and c.framework.singularity_container is None
+        ):
+            return RuleResult(
+                False,
+                self.rule_name,
+                f"Framework {c.framework.name} doesn't have any value for 'c.framework.singularity_container: {c.framework.singularity_container}'!",
+            )
+        return RuleResult(
+            True,
+            "execution_env_validity_check",
+        )
 
 
 class ParallelismGPUFloor(ConstraintRule):
@@ -14,7 +49,9 @@ class ParallelismGPUFloor(ConstraintRule):
 
     def check(self, c: BenchmarkConfig) -> RuleResult:
         if c.framework.megatron_parallelism:
-            _check = RuleResult(False, "Default fail! Check code for bug!")
+            _check = RuleResult(
+                False, "parallelism_gpu_floor", "Default fail! Check code for bug!"
+            )
             for p, min_max in c.framework.parallelism.items():
                 _c = deepcopy(c)
                 _c.framework.parallelism = {p: min_max}
@@ -63,11 +100,11 @@ class FrameworkParallelismValidityRule(ConstraintRule):
     def check(self, c: BenchmarkConfig) -> RuleResult:
         if c.framework.megatron_parallelism:
             supported_parallelisms, framework_parallelism = (
-                c.model.parallelism_supported,
+                c.model.megatron_parallelism_supported,
                 list(c.framework.parallelism.keys()),
             )
             for supported_parallelism in supported_parallelisms:
-                print(f"{framework_parallelism} ~  {supported_parallelisms}")
+                # print(f"{framework_parallelism} ~  {supported_parallelisms}")
                 if supported_parallelism not in framework_parallelism:
                     return RuleResult(
                         False,
@@ -124,11 +161,6 @@ PARALLELISM_DIVISOR = {
     "zero2": lambda n: 4 * n / (n + 3),
     "zero3": lambda n: n,
 }
-
-# Parallelism strategy names (as keys of c.framework.parallelism) that should
-# be routed through the Megatron-style TP/PP/CP/DP search instead of the
-# single-axis PARALLELISM_DIVISOR path above.
-MEGATRON_PARALLELISM_KEYS = {"tp", ""}
 
 
 def _cfg_get(node, key, default=None):
@@ -533,6 +565,7 @@ class MinNodesMemoryRule(ConstraintRule):
 
 # Registry — just add new rules here, no other changes needed
 ALL_RULES = [
+    ExecutionEnvironmentValidityRule(),
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
     MinNodesMemoryRule(),

@@ -5,7 +5,7 @@ training:
   steps: 50
   lr: 2e-5
   optimizer: "adamw"
-  gradient_checkpointing: False
+  gradient_checkpointing: True
   enable_compile: True
   epochs: null
 
@@ -13,8 +13,8 @@ combinations:
   batch_sizes: [1, 4, 8]
   precisions: ["bf16"]
   grad_accums: [8, 16]
-  lr: [2e-5]
+  lr: [2e-5] 
   optimizer: ["adamw"]
-  gradient_checkpointing: [False] # TODO: Implement parameterization
-  steps: [50]
+  gradient_checkpointing: [True]    # Has no effect, by default checkpointing is enabled for all
+                                    # ToDO: Parameterize
   enable_compile: [False, True]
