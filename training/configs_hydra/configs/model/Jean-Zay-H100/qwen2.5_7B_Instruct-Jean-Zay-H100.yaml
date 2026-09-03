@@ -1,0 +1,5 @@
+defaults:
+  - qwen2.5_72B_Instruct
+  - _self_
+
+path: "path to checkpoint"

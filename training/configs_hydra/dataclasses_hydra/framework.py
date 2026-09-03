@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 
 from omegaconf import MISSING
 
@@ -8,8 +7,8 @@ from omegaconf import MISSING
 class ParallelismSpec:
     """Constraints for one parallelism strategy."""
 
-    min_gpus: int = 1
-    max_gpus: int = 999
+    min_gpus: int | None = 1
+    max_gpus: int | None = 999
 
     def __post_init__(self):
         if self.min_gpus < 1:
@@ -24,8 +23,7 @@ class ParallelismSpec:
 class ScriptsConfig:
     run: str = MISSING
     finetune: str = MISSING
-    shared: str = MISSING
-    copy_files: List[str] = MISSING
+    copy_files: list[str] = MISSING
 
     def __post_init__(self):
         if not self.run:
@@ -34,23 +32,19 @@ class ScriptsConfig:
             raise ValueError("scripts.finetune must be a non-empty path")
 
 
-VALID_FRAMEWORKS = frozenset({"torchrun", "accelerate", "deepspeed"})
-
-
 @dataclass
 class FrameworkConfig:
     name: str = MISSING
     python_environment: str | None = None
     singularity_container: str | None = None
     parallelism_name: str = ""
-    parallelism: Dict[str, ParallelismSpec] = field(default_factory=dict)
+    parallelism: dict[str, ParallelismSpec] = field(default_factory=dict)
+    megatron_parallelism: dict[str, int] | None = None
     scripts: ScriptsConfig = field(default_factory=ScriptsConfig)
+    datasets_allowed: list[str] | None = None
+    env: dict = field(default_factory=dict)
 
     def __post_init__(self):
-        if self.name not in VALID_FRAMEWORKS:
-            raise ValueError(
-                f"Unknown framework: '{self.name}'. Valid: {VALID_FRAMEWORKS}"
-            )
         if not self.parallelism:
             raise ValueError(
                 f"Framework '{self.name}' must define at least one parallelism"
@@ -66,5 +60,5 @@ class FrameworkConfig:
     def supports_parallelism(self, name: str) -> bool:
         return name in self.parallelism
 
-    def get_parallelism_spec(self, name: str) -> Optional[ParallelismSpec]:
+    def get_parallelism_spec(self, name: str) -> ParallelismSpec | None:
         return self.parallelism.get(name)

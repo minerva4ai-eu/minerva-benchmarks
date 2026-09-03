@@ -1,0 +1,8 @@
+name: tulu-3-sft-mixture
+path: ${abs_path:datasets/tulu-3-sft-mixture}
+task: Instruction-Finetuning
+max_seq_len: 4096
+train:
+  - "training.jsonl"
+validation:
+  - "validation.jsonl"

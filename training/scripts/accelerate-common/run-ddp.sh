@@ -11,7 +11,8 @@ MASTER_PORT=29500
 # export MASTER_ADDR=$HEAD_NODE
 NUM_PROCS=$(($SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
+echo "EXECUTION_MODE: $EXECUTION_MODE"
 
 train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
@@ -23,9 +24,21 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --num_machines $SLURM_STEP_NUM_NODES \
       $TRAIN_SCRIPT --yaml $1"
 
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare --yaml $1"
+
+echo "######################################"
+echo "#       Running preparation stage    #"
+echo "######################################"
+    
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+
+echo "######################################"
+echo "#     Running  Accelerate-DDP train  #"
+echo "######################################"
+
 # Start monitoring in background
 $gpu_plots_monitor_command &
-monitor_pid=\$!
+monitor_pid=$!
 
 # Optional: give the monitor time to initialize
 sleep 5
@@ -33,10 +46,10 @@ sleep 5
 # Run training in foreground (this blocks until done)
 $train_command
 
-kill -SIGTERM \"\$monitor_pid\"
+kill -SIGTERM "$monitor_pid"
 
 # Wait for the monitor to clean up and exit
-wait \"\$monitor_pid\"
+wait "$monitor_pid"
 
 
 echo "DDP Job Completed."

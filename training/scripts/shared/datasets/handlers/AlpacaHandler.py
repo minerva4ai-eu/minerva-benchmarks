@@ -1,8 +1,8 @@
 import json
-from typing import Optional
 
 import torch
 from datasets import Dataset as HFDataset
+from pandas import DataFrame
 
 from . import DatasetHandler, RawTextDataset
 from . import utils as u
@@ -12,8 +12,8 @@ class AlpacaHandler(DatasetHandler):
     def __init__(
         self,
         tokenizer,
-        path: Optional[str] = None,
-        data: Optional[list[torch.Tensor]] = None,
+        path: str | None = None,
+        data: list[torch.Tensor] | None = None,
         max_length=1024,
         pad_maxlength=True,
     ):
@@ -106,13 +106,13 @@ class AlpacaHandler(DatasetHandler):
 
 
 class AlpacaRawDataset(RawTextDataset):
-    def __init__(
-        self,
-        path,
-    ):
+    def __init__(self, path, data: DataFrame = None):
+        if data is not None:
+            self.data = data
+            return
         path = path.replace('"', "")
         with open(path, "r", encoding="utf-8") as f:
-            self.data = json.load(f)
+            self.data = DataFrame.from_dict(json.load(f))
 
     def __len__(self):
         return len(self.data)
@@ -127,14 +127,131 @@ class AlpacaRawDataset(RawTextDataset):
             prompt = prompt + "\n\n### Response:\n" + item.get("output", "")
             return {"text": prompt}
 
-        processed = [build_prompt(item) for item in self.data]
+        processed = [build_prompt(self.data.iloc[idx]) for idx in range(self.__len__())]
 
         # Must be a HuggingFace Dataset, not a torch Dataset — packing requires it
         return HFDataset.from_list(processed)
 
-    @staticmethod
+    def prepare_instruction_response_dataset(
+        self, instructions_field="instruction", response_field="response"
+    ) -> HFDataset:
+        def build_instruction_response(item):
+            prompt = item.get("instruction", "")
+            if item.get("input"):
+                prompt = prompt + "\n\n" + item["input"]
+            return {instructions_field: prompt, response_field: item.get("output", "")}
+
+        processed = [
+            build_instruction_response(self.data.iloc[idx])
+            for idx in range(self.__len__())
+        ]
+
+        # Must be a HuggingFace Dataset, not a torch Dataset — packing requires it
+        return HFDataset.from_list(processed)
+
+    def build_packed_instruction_dataset(
+        self,
+        raw_dataset,
+        tokenizer,
+        max_length,
+        instructions_field="instruction",
+        response_field="response",
+    ):
+        """Tokenize, concatenate, and chunk into fixed-length blocks."""
+
+        def tokenize_fn(examples):
+            input_ids_list, labels_list = [], []
+            for prompt, response in zip(
+                examples[instructions_field], examples[response_field]
+            ):
+                prompt_ids = tokenizer(prompt, add_special_tokens=False)["input_ids"]
+                response_ids = tokenizer(response, add_special_tokens=False)[
+                    "input_ids"
+                ] + [tokenizer.eos_token_id]
+                ids = prompt_ids + response_ids
+                labels = [-100] * len(
+                    prompt_ids
+                ) + response_ids  # mask prompt, keep response as labels
+                input_ids_list.append(ids)
+                labels_list.append(labels)
+            return {"input_ids": input_ids_list, "labels": labels_list}
+
+        tokenized = raw_dataset.map(
+            tokenize_fn,
+            batched=True,
+            remove_columns=raw_dataset.column_names,
+            desc="Tokenizing",
+        )
+
+        # Instead of truncating, pad the final block:
+        def group_texts_pad(examples):
+            concatenated_ids = sum(examples["input_ids"], [])
+            concatenated_labels = sum(examples["labels"], [])
+
+            # Create full blocks and keep remainder as partial block
+            blocks_ids = []
+            blocks_labels = []
+
+            for i in range(0, len(concatenated_ids), max_length):
+                block_ids = concatenated_ids[i : i + max_length]
+                block_labels = concatenated_labels[i : i + max_length]
+
+                # Pad if necessary
+                if len(block_ids) < max_length:
+                    pad_len = max_length - len(block_ids)
+                    block_ids = block_ids + [tokenizer.pad_token_id] * pad_len
+                    block_labels = (
+                        block_labels + [-100] * pad_len
+                    )  # Don't compute loss on padding
+
+                blocks_ids.append(block_ids)
+                blocks_labels.append(block_labels)
+
+            return {"input_ids": blocks_ids, "labels": blocks_labels}
+
+        """
+        def group_texts(examples):
+            concatenated_ids = sum(examples["input_ids"], [])
+            concatenated_labels = sum(examples["labels"], [])
+            total_len = (len(concatenated_ids) // max_length) * max_length
+            return {
+                "input_ids": [
+                    concatenated_ids[i : i + max_length]
+                    for i in range(0, total_len, max_length)
+                ],
+                "labels": [
+                    concatenated_labels[i : i + max_length]
+                    for i in range(0, total_len, max_length)
+                ],
+            }
+        """
+        packed = tokenized.map(
+            group_texts_pad,
+            batched=True,
+            # FIX: Explicitly remove un-packed tokenized columns before packing
+            remove_columns=tokenized.column_names,
+            desc=f"Packing into {max_length}-token blocks",
+        )
+        return packed
+
+    def prepare_packed_dataset(self, tokenizer, max_length: int, save_path: str = ""):
+
+        raw_dataset = self.prepare_instruction_response_dataset()
+
+        packed_dataset = self.build_packed_instruction_dataset(
+            raw_dataset, tokenizer, max_length
+        )
+
+        if save_path:
+            packed_dataset.save_to_disk(save_path)
+
+        return packed_dataset
+
+    @classmethod
     def from_data(
-        data: list[dict[str, str]],
+        cls,
+        data: DataFrame,
     ):
 
-        return HFDataset.from_list(data)
+        # return HFDataset.from_list(data)
+        return cls("", data)

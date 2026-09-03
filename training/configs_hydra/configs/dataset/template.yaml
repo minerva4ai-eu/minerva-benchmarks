@@ -1,3 +1,5 @@
+## THIS IS A GENERAL TEMPLATE OF WHAT A DATASET CONFIG SHOULD INCLUDE
+## IT SHOULD NOT BE INHERITED BY NEW DATASET CONFIGS
 name: "dataset name"                  # Must be filled
 path: "pat/to/dataset"                # Must be filled
 train:                                # Provide only is train and validation files are pre-split

@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
-
 import pandas as pd
 import shared.utils as u
 import torch
@@ -13,8 +11,8 @@ class SquadV2Handler(DatasetHandler):
     def __init__(
         self,
         tokenizer,
-        path: Optional[str | list[str]] = None,
-        data: Optional[pd.DataFrame] = None,
+        path: str | list[str] | None = None,
+        data: pd.DataFrame | None = None,
         max_length=1024,
         pad_maxlength=True,
     ):
@@ -53,7 +51,7 @@ class SquadV2Handler(DatasetHandler):
     def __raw_items_range__(self, idxs):
         return pd.DataFrame([self.data.iloc[idx] for idx in idxs])
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """
         For each row, build the input text using the tokenizer's chat template:
           user: Question: ... Context: ...
@@ -145,7 +143,10 @@ class SquadV2Handler(DatasetHandler):
 
 
 class SquadV2RawDataset(RawTextDataset):
-    def __init__(self, path: str | list[str]):
+    def __init__(self, path: str | list[str], data: pd.DataFrame = None):
+        if data is not None:
+            self.data = data
+            return
         # Load dataset from parquet
         if path:
             if isinstance(path, str):
@@ -199,9 +200,130 @@ class SquadV2RawDataset(RawTextDataset):
         # Must be a HuggingFace Dataset, not a torch Dataset — packing requires it
         return HFDataset.from_list(processed)
 
-    @staticmethod
+    def prepare_instruction_response_dataset(
+        self, instructions_field="instruction", response_field="response"
+    ) -> HFDataset:
+        def build_instruction_response(item):
+            question = item["question"].strip()
+            context = item["context"].strip()
+            answer_data = item["answers"]
+            if isinstance(answer_data, dict) and "text" in answer_data:
+                answer_texts = answer_data.get("text", [])
+                answer = answer_texts[0] if len(answer_texts) > 0 else ""
+            else:
+                answer = str(answer_data) if isinstance(answer_data, str) else ""
+            return {
+                instructions_field: f"Question: {question}\n\nContext: {context}",
+                response_field: answer,
+            }
+
+        processed = [
+            build_instruction_response(self.data.iloc[idx])
+            for idx in range(self.__len__())
+        ]
+
+        # Must be a HuggingFace Dataset, not a torch Dataset — packing requires it
+        return HFDataset.from_list(processed)
+
+    def build_packed_instruction_dataset(
+        self,
+        raw_dataset,
+        tokenizer,
+        max_length,
+        instructions_field="instruction",
+        response_field="response",
+    ):
+        """Tokenize, concatenate, and chunk into fixed-length blocks."""
+
+        def tokenize_fn(examples):
+            input_ids_list, labels_list = [], []
+            for prompt, response in zip(
+                examples[instructions_field], examples[response_field]
+            ):
+                prompt_ids = tokenizer(prompt, add_special_tokens=False)["input_ids"]
+                response_ids = tokenizer(response, add_special_tokens=False)[
+                    "input_ids"
+                ] + [tokenizer.eos_token_id]
+                ids = prompt_ids + response_ids
+                labels = [-100] * len(
+                    prompt_ids
+                ) + response_ids  # mask prompt, keep response as labels
+                input_ids_list.append(ids)
+                labels_list.append(labels)
+            return {"input_ids": input_ids_list, "labels": labels_list}
+
+        tokenized = raw_dataset.map(
+            tokenize_fn,
+            batched=True,
+            remove_columns=raw_dataset.column_names,
+            desc="Tokenizing",
+        )
+
+        def group_texts_pad(examples):
+            concatenated_ids = sum(examples["input_ids"], [])
+            concatenated_labels = sum(examples["labels"], [])
+
+            # Create full blocks and keep remainder as partial block
+            blocks_ids = []
+            blocks_labels = []
+
+            for i in range(0, len(concatenated_ids), max_length):
+                block_ids = concatenated_ids[i : i + max_length]
+                block_labels = concatenated_labels[i : i + max_length]
+
+                # Pad if necessary
+                if len(block_ids) < max_length:
+                    pad_len = max_length - len(block_ids)
+                    block_ids = block_ids + [tokenizer.pad_token_id] * pad_len
+                    block_labels = (
+                        block_labels + [-100] * pad_len
+                    )  # Don't compute loss on padding
+
+                blocks_ids.append(block_ids)
+                blocks_labels.append(block_labels)
+
+            return {"input_ids": blocks_ids, "labels": blocks_labels}
+
+        """
+        def group_texts(examples):
+            concatenated_ids = sum(examples["input_ids"], [])
+            concatenated_labels = sum(examples["labels"], [])
+            total_len = (len(concatenated_ids) // max_length) * max_length
+            return {
+                "input_ids": [
+                    concatenated_ids[i : i + max_length]
+                    for i in range(0, total_len, max_length)
+                ],
+                "labels": [
+                    concatenated_labels[i : i + max_length]
+                    for i in range(0, total_len, max_length)
+                ],
+            }
+        """
+        packed = tokenized.map(
+            group_texts_pad,
+            batched=True,
+            # FIX: Explicitly remove un-packed tokenized columns before packing
+            remove_columns=tokenized.column_names,
+            desc=f"Packing into {max_length}-token blocks",
+        )
+        return packed
+
+    def prepare_packed_dataset(self, tokenizer, max_length: int, save_path: str = ""):
+
+        raw_dataset = self.prepare_instruction_response_dataset()
+
+        self.packed_dataset = self.build_packed_instruction_dataset(
+            raw_dataset, tokenizer, max_length
+        )
+
+        if save_path:
+            self.packed_dataset.save_to_disk(save_path)
+
+    @classmethod
     def from_data(
-        data: list[dict[str, str]],
+        cls,
+        data: pd.DataFrame,
     ):
 
-        return HFDataset.from_list(data)
+        return cls("", data)

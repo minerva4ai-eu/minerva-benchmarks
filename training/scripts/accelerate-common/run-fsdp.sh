@@ -11,7 +11,7 @@ MASTER_PORT=29500
 # export MASTER_ADDR=$HEAD_NODE
 NUM_PROCS=$(($SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
 
 # accelerate_config_path="scripts/accelerate-common/accelerate_config.yaml"
 
@@ -21,7 +21,8 @@ gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.
 # sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
 # sed -i "s/machine_rank: 0/machine_rank: $SLURM_NODEID/g" "$accelerate_config_path"
 
-train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch \
+
+train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
@@ -29,22 +30,48 @@ train_command_max_overlap="${runtime_prefix:+$runtime_prefix} accelerate launch 
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $SLURM_STEP_NUM_NODES \
-      $TRAIN_SCRIPT --yaml $1 --max_comm_comp_overlap"
+       $TRAIN_SCRIPT --yaml $1 --max_comm_comp_overlap"
+
+echo "ENABLE_COMPILE: $ENABLE_COMPILE"
+if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
+    echo "Compile enabled!"
+    train_command="$train_command --enable_compile"
+fi
+
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare $TRAIN_SCRIPT --yaml $1"
+
+echo "NODE_RANK: {$NODE_RANK}"
+echo "NNODES: {$NNODES}"
+echo "NUM_PROCS: {$NUM_PROCS}"
+echo "MASTER_ADDR: {$MASTER_ADDR}"
+echo "MASTER_PORT: {$MASTER_PORT}"
+echo "train_command_min_overlap: {$train_command}"
+echo "prepare_train_command: {$prepare_train_command}"
+
+echo "######################################"
+echo "#       Running preparation stage    #"
+echo "######################################"
+    
+srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+
+echo "######################################"
+echo "#     Running Accelerate-FSDP train  #"
+echo "######################################"
 
 # Start monitoring in background
 $gpu_plots_monitor_command &
-monitor_pid=\$!
+monitor_pid=$!
 
 # Optional: give the monitor time to initialize
 sleep 5
 
 # Run training in foreground (this blocks until done)
-$train_command_max_overlap
+$train_command
 
-kill -SIGTERM \"\$monitor_pid\"
+kill -SIGTERM "$monitor_pid"
 
 # Wait for the monitor to clean up and exit
-wait \"\$monitor_pid\"
+wait "$monitor_pid"
 
 echo "FSDP Job Completed."
 

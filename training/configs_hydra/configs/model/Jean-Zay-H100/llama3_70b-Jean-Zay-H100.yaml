@@ -1,0 +1,5 @@
+defaults:
+  - llama3_70b
+  - _self_
+
+path: "fill in path to model"

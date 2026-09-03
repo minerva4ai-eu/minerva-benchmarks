@@ -58,20 +58,6 @@ session = PromptSession(
 )
 
 
-# try:
-#    with open(HISTORY_FILE_PATH, "a") as f:
-#        pass
-#    print(f"DEBUG: history file writable at {HISTORY_FILE_PATH}")
-# except Exception as e:
-#    print(f"DEBUG: history file FAILED: {e}")
-# Prevent Enter from submitting (we just want to move to the next line)
-# @bindings.add("enter")
-# def _(event):
-#    event.app.current_buffer.insert_text(
-#        "\n"
-#    )  # Inserts a newline instead of submitting
-
-
 def read_user_input(
     history_path: str = HISTORY_FILE_PATH, input_text: str = "minerva-benchmarks > "
 ) -> str:

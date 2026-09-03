@@ -22,7 +22,7 @@ main_process_port: 12345
 
 
 # General settings (not DeepSpeed-specific)
-use_cpu: false
-downcast_bf16: "no"
-same_network: true
+#use_cpu: false
+#downcast_bf16: "no"
+#same_network: true
 

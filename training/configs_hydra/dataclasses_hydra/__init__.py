@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from hydra.core.config_store import ConfigStore
+from omegaconf import OmegaConf
 
 from .arch import HPCArchitecture
 from .benchmark import BenchmarkConfig
@@ -7,16 +10,12 @@ from .framework import FrameworkConfig
 from .model import ModelConfig, TrainArgsConfig
 from .slurm import SlurmConfig
 
-from omegaconf import OmegaConf
-
-from pathlib import Path
-
 # 1. Define and register the custom resolver
 # This must happen BEFORE the @hydra.main decorator executes
 OmegaConf.register_new_resolver(
-    "abs_path", 
-    lambda relative_path: str(Path.cwd() / relative_path)
+    "abs_path", lambda relative_path: str(Path.cwd() / relative_path)
 )
+
 
 def register_configs():
 
@@ -34,12 +33,14 @@ def register_base(cs: ConfigStore):
     # dataset YAMLs
     cs.store(group="dataset", name="alpaca", node=DatasetConfig)
     cs.store(group="dataset", name="squadv2", node=DatasetConfig)
+    cs.store(group="dataset", name="tulu-3-sft-mixture", node=DatasetConfig)
 
     # framework YAMLs
     cs.store(group="framework", name="accelerate", node=FrameworkConfig)
     cs.store(group="framework", name="torchrun", node=FrameworkConfig)
     cs.store(group="framework", name="deepspeed", node=FrameworkConfig)
     cs.store(group="framework", name="deepspeed-accelerate", node=FrameworkConfig)
+    cs.store(group="framework", name="megatron-nemo-2509", node=FrameworkConfig)
 
     # model YAMLs
     # cs.store(group="model", name="base_training", node=TrainArgsConfig)
@@ -49,6 +50,7 @@ def register_base(cs: ConfigStore):
     cs.store(group="model", name="mistral_7b", node=ModelConfig)
     cs.store(group="model", name="llama3_8b", node=ModelConfig)
     cs.store(group="model", name="llama3_70b", node=ModelConfig)
+    cs.store(group="model", name="qwen2.5_7B_Instruct", node=ModelConfig)
 
     # slurm YAMLS
     cs.store(group="slurm", name="base", node=SlurmConfig)

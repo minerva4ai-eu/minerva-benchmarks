@@ -5,34 +5,35 @@
         "zero_quantized_weights": false,
         "zero_quantized_gradients": false,
         "stage3_param_persistence_threshold": 1e6,
-        "stage3_max_live_parameters": 1e8,
+        "stage3_max_live_parameters": 1e7,
         "stage3_max_reuse_distance": 1e8,
         "stage3_gather_16bit_weights_on_model_save": true,
-        "stage3_prefetch_bucket_size": 5e8,
+        "stage3_prefetch_bucket_size": 1e8,
         "overlap_comm": true,
         "contiguous_gradients": true,
-        "reduce_bucket_size": 5e8,
+        "reduce_bucket_size": 1e8,
         "reduce_scatter": true,
         "allgather_partitions": true,
-        "allgather_bucket_size": 5e8,
+        "allgather_bucket_size": 1e8,
         "round_robin_gradients": true
+        
     },
     "optimizer": {
         "type": "AdamW",
         "params": {
             "torch_adam": true,
-            "lr": "auto",
-            "betas": "auto",
-            "eps": "auto",
-            "weight_decay": "auto"
+            "lr": 1e-4,
+            "betas": [0.9, 0.95],
+            "eps": 1e-8,
+            "weight_decay": 0.1
         }
     },
     "scheduler": {
         "type": "WarmupLR",
-        "params": {
-            "warmup_min_lr": "auto",
-            "warmup_max_lr": "auto",
-            "warmup_num_steps": "auto"
+        "params": {         
+            "warmup_min_lr": 0.0,
+            "warmup_max_lr": 1e-4,
+            "warmup_num_steps": 10
         }
     },
     "bf16": {

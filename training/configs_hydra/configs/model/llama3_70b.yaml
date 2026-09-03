@@ -34,10 +34,18 @@ tokenizer_type:       tiktoken   # Llama 2 used sentencepiece
 
 max_gpus_scale: 32
 frameworks_supported:
-  - torchrun
-  - accelerate
-  - deepspeed
-  - deepspeed-accelerate
+  - torchrun-cuda121
+  - torchrun-cuda128
+  - torchrun-cuda130
+  - accelerate-cuda121
+  - accelerate-cuda128
+  - accelerate-cuda130
+  - deepspeed-cuda121
+  - deepspeed-cuda128
+  - deepspeed-cuda130
+  - deepspeed-accelerate-cuda121
+  - deepspeed-accelerate-cuda128
+  - deepspeed-accelerate-cuda130
 parallelism_supported:
   - fsdp
   - zero3

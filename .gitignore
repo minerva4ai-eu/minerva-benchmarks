@@ -28,8 +28,10 @@ training/benchmark-runs*
 training/configs_hydra/benchmarks_to_run/*
 training/datasets/*
 training/models/*
+training/cli-logs/*
 
 */.torchcompile_cache/*
+*/.torch-inductor-cache/*
 */.triton-cache/*
 
 *copy

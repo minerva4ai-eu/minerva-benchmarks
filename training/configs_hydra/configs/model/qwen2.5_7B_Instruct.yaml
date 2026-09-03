@@ -1,0 +1,43 @@
+defaults:
+  - base_training
+  - _self_
+
+name: qwen2.5_7B_Instruct
+path: path/to/mistral_7b 
+# transformer dims
+total_params_billions: 7.61
+architecture_type: dense
+num_layers:           28
+hidden_dim:           3584
+ffn_intermediate_dim: 18944
+num_attention_heads:  28
+num_kv_heads:         4        # GQA
+head_dim:             128      # 3584 / 28
+
+# attention
+attention_type:       gqa
+
+# tokenizer
+vocab_size:           152064
+
+# GPU requirements — constraint metadata
+max_gpus_scale: 64
+
+
+frameworks_supported:
+  - megatron-nemo-2509
+megatron_parallelism_supported:
+  - dp
+  - tp
+  - pp
+  - cp
+
+combinations:
+  batch_sizes: [1]
+  grad_accums: [8]
+  steps: [25]
+  precisions: 
+  lr: 
+  optimizer: 
+  gradient_checkpointing: 
+  enable_compile:

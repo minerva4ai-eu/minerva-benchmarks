@@ -1,7 +1,6 @@
 # benchmark/cli.py
 import os
 import sys
-import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 
 import logging
 
-TIMESTAMP = datetime.now().strftime('%Y%m%d%H%M%S')
+TIMESTAMP = datetime.now().strftime("%Y%m%d%H%M%S")
 LOG_DIR = os.path.join("outputs", "logs", "pycli", TIMESTAMP)
 if not os.path.isdir(LOG_DIR):
     os.makedirs(LOG_DIR)
@@ -32,10 +31,11 @@ if not os.path.isdir(LOG_DIR):
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s |  %(levelname)s | %(name)s : %(message)s",
-    handlers=[logging.FileHandler(os.path.join(LOG_DIR, f"minerva.log"))],
+    handlers=[logging.FileHandler(os.path.join(LOG_DIR, "minerva.log"))],
 )
 
 logger = logging.getLogger(__name__)
+
 
 @click.group()
 def cli():
@@ -87,8 +87,8 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
     YAML files. Supports dry-run mode for config examination.
     """
     logger.info("Running cli...")
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -120,12 +120,16 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
                 f"\t{u.FAILURE_HEAVY} {u.RED}!WARNING! Argument '--config-name' is defaulting to '{DEFAULT_CONFIG_NAME}'...{u.RESET}"
             )
             exit(1)
-    
+
     # TODO: review output structure
     runs_dir = f"{runs_dir}-{config_name}"
     run_date = datetime.now().date().strftime("%d-%m-%Y")
     valid, _ = generate_valid_combos(
-        config_path=configs_path, config_name=config_name, outpath=runs_dir, run_date=run_date, dry=dry_run
+        config_path=configs_path,
+        config_name=config_name,
+        outpath=runs_dir,
+        run_date=run_date,
+        dry=dry_run,
     )
     if dry_run:
         for cfg in valid:
@@ -133,7 +137,7 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
     else:
         # TODO: Check desired behavior
         if yamls:
-            print("Use batch mode in HPC")
+            click.echo("Use batch mode in HPC")
             exit(1)
 
         # # Sumbit all
@@ -142,16 +146,15 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
         #     logger.info("cfg = %s", cfg)
         #     # TODO: already seen already checked?
         #     # print(cfg)
-        
+
         jobid = submit_job(
             cfg_name=config_name,
             config_path=configs_path,
             runs_dir=runs_dir,
             # run_dir=launch_folder,
             # cfgs = valid,
-            run_date=run_date
+            run_date=run_date,
         )
-    return
 
 
 @cli.command()
@@ -215,8 +218,8 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
     Requires --run-date and --run-id to identify the original run.
     """
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Re-running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
@@ -355,7 +358,7 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
                 "yaml_filename": "",
             }
             if cfg.id in cfgs_seen:
-                print(
+                click.echo(
                     f"{u.YELLOW}Config id '{cfg.id} has been seen already, skipping duplicate job sbmission...'{u.RESET}"
                 )
                 continue
@@ -375,10 +378,10 @@ def rerun(run_date, run_id, runs_dir, all, only_failed, only_pending, yamls):
         u.write_jsonl(d=jobs_resubmitted, p=rerun_monitor_path)
 
 
-def _parse_space_separated(value: str | None) -> set | None:
+def _parse_space_separated(value: str | None) -> set:
     """Parse a space-separated string into a set of values, or return None."""
     if not value:
-        return None
+        return set()
     return set(value.split())
 
 
@@ -531,7 +534,7 @@ def status(
     states = _parse_space_separated(state)
     if state in states:
         if state not in m.SLURM_STATUS_DASHBOARD.keys():
-            print(
+            click.echo(
                 f"{u.RED}Argument '--state' is not valid to filter benchmark jobs for requested run."
                 + f"\n{u.YELLOW}Valid job states: {', '.join(list(m.SLURM_STATUS_DASHBOARD.keys()))}{u.RESET}"
             )
@@ -554,11 +557,11 @@ def status(
             )
             return
 
-    print(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
+    click.echo(f"\nJob status for run {u.CYAN}{run_id}{u.RESET}:\n")
     s1 = " " * 20
     s2 = " " * 50
     s3 = " " * 49
-    print(f"{u.YELLOW}JOBID | RUNID | DEPJOB")
+    click.echo(f"{u.YELLOW}JOBID | RUNID | DEPJOB{u.RESET}")
     for job in sorted(run_jobs, key=lambda j: j["id"]):
         job_info = m.get_job_info(job["id"])
         if state and state != job_info.status_meta["code_complete"]:
@@ -622,8 +625,8 @@ def cancel(run_date, run_id, runs_id, model, framework, parallelism, nodes):
     Only affects running and pending jobs; completed/failed jobs are ignored.
     """
 
-    print("\n")
-    print(
+    click.echo("\n")
+    click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Cancelling {u.MAGENTA} MINERVA Benchmarks {u.CYAN} jobs {u.POINT_DIAMOND} {u.RESET}"
     )
 
