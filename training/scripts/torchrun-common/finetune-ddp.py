@@ -1,25 +1,20 @@
 import gc
-import os
-import sys
-import time
-
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# # sys.path.append("../..")
-
 import logging
+import os
+import time
 from datetime import datetime
 
 import torch
 import torch.distributed as dist
-from shared.args import construct_args, get_parser
-from shared.custom_train import PerformanceTrackingSFTTrainer
-from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import (
+from scripts.shared.args import construct_args, get_parser
+from scripts.shared.custom_train import PerformanceTrackingSFTTrainer
+from scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import (
     print_rank,
 )
-from transformers import AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer
 from trl.trainer.sft_config import (
     SFTConfig,
 )
@@ -155,7 +150,7 @@ def main():
 
         print_rank(f"Loading Model... dtype: {dtype}")
 
-        model_config = AutoConfig.from_pretrained(model_name)
+        model_config = AutoConfig.from_pretrained(args.model_name)
         flops_callback = mfu_callback_from_hf_config(
             model_config,
             tokenizer,

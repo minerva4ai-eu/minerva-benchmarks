@@ -13,9 +13,6 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
-from datetime import datetime
-from scripts.slurm.submitter import build_launch_folder
-from scripts.slurm.cli_utils import BASE_DIR
 
 # Color Codes
 GREEN = "\033[92m"
@@ -34,9 +31,30 @@ RESET = "\033[0m"
 
 console = Console()
 
+
+def single_gpu_config(cfg: BenchmarkConfig) -> bool:
+    """Replicates your GPU_CONFIGS=(1 $GPUS_PER_NODE)
+    logic for experiments on 1 node that require also
+    single GPU run"""
+    if (
+        cfg.machine.single_gpu_also_valid
+        and (cfg.slurm.sbatch.nodes == 1)
+        and (cfg.framework.parallelism[cfg.framework.parallelism_name]["min_gpus"] == 1)
+    ):
+        return True
+    return False
+
+
+console = Console()
+
+
 # TODO: check job nodes
 def generate_valid_combos(
-    config_path: str, config_name: str, outpath: str, run_date: str, dry: bool | None = None
+    config_path: str,
+    config_name: str,
+    outpath: str,
+    run_date: str,
+    dry: bool | None = None,
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
 
     # logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
@@ -47,7 +65,7 @@ def generate_valid_combos(
     GlobalHydra.instance().clear()
 
     # # TODO: Don't write if "hydra.errors.MissingConfigException: Cannot find primary config 'MN5-uv-venv-cuda130-flash-attn'. Check that it's in your config search path."
-    # os.makedirs(outpath, exist_ok=True)
+    os.makedirs(outpath, exist_ok=True)
 
     cfg_seen = set()
     with initialize_config_dir(
@@ -152,28 +170,25 @@ def _single_parallelism_framework(
             bs,
             grad_acc,
             precision,
-            lr,
-            optimizer,
             steps,
             enable_compile,
+            grad_ctk,
         ) in product(
             cfg.model.combinations.batch_sizes,
             cfg.model.combinations.grad_accums,
             cfg.model.combinations.precisions,
-            cfg.model.combinations.lr,
-            cfg.model.combinations.optimizer,
             cfg.model.combinations.steps,
             cfg.model.combinations.enable_compile,
+            cfg.model.combinations.gradient_checkpointing,
         ):
             # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
             # to each experiment combination
             tmp_cfg.model.training.batch_size = bs
             tmp_cfg.model.training.grad_accum = grad_acc
             tmp_cfg.model.training.precision = precision
-            tmp_cfg.model.training.lr = lr
-            tmp_cfg.model.training.optimizer = optimizer
             tmp_cfg.model.training.steps = steps
             tmp_cfg.model.training.enable_compile = enable_compile
+            tmp_cfg.model.training.gradient_checkpointing = grad_ctk
             tmp_cfg.experiment.output_dir = outpath
             # Will bee used later to take care of configuration
             # of 1 node and 1 gpu
@@ -198,6 +213,7 @@ def _single_parallelism_framework(
                 experiment_parameters = (
                     f"bs{bs}"
                     + f"-grad_accum{grad_acc}"
+                    + f"-grad-ctk{grad_ctk}"
                     + f"-compile{enable_compile}"
                     + f"-prec{precision}"
                     + f"-steps{steps}"
@@ -302,20 +318,18 @@ def _multi_parallelism_framework(
 
     tmp_cfg = deepcopy(cfg)
 
-    for (
-        bs,
-        grad_acc,
-        steps,
-    ) in product(
+    for bs, grad_acc, steps, grad_ctk in product(
         cfg.model.combinations.batch_sizes,
         cfg.model.combinations.grad_accums,
         cfg.model.combinations.steps,
+        cfg.model.combinations.gradient_checkpointing,
     ):
         # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
         # to each experiment combination
         tmp_cfg.model.training.batch_size = bs
         tmp_cfg.model.training.grad_accum = grad_acc
         tmp_cfg.model.training.steps = steps
+        tmp_cfg.model.training.gradient_checkpointing = grad_ctk
         tmp_cfg.experiment.output_dir = outpath
 
         # Get min number of nodes to run based on model and hpc architecture
@@ -379,7 +393,9 @@ def _multi_parallelism_framework(
                 tmp_cfg.slurm.sbatch.chdir = os.path.join(
                     tmp_cfg.experiment.output_dir, parameters_combo
                 )
-                experiment_parameters = f"bs{bs}" + f"-grad_accum{grad_acc}"
+                experiment_parameters = (
+                    f"bs{bs}" + f"-grad_accum{grad_acc}" + f"-grad-ctk{grad_ctk}"
+                )
                 yaml_filename = (
                     f"{parallelism_comb_str}--{experiment_parameters}" + ".yaml"
                 )
@@ -471,20 +487,3 @@ def get_parser():
         required=True,
     )
     return parser
-
-
-if __name__ == "__main__":
-    parser = get_parser()
-    args = parser.parse_args()
-
-    GlobalHydra.instance().clear()
-    """with initialize_config_dir(
-        config_dir=os.path.abspath(args.config_path), version_base=None
-    ):
-        cfg = compose(config_name=args.config_name)
-        my_app(cfg)"""
-    generate_valid_combos(
-        config_path=os.path.abspath(args.config_path),
-        config_name=args.config_name,
-        outpath="./benchmarks_to_run",
-    )

@@ -1,8 +1,0 @@
-# Base configuration for benchmark experiments
-defaults:
-  - MN5
-  - _self_
-
-machine:
-  python_environment: "/gpfs/scratch/bsc99/ai_operations/bsc206334/minerva-benchmarks/training/envs/benchmarks/cuda121-flash-attn/.venv"
- 

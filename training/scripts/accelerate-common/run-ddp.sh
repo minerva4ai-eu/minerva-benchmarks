@@ -4,6 +4,16 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
+module purge
+if [ ! -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
+source scripts/shared/runtime_environment.sh
+training_activate_runtime_environment
+
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix: $runtime_prefix"
 
 echo yaml_path=$1
 
@@ -11,7 +21,7 @@ MASTER_PORT=29500
 # export MASTER_ADDR=$HEAD_NODE
 NUM_PROCS=$(($SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
 echo "EXECUTION_MODE: $EXECUTION_MODE"
 
 train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
@@ -24,13 +34,13 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --num_machines $SLURM_STEP_NUM_NODES \
       $TRAIN_SCRIPT --yaml $1"
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare --yaml $1"
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 
 echo "######################################"
 echo "#       Running preparation stage    #"
 echo "######################################"
     
-srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+$prepare_train_command
 
 echo "######################################"
 echo "#     Running  Accelerate-DDP train  #"

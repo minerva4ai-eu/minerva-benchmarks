@@ -13,8 +13,9 @@ combinations:
   batch_sizes: [1, 4, 8]
   precisions: ["bf16"]
   grad_accums: [8, 16]
-  lr: [2e-5] 
-  optimizer: ["adamw"]
-  gradient_checkpointing: [True]    # Has no effect, by default checkpointing is enabled for all
-                                    # ToDO: Parameterize
+  gradient_checkpointing: [True]    
   enable_compile: [False, True]
+  steps: [50]
+  epochs: 
+  lr: [2e-5]                        # Has no effect, by default checkpointing is enabled for all  
+  optimizer: ["adamw"]              # Has no effect, by default checkpointing is enabled for all

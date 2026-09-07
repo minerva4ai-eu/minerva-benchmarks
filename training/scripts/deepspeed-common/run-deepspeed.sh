@@ -1,11 +1,18 @@
 #!/bin/bash
 
-
 ##################################################
-###           Environment Setup                ###
+###            Setup Environment               ###
 ##################################################
-source shared/runtime_environment.sh
+module purge
+if [ ! -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
+source scripts/shared/runtime_environment.sh
 training_activate_runtime_environment
+
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix: $runtime_prefix"
 
 
 # Get Arguments
@@ -61,7 +68,7 @@ echo "Using hpZ partition size: $HPZ_PARTITION_SIZE"
 runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix $runtime_prefix"
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
 
 train_command="${runtime_prefix:+$runtime_prefix} deepspeed \
     --no_ssh \
@@ -87,7 +94,7 @@ train_command="${runtime_prefix:+$runtime_prefix} deepspeed \
       --deepspeed_config_file  $deepspeed_config_path \
       --logging_steps 1 "
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare \
         --model $MODEL_PATH \
         --data $DATASET_PATH \
         --dataset $DATASET \
@@ -101,7 +108,7 @@ if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
 fi
 
-srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+$prepare_train_command
 
 # Launch Run
 srun -l --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "

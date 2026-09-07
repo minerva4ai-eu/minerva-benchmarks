@@ -4,16 +4,24 @@
 ##################################################
 ###            Setup Environment               ###
 ##################################################
+module purge
+if [ ! -z "$LOAD_MODULES" ]; then
+    eval "$LOAD_MODULES"
+fi
 
 echo yaml_path=$1
 
-source shared/runtime_environment.sh
+source scripts/shared/runtime_environment.sh
 training_activate_runtime_environment
+
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix: $runtime_prefix"
 
 ##################################################
 ###             Torchrun Setup                 ###
 ##################################################
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
 
 export MASTER_PORT=29500
 
@@ -25,13 +33,13 @@ train_command="${runtime_prefix:+$runtime_prefix} torchrun \
       --rdzv_endpoint ${HEAD_NODE}:${MASTER_PORT} \
       $TRAIN_SCRIPT --yaml $1"
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare --yaml $1"
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 
 echo "######################################"
 echo "#       Running preparation stage    #"
 echo "######################################"
     
-srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+$prepare_train_command
 
 echo "######################################"
 echo "#     Running  Torchrun-DDP train    #"

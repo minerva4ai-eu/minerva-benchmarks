@@ -32,8 +32,8 @@ training/cli-logs/*
 
 */.torchcompile_cache/*
 */.torch-inductor-cache/*
-*/.triton-cache/*
-
+*/.triton*
+*/.cache*
 *copy
 
 job_outputs/

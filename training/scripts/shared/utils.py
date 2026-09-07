@@ -122,6 +122,19 @@ def perf_timed(attr: str):
     return decorator
 
 
+def has_tensor_cores(device_index=0):
+
+    if not torch.cuda.is_available():
+        # ToDo: case for rocm
+        return False
+
+    # Compute Capability major and minor versions
+    major, minor = torch.cuda.get_device_capability(device_index)
+
+    # Volta (7.0), Turing (7.5), Ampere (8.0, 8.6), Ada Lovelace (8.9), Hopper (9.0), Blackwell (10.0+)
+    return major >= 7
+
+
 #####################################
 #           FSDP felpers            #
 #####################################
@@ -172,7 +185,7 @@ def get_fsdp_layer_to_wrap(model_name_or_path: str) -> list[str]:
 
 def save_training_summary(
     *,
-    output_dir,
+    output_file,
     rank,
     model_name,
     dataset_name,
@@ -279,5 +292,4 @@ def save_training_summary(
     }
 
     final_summary = {**summary, **metrics_summary}
-    output_file = os.path.join(output_dir, f"training_summary_{rank}.json")
     save_summary_stats_json(final_summary, output_file)

@@ -11,7 +11,7 @@ import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
 from omegaconf import DictConfig
 from scripts.slurm.cli_utils import *
-from scripts.slurm.submitter import submit_job
+from scripts.slurm.submitter import submit_job, write_config
 
 if TYPE_CHECKING:
     from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -92,7 +92,7 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
-    valid = []
+    cfgs_valid = []
     if yamls:
         if isinstance(yamls, tuple) and len(yamls) == 1:
             yamls = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
@@ -101,7 +101,7 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
 
             try:
                 _cfg: BenchmarkConfig = DictConfig(u.load_yaml(y))
-                valid.append(_cfg)
+                cfgs_valid.append(_cfg)
                 click.echo(f"\t{u.SUCCESS_HEAVY} {u.GREEN}YAML config FOUND!{u.RESET}")
             except FileNotFoundError:
                 click.echo(
@@ -124,7 +124,7 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
     # TODO: review output structure
     runs_dir = f"{runs_dir}-{config_name}"
     run_date = datetime.now().date().strftime("%d-%m-%Y")
-    valid, _ = generate_valid_combos(
+    cfgs_valid, _ = generate_valid_combos(
         config_path=configs_path,
         config_name=config_name,
         outpath=runs_dir,
@@ -132,7 +132,7 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
         dry=dry_run,
     )
     if dry_run:
-        for cfg in valid:
+        for cfg in cfgs_valid:
             click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
     else:
         # TODO: Check desired behavior
@@ -140,19 +140,43 @@ def run(dry_run, configs_path, config_name, runs_dir, yamls):
             click.echo("Use batch mode in HPC")
             exit(1)
 
+        # Slurm Monitor create new run-id folder
+        run_date = datetime.now().date().strftime("%d-%m-%Y")
+        slurm_monitor_dir = os.path.join(runs_dir, "slurm-monitor")
+        date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
+        run_id = 1
+        short_id = f"run_id-{run_id}"
+        run_monitor_dir = os.path.join(date_monitor_dir, short_id)
+        while os.path.exists(run_monitor_dir):
+            run_id += 1
+            short_id = f"run_id-{run_id}"
+            run_monitor_dir = os.path.join(date_monitor_dir, short_id)
+        cfgs_paths = []
+        for cfg in cfgs_valid:
+            cfgs_paths.append(
+                write_config(
+                    cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=runs_dir
+                )
+            )
         # # Sumbit all
         # # TODO: Check desired behavior, dry-run job?
         # for cfg in valid:
         #     logger.info("cfg = %s", cfg)
         #     # TODO: already seen already checked?
         #     # print(cfg)
-
+        logger.info(
+            "Calling submit_job(cfg_name=%s, config_path=%s, runs_dir=%s,run_date=%s)",
+            config_name,
+            configs_path,
+            runs_dir,
+            run_date,
+        )
         jobid = submit_job(
-            cfg_name=config_name,
+            config_name=config_name,
             config_path=configs_path,
             runs_dir=runs_dir,
-            # run_dir=launch_folder,
-            # cfgs = valid,
+            cfgs=cfgs_valid,
+            cfgs_paths=cfgs_paths,
             run_date=run_date,
         )
 

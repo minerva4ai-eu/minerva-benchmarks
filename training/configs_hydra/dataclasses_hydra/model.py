@@ -71,8 +71,8 @@ class ModelTrainingComboConfig:
     batch_size: int = MISSING
     grad_accum: int = MISSING
     max_model_length: int = MISSING
-    precision: str | None = MISSING
-    lr: float | None = MISSING
+    precision: str = MISSING
+    lr: float = MISSING
     optimizer: str | None = "adamw"
     steps: int | None = None
     epochs: int | None = None

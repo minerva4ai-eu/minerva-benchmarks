@@ -1,20 +1,23 @@
 import functools
 import gc
+import logging
 import math
 import os
 import time
-
-import sys
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# # sys.path.append("../..")
+from datetime import datetime
 
 import torch
 import torch.distributed as dist
-from shared.args import get_fsdp_parser
-from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import (
+from scripts.shared.args import construct_args
+from scripts.shared.args import get_fsdp_parser as get_parser
+from scripts.shared.data import (
+    collate_fn,
+    get_train_eval_path,
+    load_prepared_packed_dataset,
+)
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import (
     is_main_process,
     print_rank,
     save_training_summary,
@@ -45,12 +48,7 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-args = get_fsdp_parser().parse_args()
-
-import logging
-from datetime import datetime
-
-RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime('%Y%m%d%H%M%S'))
+RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime("%Y%m%d%H%M%S"))
 RUNJD = os.environ.get("SLURM_STEP_ID")
 LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
 if not os.path.exists(LOG_DIR):
@@ -64,6 +62,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
 
 def load_model(model_path, dtype):
     """
@@ -211,8 +210,16 @@ def save_model(model, tokenizer, output_dir, rank):
 
 
 def main():
-    model_path = args.model
-    model_name = args.model.split("/")[-1]
+
+    # Get main id
+    jobid = os.environ["SLURM_JOB_ID"]
+    jobstepid = os.environ["SLURM_STEP_ID"]
+    jobsteprocid = os.environ["SLURM_PROCID"]
+
+    args = construct_args(get_parser().parse_args())
+
+    model_path = args.model_path
+    model_name = args.model_name
     train_path, eval_path = get_train_eval_path(args)
 
     rank, world_size, local_rank = setup_distributed()
@@ -236,11 +243,11 @@ def main():
     # Dataset
     # ------------------------------------------------------------------
     train_dataset = load_prepared_packed_dataset(train_path)
-    # eval_dataset = load_prepared_packed_dataset(eval_path)
+    eval_dataset = load_prepared_packed_dataset(eval_path)
 
     print_rank(
         rank,
-        f"Packed train dataset size: {len(train_dataset)} blocks of {MAX_LENGTH} tokens",
+        f"Packed train dataset size: {len(train_dataset)} blocks of {args.max_length} tokens",
     )
 
     train_sampler = DistributedSampler(
@@ -262,12 +269,12 @@ def main():
     print_rank(0, f"Loading model {model_path}...")
     model = load_model(model_path, dtype)
     print_rank(
-        0, f"Max communication-computation overlap: {args.max_comm_comp_overlap}"
+        0, f"Max communication-computation overlap: {args.fsdp_max_comm_comp_overlap}"
     )
     model = wrap_fsdp(
         model,
         dtype,
-        max_comm_comp_overlap=args.max_comm_comp_overlap,
+        max_comm_comp_overlap=args.fsdp_max_comm_comp_overlap,
     )
     print_rank(rank, "Model wrapped with FSDP.")
 
@@ -297,13 +304,7 @@ def main():
         num_training_steps=total_steps,
     )
 
-    peak_gpu_tflops = (
-        float(os.environ["GPU_PEAK_TFLOPS"])
-        if os.environ.get("GPU_PEAK_TFLOPS")
-        else None
-    )
-    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    print_rank(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {peak_gpu_tflops}")
+    print_rank(0, f"GPU: {args.gpu_name} | peak TFLOPs for MFU: {args.peak_flops}")
 
     gpu_stats_during, stop_flag = start_gpu_monitor(
         interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
@@ -319,7 +320,7 @@ def main():
     flopsCallback_megatronLM = mfu_callback_from_hf_config(
         AutoConfig.from_pretrained(model_path),
         tokenizer,
-        gpu_peak_flops=peak_gpu_tflops,
+        gpu_peak_flops=args.peak_flops,
         seq_length=args.max_length,
         trainer_callback=False,
     )
@@ -355,7 +356,7 @@ def main():
                 global_step += 1
 
                 flopsCallback_megatronLM.on_step_end(
-                    micro_batch_size=BATCH_SIZE,
+                    micro_batch_size=args.batch_size,
                     world_size=world_size,
                     gradient_accumulation_steps=grad_accum_steps,
                     global_step=global_step,
@@ -413,13 +414,16 @@ def main():
         print_rank(i, "\n".join(summary_log))
 
     save_training_summary(
-        output_dir=output_dir,
+        output_file=os.path.join(
+            args.output_dir,
+            f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+        ),
         rank=rank,
         model_name=model_name,
-        dataset_name=args.dataset,
+        dataset_name=args.dataset_name,
         framework="accelerate",
         parallelism_type="fsdp",
-        batch_size=BATCH_SIZE,
+        batch_size=args.batch_size,
         gradient_accumulation=args.gradient_accumulation_steps,
         learning_rate=args.lr,
         total_training_time_secs=elapsed_total,

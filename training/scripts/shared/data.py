@@ -4,19 +4,21 @@ from typing import TYPE_CHECKING
 
 import torch
 from pandas import DataFrame
-from shared.datasets.config_datasets_handlers_map import (
+from scripts.shared.datasets.config_datasets_handlers_map import (
     DATASET_MAP,
 )
-from shared.utils import is_local_rank_zero, print_rank
+from scripts.shared.utils import is_local_rank_zero, print_rank
 from sklearn.model_selection import train_test_split
 
 if TYPE_CHECKING:
-    from shared.datasets.handlers import RawTextDataset
+    from scripts.shared.args import Configuration
+    from scripts.shared.datasets.handlers import RawTextDataset
     from torch.utils.data import Dataset
 
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class DatasetsNotPreparedError(Exception):
     def __init__(
@@ -184,12 +186,12 @@ def collate_fn(batch):
     return {"input_ids": input_ids, "labels": labels, "attention_mask": attention_mask}
 
 
-def get_train_eval_path(args) -> tuple[str, str]:
+def get_train_eval_path(args: "Configuration") -> tuple[str, str]:
 
-    model_name = args.model.split("/")[-1]
-    data_dir = "/".join(args.data.split("/")[:-1])
-    if os.path.isdir(args.data):
-        data_dir = args.data
+    model_name = args.model_name
+    data_dir = "/".join(args.dataset_path.split("/")[:-1])
+    if os.path.isdir(args.dataset_path):
+        data_dir = args.dataset_path
     prepared_data = os.environ.get(
         "PRETOKENIZED_DATA_PATH",
         os.path.join(data_dir, f"{model_name}"),
