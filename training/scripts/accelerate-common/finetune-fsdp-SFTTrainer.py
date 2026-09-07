@@ -4,14 +4,14 @@ import time
 
 import torch
 import torch.distributed as dist
-from shared.args import get_fsdp_parser
-from shared.custom_train import (
+from scripts.shared.args import get_fsdp_parser
+from scripts.shared.custom_train import (
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
-from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import (
+from scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import (
     get_fsdp_layer_to_wrap,
     print_rank,
 )

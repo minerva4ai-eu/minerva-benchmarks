@@ -4,14 +4,18 @@ import time
 
 import torch
 import torch.distributed as dist
-from shared.args import get_deepspeed_parser
-from shared.custom_train import PerformanceTrackingSFTTrainer
-from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
+from scripts.shared.args import get_deepspeed_parser
+from scripts.shared.custom_train import PerformanceTrackingSFTTrainer
+from scripts.shared.data import (
+    collate_fn,
+    get_train_eval_path,
+    load_prepared_packed_dataset,
+)
 
-# from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import print_rank
+# scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import print_rank
 from transformers import AutoConfig, AutoTokenizer
 from trl.trainer.sft_config import (
     SFTConfig,

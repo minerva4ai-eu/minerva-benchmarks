@@ -6,11 +6,16 @@ import time
 
 import torch
 import torch.distributed as dist
-from shared.args import get_fsdp_parser
-from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import (
+from scripts.shared.args import construct_args
+from scripts.shared.args import get_fsdp_parser as get_parser
+from scripts.shared.data import (
+    collate_fn,
+    get_train_eval_path,
+    load_prepared_packed_dataset,
+)
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import (
     is_main_process,
     print_rank,
     save_training_summary,

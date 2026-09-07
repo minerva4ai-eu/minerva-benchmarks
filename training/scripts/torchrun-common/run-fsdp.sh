@@ -8,17 +8,16 @@ module purge
 if [ ! -z "$LOAD_MODULES" ]; then
     eval "$LOAD_MODULES"
 fi
-source shared/runtime_environment.sh
+
+echo yaml_path=$1
+
+source scripts/shared/runtime_environment.sh
 training_activate_runtime_environment
 
-# Get Arguments
-OUTPUT_DIR="${LAUNCH_FOLDER}/output"
-# Deprecated script arguments - provided by launch environment
-#LAUNCH_FOLDER=$1
-#DATASET=$2
-#DATASET_PATH=$3
-#TRAIN_SCRIPT=$4
-mkdir -p $OUTPUT_DIR
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix: $runtime_prefix"
+
 
 # Print Arguments Received
 echo "LAUNCH_FOLDER: {$LAUNCH_FOLDER}, DATASET: {$DATASET}, DATASET_PATH: {$DATASET_PATH}"
@@ -44,7 +43,7 @@ export MASTER_ADDR=$(scontrol show hostnames ${SLURM_NODELIST} | head -n 1)
 export MASTER_PORT=29500
 export NODE_RANK=$SLURM_PROCID
 
-gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m shared.gpu_plots"
+gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
 
 
 train_command="${runtime_prefix:+$runtime_prefix} torchrun \
@@ -66,7 +65,7 @@ train_command="${runtime_prefix:+$runtime_prefix} torchrun \
       --max_comm_comp_overlap "
 
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m shared.prepare \
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare \
         --model $MODEL_PATH \
         --data $DATASET_PATH \
         --dataset $DATASET \
@@ -83,7 +82,7 @@ echo "######################################"
 echo "#       Running preparation stage    #"
 echo "######################################"
     
-srun --nodes=1 --ntasks=1 --export=ALL $prepare_train_command
+$prepare_train_command
 
 echo "######################################"
 echo "#     Running  Torchrun-FSDP train    #"

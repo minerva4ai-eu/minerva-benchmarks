@@ -20,9 +20,9 @@ sbatch:
     - "--time=00:30:00"                   # Not touch
   logs_folder: "slurm-logs"
 
-srun:                                     # Field not implemented
-  gpus_per_node: 0
-  cpus_per_gpu: 0
-  nodes: 0
-  cpus_per_task: 0
-  tasks_per_node: 0
+#srun:                                     # Field not implemented
+#  gpus_per_node: 0
+#  cpus_per_gpu: 0
+#  nodes: 0
+#  cpus_per_task: 0
+#  tasks_per_node: 0

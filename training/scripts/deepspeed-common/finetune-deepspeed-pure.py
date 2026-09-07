@@ -6,11 +6,15 @@ import deepspeed
 import psutil
 import torch
 import torch.distributed as dist
-from shared.args import get_deepspeed_parser
-from shared.data import collate_fn, get_train_eval_path, load_prepared_packed_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
-from shared.utils import (
+from scripts.shared.args import get_deepspeed_parser
+from scripts.shared.data import (
+    collate_fn,
+    get_train_eval_path,
+    load_prepared_packed_dataset,
+)
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import (
     is_main_process,
     print_rank,
     save_training_summary,
@@ -218,7 +222,6 @@ def main():
     # Metric accumulators
     # ------------------------------------------------------------------
     total_loss_sum: float = 0.0
-    total_loss_steps: int = 0
 
     tokens_per_gpu_all_epochs: int = 0  # tokens seen by this rank
     tokens_global_all_epochs: int = 0  # sum across all ranks
@@ -309,16 +312,14 @@ def main():
                 # ------ loss logging -----------------
                 # accum_loss was already divided by grad_accum_steps each step;
                 # multiply back so we log the mean of the original micro-losses.
-                step_loss = accum_loss * grad_accum_steps
+                step_loss = accum_loss / grad_accum_steps
                 total_loss_sum += step_loss
-                total_loss_steps += 1
 
                 # ------ reset micro accumulators -----
+                global_step += 1
                 accum_loss = 0.0
                 accum_tokens_local = 0
                 step_start = time.time()
-
-                global_step += 1
 
                 # ------ max_steps guard --------------
                 if args.max_steps is not None and global_step >= args.max_steps:
@@ -336,9 +337,7 @@ def main():
 
             tokens_per_gpu_all_epochs += accum_tokens_local
 
-            step_loss = accum_loss * grad_accum_steps
-            total_loss_sum += step_loss
-            total_loss_steps += 1
+            step_loss = accum_loss / grad_accum_steps
             global_step += 1
 
     elapsed_total = time.time() - train_start

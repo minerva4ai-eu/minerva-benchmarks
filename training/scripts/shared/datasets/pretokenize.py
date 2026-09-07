@@ -1,28 +1,26 @@
 import os
 import sys
 
-from shared.args import get_parser
-from shared.data import load_and_prepare_raw_dataset, prepare_packed_dataset
+from scripts.shared.args import construct_args, get_parser
+from scripts.shared.data import load_and_prepare_raw_dataset, prepare_packed_dataset
 from transformers import (
     AutoTokenizer,
 )
 
-args = get_parser().parse_args()
+cfg = construct_args(get_parser().parse_args())
 
-MAX_LENGTH = args.max_length
-BATCH_SIZE = args.batch_size
+MAX_LENGTH = cfg.max_length
+BATCH_SIZE = cfg.batch_size
 
 
 def main():
 
-    model_path = args.model
-    model_name = args.model.split("/")[-1]
-    data_dir = "/".join(args.data.split("/")[:-1])
-    if os.path.isdir(args.data):
-        data_dir = args.data
+    data_dir = "/".join(cfg.dataset_path.split("/")[:-1])
+    if os.path.isdir(cfg.dataset_path):
+        data_dir = cfg.dataset_path
     prepared_data = os.environ.get(
         "PRETOKENIZED_DATA_PATH",
-        os.path.join(data_dir, f"{model_name}"),
+        os.path.join(data_dir, f"{cfg.model_name}"),
     )
     train_path = os.path.join(prepared_data, f"train-packed-{MAX_LENGTH}")
     eval_path = os.path.join(prepared_data, f"eval-packed-{MAX_LENGTH}")
@@ -31,14 +29,16 @@ def main():
         print(f"Dataset pre-tokenized on path '{prepared_data}'...")
         sys.exit()
     print("Starting raw data pre-tokenizationLoaded datasets...")
-    print(f"Loading tokenizer for model '{model_name}'...")
-    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
+    print(f"Loading tokenizer for model '{cfg.model_name}'...")
+    tokenizer = AutoTokenizer.from_pretrained(cfg.model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
     train_dataset_raw, eval_dataset_raw = load_and_prepare_raw_dataset(
-        dataset_name=args.dataset,
-        dataset_path=args.data,
+        dataset_name=cfg.dataset_name,
+        dataset_path=cfg.dataset_path,
+        train_files=cfg.dataset_train_files,
+        validation_files=cfg.dataset_validation_files,
         test_size=0.1,
         return_raw=True,
     )

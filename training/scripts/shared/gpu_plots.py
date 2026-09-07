@@ -198,7 +198,7 @@ def logtimeit(func):
 def get_gpu_metrics() -> list[list[str]]:
     # Check environment variable DISABLE_MONITORING - "True" means disable monitoring
     disable_monitoring = os.environ.get("DISABLE_MONITORING", "False").lower() == "true"
-    
+
     # If monitoring is disabled, return empty list immediately
     if disable_monitoring:
         return []
@@ -256,8 +256,6 @@ def monitor_gpus(
         # csvfile.flush()
         gpus_metrics.to_csv(output_file)
         time.sleep(interval_seconds)
-
-    return
 
 
 if __name__ == "__main__":

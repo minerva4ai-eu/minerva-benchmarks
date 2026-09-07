@@ -1,16 +1,15 @@
+import logging
 import os
 import time
-
-import sys
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-# # sys.path.append("../..")
+from datetime import datetime
 
 import torch
-from shared.args import get_parser
-from shared.custom_train import PerformanceTrackingSFTTrainer
-from shared.data import load_and_prepare_raw_dataset
-from shared.flops import mfu_callback_from_hf_config
-from shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.args import construct_args, get_parser
+from scripts.shared.custom_train import PerformanceTrackingSFTTrainer
+from scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.utils import print_rank, save_summary_stats_json
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -48,18 +47,20 @@ def is_main_process():
 # --- Main ---
 def main():
     # Get main id
+    rank = os.environ["RANK"]
     jobid = os.environ["SLURM_JOB_ID"]
     jobstepid = os.environ["SLURM_STEP_ID"]
+    jobsteprocid = os.environ["SLURM_PROCID"]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_name = args.model
-    output_dir = args.output_dir
+
+    args = construct_args(get_parser().parse_args())
 
     if is_main_process:
-        os.makedirs(output_dir, exist_ok=True)
-        logger.info(f"Loading tokenizer... {model_name}")
+        os.makedirs(args.output_dir, exist_ok=True)
+        logger.info(f"Loading tokenizer... {args.model_name}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     logger.info("Tokenizer Loaded")
@@ -68,18 +69,17 @@ def main():
     # Handle dataset path (string or dict)
     # ---------------------------------------------------------------------
     train_dataset, eval_dataset = load_and_prepare_raw_dataset(
-        dataset_name=dataset_name, dataset_path=dataset_path, test_size=0.1
+        dataset_name=args.dataset_name, dataset_path=args.dataset_path, test_size=0.1
     )
 
     # --- Precision selection ---
-    if precision == "fp16":
+    if args.precision == "fp16":
         dtype = torch.float16
-    elif precision == "bf16":
+    elif args.precision == "bf16":
         dtype = torch.bfloat16
     else:
         dtype = torch.float32
 
-    try:
         compilation_args = {}
         if args.enable_compile:
             torch_compile_backend = "inductor"
@@ -106,7 +106,7 @@ def main():
             fp16=True if args.precision == "fp16" else False,
             bf16=True if args.precision == "bf16" else False,
             optim="adamw_torch",
-            logging_dir=f"{output_dir}/logs",
+            logging_dir=f"{args.output_dir}/logs",
             report_to="none",
             eval_strategy="no",
             eval_steps=None,
@@ -140,23 +140,23 @@ def main():
         logger.info("Model Loaded")
 
         # Conditionally add either epochs or max_steps
-        training_args.num_train_epochs = epochs if epochs is not None else 1
-        if max_steps is not None:
-            training_args.max_steps = int(max_steps)
+        training_args.num_train_epochs = args.epochs if args.epochs is not None else 1
+        if args.max_steps is not None:
+            training_args.max_steps = int(args.max_steps)
 
         _peak_gpu_tflops = os.environ.get("GPU_PEAK_TFLOPS")
         peak_gpu_tflops = float(_peak_gpu_tflops) if _peak_gpu_tflops else None
         logger.info("peak_gpu_tflops = %s", peak_gpu_tflops)
         gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
         print(
-            f"GPU_NAME: {gpu_name} | Using peak GPU TFLOPS for MFU calculation: {peak_gpu_tflops} TFLOPS",
+            f"GPU_NAME: {args.gpu_name} | Using peak GPU TFLOPS for MFU calculation: {args.peak_flops} TFLOPS",
         )
 
         flopsCallback_megatronLM = mfu_callback_from_hf_config(
             model,
             tokenizer,
-            gpu_peak_flops=peak_gpu_tflops,
-            seq_length=max_length,
+            gpu_peak_flops=args.peak_flops,
+            seq_length=args.max_length,
         )
         trainer = PerformanceTrackingSFTTrainer(
             model=model,
@@ -171,25 +171,42 @@ def main():
             peak_gpu_tflops=peak_gpu_tflops,
         )
 
-        # Start GPU monitor
-        gpu_stats_during, stop_flag = start_gpu_monitor(
-            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
-        )
+        try:
+            # Start GPU monitor
+            gpu_stats_during, stop_flag = start_gpu_monitor(
+                interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+            )
 
-        trainer.train()
+            trainer.train()
 
-        stop_flag["stop"] = True
-        time.sleep(2)
+            stop_flag["stop"] = True
+            time.sleep(2)
 
-        trainer.write_summary(output_dir=output_dir, gpu_stats=gpu_stats_during)
+            trainer.write_summary(
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+                ),
+                gpu_stats=gpu_stats_during,
+            )
 
-        del trainer
-        torch.cuda.empty_cache()
-        print("Fine-tuning completed successfully.")
+            print("Fine-tuning completed successfully.")
 
-    except Exception as e:
-        print("Fine-tuning completed with error.")
-        raise e
+        except Exception as e:
+            save_summary_stats_json(
+                summary={
+                    "error": str(e),
+                },
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+                ),
+            )
+            print_rank("Fine-tuning failed to complete!")
+            raise e
+        finally:
+            del trainer
+            torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":

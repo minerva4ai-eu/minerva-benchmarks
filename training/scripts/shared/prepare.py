@@ -1,3 +1,3 @@
-from shared.datasets import pretokenize as p
+from scripts.shared.datasets import pretokenize as p
 
 p.main()

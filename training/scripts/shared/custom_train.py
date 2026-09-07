@@ -5,16 +5,17 @@ import time
 import torch
 import torch._inductor.config as inductor_config
 import torch.distributed as dist
-from shared.utils import save_summary_stats_json
+from scripts.shared.utils import save_summary_stats_json
 from trl import SFTTrainer
 
 # Save tuning results to disk so next run skips benchmarking
 inductor_config.autotune_local_cache = True
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
-# Only set CUDA-specific configurations if CUDA is available
-if torch.cuda.is_available():
-    torch.backends.cuda.matmul.allow_tf32 = True
-    torch.backends.cudnn.allow_tf32 = True
+# torch.compiler.config.assume_static_by_default = False
+# torch._dynamo.config.capture_dynamic_shapes = True
+# torch._dynamo.config.recompile_limit = 16
 
 # torch.compiler.config.assume_static_by_default = False
 # torch._dynamo.config.capture_dynamic_shapes = True
@@ -38,7 +39,7 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     if dist.is_initialized():
         device_rank = dist.get_rank()
     else:
-        device_rank = os.environ.get("RANK")
+        device_rank = int(os.environ["RANK"])
     if rank is None or device_rank == rank:
         print(f"[ RANK {device_rank} ]: {msg}")
 
@@ -362,7 +363,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             print_rank(f"Average MFU: {self.avg_mfu_this_gpu:.2f}")
         return output
 
-    def write_summary(self, output_dir: str, gpu_stats: dict[str, list[float]]):
+    def write_summary(self, output_file: str, gpu_stats: dict[str, list[float]]):
         try:
             # trainable_params, total_params, trainable_pct = count_parameters(model)
             trainable_params, total_params, trainable_pct = 0, 0, 0
@@ -477,10 +478,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 "validation_loss": avg_validation_loss,
             }
             save_summary_stats_json(
-                summary={**summary, **metrics_summary},
-                output_file=os.path.join(
-                    output_dir, f"training_summary_{dist.get_rank()}.json"
-                ),
+                summary={**summary, **metrics_summary}, output_file=output_file
             )
 
         except Exception as e:
@@ -488,9 +486,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 summary={
                     "error": str(e),
                 },
-                output_file=os.path.join(
-                    output_dir, f"training_summary_{dist.get_rank()}.json"
-                ),
+                output_file=output_file,
             )
             print_rank("Fine-tuning failed to complete!")
             raise e

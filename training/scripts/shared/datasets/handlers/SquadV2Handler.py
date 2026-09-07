@@ -1,8 +1,8 @@
 import pandas as pd
-import shared.utils as u
+import scripts.shared.utils as u
 import torch
 from datasets import Dataset as HFDataset
-from shared.datasets.handlers import DatasetHandler
+from scripts.shared.datasets.handlers import DatasetHandler
 
 from . import DatasetHandler, RawTextDataset
 
