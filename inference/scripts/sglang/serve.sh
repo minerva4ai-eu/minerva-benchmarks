@@ -111,12 +111,12 @@ for conc in "${concurrencies[@]}"; do
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
     
     # Run in GPU monitor in background.
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
             python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
     # Run benchmark stressing the sglang server.
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $SGLANG_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
             python3 $BENCHMARK_FILE \
             --backend sglang \
             --host localhost \
