@@ -18,17 +18,19 @@ class ArchitectureType(str, Enum):
 class TrainArgsConfig:
     """Holds lists — generator expands these into individual combos."""
 
+    global_batch_sizes: list[int]  # field(default_factory=lambda: [1, 4, 8])
     batch_sizes: list[int]  # field(default_factory=lambda: [1, 4, 8])
-    precisions: list[str] | None = MISSING  # field(default_factory=lambda: ["bf16"])
+    precisions: list[str] = MISSING  # field(default_factory=lambda: ["bf16"])
     grad_accums: list[int] | None = MISSING  # field(default_factory=lambda: [1])
     lr: list[float] | None = MISSING  # field(default_factory=lambda: [1e-4])
-    optimizer: list[str] | None = MISSING  # field(default_factory=lambda: ["adamw"])
-    gradient_checkpointing: list[bool] | None = (
+    optimizer: list[str] = MISSING  # field(default_factory=lambda: ["adamw"])
+    gradient_checkpointing: list[bool] = (
         MISSING  # field(default_factory=lambda: [True, False])
     )
     steps: list[int] | None = MISSING  # field(default_factory=lambda: [50])
     epochs: list[int] | None = MISSING  # field(default_factory=lambda: [1])
-    enable_compile: list[bool] | None = MISSING
+    enable_compile: list[bool] = MISSING
+    max_seq_lens: list[int] = MISSING
 
     def __post_init__(self):
         bad_precisions = set(self.precisions) - VALID_PRECISIONS
@@ -68,6 +70,7 @@ class TrainArgsConfig:
 class ModelTrainingComboConfig:
     """A single resolved training combo — what the constraint rule receives."""
 
+    global_batch_size: int = MISSING
     batch_size: int = MISSING
     grad_accum: int = MISSING
     max_model_length: int = MISSING

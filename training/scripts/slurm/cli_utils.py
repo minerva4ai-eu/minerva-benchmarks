@@ -14,7 +14,7 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
-RUNS_DIR = Path("outputs/")
+RUNS_DIR = Path("benchmark-runs/")
 DEFAULT_CONFIGS_PATH = "./configs_hydra/configs"
 DEFAULT_CONFIG_NAME = "base"
 BASE_DIR = Path(".")

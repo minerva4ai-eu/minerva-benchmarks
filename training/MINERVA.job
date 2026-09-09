@@ -36,15 +36,6 @@ echo "PYTHON: $PYTHON"
 
 echo MINERVA_WORKDIR="$MINERVA_WORKDIR"
 echo ""
-
-# exit 0
-export LOG_DIR="outputs/logs/bashwork/$SLURM_JOB_ID"
-if [[ ! -d $LOG_DIR ]]; then
-    mkdir -p "$LOG_DIR"
-fi
-
-echo "LOG_DIR: $LOG_DIR"
-
     
 py_to_module() {
     local path="$1"
@@ -96,6 +87,11 @@ VENV_PATH : $VENV_PATH"
     export TORCHINDUCTOR_CACHE_DIR="$TMPDIR/torchinductor_$USER/$SLURM_JOB_ID.$SLURM_STEP_ID"
     export TENSORBOARD_LOGGING_DIR="$TMPDIR/tensorboard_$SLURM_JOB_ID.$SLURM_STEP_ID"
 
+    export NCCL_DEBUG=INFO
+    export NCCL_DEBUG_SUBSYS=INIT,P2P,COLL,NET,GRAPH,TUNING,NVLS,PROXY
+    export NCCL_DEBUG_TIMESTAMP_LEVELS=WARN,INFO
+    export NCCL_DEBUG_FILE="$SRUN_LOGS/steps-slurm-logs/srun-$SLURM_JOB_ID.$SLURM_STEP_ID.nccl"
+
     # No slurm commands inside the container (only environment variables)
     export HEAD_NODE=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
     echo HEAD_NODE=$HEAD_NODE
@@ -104,6 +100,8 @@ VENV_PATH : $VENV_PATH"
 
     #bash "$SRUN_SCRIPT" "$YAML_PATH" >> "$LOG_DIR/work-step$SLURM_STEP_ID-task$SLURM_PROCID.log" 2>&1
     # bash scripts/$FRAMEWORK-common/run-$PARALLELISM.sh $1 >> outputs/logs/workers/work-job$SLURM_JOB_ID-step$SLURM_STEP_ID-task$SLURM_PROCID.log 2>&1
+    export PROFILER_OUTDIR="$SRUN_LOGS/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURM_NODENAME"
+    
     bash "$SRUN_SCRIPT" "$YAML_PATH" 
 
     echo "Ending runner_fn: `date`"
@@ -125,7 +123,7 @@ for YAML_PATH in "${PATH_ARRAY[@]}"; do
     echo "Setting srun environment..."
     echo "Running: $PYTHON -m scripts.slurm.submitter --build-srun-env"
 
-    export TEMP_ENV_FILE=".tmp_srun_env"
+    export TEMP_ENV_FILE="$TMPDIR/.tmp_srun_env"
     eval "$PYTHON -m scripts.slurm.submitter --build-srun-env"
     source "$TEMP_ENV_FILE"
     rm "$TEMP_ENV_FILE"
@@ -141,6 +139,14 @@ SINGULARITY_CONTAINER: $SINGULARITY_CONTAINER \
 VENV_PATH : $VENV_PATH"
 
     
+    export LOG_DIR="$MINERVA_WORKDIR"
+    if [[ ! -d $LOG_DIR ]]; then
+        mkdir -p "$LOG_DIR"
+    fi
+
+    echo "LOG_DIR: $LOG_DIR"
+    export SRUN_LOGS="$LOG_DIR/$SLURM_JOB_ID"
+
     NGPU=$SLURM_GPUS_ON_NODE
     NCPU=$SLURM_CPUS_ON_NODE
     if [[ $PARALLELISM == "none" ]]; then
@@ -151,12 +157,12 @@ VENV_PATH : $VENV_PATH"
 
 
     #-c "$NCPU" \
-    #    --output=./job_outputs/%j/slurm-%J.out \
-    #    --error=./job_outputs/%j/slurm-%J.err \
     srun \
         -N "$NNODES" \
         --ntasks-per-node=1 \
         --gres=gpu:"$NGPU" \
+        --output="$SRUN_LOGS/steps-slurm-logs/srun-%J.out" \
+        --error="$SRUN_LOGS/steps-slurm-logs/srun-%J.err" \
         --export=ALL \
         bash -c "runner_fn $YAML_PATH" &
         

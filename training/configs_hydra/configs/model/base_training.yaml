@@ -1,4 +1,5 @@
 training:
+  global_batch_size: 1
   batch_size: 1
   grad_accum: 1
   precision: "bf16"
@@ -8,14 +9,17 @@ training:
   gradient_checkpointing: True
   enable_compile: True
   epochs: null
+  max_seq_len: -1
 
 combinations:
-  batch_sizes: [1, 4, 8]
+  global_batch_sizes: [256]
+  batch_sizes: [1, 2]
   precisions: ["bf16"]
-  grad_accums: [8, 16]
+  #grad_accums: [8, 16]
   gradient_checkpointing: [True]    
   enable_compile: [False, True]
   steps: [50]
   epochs: 
   lr: [2e-5]                        # Has no effect, by default checkpointing is enabled for all  
   optimizer: ["adamw"]              # Has no effect, by default checkpointing is enabled for all
+  max_seq_lens: [1024, 2048]

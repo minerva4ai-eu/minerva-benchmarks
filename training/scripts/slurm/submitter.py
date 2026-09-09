@@ -20,16 +20,14 @@ def write_config(
     runs_dir: str,
     dry: bool | None = False,
 ) -> str:
-    cfg_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
-    # logger.debug("combo_path = %s", combo_path)
-    experiment_config_dir = os.path.join(cfg_path, "yaml-configs")
-    experiment_config_path = os.path.join(
-        experiment_config_dir, cfg.experiment.yaml_filename
-    )
-    if not dry:
-        os.makedirs(experiment_config_dir, exist_ok=True)
-        OmegaConf.save(cfg, experiment_config_path)
-    return experiment_config_path
+    cfg_dir = u.get_cfg_folder(cfg, base_dir, runs_dir)
+    logger.debug("cfg_dir = %s", cfg_dir)
+    cfg_path = os.path.join(cfg_dir, str(cfg.experiment.yaml_filename))
+    # if not dry:
+    logger.debug(f"Writing config on '{cfg_path}'")
+    os.makedirs(cfg_dir, exist_ok=True)
+    OmegaConf.save(cfg, cfg_path)
+    return cfg_path
 
 
 def _build_launch_folder(
@@ -190,7 +188,7 @@ def build_sbatch_env(
     # TODO: try-except
     env |= {
         "MODULES": " ".join(machine.modules) if machine.modules else "",
-        "EXECUTION_MODE": machine.runtime_env_mode.value,
+        "EXECUTION_MODE": machine.runtime_env_mode,
         "SINGULARITY_BINDS": "".join(machine.singularity_binds)
         if machine.singularity_binds
         else "",
@@ -225,16 +223,12 @@ def get_job_nodes(cfgs: list[BenchmarkConfig]) -> int:
 def submit_job(
     cfgs: list[BenchmarkConfig],
     cfgs_paths: list[str],
-    config_path: str,
-    config_name: str,
     runs_dir: str,
     run_date: str,
 ) -> str:
 
     job_id = ""
 
-    logger.debug("cfg_name = %s", config_name)
-    logger.debug("config_path = %s", config_path)
     logger.debug("runs_dir = %s", runs_dir)
     logger.debug("run_date = %s", run_date)
     logger.debug("len(cfgs) = %s", len(cfgs))
@@ -254,7 +248,7 @@ def submit_job(
     m = cfgs[0].machine
     logger.debug("Max nodes = %s", job_nodes)
     # Get system env configs
-    minerva_dir = os.path.join(runs_dir, m.name, run_date)
+    minerva_dir = os.path.join(runs_dir, m.name, run_date)  # writes cfg profiles
     sbatch_logs_dir = f"{minerva_dir}/%j/sbatch"
     logger.debug("sbatch_logs_dir = %s", sbatch_logs_dir)
 
@@ -266,8 +260,8 @@ def submit_job(
         f"--gres={s.sbatch.gres}",
         f"--cpus-per-task={s.sbatch.cpus_per_task}",
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
-        # f"--output={sbatch_logs_dir}/run-%j.out",
-        # f"--error={sbatch_logs_dir}/run-%j.err",
+        f"--output={sbatch_logs_dir}/sbatch-%j.out",
+        f"--error={sbatch_logs_dir}/sbatch-%j.err",
         f"--partition={s.partition}",
     ]
     # TODO: check desired behavior, joint condition?
@@ -300,17 +294,18 @@ def submit_job(
             env=build_sbatch_env(machine=m, yamls=cfgs_paths, results_dir=minerva_dir),
         )
         if result.returncode != 0:
-            click.echo(
-                f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {config_name} {u.RESET}"
-            )
+            click.echo(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned -  {u.RESET}")
+            for cfg_path in cfgs_paths:
+                click.echo(f"\t{u.POINT_BULLET} {u.RED}{cfg_path} {u.RESET}")
             click.echo(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
             return "-100"
         job_id = result.stdout.strip()
-        # job_id = "0"
     except Exception as e:
         raise e
 
-    click.echo(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {config_name} {u.RESET}")
+    click.echo(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {u.RESET}")
+    for cfg_path in cfgs_paths:
+        click.echo(f"\t{u.POINT_BULLET} {u.GREEN}{cfg_path} {u.RESET}")
     return job_id
 
 

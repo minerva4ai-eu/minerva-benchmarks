@@ -1,15 +1,21 @@
 import logging
 import os
 import time
-from datetime import datetime
 
 import torch
 from scripts.shared.args import construct_args, get_parser
+from scripts.shared.args import get_fsdp_parser as get_parser
 from scripts.shared.custom_train import PerformanceTrackingSFTTrainer
-from scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.data import (
+    load_and_prepare_raw_dataset,
+)
 from scripts.shared.flops import mfu_callback_from_hf_config
 from scripts.shared.gpu_monitor import start_gpu_monitor
-from scripts.shared.utils import print_rank, save_summary_stats_json
+from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.shared.utils import (
+    print_rank,
+    save_summary_stats_json,
+)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -18,25 +24,10 @@ from trl.trainer.sft_config import (
     SFTConfig,
 )
 
-RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime("%Y%m%d%H%M%S"))
-RUNJD = os.environ.get("SLURM_STEP_ID")
-LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR, exist_ok=True)
+setup_logging(level=logging.INFO, yaml=get_parser().parse_args().yaml_file)
 
-# FIXME: logging level
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s |  %(levelname)s | %(name)s : %(message)s",
-    handlers=[logging.FileHandler(os.path.join(LOG_DIR, f"minerva-step{RUNJD}.log"))],
-)
-
-logger = logging.getLogger(__name__)
-
-
-def is_main_process():
-    rank = int(os.environ.get("RANK", 0))
-    return rank == 0
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
 
 
 # --- Main ---
@@ -51,9 +42,8 @@ def main():
 
     args = construct_args(get_parser().parse_args())
 
-    if is_main_process:
-        os.makedirs(args.output_dir, exist_ok=True)
-        logger.info(f"Loading tokenizer... {args.model_name}")
+    os.makedirs(args.output_dir, exist_ok=True)
+    logger.info(f"Loading tokenizer... {args.model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=True)
     if tokenizer.pad_token is None:

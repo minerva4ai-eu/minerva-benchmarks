@@ -47,7 +47,7 @@ if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
 fi
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare $TRAIN_SCRIPT --yaml $1"
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"

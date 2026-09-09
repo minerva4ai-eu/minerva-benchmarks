@@ -167,28 +167,31 @@ def _single_parallelism_framework(
         # print(OmegaConf.to_yaml(cfg))
 
         for (
+            gbs,
             bs,
-            grad_acc,
             precision,
             steps,
             enable_compile,
             grad_ctk,
+            seq_len,
         ) in product(
+            cfg.model.combinations.global_batch_sizes,
             cfg.model.combinations.batch_sizes,
-            cfg.model.combinations.grad_accums,
             cfg.model.combinations.precisions,
             cfg.model.combinations.steps,
             cfg.model.combinations.enable_compile,
             cfg.model.combinations.gradient_checkpointing,
+            cfg.model.combinations.max_seq_lens,
         ):
             # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
             # to each experiment combination
+            tmp_cfg.model.training.global_batch_size = gbs
             tmp_cfg.model.training.batch_size = bs
-            tmp_cfg.model.training.grad_accum = grad_acc
             tmp_cfg.model.training.precision = precision
             tmp_cfg.model.training.steps = steps
             tmp_cfg.model.training.enable_compile = enable_compile
             tmp_cfg.model.training.gradient_checkpointing = grad_ctk
+            tmp_cfg.model.training.max_model_length = seq_len
             tmp_cfg.experiment.output_dir = outpath
             # Will bee used later to take care of configuration
             # of 1 node and 1 gpu
@@ -203,6 +206,11 @@ def _single_parallelism_framework(
 
             for nodes in nodes_to_run:
                 tmp_cfg.slurm.sbatch.nodes = nodes
+                total_gpus = (
+                    tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
+                )
+                grad_acc = int(gbs / (bs * total_gpus))
+                tmp_cfg.model.training.grad_accum = grad_acc
 
                 parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
 
@@ -211,9 +219,10 @@ def _single_parallelism_framework(
                 )
 
                 experiment_parameters = (
-                    f"bs{bs}"
+                    f"gbs{gbs}-bs{bs}"
                     + f"-grad_accum{grad_acc}"
                     + f"-grad-ctk{grad_ctk}"
+                    + f"-max-seq-len{seq_len}"
                     + f"-compile{enable_compile}"
                     + f"-prec{precision}"
                     + f"-steps{steps}"
@@ -226,15 +235,14 @@ def _single_parallelism_framework(
                     tmp_cfg.slurm.sbatch.gpus_per_node = 1
                     tmp_cfg.slurm.sbatch.gres = "gpu:1"
 
-                total_gpus = (
-                    tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
-                )
                 msg = (
                     f"\t· parallelism: {parallelism}"
                     + f" | nodes:{nodes}"
                     + f" | gpus:{total_gpus}"
+                    + f" | gbs:{gbs}"
                     + f" | bs:{bs}"
                     + f" | grad_accum:{grad_acc}"
+                    + f" | max-seq-len{seq_len}"
                     + f" | compilation: {enable_compile}"
                     + f" | precision:{precision}"
                     + f" | steps:{steps}"
@@ -318,18 +326,20 @@ def _multi_parallelism_framework(
 
     tmp_cfg = deepcopy(cfg)
 
-    for bs, grad_acc, steps, grad_ctk in product(
+    for gbs, bs, steps, grad_ctk, seq_len in product(
+        cfg.model.combinations.global_batch_sizes,
         cfg.model.combinations.batch_sizes,
-        cfg.model.combinations.grad_accums,
         cfg.model.combinations.steps,
         cfg.model.combinations.gradient_checkpointing,
+        cfg.model.combinations.max_seq_lens,
     ):
         # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
         # to each experiment combination
+        tmp_cfg.model.training.global_batch_size = gbs
         tmp_cfg.model.training.batch_size = bs
-        tmp_cfg.model.training.grad_accum = grad_acc
         tmp_cfg.model.training.steps = steps
         tmp_cfg.model.training.gradient_checkpointing = grad_ctk
+        tmp_cfg.model.training.max_model_length = seq_len
         tmp_cfg.experiment.output_dir = outpath
 
         # Get min number of nodes to run based on model and hpc architecture
@@ -348,10 +358,11 @@ def _multi_parallelism_framework(
             )
             for c in parallelism_combinations:
                 tmp_cfg.slurm.sbatch.nodes = c["nnodes"]
-
                 total_gpus = (
                     tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
                 )
+                grad_acc = int(gbs / (bs * total_gpus))
+                tmp_cfg.model.training.grad_accum = grad_acc
 
                 parallelism_comb_str = ""
                 if c.get("tp", -1) != -1:
@@ -393,9 +404,7 @@ def _multi_parallelism_framework(
                 tmp_cfg.slurm.sbatch.chdir = os.path.join(
                     tmp_cfg.experiment.output_dir, parameters_combo
                 )
-                experiment_parameters = (
-                    f"bs{bs}" + f"-grad_accum{grad_acc}" + f"-grad-ctk{grad_ctk}"
-                )
+                experiment_parameters = f"gbs{gbs}-bs{bs}-grad_accum{grad_acc}-seq_len{seq_len}-grad_ctk{grad_ctk}"
                 yaml_filename = (
                     f"{parallelism_comb_str}--{experiment_parameters}" + ".yaml"
                 )
@@ -424,7 +433,9 @@ def _multi_parallelism_framework(
                     f"\t· tp:{c['tp']}-pp:{c['pp']}-cp:{c['cp']}-dp:{c['dp']}"
                     + f" | nodes:{tmp_cfg.slurm.sbatch.nodes}"
                     + f" | gpus:{total_gpus}"
+                    + f" | gbs:{gbs}"
                     + f" | bs:{bs}"
+                    + f" | max-seq-len{seq_len}"
                     + f" | grad_accum:{grad_acc}"
                 )
                 if not passed:

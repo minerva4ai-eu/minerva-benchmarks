@@ -14,11 +14,6 @@ parallelism:
 scripts:
   run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
   finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
-  copy_files:
-    - scripts/accelerate-common/accelerate_config.yaml
-    - ${framework.scripts.run}
-    - ${framework.scripts.finetune}
-    - scripts/shared
 datasets_allowed:
   - alpaca
   - squadv2

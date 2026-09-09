@@ -1,11 +1,11 @@
 import json
 import logging
 import os
-from datetime import datetime
 from shutil import copytree, ignore_patterns
 
 import yaml
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
+from omegaconf import OmegaConf
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,10 @@ def read_jsonl(path: str) -> list[dict]:
     return records
 
 
+def load_config(path: str) -> BenchmarkConfig:
+    return OmegaConf.load(path)
+
+
 def load_yaml(filepath):
     try:
         with open(filepath, "r") as file:
@@ -83,10 +87,14 @@ def load_yaml(filepath):
             config = yaml.safe_load(file)
             return config
     except FileNotFoundError as e:
-        print(f"{__name__}.load_yaml() | Error: The file '{filepath}' was not found.")
+        logger.exception(
+            f"{__name__}.load_yaml() | Error: The file '{filepath}' was not found."
+        )
         raise e
     except yaml.YAMLError as e:
-        print(f"{__name__}.load_yaml() | Error parsing YAML file: '{filepath}'")
+        logger.exception(
+            f"{__name__}.load_yaml() | Error parsing YAML file: '{filepath}'"
+        )
         raise e
 
 
@@ -95,21 +103,16 @@ def get_cfg_folder(
     base_dir: str,
     runs_dir: str,
 ):
-
-    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    prefix = "yaml-configs"
+    parameters_combo = f"{prefix}/{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
     if cfg.framework.megatron_parallelism:
-        parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+        parameters_combo = f"{prefix}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
     results_dir = os.path.join(base_dir, runs_dir)
     machine_results_base = os.path.join(results_dir, cfg.machine.name)
-    date_folder = os.path.join(
-        machine_results_base,
-        datetime.now().strftime("%d-%m-%Y"),
-    )
     cfg_path = os.path.join(
-        date_folder,
+        machine_results_base,
         parameters_combo,
     )
-    logger.debug("cfg_path = %s", cfg_path)
     return cfg_path
 
 

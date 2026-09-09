@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 class DatasetsNotPreparedError(Exception):
@@ -35,6 +35,7 @@ def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[
     assert isinstance(dataset_files, list), (
         f"_resolve_dataset_files() | dataset_files input arg must be 'list[str]', received {type(dataset_files)}"
     )
+
     dataset_full_paths = []
     for item in dataset_files:
         if os.path.isabs(str(item)):

@@ -15,10 +15,7 @@ parallelism:
 scripts:
   run: scripts/torchrun-common/run-${framework.parallelism_name}.sh
   finetune: scripts/torchrun-common/finetune-${framework.parallelism_name}.py
-  copy_files:
-    - ${framework.scripts.run}
-    - ${framework.scripts.finetune}
-    - scripts/shared
+
 datasets_allowed:
   - alpaca
   - squadv2

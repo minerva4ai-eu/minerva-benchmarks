@@ -10,14 +10,14 @@ from trl import SFTTrainer
 
 # Save tuning results to disk so next run skips benchmarking
 inductor_config.autotune_local_cache = True
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.allow_tf32 = True
+torch.backends.cuda.matmul.allow_tf32 = False
+torch.backends.cudnn.allow_tf32 = False
 
 # torch.compiler.config.assume_static_by_default = False
 # torch._dynamo.config.capture_dynamic_shapes = True
 # torch._dynamo.config.recompile_limit = 16
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
@@ -359,133 +359,128 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             print_rank(f"Average MFU: {self.avg_mfu_this_gpu:.2f}")
         return output
 
-    def write_summary(self, output_file: str, gpu_stats: dict[str, list[float]]):
-        try:
-            # trainable_params, total_params, trainable_pct = count_parameters(model)
-            trainable_params, total_params, trainable_pct = 0, 0, 0
+    def write_summary(
+        self,
+        output_file: str,
+        gpu_stats: dict[str, list[float]],
+        exception_msg: str = "",
+    ):
+        # trainable_params, total_params, trainable_pct = count_parameters(model)
+        trainable_params, total_params, trainable_pct = 0, 0, 0
 
-            log_history = self.state.log_history
-            print(f"log_history: {log_history}")
-            avg_training_loss = avg_validation_loss = None
-            avg_epoch_time_sec = avg_epoch_time_hours = None
-            avg_step_time_sec = avg_step_time_hours = None
+        log_history = self.state.log_history
+        print(f"log_history: {log_history}")
+        avg_training_loss = avg_validation_loss = None
+        avg_epoch_time_sec = avg_epoch_time_hours = None
+        avg_step_time_sec = avg_step_time_hours = None
 
-            total_training_time_secs = self.total_training_seconds
-            max_elapsed_training_time_secs = total_training_time_secs
-            if dist.is_initialized():
-                elapsed_tensor = torch.tensor(total_training_time_secs, device="cuda")
-                dist.all_reduce(elapsed_tensor, op=dist.ReduceOp.MAX)
-                max_elapsed_training_time_secs = elapsed_tensor.item()
-            tokens_per_gpu_all_epochs = self.total_tokens_this_gpu
+        total_training_time_secs = self.total_training_seconds
+        max_elapsed_training_time_secs = total_training_time_secs
+        if dist.is_initialized():
+            elapsed_tensor = torch.tensor(total_training_time_secs, device="cuda")
+            dist.all_reduce(elapsed_tensor, op=dist.ReduceOp.MAX)
+            max_elapsed_training_time_secs = elapsed_tensor.item()
+        tokens_per_gpu_all_epochs = self.total_tokens_this_gpu
 
-            tokens_global_all_epochs = self.total_tokens_global
-            avg_gpu_flops = self.global_average_flops
-            avg_gpu_mfu = self.global_average_mfu
+        tokens_global_all_epochs = self.total_tokens_global
+        avg_gpu_flops = self.global_average_flops
+        avg_gpu_mfu = self.global_average_mfu
 
-            if self.args.max_steps:
-                avg_step_time_sec = total_training_time_secs / self.args.max_steps
-                avg_step_time_hours = avg_step_time_sec / 3600
-            else:
-                avg_epoch_time_sec = (
-                    total_training_time_secs / self.args.num_train_epochs
-                )
-                avg_epoch_time_hours = avg_epoch_time_sec / 3600
-                avg_step_time_sec = avg_epoch_time_sec / len(self.args.train_dataset)
-                avg_step_time_hours = avg_step_time_sec / 3600
+        if self.args.max_steps:
+            avg_step_time_sec = total_training_time_secs / self.args.max_steps
+            avg_step_time_hours = avg_step_time_sec / 3600
+        else:
+            avg_epoch_time_sec = total_training_time_secs / self.args.num_train_epochs
+            avg_epoch_time_hours = avg_epoch_time_sec / 3600
+            avg_step_time_sec = avg_epoch_time_sec / len(self.args.train_dataset)
+            avg_step_time_hours = avg_step_time_sec / 3600
 
-            effective_batch_size = (
-                self.args.per_device_train_batch_size
-                * self.args.gradient_accumulation_steps
-                * dist.get_world_size()
-            )
+        effective_batch_size = (
+            self.args.per_device_train_batch_size
+            * self.args.gradient_accumulation_steps
+            * dist.get_world_size()
+        )
 
-            samples_per_sec = (
-                effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
-            )
-            training_throughput_tokens_per_sec_per_gpu = (
-                tokens_per_gpu_all_epochs / total_training_time_secs
-                if total_training_time_secs
-                else None
-            )
-            training_throughput_tokens_per_sec_global = (
-                tokens_global_all_epochs / total_training_time_secs
-                if max_elapsed_training_time_secs
-                else None
-            )
-            avg_gpu_power_watts = (
-                sum(gpu_stats["power"]) / len(gpu_stats["power"])
-                if gpu_stats["power"]
-                else None
-            )
-            tokens_per_sec_per_watt_global = (
-                training_throughput_tokens_per_sec_global / avg_gpu_power_watts
-                if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
-                else None
-            )
+        samples_per_sec = (
+            effective_batch_size / avg_step_time_sec if avg_step_time_sec else None
+        )
+        training_throughput_tokens_per_sec_per_gpu = (
+            tokens_per_gpu_all_epochs / total_training_time_secs
+            if total_training_time_secs
+            else None
+        )
+        training_throughput_tokens_per_sec_global = (
+            tokens_global_all_epochs / total_training_time_secs
+            if max_elapsed_training_time_secs
+            else None
+        )
+        avg_gpu_power_watts = (
+            sum(gpu_stats["power"]) / len(gpu_stats["power"])
+            if gpu_stats["power"]
+            else None
+        )
+        tokens_per_sec_per_watt_global = (
+            training_throughput_tokens_per_sec_global / avg_gpu_power_watts
+            if training_throughput_tokens_per_sec_global and avg_gpu_power_watts
+            else None
+        )
 
-            summary = {
-                "nodes": int(os.environ.get("SLURM_NNODES", "1")),
-                "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
-                "total_gpus": dist.get_world_size(),
-                "model": self.model.config.name_or_path,
-                "dataset": os.environ.get("DATASET_PATH", "Unknown"),
-                "framework": "accelerate",
-                "parallelism_type": os.environ.get("PARALLELISM", "Unknown"),
-                "batch_size": self.args.per_device_train_batch_size,
-                "gradient_accumulation": self.args.gradient_accumulation_steps,
-                "learning_rate": self.args.learning_rate,
-            }
+        summary = {
+            "nodes": int(os.environ.get("SLURM_NNODES", "1")),
+            "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
+            "total_gpus": dist.get_world_size(),
+            "model": self.model.config.name_or_path,
+            "dataset": os.environ.get("DATASET_PATH", "Unknown"),
+            "framework": "accelerate",
+            "parallelism_type": os.environ.get("PARALLELISM", "Unknown"),
+            "batch_size": self.args.per_device_train_batch_size,
+            "gradient_accumulation": self.args.gradient_accumulation_steps,
+            "learning_rate": self.args.learning_rate,
+        }
 
-            metrics_summary = {
-                "avg_gpu_memory_gb": sum(gpu_stats["mem"]) / len(gpu_stats["mem"])
-                if gpu_stats["mem"]
-                else None,
-                "peak_gpu_memory_gb": max(gpu_stats["mem"])
-                if gpu_stats["mem"]
-                else None,
-                "avg_gpu_utilization_percent": sum(gpu_stats["util"])
-                / len(gpu_stats["util"])
-                if gpu_stats["util"]
-                else None,
-                "peak_gpu_utilization_percent": max(gpu_stats["util"])
-                if gpu_stats["util"]
-                else None,
-                "avg_gpu_power_watts": avg_gpu_power_watts,
-                "peak_gpu_power_watts": max(gpu_stats["power"])
-                if gpu_stats["power"]
-                else None,
-                "total_execution_time_hours": total_training_time_secs / 3600,
-                "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
-                "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
-                "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
-                "samples_per_sec": samples_per_sec,
-                "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
-                "total_tokens_global_all_epochs": tokens_global_all_epochs,
-                "total_training_time_hours": total_training_time_secs / 3600,
-                "avg_epoch_training_time_sec": avg_epoch_time_sec,
-                "avg_epoch_training_time_hours": avg_epoch_time_hours,
-                "avg_step_training_time_sec": avg_step_time_sec,
-                "avg_step_training_time_hours": avg_step_time_hours,
-                "avg_gpu_flops": avg_gpu_flops,
-                "avg_gpu_mfu": avg_gpu_mfu,
-                "training_loss": log_history[-1]["loss"]
-                if log_history and "loss" in log_history[-1]
-                else None,
-                "validation_loss": avg_validation_loss,
-            }
-            save_summary_stats_json(
-                summary={**summary, **metrics_summary}, output_file=output_file
-            )
+        if exception_msg:
+            summary |= {"error": exception_msg}
+            save_summary_stats_json(summary=summary, output_file=output_file)
+            return
 
-        except Exception as e:
-            save_summary_stats_json(
-                summary={
-                    "error": str(e),
-                },
-                output_file=output_file,
-            )
-            print_rank("Fine-tuning failed to complete!")
-            raise e
+        metrics_summary = {
+            "avg_gpu_memory_gb": sum(gpu_stats["mem"]) / len(gpu_stats["mem"])
+            if gpu_stats["mem"]
+            else None,
+            "peak_gpu_memory_gb": max(gpu_stats["mem"]) if gpu_stats["mem"] else None,
+            "avg_gpu_utilization_percent": sum(gpu_stats["util"])
+            / len(gpu_stats["util"])
+            if gpu_stats["util"]
+            else None,
+            "peak_gpu_utilization_percent": max(gpu_stats["util"])
+            if gpu_stats["util"]
+            else None,
+            "avg_gpu_power_watts": avg_gpu_power_watts,
+            "peak_gpu_power_watts": max(gpu_stats["power"])
+            if gpu_stats["power"]
+            else None,
+            "total_execution_time_hours": total_training_time_secs / 3600,
+            "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
+            "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
+            "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
+            "samples_per_sec": samples_per_sec,
+            "total_tokens_per_gpu_all_epochs": tokens_per_gpu_all_epochs,
+            "total_tokens_global_all_epochs": tokens_global_all_epochs,
+            "total_training_time_hours": total_training_time_secs / 3600,
+            "avg_epoch_training_time_sec": avg_epoch_time_sec,
+            "avg_epoch_training_time_hours": avg_epoch_time_hours,
+            "avg_step_training_time_sec": avg_step_time_sec,
+            "avg_step_training_time_hours": avg_step_time_hours,
+            "avg_gpu_flops": avg_gpu_flops,
+            "avg_gpu_mfu": avg_gpu_mfu,
+            "training_loss": log_history[-1]["loss"]
+            if log_history and "loss" in log_history[-1]
+            else None,
+            "validation_loss": avg_validation_loss,
+        }
+        save_summary_stats_json(
+            summary={**summary, **metrics_summary}, output_file=output_file
+        )
 
 
 class FlopCounter:

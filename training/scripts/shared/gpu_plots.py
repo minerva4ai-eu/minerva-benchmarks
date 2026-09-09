@@ -14,9 +14,11 @@ import seaborn as sb
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 # Define and creat the dir path where gpu monitoring data and this module's logs will be saved
-PROFILER_DIR = f"profiler/{os.environ['SLURM_JOB_ID']}/{os.environ['SLURM_NODEID']}-{os.environ['SLURMD_NODENAME']}"
+PROFILER_DIR = f"profiler/{os.environ['SLURM_JOB_ID']}.{os.environ.get('SLURM_STEP_ID', '0')}/{os.environ['SLURM_NODEID']}-{os.environ['SLURMD_NODENAME']}"
 PROFILER_PREFIX_PATH = os.getenv("PROFILER_PREFIX_PATH", "")
-OUTDIR = os.path.join(PROFILER_PREFIX_PATH, PROFILER_DIR)
+
+DEFAULT_OUTDIR = os.path.join(PROFILER_PREFIX_PATH, PROFILER_DIR)
+OUTDIR = os.environ.get("PROFILER_OUTDIR", "DEFAULT_OUTDIR")
 os.makedirs(OUTDIR, exist_ok=True)
 
 

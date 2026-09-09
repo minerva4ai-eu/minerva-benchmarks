@@ -9,6 +9,35 @@ from omegaconf import DictConfig
 from .base import ConstraintRule, RuleResult
 
 
+class GradientAccummulationStepsValidityRule(ConstraintRule):
+    """COnfiguration profile cannot run because framework lack of execution environment support"""
+
+    @property
+    def rule_name(
+        self,
+    ):
+        return "gradient_accummulation_steps_validity"
+
+    @classmethod
+    def is_power_of_two(cls, n: int):
+        return n > 0 and (n & (n - 1)) == 0
+
+    def check(self, c: BenchmarkConfig) -> RuleResult:
+
+        if c.model.training.grad_accum < 1 and not self.is_power_of_two(
+            c.model.training.grad_accum
+        ):
+            return RuleResult(
+                False,
+                self.rule_name,
+                f"Incorrect Gradient Accumulation Steps = {c.model.training.grad_accum}",
+            )
+        return RuleResult(
+            True,
+            self.rule_name,
+        )
+
+
 class ExecutionEnvironmentValidityRule(ConstraintRule):
     """COnfiguration profile cannot run because framework lack of execution environment support"""
 
@@ -322,7 +351,7 @@ class MinNodesMemoryRule(ConstraintRule):
             )
 
         batch = c.model.training.batch_size
-        seq_len = c.dataset.max_seq_len
+        seq_len = c.model.training.max_model_length
         gpus_per_node = c.arch.node.gpus_per_node
 
         # ── single-axis path (none/ddp/fsdp/zero*), unchanged ─────────
@@ -381,7 +410,7 @@ class MinNodesMemoryRule(ConstraintRule):
         gpus_per_node = c.arch.node.gpus_per_node
         arch_type = c.model.architecture_type
         batch = c.model.training.batch_size
-        seq_len = c.dataset.max_seq_len
+        seq_len = c.model.training.max_model_length
 
         megatron_parallelisms = c.model.megatron_parallelism_supported
 
@@ -569,6 +598,7 @@ ALL_RULES = [
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
     MinNodesMemoryRule(),
+    GradientAccummulationStepsValidityRule(),
 ]
 
 

@@ -17,19 +17,19 @@
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
 MODELS = [
     "gemma3_1b",
-    # "qwen2.5_7B_Instruct",
-    # "qwen2.5_72B_Instruct",
-    # "mistral_7b",
-    # "llama3_8b",
-    # "gemma3_12b",
-    # "llama3_70b",
+    "qwen2.5_7B_Instruct",
+    "qwen2.5_72B_Instruct",
+    "mistral_7b",
+    "llama3_8b",
+    "gemma3_12b",
+    "llama3_70b",
 ]
 FRAMEWORKS = [
     "accelerate-cuda130",
-    # "torchrun-cuda130",
-    # "deepspeed-accelerate-cuda130",
-    # "megatron-nemo-2509",
-    # "deepspeed-cuda130",
+    "torchrun-cuda130",
+    "deepspeed-accelerate-cuda130",
+    "megatron-nemo-2509",
+    "deepspeed-cuda130",
 ]
 DATASETS = ["alpaca", "squadv2", "tulu-3-sft-mixture"]
 
