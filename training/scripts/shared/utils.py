@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import time
+from pathlib import Path
 
 import torch
 import torch.distributed as dist
@@ -11,7 +12,7 @@ from transformers import (
     TrainerCallback,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 # --------------------------------------------------------------------------
@@ -69,9 +70,11 @@ def count_parameters(model):
 
 
 def save_summary_stats_json(summary, output_file):
+    output_dir = Path(output_file).parent
+    if not output_dir.exists():
+        output_dir.mkdir()
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
-    # print(f"Training summary saved to {output_file}")
 
 
 def timed(attr: str):
@@ -185,22 +188,23 @@ def get_fsdp_layer_to_wrap(model_name_or_path: str) -> list[str]:
 
 def save_training_summary(
     *,
-    output_file,
-    rank,
-    model_name,
-    dataset_name,
-    framework="accelerate",
-    parallelism_type="Unknown",
-    batch_size,
-    gradient_accumulation,
-    learning_rate,
-    total_training_time_secs,
-    total_tokens_this_gpu,
-    total_tokens_global,
-    avg_gpu_flops,
-    avg_gpu_mfu,
-    gpu_stats,
-    training_loss=None,
+    output_file: str,
+    rank: int,
+    model_name: str,
+    dataset_name: str,
+    framework: str = "Unknown",
+    parallelism_type: str = "Unknown",
+    batch_size: int,
+    gradient_accumulation: int,
+    learning_rate: float,
+    total_training_time_secs: float = 0,
+    total_tokens_this_gpu: int = 0,
+    total_tokens_global: int = 0,
+    avg_gpu_flops: float = 0,
+    avg_gpu_mfu: float = 0,
+    gpu_stats: dict[str, list[float]] | None = None,
+    training_loss: float = 0,
+    exception_msg: str = "",
 ):
     if dist.is_initialized():
         world_size = dist.get_world_size()
@@ -241,6 +245,10 @@ def save_training_summary(
         "gradient_accumulation": gradient_accumulation,
         "learning_rate": learning_rate,
     }
+    if exception_msg:
+        summary |= {"error": exception_msg}
+        save_summary_stats_json(summary, output_file)
+        return
 
     metrics_summary = {
         "avg_gpu_memory_gb": (

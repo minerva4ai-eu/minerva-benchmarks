@@ -6,8 +6,9 @@ from typing import Literal
 
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from omegaconf import OmegaConf
+from scripts.slurm.utils import load_config
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 @dataclass
@@ -41,7 +42,6 @@ class Configuration:
 
     # OUTPUTS
     output_dir: str
-    run_dir: str
 
     # GPU SPECS
     gpu_name: str
@@ -96,11 +96,6 @@ def get_fsdp_parser():
             + "Note: This may increase GPU memory usage, so use with caution on memory-constrained setups."
         ),
     )
-    # parser.add_argument(
-    #    "--gradient_checkpointing",
-    #    action="store_true",
-    #    help="Enable gradient checkpointing to save memory",
-    # )
     return parser
 
 
@@ -133,20 +128,25 @@ def get_peak_gpu_flops(config: BenchmarkConfig) -> float:
     return peak_gpu_tflops
 
 
-def load_config(path: str) -> BenchmarkConfig:
-    return OmegaConf.load(path)
-
-
 def construct_args(args: argparse.Namespace) -> Configuration:
     config = load_config(args.yaml_file)
+
+    RUNID = os.environ["SLURM_JOB_ID"]
+    RUNJD = os.environ.get("SLURM_STEP_ID", "0")
+    OUTPUT_DIR = os.path.join(
+        os.environ.get("LOG_DIR", os.path.join("outputs", "logs", "pyft")),
+        RUNID,
+        f"step-{RUNJD}",
+    )
+
     train_args = Configuration(
         model_path=config.model.path,
         model_name=config.model.path.split("/")[-1],
         dataset_path=config.dataset.path,
         dataset_name=config.dataset.name,
         dataloader_num_workers=args.dataloader_num_workers,
-        dataset_train_files=config.dataset.train if config.dataset.train else [],
-        dataset_validation_files=config.dataset.validation
+        dataset_train_files=list(config.dataset.train) if config.dataset.train else [],
+        dataset_validation_files=list(config.dataset.validation)
         if config.dataset.validation
         else [],
         precision=config.model.training.precision,
@@ -159,8 +159,7 @@ def construct_args(args: argparse.Namespace) -> Configuration:
         max_length=config.model.training.max_model_length
         if not OmegaConf.is_missing(config.model.training, "max_model_length")
         else config.dataset.max_seq_len,
-        run_dir=config.run_dir,
-        output_dir=os.path.join(config.run_dir, args.output_dir),
+        output_dir=OUTPUT_DIR,
         logging_steps=args.logging_steps,
         warmup_ratio=args.warmup_ratio,
         weight_decay=args.weight_decay,
@@ -176,6 +175,8 @@ def construct_args(args: argparse.Namespace) -> Configuration:
     logger.info("model_name = %s", train_args.model_name)
     logger.info("dataset_path = %s", train_args.dataset_path)
     logger.info("dataset_name = %s", train_args.dataset_name)
+    logger.info("dataset_train_files = %s", train_args.dataset_train_files)
+    logger.info("dataset_validation_files = %s", train_args.dataset_validation_files)
     logger.info("dataset = %s", train_args.dataset_name)
     logger.info("precision = %s", train_args.precision)
     logger.info("batch_size = %s", train_args.batch_size)
@@ -187,7 +188,6 @@ def construct_args(args: argparse.Namespace) -> Configuration:
     logger.info("epochs = %s", train_args.epochs)
     logger.info("max_length = %s", train_args.max_length)
     logger.info("enable_compile = %s", train_args.enable_compile)
-    logger.info("run_dir = %s", train_args.run_dir)
     logger.info("output_dir = %s", train_args.output_dir)
     return train_args
 

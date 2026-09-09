@@ -6,7 +6,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import construct_args
+from scripts.shared.args import construct_args, get_parser
 from scripts.shared.args import get_fsdp_parser as get_parser
 from scripts.shared.data import (
     collate_fn,
@@ -15,6 +15,7 @@ from scripts.shared.data import (
 )
 from scripts.shared.flops import mfu_callback_from_hf_config
 from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
     is_main_process,
     print_rank,
@@ -46,25 +47,11 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-args = get_fsdp_parser().parse_args()
+rank, world_size, local_rank = setup_distributed()
+setup_logging(level=logging.INFO, yaml=get_parser().parse_args().yaml_file)
 
-import logging
-from datetime import datetime
-
-RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime('%Y%m%d%H%M%S'))
-RUNJD = os.environ.get("SLURM_STEP_ID")
-LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR, exist_ok=True)
-
-# FIXME: logging level
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s |  %(levelname)s | %(name)s : %(message)s",
-    handlers=[logging.FileHandler(os.path.join(LOG_DIR, f"minerva-step{RUNJD}.log"))],
-)
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
 
 def load_model(model_path, dtype):
     """

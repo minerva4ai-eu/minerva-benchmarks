@@ -1,12 +1,8 @@
 import functools
 import logging
 import time
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    pass
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 def timed(attr: str):

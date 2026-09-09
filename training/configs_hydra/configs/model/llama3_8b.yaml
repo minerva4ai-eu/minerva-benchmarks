@@ -51,7 +51,3 @@ frameworks_supported:
 parallelism_supported:
   - fsdp
 
-
-combinations:
-  batch_sizes: [1]
-  grad_accums: [8]

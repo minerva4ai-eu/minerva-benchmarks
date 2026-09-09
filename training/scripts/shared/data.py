@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
 class DatasetsNotPreparedError(Exception):
@@ -56,6 +56,20 @@ def _resolve_dataset_files(dataset_root: str, dataset_files: list[str]) -> list[
         + f"Could not join paths:\n\t- {dataset_root}"
         + f"Could not join paths:\n\t- {dataset_root}"
     )
+
+    dataset_full_paths = []
+    for item in dataset_files:
+        if os.path.isabs(str(item)):
+            dataset_full_paths.append(str(item))
+            continue
+        full_path = os.path.join(str(dataset_root), str(item))
+        assert os.path.exists(full_path), (
+            "Train/validation files should be absolute or direct subpaths of the dataset root path! "
+            + f"Could not join paths:\n\t- {dataset_root}"
+            + f"Could not join paths:\n\t- {dataset_root}"
+        )
+        dataset_full_paths.append(str(full_path))
+    return dataset_full_paths
 
 
 def parse_dataset_paths(

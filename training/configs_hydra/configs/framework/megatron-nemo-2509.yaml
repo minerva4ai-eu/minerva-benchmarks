@@ -17,10 +17,6 @@ megatron_parallelism:
 scripts:
   run: scripts/nemo-megatron-common/run-nemo_megatron.slurm
   finetune: scripts/nemo-megatron-common/nemo_megatron.py
-  copy_files:
-    - ${framework.scripts.run}
-    - ${framework.scripts.finetune}
-    - scripts/nemo-megatron-common/utils
 
 python_environment: 
 singularity_container: ${abs_path:envs/benchmarks/nemo-2509/singularity_nemo-2509.sif}

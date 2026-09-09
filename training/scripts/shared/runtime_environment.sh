@@ -49,10 +49,10 @@ training_build_runtime_prefix() {
                 runtime_prefix+=" ${SINGULARITY_BINDS}"
             fi
             runtime_prefix+=" --home ${LAUNCH_FOLDER:-$PWD} ${SINGULARITY_CONTAINER}"
-            echo "$runtime_prefix"
+            echo "$runtime_prefix "
             ;;
         venv|host)
-            echo "$VENV_PATH/bin/python"
+            echo ""
             ;;
         *)
             echo "Unknown execution mode: $execution_mode" >&2
