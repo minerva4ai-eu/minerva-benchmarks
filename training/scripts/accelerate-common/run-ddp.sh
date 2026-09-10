@@ -21,6 +21,7 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --main_process_port $MASTER_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $SLURM_STEP_NUM_NODES \
+    --dynamo_backend inductor --dynamo_use_dynamic \
       $TRAIN_SCRIPT --yaml $1"
 
 # Start monitoring in background

@@ -31,6 +31,9 @@ args = parse_args()
 import logging
 from datetime import datetime
 
+# Fixes recompilation issues for torchrun (!requires flash_attn2!)
+torch.compiler.config.assume_static_by_default = False
+
 RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime('%Y%m%d%H%M%S'))
 RUNJD = os.environ.get("SLURM_STEP_ID")
 LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
@@ -181,7 +184,7 @@ def main():
             {
                 "torch_compile": True,
                 "torch_compile_backend": "inductor",
-                # "torch_compile_mode": "max-autotune-no-cudagraphs",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
             }
             if bool(enable_compile)
             else {}
@@ -211,23 +214,32 @@ def main():
         )
 
         logger.info(f"Loading Model... dtype: {dtype}")
-        if enable_compile:
-            # torch._dynamo.exc.BackendCompilerFailed: backend='compile_fn' raised:
-            # NotImplementedError: DDPOptimizer backend: Found a higher order op in the graph. This is not supported.
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                device_map=None,  # Trainer will put model on device
-            )
-        else:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                device_map=None,  # Trainer will put model on device
-                attn_implementation="flash_attention_2",
-            )
+
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            device_map=None,  # Trainer will put model on device
+            attn_implementation="flash_attention_2",
+        )
+        
+        # if enable_compile:
+        #     # torch._dynamo.exc.BackendCompilerFailed: backend='compile_fn' raised:
+        #     # NotImplementedError: DDPOptimizer backend: Found a higher order op in the graph. This is not supported.
+        #     model = AutoModelForCausalLM.from_pretrained(
+        #         model_name,
+        #         torch_dtype=dtype,
+        #         low_cpu_mem_usage=True,
+        #         device_map=None,  # Trainer will put model on device
+        #     )
+        # else:
+        #     model = AutoModelForCausalLM.from_pretrained(
+        #         model_name,
+        #         torch_dtype=dtype,
+        #         low_cpu_mem_usage=True,
+        #         device_map=None,  # Trainer will put model on device
+        #         attn_implementation="flash_attention_2",
+        #     )
         logger.info("Model Loaded")
 
         flops_callback = mfu_callback_from_hf_config(

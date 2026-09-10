@@ -28,6 +28,9 @@ args = parse_args()
 import logging
 from datetime import datetime
 
+# Fixes recompilation issues for torchrun (?!requires flash_attn2!?)
+torch.compiler.config.assume_static_by_default = False
+
 RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime('%Y%m%d%H%M%S'))
 RUNJD = os.environ.get("SLURM_STEP_ID")
 LOG_DIR = os.path.join("outputs", "logs", "pyft", RUNID)
@@ -154,7 +157,7 @@ def main():
             {
                 "torch_compile": True,
                 "torch_compile_backend": "inductor",
-                # "torch_compile_mode": "max-autotune-no-cudagraphs",
+                "torch_compile_mode": "max-autotune-no-cudagraphs",
             }
             if bool(enable_compile)
             else {}
