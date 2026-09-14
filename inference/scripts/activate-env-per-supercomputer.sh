@@ -49,7 +49,9 @@ case "$MACHINE" in
         which python
         ;;
 
-
+    cines-adastra-mi250 | cines-adastra-mi300)
+        which python
+        ;;
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
