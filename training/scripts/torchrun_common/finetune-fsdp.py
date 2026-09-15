@@ -1,13 +1,12 @@
 import functools
 import gc
-import logging
 import math
 import os
 import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import construct_args
+from scripts.shared.args import construct_config
 from scripts.shared.args import get_fsdp_parser as get_parser
 from scripts.shared.data import (
     collate_fn,
@@ -57,7 +56,6 @@ setup_logging(
 
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 logger_rank = RankAdapter(logger, {})
-
 
 def load_model(model_path, dtype):
     """
@@ -209,7 +207,7 @@ def main(repeatid: int):
     jobstepid = os.environ["SLURM_STEP_ID"]
     jobsteprocid = os.environ["SLURM_PROCID"]
 
-    args = construct_args(get_parser().parse_args())
+    args = construct_config(get_parser().parse_args())
 
     model_path = args.model_path
     model_name = args.model_name
@@ -265,7 +263,7 @@ def main(repeatid: int):
     model = wrap_fsdp(
         model,
         dtype,
-        max_comm_comp_overlap=args.fsdp_max_comm_comp_overlap,
+        max_comm_comp_overlap=args.max_comm_comp_overlap,
     )
     logger.info("Model wrapped with FSDP.")
 
@@ -306,6 +304,7 @@ def main(repeatid: int):
         model.train()
         total_tokens_this_gpu = 0
         global_step = 0
+        step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
         start_time = time.time()
 
         flopsCallback_megatronLM = mfu_callback_from_hf_config(
@@ -323,9 +322,9 @@ def main(repeatid: int):
             if global_step == 0:
                 flopsCallback_megatronLM.on_step_begin()
             for micro_step, batch in enumerate(train_dataloader):
-                logger.info(
-                    f"micro_step:{micro_step} - batch_keys:{batch.keys()} - batch_len:{len(batch[list(batch.keys())[0]])}",
-                )
+                # logger.info(
+                #    f"micro_step:{micro_step} - batch_keys:{batch.keys()} - batch_len:{len(batch[list(batch.keys())[0]])}",
+                # )
                 batch = {
                     k: v.to(local_rank, non_blocking=True) for k, v in batch.items()
                 }
@@ -333,6 +332,7 @@ def main(repeatid: int):
                 outputs = model(**batch)
                 loss = outputs.loss / grad_accum_steps
                 loss.backward()
+                step_loss += outputs.loss
 
                 total_tokens_this_gpu += batch["input_ids"].numel()
 
@@ -352,6 +352,7 @@ def main(repeatid: int):
                         gradient_accumulation_steps=grad_accum_steps,
                         global_step=global_step,
                     )
+                    step_loss = step_loss / grad_accum_steps
 
                     if global_step % args.logging_steps == 0:
                         logger.info(
@@ -363,24 +364,58 @@ def main(repeatid: int):
                             f"gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
                         )
 
-                    if args.max_steps is not None and global_step >= int(
-                        args.max_steps
-                    ):
-                        break
+        if args.max_steps is not None and global_step >= int(args.max_steps):
+            break
 
                     flopsCallback_megatronLM.on_step_begin()
+                    step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
 
-            if args.max_steps is not None and global_step >= int(args.max_steps):
-                break
+    # --- Global token count + summary ---
+    tokens_tensor = torch.tensor(total_tokens_this_gpu, device=local_rank)
+    dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
+    total_tokens_global = tokens_tensor.item()
 
-        elapsed_total = time.time() - start_time
-        stop_flag["stop"] = True
-        time.sleep(2)
+    avg_mfu = (
+        sum(flopsCallback_megatronLM.state.mfu_this_gpu)
+        / len(flopsCallback_megatronLM.state.mfu_this_gpu)
+        if flopsCallback_megatronLM.state.mfu_this_gpu
+        else None
+    )
+    avg_tflops = (
+        sum(flopsCallback_megatronLM.state.tflops_this_gpu)
+        / len(flopsCallback_megatronLM.state.tflops_this_gpu)
+        if flopsCallback_megatronLM.state.tflops_this_gpu
+        else None
+    )
+    summary_log = [
+        f"* Total training time (s): {elapsed_total:.2f}",
+        f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
+        f"* Avg TFLOPs/s/GPU: {avg_tflops}",
+        f"* Avg MFU: {avg_mfu}",
+    ]
 
-        # --- Global token count + summary ---
-        tokens_tensor = torch.tensor(total_tokens_this_gpu, device=local_rank)
-        dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
-        total_tokens_global = tokens_tensor.item()
+    for i in range(world_size):
+        print_rank(i, "=== TRAINING SUMMARY ===")
+        print_rank(i, "\n".join(summary_log))
+
+    save_training_summary(
+        output_dir=output_dir,
+        rank=rank,
+        model_name=model_name,
+        dataset_name=args.dataset,
+        framework="torchrun",
+        parallelism_type="fsdp",
+        batch_size=BATCH_SIZE,
+        gradient_accumulation=args.gradient_accumulation_steps,
+        learning_rate=args.lr,
+        total_training_time_secs=elapsed_total,
+        total_tokens_this_gpu=total_tokens_this_gpu,
+        total_tokens_global=total_tokens_global,
+        avg_gpu_flops=avg_tflops,
+        avg_gpu_mfu=avg_mfu,
+        gpu_stats=gpu_stats_during,
+        training_loss
+    )
 
         avg_mfu = (
             sum(flopsCallback_megatronLM.state.mfu_this_gpu)
@@ -407,12 +442,13 @@ def main(repeatid: int):
         save_training_summary(
             output_file=os.path.join(
                 args.output_dir,
+                f"repeatid-{repeatid}",
                 f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
             ),
             rank=rank,
             model_name=model_name,
             dataset_name=args.dataset_name,
-            framework="accelerate",
+            framework="torchrun",
             parallelism_type="fsdp",
             batch_size=args.batch_size,
             gradient_accumulation=args.gradient_accumulation_steps,
@@ -423,6 +459,7 @@ def main(repeatid: int):
             avg_gpu_flops=avg_tflops,
             avg_gpu_mfu=avg_mfu,
             gpu_stats=gpu_stats_during,
+            training_loss=avg_final_loss.item(),
         )
         logger.info("Fine-tuning completed successfully.")
     except Exception as e:
@@ -430,7 +467,7 @@ def main(repeatid: int):
         save_training_summary(
             output_file=os.path.join(
                 args.output_dir,
-                str(repeatid),
+                f"repeatid-{repeatid}",
                 f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
             ),
             rank=rank,

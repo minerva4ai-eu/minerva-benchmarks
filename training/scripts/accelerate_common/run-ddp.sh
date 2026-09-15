@@ -17,8 +17,6 @@ echo "runtime prefix: $runtime_prefix"
 
 echo yaml_path=$1
 
-MASTER_PORT=29500
-# export MASTER_ADDR=$HEAD_NODE
 NUM_PROCS=$(($SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
@@ -29,10 +27,10 @@ train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
     --main_process_ip $HEAD_NODE \
-    --main_process_port $MASTER_PORT \
+    --main_process_port $HEAD_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $SLURM_STEP_NUM_NODES \
-      $TRAIN_SCRIPT --yaml $1"
+      $TRAIN_MODULE --yaml $1"
 
 prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 

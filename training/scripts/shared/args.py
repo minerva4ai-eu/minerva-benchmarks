@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
+from argparse import BooleanOptionalAction
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
@@ -25,6 +27,7 @@ class Configuration:
     dataset_validation_files: list[str]
 
     # TRAINING PARAMS
+    global_batch_size: int
     batch_size: int
     lr: float
     warmup_ratio: float
@@ -48,7 +51,37 @@ class Configuration:
     peak_flops: float
 
     # FSDP
-    fsdp_max_comm_comp_overlap: bool = False
+    fsdp_max_comm_comp_overlap: bool
+
+
+@dataclass
+class MegatronConfiguration(Configuration):
+    # MEGATRON
+    ## Mode
+    prepare: bool
+    ## Benchmarking / debugging arguments
+    test: bool
+    test_nsteps: bool
+    enable_flop_counter: bool
+    pytorch_profiler: bool
+    ## DataLoader related arguments
+    dataset_root: Path
+    ## Optimizer related arguments
+    min_lr: str
+    ## Model related arguments
+    nemo_ckpt_path: str
+    fp8: bool
+    ## Distributed training arguments
+    devices_per_node: int
+    num_nodes: int
+    dp_size: int
+    pp_size: int
+    tp_size: int
+    cp_size: int
+    ep_size: int
+    sequence_parallel: bool
+    log_every_n_steps: int
+    wandb_project: str
 
 
 # --- Argument Parsing ---#
@@ -66,6 +99,7 @@ def get_parser():
 
     parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
 
+    # Dataloader related arguments
     parser.add_argument(
         "--dataloader_num_workers",
         type=int,
@@ -73,14 +107,22 @@ def get_parser():
         help="Number of workers for dataloader",
     )
 
-    parser.add_argument("--lr", type=float, default=1e-04, help="Learning rate")
+    # Optimizer related arguments
     parser.add_argument(
-        "--warmup_ratio",
+        "--learning-rate", type=float, default=1e-5, help="Learning rate for Adam."
+    )
+    parser.add_argument(
+        "--weight-decay", type=float, default=0.1, help="Weight decay for Adam."
+    )
+    parser.add_argument(
+        "--min-lr", type=float, default=1e-6, help="Minimum LR for cosine decay."
+    )
+    parser.add_argument(
+        "--warmup-ratio",
         type=float,
         default=0.1,
-        help="Warmup ratio for learning rate",
+        help="Fraction of training steps for linear LR warmup (0.1 = 10%).",
     )
-    parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
     return parser
 
 
@@ -111,6 +153,68 @@ def get_deepspeed_parser():
     return parser
 
 
+MEGATRON_DEFAULT_CKPT_PATH = "nemo_ckpt"
+
+
+def get_megatron_parser():
+    """Process command-line arguments."""
+    parser = get_parser()
+
+    # Mode
+    parser.add_argument(
+        "--prepare",
+        action=BooleanOptionalAction,
+        default=False,
+        help="One-time prep (single process): build JSONL from the HF dataset. No training.",
+    )
+
+    # Benchmarking / debugging arguments
+    parser.add_argument(
+        "--test",
+        action=BooleanOptionalAction,
+        default=False,
+        help="Run in test mode for a limited number of steps.",
+    )
+    parser.add_argument(
+        "--test-nsteps",
+        type=int,
+        default=100,
+        help="Number of steps to run in test mode.",
+    )
+    parser.add_argument(
+        "--enable-flop-counter",
+        action=BooleanOptionalAction,
+        default=False,
+        help="Compute FLOPs per step.",
+    )
+    parser.add_argument(
+        "--pytorch-profiler",
+        action=BooleanOptionalAction,
+        default=False,
+        help="Whether to use pytorch profiler.",
+    )
+    parser.add_argument(
+        "--nemo-ckpt-path",
+        type=Path,
+        default=Path(f"./{MEGATRON_DEFAULT_CKPT_PATH}"),
+        help="Where the converted NeMo checkpoint is written.",
+    )
+    # parser.add_argument(
+    #    "--fp8",
+    #    action=BooleanOptionalAction,
+    #    default=False,
+    #    help="Enable FP8 training (via MegatronMixedPrecision).",
+    # )
+
+    # Logging / Checkpointing arguments
+    parser.add_argument(
+        "--log-every-n-steps", type=int, default=10, help="Logging frequency."
+    )
+    parser.add_argument("--wandb-project", help="Wandb project name.")
+
+    return parser
+
+
 def get_peak_gpu_flops(config: BenchmarkConfig) -> float:
 
     # FIXME: get theoretical flops
@@ -128,7 +232,7 @@ def get_peak_gpu_flops(config: BenchmarkConfig) -> float:
     return peak_gpu_tflops
 
 
-def construct_args(args: argparse.Namespace) -> Configuration:
+def construct_config(args: argparse.Namespace) -> Configuration:
     config = load_config(args.yaml_file)
 
     RUNID = os.environ["SLURM_JOB_ID"]
@@ -136,7 +240,7 @@ def construct_args(args: argparse.Namespace) -> Configuration:
     OUTPUT_DIR = os.path.join(
         os.environ.get("LOG_DIR", os.path.join("outputs", "logs", "pyft")),
         RUNID,
-        f"step-{RUNJD}",
+        f"outputs/training-results/step-{RUNJD}",
     )
 
     train_args = Configuration(
@@ -150,6 +254,7 @@ def construct_args(args: argparse.Namespace) -> Configuration:
         if config.dataset.validation
         else [],
         precision=config.model.training.precision,
+        global_batch_size=config.model.training.global_batch_size,
         batch_size=config.model.training.batch_size,
         gradient_accumulation_steps=config.model.training.grad_accum,
         lr=config.model.training.lr,
@@ -166,11 +271,12 @@ def construct_args(args: argparse.Namespace) -> Configuration:
         gradient_checkpointing=config.model.training.gradient_checkpointing,
         gpu_name=config.arch.gpu.name,
         peak_flops=get_peak_gpu_flops(config),
+        fsdp_max_comm_comp_overlap=args.max_comm_comp_overlap
+        if "max_comm_comp_overlap" in args
+        else False,
     )
 
-    if "max_comm_comp_overlap" in args:
-        train_args.fsdp_max_comm_comp_overlap = args.max_comm_comp_overlap
-
+    logger.info("yaml_file_path = %s", args.yaml_file)
     logger.info("model_path = %s", train_args.model_path)
     logger.info("model_name = %s", train_args.model_name)
     logger.info("dataset_path = %s", train_args.dataset_path)
@@ -192,66 +298,37 @@ def construct_args(args: argparse.Namespace) -> Configuration:
     return train_args
 
 
-"""def _get_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        # TODO: Fill in argparse description
-        description="ToDo"
-    )
-    parser.add_argument(
-        "--model", type=str, required=True, help="Path to pretrained model"
-    )
-    parser.add_argument("--data", type=str, required=True, help="Path to JSON dataset")
-    parser.add_argument("--dataset", type=str, required=True, help="Dataset name")
-    parser.add_argument(
-        "--output_dir", type=str, default="./output", help="Output directory"
-    )
-    parser.add_argument("--epochs", type=int, default=None, help="Number of epochs")
-    parser.add_argument(
-        "--batch_size", type=int, default=1, help="Per-device batch size"
-    )
-    parser.add_argument("--lr", type=float, default=1e-04, help="Learning rate")
-    parser.add_argument(
-        "--warmup_ratio",
-        type=float,
-        default=0.1,
-        help="Warmup ratio for learning rate",
-    )
-    parser.add_argument("--weight_decay", type=float, default=2e-5, help="Weight Decay")
-    parser.add_argument("--logging_steps", type=float, default=1, help="Logging Steps")
+def megatron_construct_config(args: argparse.Namespace) -> MegatronConfiguration:
+    cfg = construct_config(args)
+    config = load_config(args.yaml_file)
 
-    parser.add_argument("--max_steps", type=float, default=None, help="Maximum steps")
-    parser.add_argument("--max_length", type=int, default=1024, help="Max token length")
-    parser.add_argument("--epochs_save_every", type=int, default=1)
-    parser.add_argument(
-        "--gradient_accumulation_steps",
-        type=int,
-        default=16,
-        help="Gradient accumulation steps",
-    )
-    parser.add_argument(
-        "--dataloader_num_workers",
-        type=int,
-        default=4,
-        help="Number of workers for dataloader",
-    )
-    parser.add_argument(
-        "--precision",
-        type=str,
-        default="fp32",
-        choices=["fp32", "fp16", "bf16"],
-        help="Precision type for model weights (fp32, fp16, bf16)",
-    )
-    parser.add_argument(
-        "--enable_compile",
-        default=False,
-        action="store_true",
-        help="Disable torch.compile() in the custom trainer to avoid compilation-related device/runtime issues.",
-    )
-    parser.add_argument(
-        "--gradient_checkpointing",
-        default=False,
-        action="store_true",
-        help="",
-    )
+    from configs_hydra.dataclasses_hydra.arch import PrecisionType
 
-    return parser"""
+    train_args = MegatronConfiguration(
+        prepare=args.prepare,
+        ## Benchmarking / debugging arguments
+        test=args.test,
+        test_nsteps=args.test_nsteps,
+        enable_flop_counter=args.enable_flop_counter,
+        pytorch_profiler=args.pytorch_profiler,
+        ## DataLoader related arguments
+        dataset_root=Path(cfg.dataset_path),
+        ## Optimizer related arguments
+        min_lr=args.min_lr,
+        ## Model related arguments
+        nemo_ckpt_path=os.path.join(cfg.model_path, MEGATRON_DEFAULT_CKPT_PATH),
+        fp8=config.model.training.precision == PrecisionType.bf16_fp8.value,
+        ## Distributed training arguments
+        devices_per_node=config.slurm.sbatch.gpus_per_node,
+        num_nodes=config.slurm.sbatch.nodes,
+        dp_size=config.framework.megatron_parallelism.dp,
+        pp_size=config.framework.megatron_parallelism.pp,
+        tp_size=config.framework.megatron_parallelism.tp,
+        cp_size=config.framework.megatron_parallelism.cp,
+        ep_size=config.framework.megatron_parallelism.cp,
+        sequence_parallel=config.framework.megatron_parallelism.sp,
+        log_every_n_steps=args.log_every_n_steps,
+        wandb_project=args.wandb_project,
+        **cfg.__dict__,
+    )
+    return train_args

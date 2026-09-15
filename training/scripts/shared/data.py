@@ -1,4 +1,3 @@
-import json
 import os
 from typing import TYPE_CHECKING
 
@@ -86,16 +85,13 @@ def parse_dataset_paths(
         (train_path, val_path, is_split)
         is_split = True if both train and val are provided
     """
-    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
-    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
-    if train_files is None:
-        train_files = json.loads(os.environ.get("DATASET_TRAIN", "[]"))
-    if validation_files is None:
-        validation_files= json.loads(
-        os.environ.get("DATASET_VALIDATION", "[]")
-    )
-    print(f"DATASET_TRAIN: {os.environ.get('DATASET_TRAIN', '[]')}")
-    print(f"DATASET_VALIDATION: {os.environ.get('DATASET_VALIDATION', '[]')}")
+
+    # if not train_files:
+    #    train_files = os.environ.get("DATASET_TRAIN", "").split(",")
+    # if not validation_files:
+    #    validation_files = os.environ.get("DATASET_VALIDATION", "").split(",")
+    # print(f"train_files: {train_files}")
+    # print(f"validation_files: {validation_files}")
 
     if train_files or validation_files:
         if not train_files or not validation_files:

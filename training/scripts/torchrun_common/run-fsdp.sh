@@ -47,31 +47,15 @@ gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.
 
 
 train_command="${runtime_prefix:+$runtime_prefix} torchrun \
-    --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-    --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-    $TRAIN_SCRIPT \
-      --model $MODEL_PATH \
-      --data '$DATASET_PATH' \
-      --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
-      --batch_size $BATCH_SIZE \
-      --max_length $MAX_MODEL_LENGTH \
-      ${EPOCHS:+--epochs "$EPOCHS"} \
-      ${STEPS:+--max_steps "$STEPS"} \
-      --precision $PRECISION \
-      --lr $LR \
-      --gradient_accumulation_steps $GRAD_ACCUM \
-      --dataloader_num_workers 4 \
-      --dataset $DATASET \
-      --max_comm_comp_overlap "
+    --nnodes $SLURM_STEP_NUM_NODES \
+    --nproc_per_node $SLURM_GPUS_ON_NODE \
+    --rdzv_id $SLURM_JOB_ID.$SLURM_STEP_ID \
+    --rdzv_backend c10d \
+    --rdzv_endpoint ${HEAD_NODE}:${MASTER_PORT} \
+    $TRAIN_MODULE --yaml $1 --max_comm_comp_overlap"
 
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare \
-        --model $MODEL_PATH \
-        --data $DATASET_PATH \
-        --dataset $DATASET \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH "
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1 "
 
 echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then

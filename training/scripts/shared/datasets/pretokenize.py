@@ -3,13 +3,13 @@ import os
 import sys
 import time
 
-from scripts.shared.args import construct_args, get_parser
+from scripts.shared.args import construct_config, get_parser
 from scripts.shared.data import load_and_prepare_raw_dataset, prepare_packed_dataset
 from transformers import (
     AutoTokenizer,
 )
 
-cfg = construct_args(get_parser().parse_args())
+cfg = construct_config(get_parser().parse_args())
 
 MAX_LENGTH = cfg.max_length
 BATCH_SIZE = cfg.batch_size

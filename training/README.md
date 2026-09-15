@@ -114,9 +114,10 @@ training_MN5/
 │   │   ├── custom_train.py           # CustomTrainer + MegatronFlopsCallback
 │   │   ├── data.py                   # Dataset loading & preprocessing
 │   │   └── utils.py                  # print_rank, count_parameters, timed
-│   ├── accelerate-common/            # HuggingFace Accelerate
-│   ├── torchrun-common/              # PyTorch native distributed
-│   ├── deepspeed-common/             # Microsoft DeepSpeed
+│   ├── accelerate_common/            # HuggingFace Accelerate
+│   ├── torchrun_common/              # PyTorch native distributed
+│   ├── deepspeed_common/             # Microsoft DeepSpeed
+│   ├── nemo_megatron_common/             # Microsoft DeepSpeed
 │   ├── slurm/                        # SLURM CLI (see scripts/slurm/README.md)
 │   ├── activate-env-variables-per-supercomputer.sh
 │   ├── utils.sh                      # Shell utilities

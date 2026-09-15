@@ -46,10 +46,10 @@ if int(os.environ.get("RANK", 0)) != 0:
     os.environ.pop("NCCL_DEBUG_FILE", None)
 
 import json
-from argparse import ArgumentParser, BooleanOptionalAction, Namespace
+import logging
+import os
 from math import ceil
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import lightning.pytorch as pl
 import torch
@@ -60,6 +60,15 @@ from nemo import lightning as nl
 from nemo.collections import llm
 from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import AutoTokenizer
 from nemo.lightning.pytorch.optim import CosineAnnealingScheduler
+from scripts.nemo_megatron_common.utils import MegatronBenchmarkCallback
+from scripts.shared.args import (
+    get_megatron_parser,
+    megatron_construct_config,
+)
+
+# scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.slurm.utils import load_config
 from torch.profiler import (
     ProfilerActivity,
     profile,
@@ -67,13 +76,24 @@ from torch.profiler import (
     tensorboard_trace_handler,
 )
 from torch.utils.flop_counter import FlopCounterMode
-from utils import MegatronBenchmarkCallback
+from transformers import AutoTokenizer
+
+if TYPE_CHECKING:
+    from scripts.shared.args import MegatronConfiguration
 
 # Add the (Model, Config) pair that matches your HF checkpoint here.
 MODEL_ARCHS = {
     "Qwen2.5-7B-Instruct": (llm.Qwen2Model, llm.Qwen25Config7B),
     "Qwen2.5-72B-Instruct": (llm.Qwen2Model, llm.Qwen25Config72B),
 }
+
+_args = get_megatron_parser().parse_args()
+config = load_config(_args.yaml_file)
+setup_logging(level=logging.INFO, cfg=config)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
+
+args = megatron_construct_config(_args)
 
 
 class FlopCounterCallback(pl.Callback):
@@ -113,7 +133,9 @@ class FlopCounterCallback(pl.Callback):
         if self.enabled and self.flops_list:
             import numpy as np
 
-            print(f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs")
+            logger.info(
+                f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs"
+            )
 
 
 class TorchProfilerCallback(pl.Callback):
@@ -152,214 +174,81 @@ class TorchProfilerCallback(pl.Callback):
         self.profiler.stop()
 
 
-def parse_args() -> Namespace:
-    """Process command-line arguments."""
-    parser = ArgumentParser()
-
-    # Mode
-    parser.add_argument(
-        "--prepare",
-        action=BooleanOptionalAction,
-        default=False,
-        help="One-time prep (single process): build JSONL from the HF dataset. No training.",
-    )
-
-    # Training related arguments
-    parser.add_argument(
-        "--global-batch-size",
-        type=int,
-        default=128,
-        help="Number of examples seen for one model update.",
-    )
-    parser.add_argument("--batch-size", type=int, default=1, help="Batch size per GPU.")
-    parser.add_argument(
-        "--seq-length",
-        type=int,
-        default=4096,
-        help="Sequence length of each sample per GPU.",
-    )
-    parser.add_argument("--epochs", type=int, default=2, help="Number of epochs.")
-
-    # Benchmarking / debugging arguments
-    parser.add_argument(
-        "--test",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Run in test mode for a limited number of steps.",
-    )
-    parser.add_argument(
-        "--test-nsteps",
-        type=int,
-        default=100,
-        help="Number of steps to run in test mode.",
-    )
-    parser.add_argument(
-        "--enable-flop-counter",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Compute FLOPs per step.",
-    )
-    parser.add_argument(
-        "--pytorch-profiler",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Whether to use pytorch profiler.",
-    )
-
-    # DataLoader related arguments
-    parser.add_argument(
-        "--dataset-path",
-        type=Path,
-        help="HuggingFace dataset path. Used only in --prepare.",
-    )
-    parser.add_argument(
-        "--dataset-root",
-        type=Path,
-        required=True,
-        help="Directory with training.jsonl / validation.jsonl.",
-    )
-    parser.add_argument(
-        "--num-workers",
-        type=int,
-        default=4,
-        help="Number of workers spawned by the dataloader.",
-    )
-
-    # Optimizer related arguments
-    parser.add_argument(
-        "--lr-warmup-ratio",
-        type=float,
-        default=0.1,
-        help="Fraction of training steps for linear LR warmup (0.1 = 10%).",
-    )
-    parser.add_argument(
-        "--learning-rate", type=float, default=1e-5, help="Learning rate for Adam."
-    )
-    parser.add_argument(
-        "--min-lr", type=float, default=1e-6, help="Minimum LR for cosine decay."
-    )
-    parser.add_argument(
-        "--weight-decay", type=float, default=0.1, help="Weight decay for Adam."
-    )
-
-    # Model related arguments
-    parser.add_argument(
-        "--model-path", type=Path, help="Local HuggingFace model directory."
-    )
-    parser.add_argument(
-        "--nemo-ckpt-path",
-        type=Path,
-        default=Path("./nemo_ckpt"),
-        help="Where the converted NeMo checkpoint is written.",
-    )
-    parser.add_argument(
-        "--activation-checkpointing",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Enable full activation recomputation.",
-    )
-    parser.add_argument(
-        "--fp8",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Enable FP8 training (via MegatronMixedPrecision).",
-    )
-
-    # Distributed training arguments
-    parser.add_argument(
-        "--devices-per-node", type=int, default=1, help="Number of GPUs per node."
-    )
-    parser.add_argument("--num-nodes", type=int, default=1, help="Number of nodes.")
-    parser.add_argument("--dp-size", type=int, default=1, help="Data parallel size.")
-    parser.add_argument(
-        "--pp-size", type=int, default=1, help="Pipeline parallel size."
-    )
-    parser.add_argument("--tp-size", type=int, default=1, help="Tensor parallel size.")
-    parser.add_argument("--cp-size", type=int, default=1, help="Context parallel size.")
-    parser.add_argument(
-        "--sequence-parallel",
-        action=BooleanOptionalAction,
-        default=False,
-        help="Enable sequence parallelism (requires TP>1).",
-    )
-
-    # Logging / Checkpointing arguments
-    parser.add_argument(
-        "--log-every-n-steps", type=int, default=10, help="Logging frequency."
-    )
-    parser.add_argument("--wandb-project", help="Wandb project name.")
-
-    return parser.parse_args()
-
-
-def prepare(args: Namespace) -> None:
+def prepare(cfg: "MegatronConfiguration") -> None:
     """One-time, single-process prep: build training.jsonl / validation.jsonl from the HF dataset."""
     import sys
-
-    sys.stdout.flush()
-
-    print(f"[prepare] model_path={args.model_path}", flush=True)
-    print(f"[prepare] model_path.exists()={args.model_path.exists()}", flush=True)
-    if args.model_path.exists():
-        print(
-            f"[prepare] model files: {list(args.model_path.iterdir())[:10]}", flush=True
-        )
+    from pathlib import Path
 
     # Convert HF checkpoint into NeMo checkpoint
     # https://github.com/NVIDIA-NeMo/NeMo/blob/v2.6.2/nemo/collections/llm/api.py#L577
     from nemo.collections.llm import import_ckpt
 
-    print(f"[prepare] looking up MODEL_ARCHS for '{args.model_path.name}'", flush=True)
-    model_cls, config_cls = MODEL_ARCHS[args.model_path.name]
-    print(f"[prepare] creating tokenizer for {args.model_path}", flush=True)
-    tokenizer = AutoTokenizer(args.model_path, use_fast=True)
-    print("[prepare] tokenizer created, calling import_ckpt", flush=True)
-    print(f"[prepare]   model_cls={model_cls}", flush=True)
-    print(f"[prepare]   config_cls={config_cls}", flush=True)
-    print(f"[prepare]   source=hf://{args.model_path}", flush=True)
-    print(f"[prepare]   output_path={args.nemo_ckpt_path}", flush=True)
-    import_ckpt(
-        model=model_cls(config_cls(seq_length=args.seq_length), tokenizer=tokenizer),
-        source=f"hf://{args.model_path}",  # local dir -> "hf:///abs/path", géré par l'importeur hf
-        output_path=args.nemo_ckpt_path,
-        overwrite=True,
-    )
-    print(f"[prepare] Converted HF -> NeMo at {args.nemo_ckpt_path}", flush=True)
+    sys.stdout.flush()
+    model_path = Path(cfg.model_path)
+    logger.info(f"[prepare] model_path={cfg.model_path}")
+    logger.info(f"[prepare] model_path.exists()={model_path.exists()}")
+    if os.path.exists(cfg.nemo_ckpt_path):
+        logger.info(
+            f"[prepare] Model checkpoint already exists '{cfg.nemo_ckpt_path}'. Skipping conversion..."
+        )
+    else:
+        if model_path.exists():
+            logger.info(f"[prepare] model files: {list(model_path.iterdir())[:10]}")
+
+        logger.info(f"[prepare] looking up MODEL_ARCHS for '{model_path.name}'")
+        model_cls, config_cls = MODEL_ARCHS[model_path.name]
+        logger.info(f"[prepare] creating tokenizer for {model_path}")
+        tokenizer = AutoTokenizer.from_pretrained(cfg.model_path, use_fast=True)
+        logger.info("[prepare] tokenizer created, calling import_ckpt")
+        logger.info(f"[prepare]   model_cls={model_cls}")
+        logger.info(f"[prepare]   config_cls={config_cls}")
+        logger.info(f"[prepare]   source=hf://{model_path}")
+        logger.info(f"[prepare]   output_path={cfg.nemo_ckpt_path}")
+        import_ckpt(
+            model=model_cls(config_cls(seq_length=cfg.max_length), tokenizer=tokenizer),
+            source=f"hf://{model_path}",  # local dir -> "hf:///abs/path", géré par l'importeur hf
+            output_path=cfg.nemo_ckpt_path,
+            overwrite=False,
+        )
+        logger.info(f"[prepare] Converted HF -> NeMo at {cfg.nemo_ckpt_path}")
 
     # Prepare dataset
     from datasets import load_dataset
 
-    print(f"[prepare] loading dataset from {args.dataset_path}", flush=True)
-    args.dataset_root.mkdir(parents=True, exist_ok=True)
-    dataset = load_dataset(str(args.dataset_path))
-    print(f"[prepare] dataset loaded: {list(dataset.keys())}", flush=True)
+    train_split_name = "training"
+    valid_split_name = "validation"
 
-    def dump(split_name: str, hf_split: Dataset) -> None:
-        out_file = args.dataset_root / f"{split_name}.jsonl"
+    train_file = os.path.join(cfg.dataset_root, f"{train_split_name}.jsonl")
+
+    if os.path.exists(train_file):
+        logger.info(
+            f"[prepare] File already exists '{train_file}'. Skipping conversion..."
+        )
+        return
+    logger.info(f"[prepare] loading dataset from {cfg.dataset_path}")
+    os.makedirs(cfg.dataset_root, exist_ok=True)
+    dataset = load_dataset(str(cfg.dataset_path))
+    logger.info(f"[prepare] dataset loaded: {list(dataset.keys())}")
+
+    def dump(out_file: str, hf_split: Dataset) -> None:
 
         with open(out_file, "w") as f:
             f.writelines(
                 json.dumps({"messages": ex["messages"]}) + "\n" for ex in hf_split
             )
-        print(f"Wrote {out_file} ({len(hf_split)} examples)", flush=True)
+        print(f"Wrote {out_file} ({len(hf_split)} examples)")
 
     # Create training.jsonl
-    dump("training", dataset["train"])
+    dump(train_split_name, dataset["train"])
     # Reuse train as validation for warmup/sanity if no val split, mirroring the original script.
     dump(
-        "validation",
+        valid_split_name,
         dataset["validation"] if "validation" in dataset else dataset["train"],
     )
 
 
-def main() -> None:
+def main(repeatid: int):
     """Run SFT with a Megatron-Core model using Megatron strategy."""
-    # 1. Get command-line arguments
-    args = parse_args()
-
-    if args.prepare:
-        prepare(args)
-        return
 
     # 2. Distributed Training Setup
     world = args.devices_per_node * args.num_nodes
@@ -369,35 +258,39 @@ def main() -> None:
         f"4D mismatch: DP*PP*TP*CP={args.dp_size * args.pp_size * args.tp_size * args.cp_size} != world={world}"
     )
 
-    n_train = sum(1 for _ in open(args.dataset_root / "training.jsonl"))
-    total_steps = args.epochs * ceil(n_train / args.global_batch_size)
+    n_train = sum(1 for _ in open(args.dataset_root.joinpath("training.jsonl")))
+    epochs = args.epochs if args.epochs else 1
+    total_steps = (
+        args.max_steps
+        if args.max_steps
+        else epochs * ceil(n_train / args.global_batch_size)
+    )
     max_steps = args.test_nsteps if args.test else total_steps
-    lr_warmup_steps = int(args.lr_warmup_ratio * total_steps)
+    lr_warmup_steps = int(args.warmup_ratio * total_steps)
 
     # NOTE: with MegatronStrategy you do not pass accumulate_grad_batches to the Trainer
     # Micro-batching to reach the global batch size is handled internally
     # We compute it ourselves for throughput math.
     grad_acc = args.global_batch_size // (args.batch_size * args.dp_size)
 
-    if rank == 0:
-        print(f"World size                : {world}")
-        print(f"Global batch size         : {args.global_batch_size}")
-        print(f"Gradient accumulation     : {grad_acc}")
-        print(f"Micro batch size (per GPU): {args.batch_size}")
-        print(f"Sequence length           : {args.seq_length}")
-        print(f"Activation checkpointing  : {args.activation_checkpointing}")
-        print(f"FP8 training              : {args.fp8}")
+    logger.info(f"World size                : {world}")
+    logger.info(f"Global batch size         : {args.global_batch_size}")
+    logger.info(f"Gradient accumulation     : {grad_acc}")
+    logger.info(f"Micro batch size (per GPU): {args.batch_size}")
+    logger.info(f"Sequence length           : {args.max_length}")
+    logger.info(f"Activation checkpointing  : {args.gradient_checkpointing}")
+    logger.info(f"FP8 training              : {args.fp8}")
 
     # 3. Model (Megatron-Core native). Weights are restored later via AutoResume.
-    tokenizer = AutoTokenizer(args.model_path)
-    model_cls, config_cls = MODEL_ARCHS[args.model_path.name]
-    model_config = config_cls(seq_length=args.seq_length)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    model_cls, config_cls = MODEL_ARCHS[args.model_name]
+    model_config = config_cls(seq_length=args.max_length)
     # With CP>1 the sequence is split across ranks, so one rank's slice may contain
     # zero answer tokens. The default loss averages per rank, which then divides by
     # that local zero -> NaN. This flag instead sums the loss and divides by the total
     # token count over the whole CP group, so no rank divides by its own zero.
     model_config.calculate_per_token_loss = True
-    if args.activation_checkpointing:
+    if args.gradient_checkpointing:
         model_config.recompute_granularity = "full"
         model_config.recompute_method = "uniform"
         model_config.recompute_num_layers = 1
@@ -409,24 +302,24 @@ def main() -> None:
         pipeline_model_parallel_size=args.pp_size,
         context_parallel_size=args.cp_size,
         sequence_parallel=args.sequence_parallel,
-        pipeline_dtype=torch.bfloat16,
+        # pipeline_dtype=torch.bfloat16,
     )
 
-    if rank == 0:
-        print(f"DP size                  : {args.dp_size}")
-        print(f"PP size                  : {args.pp_size}")
-        print(f"TP size                  : {args.tp_size}")
-        print(f"CP size                  : {args.cp_size}")
-        print(f"Sequence parallel        : {args.sequence_parallel}")
+    logger.info(f"DP size                  : {args.dp_size}")
+    logger.info(f"PP size                  : {args.pp_size}")
+    logger.info(f"TP size                  : {args.tp_size}")
+    logger.info(f"CP size                  : {args.cp_size}")
+    logger.info(f"EP size                  : {args.ep_size}")
+    logger.info(f"Sequence parallel        : {args.sequence_parallel}")
 
     # 4. Data processing (file-based SFT).
     data = llm.FineTuningDataModule(
-        dataset_root=str(args.dataset_root),
-        seq_length=args.seq_length,
+        dataset_root=args.dataset_root,
+        seq_length=args.max_length,
         tokenizer=tokenizer,
         micro_batch_size=args.batch_size,
         global_batch_size=args.global_batch_size,
-        num_workers=args.num_workers,
+        num_workers=args.dataloader_num_workers,
         dataset_kwargs={
             "chat": True,
             "use_hf_tokenizer_chat_template": True,
@@ -434,14 +327,55 @@ def main() -> None:
     )  # https://github.com/NVIDIA-NeMo/NeMo/blob/v2.6.2/nemo/collections/llm/gpt/data/fine_tuning.py#L35
 
     # 5. Training preparation
+
+    callbacks = []
+    plugins = []
+    # Benchmark logging
+    callbacks.append(
+        MegatronBenchmarkCallback(
+            rank,
+            max_steps,  # total number of weight updates
+            args.global_batch_size,  # number of samples per weight update
+            args.max_length,  # number of tokens per sample
+            ceil(n_train / args.global_batch_size),  # number of steps per epoch
+            1,  # 1 warmup step
+        )
+    )
+
+    # FLOPs counting
+    callbacks.append(
+        FlopCounterCallback(enabled=args.enable_flop_counter and rank == 0)
+    )
+
+    # Pytorch Profiler
+    if args.pytorch_profiler:
+        callbacks.append(TorchProfilerCallback(rank))
+
     opt_config = OptimizerConfig(
         optimizer="adam",
-        lr=args.learning_rate,
+        lr=args.lr,
         weight_decay=args.weight_decay,
         clip_grad=0.0,
-        bf16=True,
         use_distributed_optimizer=True,
     )
+    if args.precision == "bf16_fp8":
+        plugins.append(
+            nl.MegatronMixedPrecision(
+                precision="bf16-mixed", fp8="hybrid" if args.fp8 else None
+            )
+        )
+        opt_config.bf16 = True
+        strategy.pipeline_dtype = torch.bfloat16
+    elif args.precision == "bf16":
+        plugins.append(nl.MegatronMixedPrecision(precision="bf16-mixed"))
+        opt_config.bf16 = True
+        strategy.pipeline_dtype = torch.bfloat16
+    elif args.precision == "fp16":
+        plugins.append(nl.MegatronMixedPrecision(precision="fp16_mixed"))
+        opt_config.fp16 = True
+        strategy.pipeline_dtype = torch.float16
+    else:
+        raise ValueError(f"Unsupported Megatron precision: {args.precision}")
     scheduler = CosineAnnealingScheduler(
         max_steps=max_steps,
         warmup_steps=lr_warmup_steps,
@@ -459,7 +393,7 @@ def main() -> None:
         wandb = WandbLogger(
             project=args.wandb_project,
             name=(
-                f"{args.model_path.name}"
+                f"{args.model_name}"
                 f"_nodes{args.num_nodes}"
                 f"_devices{args.devices_per_node}"
                 f"_strat_MegatronStrategy"
@@ -470,41 +404,15 @@ def main() -> None:
                 f"_sp{args.sequence_parallel}"
                 f"_gbs{args.global_batch_size}"
                 f"_mbs{args.batch_size}"
-                f"_seqlen{args.seq_length}"
+                f"_seqlen{args.max_length}"
             ),
         )
-
-    callbacks = []
-
-    # Benchmark logging
-    callbacks.append(
-        MegatronBenchmarkCallback(
-            rank,
-            max_steps,  # total number of weight updates
-            args.global_batch_size,  # number of samples per weight update
-            args.seq_length,  # number of tokens per sample
-            ceil(n_train / args.global_batch_size),  # number of steps per epoch
-            1,  # 1 warmup step
-        )
-    )
-
-    # FLOPs counting
-    callbacks.append(
-        FlopCounterCallback(enabled=args.enable_flop_counter and rank == 0)
-    )
-
-    # Pytorch Profiler
-    if args.pytorch_profiler:
-        callbacks.append(TorchProfilerCallback(rank))
-
     trainer = nl.Trainer(
         accelerator="gpu",
         strategy=strategy,
         devices=args.devices_per_node,
         num_nodes=args.num_nodes,
-        plugins=nl.MegatronMixedPrecision(
-            precision="bf16-mixed", fp8="hybrid" if args.fp8 else None
-        ),
+        plugins=plugins,
         logger=wandb,
         callbacks=callbacks,
         max_epochs=args.epochs,
@@ -518,6 +426,21 @@ def main() -> None:
         # No accumulate_grad_batches / gradient_clip_val here: micro-batching is managed by
         # Megatron's microbatch calculator, and grad clipping by OptimizerConfig.clip_grad (TP-safe).
     )
+
+    jobid = os.environ.get("SLURM_JOB_ID", "unknown")
+    jobstepid = os.environ.get("SLURM_STEP_ID", "0")
+    jobsteprocid = os.environ.get("SLURM_PROCID", "0")
+    summary_file = os.path.join(
+        args.output_dir,
+        f"nemo_experiments-{jobid}-step{jobstepid}-task{jobsteprocid}",
+        f"repeatid-{repeatid}",
+    )
+    os.makedirs(os.path.dirname(summary_file), exist_ok=True)
+    nemo_logger = nl.NeMoLogger(
+        log_dir=os.path.abspath(os.path.dirname(summary_file)),
+        name="MINERVA-Bench-Nemo-Megatron",
+    )
+    nemo_logger.setup(trainer, resume_if_exists=True)
 
     # Restore local HF weights (the model's "hf" importer converts them on the fly).
     resume = nl.AutoResume(
@@ -536,4 +459,19 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if args.prepare:
+        logger.info("_________________________________")
+        logger.info("Running preparation ")
+        logger.info("_________________________________")
+
+        prepare(args)
+    else:
+        try:
+            for repeatid in range(config.experiment.repeat):
+                logger.info("_________________________________")
+                logger.info(f"Running repeatid: {repeatid}")
+                logger.info("_________________________________")
+                main(repeatid)
+        except Exception as e:
+            logger.exception("Error occured during execution of main")
+            raise e

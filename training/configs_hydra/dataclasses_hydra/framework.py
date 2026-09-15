@@ -33,11 +33,21 @@ class ScriptsConfig:
 
 
 @dataclass
+class MegatronParallelism:
+    dp: int
+    pp: int
+    tp: int
+    cp: int
+    ep: int
+    sp: bool
+
+
+@dataclass
 class FrameworkConfig:
     name: str = MISSING
     parallelism_name: str = ""
     parallelism: dict[str, ParallelismSpec] = field(default_factory=dict)
-    megatron_parallelism: dict[str, int] | None = None
+    megatron_parallelism: MegatronParallelism | None = None
     scripts: ScriptsConfig = field(default_factory=ScriptsConfig)
     datasets_allowed: list[str] | None = None
     env: dict = field(default_factory=dict)

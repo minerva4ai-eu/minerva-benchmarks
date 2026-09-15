@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #SBATCH -J minerva_train
+#SBATCH -t 01:00:00
 
 # ##############################################################################
 #                                  Overview
@@ -93,14 +94,13 @@ VENV_PATH : $VENV_PATH"
     export NCCL_DEBUG_FILE="$SRUN_LOGS/steps-slurm-logs/srun-$SLURM_JOB_ID.$SLURM_STEP_ID.nccl"
 
     # No slurm commands inside the container (only environment variables)
+
+    export HEAD_PORT=29500
     export HEAD_NODE=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
-    echo HEAD_NODE=$HEAD_NODE
 
-    #export TRAIN_SCRIPT="scripts/$FRAMEWORK-common/finetune-$PARALLELISM.py"
+    echo "HEAD_NODE=$HEAD_NODE"
 
-    #bash "$SRUN_SCRIPT" "$YAML_PATH" >> "$LOG_DIR/work-step$SLURM_STEP_ID-task$SLURM_PROCID.log" 2>&1
-    # bash scripts/$FRAMEWORK-common/run-$PARALLELISM.sh $1 >> outputs/logs/workers/work-job$SLURM_JOB_ID-step$SLURM_STEP_ID-task$SLURM_PROCID.log 2>&1
-    export PROFILER_OUTDIR="$SRUN_LOGS/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURM_NODENAME"
+    export PROFILER_OUTDIR="$SRUN_LOGS/outputs/gpus-monitor/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURMD_NODENAME"
     
     bash "$SRUN_SCRIPT" "$YAML_PATH" 
 
@@ -128,7 +128,7 @@ for YAML_PATH in "${PATH_ARRAY[@]}"; do
     source "$TEMP_ENV_FILE"
     rm "$TEMP_ENV_FILE"
 
-    export TRAIN_SCRIPT=$(py_to_module "$TRAIN_SCRIPT")
+    export TRAIN_MODULE=$(py_to_module "$TRAIN_SCRIPT")
     echo "SRUN_SCRIPT: $SRUN_SCRIPT \
 TRAIN_SCRIPT: $TRAIN_SCRIPT \
 FRAMEWORK: $FRAMEWORK \
@@ -136,8 +136,9 @@ PARALLELISM: $PARALLELISM \
 NNODES: $NNODES \
 EXECUTION_MODE: $EXECUTION_MODE \
 SINGULARITY_CONTAINER: $SINGULARITY_CONTAINER \
-VENV_PATH : $VENV_PATH"
-
+VENV_PATH : $VENV_PATH \
+TRAIN_SCRIPT: $TRAIN_SCRIPT \
+TRAIN_MODULE: $TRAIN_MODULE"
     
     export LOG_DIR="$MINERVA_WORKDIR"
     if [[ ! -d $LOG_DIR ]]; then
@@ -147,12 +148,12 @@ VENV_PATH : $VENV_PATH"
     echo "LOG_DIR: $LOG_DIR"
     export SRUN_LOGS="$LOG_DIR/$SLURM_JOB_ID"
 
-    NGPU=$SLURM_GPUS_ON_NODE
-    NCPU=$SLURM_CPUS_ON_NODE
+    NGPUs=$SLURM_GPUS_ON_NODE
+    NCPUs=$SLURM_CPUS_ON_NODE
     if [[ $PARALLELISM == "none" ]]; then
         echo heree
-        NGPU=1
-        NCPU=$SLURM_CPUS_PER_TASK
+        NGPUs=1
+        NCPUs=$((SLURM_CPUS_PER_TASK/NGPUs))
     fi
 
 
@@ -160,16 +161,13 @@ VENV_PATH : $VENV_PATH"
     srun \
         -N "$NNODES" \
         --ntasks-per-node=1 \
-        --gres=gpu:"$NGPU" \
+        --cpus-per-task=$NCPUs \
+        --gres=gpu:"$NGPUs" \
         --output="$SRUN_LOGS/steps-slurm-logs/srun-%J.out" \
         --error="$SRUN_LOGS/steps-slurm-logs/srun-%J.err" \
         --export=ALL \
         bash -c "runner_fn $YAML_PATH" &
         
 done
-
-# # Use script that calls srun to do checks in order to avoid srun steps with invalid configurations
-# parallel -j 0 ./work.sh {} ::: ${model_names[@]} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: ${node_configs[@]} ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: ${max_lengths[@]} ::: $(seq $trials)
-# # parallel -j 0 --joblog joblog.txt ./work.sh $model_name {} ::: ${frameworks[@]} ::: ${parallelisms[@]} ::: $(seq $max_nodes) ::: ${dataset_names[@]} ::: ${batch_sizes[@]} ::: ${grad_accums[@]} ::: ${enable_compile[@]} ::: ${precisions[@]} ::: ${lrs[@]} ::: $(seq $trials)
 
 wait

@@ -34,12 +34,13 @@ def setup_logging(
     LOG_DIR = os.path.join(
         os.environ.get("LOG_DIR", os.path.join("outputs", "logs", "pyft")),
         RUNID,
+        "training-logs",
         f"{cfg.model.name}_{cfg.framework.name}_{cfg.framework.parallelism_name}_{cfg.dataset.name}_nodes{cfg.slurm.sbatch.nodes}",
     )
 
     # Prevent filesystem race condition: let Rank 0 create the directory
-    if rank == 0:
-        os.makedirs(LOG_DIR, exist_ok=True)
+    # if rank == 0:
+    os.makedirs(LOG_DIR, exist_ok=True)
 
     # Wait for Rank 0 to finish creating the directory if using torch.distributed
     if dist.is_initialized():

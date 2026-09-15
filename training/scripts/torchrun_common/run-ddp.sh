@@ -33,9 +33,12 @@ if [ "$GPUS_PER_NODE" -eq "0" ] && [ "$PRECISION" = "bf16" ]; then
 fi
 
 train_command="${runtime_prefix:+$runtime_prefix} torchrun \
-      --nnodes $SLURM_STEP_NUM_NODES --nproc_per_node $SLURM_GPUS_ON_NODE \
-      --rdzv_id $SLURM_JOB_ID.$SLURM_STEP_ID --rdzv_backend c10d --rdzv_endpoint ${HEAD_NODE}:${MASTER_PORT} \
-      $TRAIN_SCRIPT --yaml $1"
+      --nnodes $SLURM_STEP_NUM_NODES \
+      --nproc_per_node $SLURM_GPUS_ON_NODE \
+      --rdzv_id $SLURM_JOB_ID.$SLURM_STEP_ID \
+      --rdzv_backend c10d \
+      --rdzv_endpoint ${HEAD_NODE}:${MASTER_PORT} \
+      $TRAIN_MODULE --yaml $1"
 
 prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 
