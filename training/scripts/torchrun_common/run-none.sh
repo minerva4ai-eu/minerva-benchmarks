@@ -1,6 +1,7 @@
 #!/bin/bash
 
 
+
 ##################################################
 ###            Setup Environment               ###
 ##################################################
@@ -11,9 +12,12 @@ fi
 
 echo yaml_path=$1
 
-# Torchrun args
-export MASTER_PORT=29500
-# export NODE_RANK=$SLURM_PROCID
+source scripts/shared/runtime_environment.sh
+training_activate_runtime_environment
+
+echo "EXECUTION_MODE: $EXECUTION_MODE"
+runtime_prefix="$(training_build_runtime_prefix)"
+echo "runtime prefix: $runtime_prefix"
 
 ###################################################
 
@@ -25,20 +29,14 @@ export MASTER_PORT=29500
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
 
-train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_SCRIPT --yaml $1"
+train_command="${runtime_prefix:+$runtime_prefix} python $TRAIN_MODULE --yaml $1"
 
 echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $DISABLE_COMPILE == "True" || $DISABLE_COMPILE == "true" ]]; then
     train_command="$train_command --enable_compile"
 fi
 
-prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare \
-        --model $MODEL_PATH \
-        --data $DATASET_PATH \
-        --dataset $DATASET \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH "
+prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.prepare --yaml $1"
 
 $prepare_train_command
 

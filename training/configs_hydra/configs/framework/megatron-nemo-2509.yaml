@@ -7,16 +7,18 @@ parallelism:
   tp: { min_gpus: 2 }
   cp: { min_gpus: 2 }
   ep: { min_gpus: 2 }
+  sp: { min_gpus: 2 }
 megatron_parallelism:
   dp: -1                             # Will be filled in during composing time
   pp: -1                             # Will be filled in during composing time
   tp: ${arch.node.gpus_per_node}     # Stable value, equal to 'arch.node.gpus_per_node'
   cp: -1                             # Will be filled in during composing time
   ep: -1                             # Will be filled in during composing time
+  sp: False                          # Will be filled in during composing time
 
 scripts:
-  run: scripts/nemo-megatron-common/run-nemo_megatron.slurm
-  finetune: scripts/nemo-megatron-common/nemo_megatron.py
+  run: scripts/nemo_megatron_common/run-nemo_megatron.slurm
+  finetune: scripts/nemo_megatron_common/nemo_megatron.py
 
 python_environment: 
 singularity_container: ${abs_path:envs/benchmarks/nemo-2509/singularity_nemo-2509.sif}

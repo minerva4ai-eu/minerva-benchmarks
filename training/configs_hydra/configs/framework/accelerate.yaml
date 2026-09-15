@@ -12,8 +12,8 @@ parallelism:
   fsdp: { min_gpus: 2 }
 
 scripts:
-  run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
-  finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
+  run: scripts/accelerate_common/run-${framework.parallelism_name}.sh
+  finetune: scripts/accelerate_common/finetune-${framework.parallelism_name}.py
 datasets_allowed:
   - alpaca
   - squadv2

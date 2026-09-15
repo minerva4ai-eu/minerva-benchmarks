@@ -9,7 +9,7 @@ DeepSpeed enables training large language models at scale through its ZeRO optim
 ## Directory Structure
 
 ```
-deepspeed-common/
+deepspeed_common/
 ├── configs/
 │   ├── zero1.json               # ZeRO-1 configuration
 │   ├── zero2.json               # ZeRO-2 configuration
@@ -119,7 +119,7 @@ DeepSpeed + Accelerate training using HuggingFace's `SFTTrainer`. Leverages Acce
 
 ### `gpu_monitor.py`
 
-Identical to the accelerate-common version. Provides GPU metrics via NVIDIA NVML:
+Identical to the accelerate_common version. Provides GPU metrics via NVIDIA NVML:
 
 **`GPUMonitorCallback`** — Trainer callback logging per-step metrics:
 - Average/peak GPU memory (GB)

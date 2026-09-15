@@ -107,6 +107,15 @@ def build_srun_env():
     cfg: BenchmarkConfig
     cfg = OmegaConf.load(yaml_path)
 
+    # Absolute path to the training/ root (two levels up from this file)
+    training_root = str(Path(__file__).resolve().parents[2])
+    existing_pythonpath = os.getenv("PYTHONPATH", "")
+    pythonpath = (
+        f"{training_root}:{existing_pythonpath}"
+        if existing_pythonpath
+        else training_root
+    )
+
     env = {
         **(
             {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
@@ -140,33 +149,37 @@ def build_srun_env():
         "PARALLELISM": cfg.framework.parallelism_name,
         "NNODES": cfg.slurm.sbatch.nodes,
         "TOKENIZERS_PARALLELISM": str(False),
-        **(
-            {
-                "TP": str(cfg.framework.megatron_parallelism.tp),
-                "PP": str(cfg.framework.megatron_parallelism.pp),
-                "DP": str(cfg.framework.megatron_parallelism.dp),
-                "CP": str(cfg.framework.megatron_parallelism.cp),
-                "SP": str(cfg.framework.megatron_parallelism.cp),
-                "EP": str(cfg.framework.megatron_parallelism.cp),
-            }
-            if cfg.framework.megatron_parallelism
-            else {}
-        ),
+        # **(
+        #    {
+        #        "TP": str(cfg.framework.megatron_parallelism.tp),
+        #        "PP": str(cfg.framework.megatron_parallelism.pp),
+        #        "DP": str(cfg.framework.megatron_parallelism.dp),
+        #        "CP": str(cfg.framework.megatron_parallelism.cp),
+        #        "SP": str(cfg.framework.megatron_parallelism.cp),
+        #        "EP": str(cfg.framework.megatron_parallelism.cp),
+        #    }
+        #    if cfg.framework.megatron_parallelism
+        #    else {}
+        # ),
         "DATASET_PATH": cfg.dataset.path,
-        **(
-            {
-                "DATASET_TRAIN": str(cfg.dataset.train),
-            }
-            if cfg.dataset.train is not None
-            else {}
-        ),
-        **(
-            {
-                "DATASET_VALIDATION": str(cfg.dataset.validation),
-            }
-            if cfg.dataset.validation is not None
-            else {}
-        ),
+        # **(
+        #    {
+        #        "DATASET_TRAIN": ",".join(cfg.dataset.train),
+        #    }
+        #    if cfg.dataset.train is not None
+        #    else {}
+        # ),
+        # **(
+        #    {
+        #        "DATASET_VALIDATION": ",".join(cfg.dataset.validation),
+        #    }
+        #    if cfg.dataset.validation is not None
+        #    else {}
+        # ),
+        "ZERO_STAGE": cfg.framework.parallelism_name
+        if cfg.framework.name.startswith(("deepspeed", "deepspeed-accelerate"))
+        else "",
+        "PYTHONPATH": pythonpath,
     }
 
     if cfg.machine.env:
@@ -249,7 +262,7 @@ def submit_job(
     logger.debug("Max nodes = %s", job_nodes)
     # Get system env configs
     minerva_dir = os.path.join(runs_dir, m.name, run_date)  # writes cfg profiles
-    sbatch_logs_dir = f"{minerva_dir}/%j/sbatch"
+    sbatch_logs_dir = f"{minerva_dir}/%j/sbatch-slurm-logs"
     logger.debug("sbatch_logs_dir = %s", sbatch_logs_dir)
 
     # Build sbatch command to submit
@@ -260,8 +273,8 @@ def submit_job(
         f"--gres={s.sbatch.gres}",
         f"--cpus-per-task={s.sbatch.cpus_per_task}",
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
-        f"--output={sbatch_logs_dir}/sbatch-%j.out",
-        f"--error={sbatch_logs_dir}/sbatch-%j.err",
+        f"--output={sbatch_logs_dir}/MINERVA-JOB-%j.out",
+        f"--error={sbatch_logs_dir}/MINERVA-JOB-%j.err",
         f"--partition={s.partition}",
     ]
     # TODO: check desired behavior, joint condition?

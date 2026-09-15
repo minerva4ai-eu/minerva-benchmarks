@@ -26,7 +26,9 @@ class EmptyCacheCallback(TrainerCallback):
 
 
 def setup_distributed():
-    local_rank = int(os.environ["LOCAL_RANK"])
+    local_rank = int(os.getenv("LOCAL_RANK", "-1"))
+    if local_rank == -1:
+        return 0, 1, 0
     torch.cuda.set_device(local_rank)
     if not dist.is_initialized():
         dist.init_process_group(backend="nccl")
@@ -71,8 +73,7 @@ def count_parameters(model):
 
 def save_summary_stats_json(summary, output_file):
     output_dir = Path(output_file).parent
-    if not output_dir.exists():
-        output_dir.mkdir()
+    output_dir.mkdir(exist_ok=True)
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
 

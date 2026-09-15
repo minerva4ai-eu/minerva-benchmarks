@@ -50,4 +50,4 @@ AVAILABLE_FRAMEWORKS = [
     "megatron-nemo-2509",
 ]
 
-MEGATRON_PARALLELISM_AVAILABLE = ["tp", "pp", "cp", "dp", "ep"]
+MEGATRON_PARALLELISM_AVAILABLE = ["tp", "pp", "cp", "dp", "ep", "sp"]

@@ -349,16 +349,16 @@ This pattern allows:
 
 ```yaml
 # In framework/accelerate.yaml
-run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
-finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
+run: scripts/accelerate_common/run-${framework.parallelism_name}.sh
+finetune: scripts/accelerate_common/finetune-${framework.parallelism_name}.py
 
 # In slurm/MN5.yaml
 gres: gpu:${arch.node.gpus_per_node}
 
 # In framework configs
 scripts:
-  run: scripts/deepspeed-common/run-deepspeed.sh
-  finetune: scripts/deepspeed-common/finetune-deepspeed-pure.py
+  run: scripts/deepspeed_common/run-deepspeed.sh
+  finetune: scripts/deepspeed_common/finetune-deepspeed-pure.py
 ```
 
 When composing a config, Hydra resolves all interpolations to produce a fully concrete `BenchmarkConfig` object.

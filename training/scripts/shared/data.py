@@ -1,4 +1,3 @@
-import ast
 import os
 from typing import TYPE_CHECKING
 
@@ -66,12 +65,12 @@ def parse_dataset_paths(
         is_split = True if both train and val are provided
     """
 
-    if not train_files:
-        train_files = ast.literal_eval(os.environ.get("DATASET_TRAIN", "[]"))
-    if not validation_files:
-        validation_files = ast.literal_eval(os.environ.get("DATASET_VALIDATION", "[]"))
-    print(f"train_files: {train_files}")
-    print(f"validation_files: {validation_files}")
+    # if not train_files:
+    #    train_files = os.environ.get("DATASET_TRAIN", "").split(",")
+    # if not validation_files:
+    #    validation_files = os.environ.get("DATASET_VALIDATION", "").split(",")
+    # print(f"train_files: {train_files}")
+    # print(f"validation_files: {validation_files}")
 
     if train_files or validation_files:
         if not train_files or not validation_files:

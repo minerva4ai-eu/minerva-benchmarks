@@ -7,7 +7,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import construct_args, get_parser
+from scripts.shared.args import construct_config
 from scripts.shared.args import get_fsdp_parser as get_parser
 from scripts.shared.data import (
     collate_fn,
@@ -19,11 +19,10 @@ from scripts.shared.gpu_monitor import start_gpu_monitor
 from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
     is_main_process,
-    print_rank,
-    save_summary_stats_json,
     save_training_summary,
     setup_distributed,
 )
+from scripts.slurm.utils import load_config
 from torch.distributed._composable.fsdp import MixedPrecisionPolicy, fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     CheckpointImpl,
@@ -50,7 +49,11 @@ from transformers import (
 )
 
 rank, world_size, local_rank = setup_distributed()
-setup_logging(level=logging.INFO, yaml=get_parser().parse_args().yaml_file)
+config = load_config(get_parser().parse_args().yaml_file)
+setup_logging(
+    level=logging.INFO,
+    cfg=config,
+)
 
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 logger_rank = RankAdapter(logger, {})
@@ -95,9 +98,7 @@ def get_transformer_layer_classes(model):
 def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False):
 
     layer_classes = get_transformer_layer_classes(model)
-    print_rank(
-        0, f"FSDP auto-wrap layer classes: {[c.__name__ for c in layer_classes]}"
-    )
+    logger.info(f"FSDP auto-wrap layer classes: {[c.__name__ for c in layer_classes]}")
 
     auto_wrap_policy = functools.partial(
         transformer_auto_wrap_policy,
@@ -114,7 +115,7 @@ def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False
     current_device = torch.cuda.current_device()
 
     if is_main_process(dist.get_rank()):
-        print_rank(
+        logger.info(
             f"BEFORE FSDP WRAP | sample weight sum: {next(model.parameters()).sum().item()}",
         )
     torch.cuda.synchronize()
@@ -168,7 +169,7 @@ def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False
                 else BackwardPrefetch.BACKWARD_POST
             ),
         )
-        print_rank("Model FSDP wrapped...")
+        logger.info("Model FSDP wrapped...")
 
         # Activation checkpointing, equivalent to fsdp_config["activation_checkpointing"]=True
         check_fn = lambda submodule: isinstance(submodule, tuple(layer_classes))
@@ -181,10 +182,10 @@ def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False
             model, checkpoint_wrapper_fn=checkpoint_fn, check_fn=check_fn
         )
 
-    print_rank(
+    logger.info(
         f"AFTER FSDP WRAP | sample weight sum: {next(model.parameters()).sum().item()}",
     )
-    print_rank("FSDP Model settings set...")
+    logger.info("FSDP Model settings set...")
     return model
 
 
@@ -197,62 +198,57 @@ def save_model(model, tokenizer, output_dir, rank):
         # unwrap: model is FSDP(model) with no other wrapper, so .module gives the raw model
         model.module.save_pretrained(output_dir, state_dict=state_dict)
         tokenizer.save_pretrained(output_dir)
-        print_rank(0, f"Saved model + tokenizer to {output_dir}")
+        logger.info(f"Saved model + tokenizer to {output_dir}")
     dist.barrier()
 
 
-def main():
-    logger.info(
-        "localrankvar = %s, rankvar = %s, grouprankvar = %s, rolerankvar = %s, localworldsizevar = %s, worldsizevar = %s",
-        os.environ.get("LOCAL_RANK", None),
-        os.environ.get("RANK", None),
-        os.environ.get("GROUP_RANK", None),
-        os.environ.get("ROLE_RANK", None),
-        os.environ.get("LOCAL_WORLD_SIZE", None),
-        os.environ.get("WORLD_SIZE", None),
-    )
+def main(repeatid: int):
 
     # Get main id
     jobid = os.environ["SLURM_JOB_ID"]
     jobstepid = os.environ["SLURM_STEP_ID"]
     jobsteprocid = os.environ["SLURM_PROCID"]
 
-    args = construct_args(get_parser().parse_args())
+    args = construct_config(get_parser().parse_args())
 
+    model_path = args.model_path
+    model_name = args.model_name
     train_path, eval_path = get_train_eval_path(args)
 
     rank, world_size, local_rank = setup_distributed()
+    torch.cuda.empty_cache()
 
+    output_dir = args.output_dir
     if is_main_process(rank):
-        os.makedirs(args.output_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
 
     dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
         args.precision, torch.float32
     )
-    print_rank(0, f"Training dtype: {dtype}")
+    logger.info(f"Training dtype: {dtype}")
 
     # --- Tokenizer ---
-    print_rank(rank, f"Loading tokenizer {args.model_name}...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path, use_fast=True)
+    logger.info(f"Loading tokenizer {model_name}...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print_rank(rank, "Tokenizer Loaded")
-
+    # ------------------------------------------------------------------
+    # Dataset
+    # ------------------------------------------------------------------
     train_dataset = load_prepared_packed_dataset(train_path)
-    # eval_dataset = load_prepared_packed_dataset(eval_path)
+    eval_dataset = load_prepared_packed_dataset(eval_path)
 
-    print_rank(
-        rank,
+    logger.info(
         f"Packed train dataset size: {len(train_dataset)} blocks of {args.max_length} tokens",
     )
 
-    sampler = DistributedSampler(
+    train_sampler = DistributedSampler(
         train_dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=32
     )
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
-        sampler=sampler,
+        sampler=train_sampler,
         collate_fn=collate_fn,
         num_workers=args.dataloader_num_workers,
         pin_memory=True,
@@ -260,26 +256,23 @@ def main():
         persistent_workers=args.dataloader_num_workers > 1,
         prefetch_factor=4 if args.dataloader_num_workers > 0 else None,
     )
-
     # --- Model + FSDP ---
-    print_rank(0, f"Loading model {args.model_path}...")
-    model = load_model(args.model_path, dtype)
-    print_rank(
-        0, f"Max communication-computation overlap: {args.fsdp_max_comm_comp_overlap}"
+    logger.info(f"Loading model {model_path}...")
+    model = load_model(model_path, dtype)
+    logger.info(
+        f"Max communication-computation overlap: {args.fsdp_max_comm_comp_overlap}"
     )
     model = wrap_fsdp(
         model,
         dtype,
         max_comm_comp_overlap=args.fsdp_max_comm_comp_overlap,
     )
-    print_rank(rank, "Model wrapped with FSDP.")
+    logger.info("Model wrapped with FSDP.")
 
     if args.enable_compile:
-        print_rank(0, "torch.compile enabled.")
-        model = torch.compile(
-            model, backend="inductor", mode="max-autotune-no-cudagraphs"
-        )
-        print_rank(0, "Model compilation finished.")
+        logger.info("torch.compile enabled.")
+        model = torch.compile(model, backend="inductor", mode="default")
+        logger.info("Model compilation finished.")
 
     # --- Optimizer / schedule ---
     optimizer = torch.optim.AdamW(
@@ -302,46 +295,38 @@ def main():
         num_training_steps=total_steps,
     )
 
-    peak_gpu_tflops = (
-        float(os.environ["GPU_PEAK_TFLOPS"])
-        if os.environ.get("GPU_PEAK_TFLOPS")
-        else None
-    )
-    gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    print_rank(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {peak_gpu_tflops}")
-
-    gpu_stats_during, stop_flag = start_gpu_monitor(
-        interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
-    )
-
-    # --- Training loop ---
-    print_rank("Starting trainining...")
-    model.train()
-    total_tokens_this_gpu = 0
-    global_step = 0
-    step_loss = torch.tensor(0)
-    start_time = time.time()
-
-    flopsCallback_megatronLM = mfu_callback_from_hf_config(
-        AutoConfig.from_pretrained(args.model_path),
-        tokenizer,
-        gpu_peak_flops=peak_gpu_tflops,
-        seq_length=args.max_length,
-        trainer_callback=False,
-    )
+    logger.info(f"GPU: {args.gpu_name} | peak TFLOPs for MFU: {args.peak_flops}")
 
     try:
-        print_rank(0, "Beginning of training...")
+        gpu_stats_during, stop_flag = start_gpu_monitor(
+            interval_sec=5, n_gpus=int(os.environ.get("GPUS_PER_NODE", 1))
+        )
+
+        # --- Training loop ---
+        model.train()
+        total_tokens_this_gpu = 0
+        global_step = 0
+        step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
+        start_time = time.time()
+
+        flopsCallback_megatronLM = mfu_callback_from_hf_config(
+            AutoConfig.from_pretrained(model_path),
+            tokenizer,
+            gpu_peak_flops=args.peak_flops,
+            seq_length=args.max_length,
+            trainer_callback=False,
+        )
+
+        logger.info("Beginning of training...")
         for epoch in range(num_epochs):
-            sampler.set_epoch(epoch)
+            train_sampler.set_epoch(epoch)
             optimizer.zero_grad()
             if global_step == 0:
                 flopsCallback_megatronLM.on_step_begin()
             for micro_step, batch in enumerate(train_dataloader):
-                print_rank(
-                    0,
-                    f"micro_step:{micro_step} - batch_keys:{batch.keys()} - batch_len:{len(batch[list(batch.keys())[0]])}",
-                )
+                # logger.info(
+                #    f"micro_step:{micro_step} - batch_keys:{batch.keys()} - batch_len:{len(batch[list(batch.keys())[0]])}",
+                # )
                 batch = {
                     k: v.to(local_rank, non_blocking=True) for k, v in batch.items()
                 }
@@ -349,14 +334,12 @@ def main():
                 outputs = model(**batch)
                 loss = outputs.loss / grad_accum_steps
                 loss.backward()
-
                 step_loss += outputs.loss
 
                 total_tokens_this_gpu += batch["input_ids"].numel()
 
                 if (micro_step + 1) % grad_accum_steps == 0:
-                    print_rank(
-                        0,
+                    logger.info(
                         f"global_step:{global_step} ",
                     )
                     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -371,14 +354,12 @@ def main():
                         gradient_accumulation_steps=grad_accum_steps,
                         global_step=global_step,
                     )
-
                     step_loss = step_loss / grad_accum_steps
 
                     if global_step % args.logging_steps == 0:
-                        print_rank(
-                            0,
+                        logger.info(
                             f"epoch {epoch} step {global_step}/{total_steps} | "
-                            f"loss {step_loss.item():.4f} | "
+                            f"loss {outputs.loss.item():.4f} | "
                             f"lr {lr_scheduler.get_last_lr()[0]:.5e} | "
                             f"TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f} | "
                             f"MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]} | "
@@ -391,7 +372,7 @@ def main():
                         break
 
                     flopsCallback_megatronLM.on_step_begin()
-                    step_loss = torch.tensor(0)
+                    step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
 
             if args.max_steps is not None and global_step >= int(args.max_steps):
                 break
@@ -427,45 +408,50 @@ def main():
             f"* Avg MFU: {avg_mfu}",
         ]
 
-        for i in range(world_size):
-            print_rank(i, "=== TRAINING SUMMARY ===")
-            print_rank(i, "\n".join(summary_log))
+        logger_rank.info("=== TRAINING SUMMARY ===")
+        logger_rank.info("\n".join(summary_log))
 
         save_training_summary(
             output_file=os.path.join(
                 args.output_dir,
+                f"repeatid-{repeatid}",
                 f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
             ),
             rank=rank,
-            model_name=args.model_name,
+            model_name=model_name,
             dataset_name=args.dataset_name,
-            framework="torchrun",
+            framework="accelerate",
             parallelism_type="fsdp",
             batch_size=args.batch_size,
             gradient_accumulation=args.gradient_accumulation_steps,
             learning_rate=args.lr,
             total_training_time_secs=elapsed_total,
             total_tokens_this_gpu=total_tokens_this_gpu,
-            total_tokens_global=total_tokens_global,
+            total_tokens_global=int(total_tokens_global),
             avg_gpu_flops=avg_tflops,
             avg_gpu_mfu=avg_mfu,
             gpu_stats=gpu_stats_during,
             training_loss=avg_final_loss.item(),
         )
-
-        print_rank(rank, "Fine-tuning completed successfully.")
-
+        logger.info("Fine-tuning completed successfully.")
     except Exception as e:
-        save_summary_stats_json(
-            summary={
-                "error": str(e),
-            },
+        logger.exception("Fine-tuning failed with error!")
+        save_training_summary(
             output_file=os.path.join(
                 args.output_dir,
+                f"repeatid-{repeatid}",
                 f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
             ),
+            rank=rank,
+            model_name=model_name,
+            dataset_name=args.dataset_name,
+            framework="accelerate",
+            parallelism_type="fsdp",
+            batch_size=args.batch_size,
+            gradient_accumulation=args.gradient_accumulation_steps,
+            learning_rate=args.lr,
+            exception_msg=str(e),
         )
-        print_rank("Fine-tuning failed to complete!")
         raise e
     finally:
         del model, optimizer
@@ -474,4 +460,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    for repeatid in range(config.experiment.repeat):
+        main(repeatid)

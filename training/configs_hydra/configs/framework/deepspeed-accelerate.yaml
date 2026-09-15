@@ -14,8 +14,8 @@ parallelism:
   zero3-offload: { min_gpus: 2 }
 
 scripts:
-  run: scripts/deepspeed-common/run-deepspeed-accelerate.sh
-  finetune: scripts/deepspeed-common/finetune-deepspeed-accelerate.py
+  run: scripts/deepspeed_common/run-deepspeed-accelerate.sh
+  finetune: scripts/deepspeed_common/finetune-deepspeed-accelerate.py
 datasets_allowed:
   - alpaca
   - squadv2

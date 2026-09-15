@@ -1,7 +1,16 @@
 import os
+import warnings
 from argparse import ArgumentParser
 from copy import deepcopy
 from itertools import product
+
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+)
+
+
+warnings.filterwarnings("ignore")
 
 from configs_hydra.constraints import rules
 from configs_hydra.dataclasses_hydra import BenchmarkConfig, register_configs
@@ -56,8 +65,9 @@ def generate_valid_combos(
     run_date: str,
     dry: bool | None = None,
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
-
     # logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
+
+    import configs_hydra.model_framework_dataset as mfd
 
     valid, skipped = [], []
 
@@ -72,7 +82,9 @@ def generate_valid_combos(
         config_dir=os.path.abspath(config_path), version_base="1.3"
     ):
         raw_total = 0
-        for model, framework, dataset in product(MODELS, FRAMEWORKS, DATASETS):
+        for model, framework, dataset in product(
+            mfd.MODELS, mfd.FRAMEWORKS, mfd.DATASETS
+        ):
             _init_cfg: BenchmarkConfig = compose(
                 config_name,
             )
@@ -326,12 +338,13 @@ def _multi_parallelism_framework(
 
     tmp_cfg = deepcopy(cfg)
 
-    for gbs, bs, steps, grad_ctk, seq_len in product(
+    for gbs, bs, steps, grad_ctk, seq_len, prec in product(
         cfg.model.combinations.global_batch_sizes,
         cfg.model.combinations.batch_sizes,
         cfg.model.combinations.steps,
         cfg.model.combinations.gradient_checkpointing,
         cfg.model.combinations.max_seq_lens,
+        cfg.model.combinations.precisions,
     ):
         # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
         # to each experiment combination
@@ -340,6 +353,7 @@ def _multi_parallelism_framework(
         tmp_cfg.model.training.steps = steps
         tmp_cfg.model.training.gradient_checkpointing = grad_ctk
         tmp_cfg.model.training.max_model_length = seq_len
+        tmp_cfg.model.training.precision = prec
         tmp_cfg.experiment.output_dir = outpath
 
         # Get min number of nodes to run based on model and hpc architecture
@@ -390,11 +404,10 @@ def _multi_parallelism_framework(
                     parallelism_comb_str += (
                         f"_ep-{tmp_cfg.framework.megatron_parallelism.ep}"
                     )
-                if c.get("sp", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.sp = c["sp"]
-                    parallelism_comb_str += (
-                        f"_sp-{tmp_cfg.framework.megatron_parallelism.sp}"
-                    )
+                tmp_cfg.framework.megatron_parallelism.sp = c.get("sp", False)
+                parallelism_comb_str += (
+                    f"_sp-{tmp_cfg.framework.megatron_parallelism.sp}"
+                )
 
                 parameters_combo = (
                     f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/"
@@ -404,7 +417,14 @@ def _multi_parallelism_framework(
                 tmp_cfg.slurm.sbatch.chdir = os.path.join(
                     tmp_cfg.experiment.output_dir, parameters_combo
                 )
-                experiment_parameters = f"gbs{gbs}-bs{bs}-grad_accum{grad_acc}-seq_len{seq_len}-grad_ctk{grad_ctk}"
+                experiment_parameters = (
+                    f"gbs{gbs}"
+                    f"-bs{bs}"
+                    f"-grad_accum{grad_acc}"
+                    f"-prec{prec}"
+                    f"-seq_len{seq_len}"
+                    f"-grad_ctk{grad_ctk}"
+                )
                 yaml_filename = (
                     f"{parallelism_comb_str}--{experiment_parameters}" + ".yaml"
                 )
@@ -435,7 +455,8 @@ def _multi_parallelism_framework(
                     + f" | gpus:{total_gpus}"
                     + f" | gbs:{gbs}"
                     + f" | bs:{bs}"
-                    + f" | max-seq-len{seq_len}"
+                    + f" | precision:{prec}"
+                    + f" | max-seq-len:{seq_len}"
                     + f" | grad_accum:{grad_acc}"
                 )
                 if not passed:

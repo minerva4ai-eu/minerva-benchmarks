@@ -35,7 +35,5 @@ training/cli-logs/*
 */.triton*
 */.cache*
 *copy
+*.deepspeed_env
 
-job_outputs/
-outputs/
-profiler/

@@ -31,3 +31,8 @@ megatron_parallelism_supported:
   - tp
   - pp
   - cp
+  - sp
+
+
+combinations:
+  precisions: ["bf16", "bf16_fp8"]

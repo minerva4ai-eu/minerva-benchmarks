@@ -16,30 +16,19 @@ runtime_prefix="$(training_build_runtime_prefix)"
 echo "runtime prefix: $runtime_prefix"
 echo yaml_path=$1
 
-MASTER_PORT=29500
-# export MASTER_ADDR=$HEAD_NODE
-NUM_PROCS=$(($SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
+NUM_PROCS=$((SLURM_STEP_NUM_NODES * SLURM_GPUS_ON_NODE))
 
 gpu_plots_monitor_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shared.gpu_plots"
-
-# accelerate_config_path="scripts/accelerate-common/accelerate_config.yaml"
-
-# # Update Accelerate config placeholders
-# sed -i "s/{{MASTER_IP}}/$HEAD_NODE/g" "$accelerate_config_path"
-# sed -i "s/{{NUM_NODES}}/$SLURM_STEP_NUM_NODES/g" "$accelerate_config_path"
-# sed -i "s/{{NUM_GPUS}}/$NUM_PROCS/g" "$accelerate_config_path"
-# sed -i "s/machine_rank: 0/machine_rank: $SLURM_NODEID/g" "$accelerate_config_path"
-
 
 train_command="${runtime_prefix:+$runtime_prefix} accelerate launch \
     --multi-gpu \
     --machine_rank $SLURM_NODEID \
     --rdzv_backend c10d \
     --main_process_ip $HEAD_NODE \
-    --main_process_port $MASTER_PORT \
+    --main_process_port $HEAD_PORT \
     --num_processes $NUM_PROCS \
     --num_machines $SLURM_STEP_NUM_NODES \
-       $TRAIN_SCRIPT --yaml $1 --max_comm_comp_overlap"
+       $TRAIN_MODULE --yaml $1 --max_comm_comp_overlap"
 
 echo "ENABLE_COMPILE: $ENABLE_COMPILE"
 if [[ $ENABLE_COMPILE == "True" || $ENABLE_COMPILE == "true" ]]; then
@@ -52,8 +41,8 @@ prepare_train_command="${runtime_prefix:+$runtime_prefix} python -m scripts.shar
 echo "NODE_RANK: {$NODE_RANK}"
 echo "NNODES: {$NNODES}"
 echo "NUM_PROCS: {$NUM_PROCS}"
-echo "MASTER_ADDR: {$MASTER_ADDR}"
-echo "MASTER_PORT: {$MASTER_PORT}"
+echo "HEAD_NODE: {$HEAD_NODE}"
+echo "HEAD_PORT: {$HEAD_PORT}"
 echo "train_command: {$train_command}"
 echo "prepare_train_command: {$prepare_train_command}"
 

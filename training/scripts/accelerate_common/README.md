@@ -9,7 +9,7 @@ Accelerate abstracts away the complexity of distributed training by providing a 
 ## Directory Structure
 
 ```
-accelerate-common/
+accelerate_common/
 ├── run-none.sh              # Single-GPU launcher
 ├── run-ddp.sh               # DDP (Distributed Data Parallel) launcher
 ├── run-fsdp.sh              # FSDP (Fully Sharded Data Parallel) launcher

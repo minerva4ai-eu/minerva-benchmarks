@@ -38,7 +38,7 @@ scripts/
 │   ├── utils.py                     # print_rank, count_parameters, timed decorators
 │   └── datasets/                    # Dataset handler registry
 │
-├── accelerate-common/               # HuggingFace Accelerate framework
+├── accelerate_common/               # HuggingFace Accelerate framework
 │   ├── run-none.sh                  # Single-GPU launcher
 │   ├── run-ddp.sh                   # DDP launcher (multi-GPU)
 │   ├── run-fsdp.sh                  # FSDP launcher (multi-GPU)
@@ -58,7 +58,7 @@ scripts/
 │   ├── gpu_monitor.py               # GPU metrics collection
 │   └── utils.py                     # TorchRun-specific utilities
 │
-├── deepspeed-common/                # Microsoft DeepSpeed
+├── deepspeed_common/                # Microsoft DeepSpeed
 │   ├── run-deepspeed.sh             # DeepSpeed launcher (ZeRO stages)
 │   ├── finetune-deepspeed.py        # DeepSpeed training entry point
 │   ├── configs/                     # DeepSpeed JSON configuration files
@@ -174,7 +174,7 @@ Registry of dataset handlers that load, preprocess, and format data for training
 
 ## Framework-Specific Scripts
 
-### Accelerate (`accelerate-common/`)
+### Accelerate (`accelerate_common/`)
 
 [HuggingFace Accelerate](https://huggingface.co/docs/accelerate) provides a high-level API for multi-GPU training.
 
@@ -248,7 +248,7 @@ PyTorch's native distributed training package provides lower-level control over 
 | `finetune-ddp.py` | DDP training |
 | `finetune-fsdp.py` | FSDP training |
 
-### DeepSpeed (`deepspeed-common/`)
+### DeepSpeed (`deepspeed_common/`)
 
 [Microsoft DeepSpeed](https://www.deepspeed.ai/) provides ZeRO optimization for training very large models across multiple GPUs/nodes.
 
@@ -271,7 +271,7 @@ PyTorch's native distributed training package provides lower-level control over 
 - **DeepSpeed JSON configs** — Located in `configs/`, define ZeRO stage, micro batch size, gradient accumulation, etc.
 - **Metrics collection** — `metrics.py` collects DeepSpeed-specific metrics (throughput, memory, ZeRO stats).
 
-**DeepSpeed JSON Configs (`deepspeed-common/configs/`):**
+**DeepSpeed JSON Configs (`deepspeed_common/configs/`):**
 
 | File | Purpose |
 |------|---------|

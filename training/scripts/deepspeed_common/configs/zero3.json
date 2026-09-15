@@ -18,22 +18,23 @@
         "round_robin_gradients": true
         
     },
-    "optimizer": {
+  "optimizer": {
         "type": "AdamW",
         "params": {
             "torch_adam": true,
-            "lr": 1e-4,
-            "betas": [0.9, 0.95],
-            "eps": 1e-8,
-            "weight_decay": 0.1
+            "lr":"auto",
+            "betas": "auto",
+            "eps": "auto",
+            "weight_decay": "auto"
         }
     },
+
     "scheduler": {
         "type": "WarmupLR",
-        "params": {         
-            "warmup_min_lr": 0.0,
-            "warmup_max_lr": 1e-4,
-            "warmup_num_steps": 10
+        "params": {
+        "warmup_min_lr": "auto",
+        "warmup_max_lr": "auto",
+        "warmup_num_steps": "auto"
         }
     },
     "bf16": {
@@ -43,12 +44,5 @@
         "enabled": "auto"
     },
     "train_micro_batch_size_per_gpu": "auto",
-    "gradient_accumulation_steps": "auto",
-    "csv_monitor": {
-        "enabled": true,
-        "output_path": "output/ds_logs/",
-        "job_name": "deepspeed_training_metrics"
-    }
-    
-    
+    "gradient_accumulation_steps": "auto"
 }

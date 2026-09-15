@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import time
@@ -6,7 +7,7 @@ import deepspeed
 import psutil
 import torch
 import torch.distributed as dist
-from scripts.shared.args import get_deepspeed_parser
+from scripts.shared.args import construct_config, get_deepspeed_parser
 from scripts.shared.data import (
     collate_fn,
     get_train_eval_path,
@@ -14,25 +15,21 @@ from scripts.shared.data import (
 )
 from scripts.shared.flops import mfu_callback_from_hf_config
 from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
     is_main_process,
-    print_rank,
     save_training_summary,
     setup_distributed,
 )
-from transformers import (
-    AutoConfig,
-    AutoModelForCausalLM,
-    AutoTokenizer,
-)
+from scripts.slurm.utils import load_config
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from transformers.integrations.deepspeed import HfDeepSpeedConfig
 
-args = get_deepspeed_parser().parse_args()
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+rank, world_size, local_rank = setup_distributed()
+config = load_config(get_deepspeed_parser().parse_args().yaml_file)
+setup_logging(level=logging.INFO, cfg=config)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
 
 
 def get_dist_info():
@@ -82,10 +79,17 @@ def load_model(model_path, dtype, ds_config):
 # ------#
 
 
-def main():
-    model_path = args.model
-    model_name = args.model.split("/")[-1]
-    train_path, eval_path = get_train_eval_path(args)
+def main(repeatid: int):
+    jobid = os.environ["SLURM_JOB_ID"]
+    jobstepid = os.environ["SLURM_STEP_ID"]
+    jobsteprocid = os.environ["SLURM_PROCID"]
+
+    args = get_deepspeed_parser().parse_args()
+    cfg = construct_config(args)
+
+    model_path = cfg.model_path
+    model_name = cfg.model_name
+    train_path, eval_path = get_train_eval_path(cfg)
 
     rank, world_size, local_rank = setup_distributed()
     torch.cuda.empty_cache()
@@ -95,26 +99,14 @@ def main():
         os.makedirs(output_dir, exist_ok=True)
 
     dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
-        args.precision, torch.float32
+        cfg.precision, torch.float32
     )
-    print_rank(0, f"Training dtype: {dtype}")
-
-    # -----------------------#
-    # Load DeepSpeed Config  #
-    # -----------------------#
-    with open(args.deepspeed_config_file, "r") as f:
-        import json
-
-        ds_config = json.load(f)
-    ds_config["bf16"] = {"enabled": args.precision == "bf16"}
-    ds_config["fp16"] = {"enabled": args.precision == "fp16"}
-    ds_config["train_micro_batch_size_per_gpu"] = args.batch_size
-    ds_config["gradient_accumulation_steps"] = args.gradient_accumulation_steps
+    logger.info(f"Training dtype: {dtype}")
 
     # -----------#
     # Tokenizer  #
     # -----------#
-    print_rank(rank, f"Loading tokenizer {model_name}...")
+    logger_rank.info(f"Loading tokenizer {model_name}...")
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -125,9 +117,8 @@ def main():
     train_dataset = load_prepared_packed_dataset(train_path)
     # eval_dataset = load_prepared_packed_dataset(eval_path)
 
-    print_rank(
-        rank,
-        f"Packed train dataset size: {len(train_dataset)} blocks of {args.max_length} tokens",
+    logger_rank.info(
+        f"Packed train dataset size: {len(train_dataset)} blocks of {cfg.max_length} tokens",
     )
 
     train_sampler = torch.utils.data.DistributedSampler(
@@ -135,62 +126,99 @@ def main():
     )
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=args.batch_size,
+        batch_size=cfg.batch_size,
         sampler=train_sampler,
         collate_fn=collate_fn,
-        num_workers=args.dataloader_num_workers,
+        num_workers=cfg.dataloader_num_workers,
         pin_memory=True,
         drop_last=True,
-        persistent_workers=args.dataloader_num_workers > 1,
-        prefetch_factor=4 if args.dataloader_num_workers > 0 else None,
+        persistent_workers=cfg.dataloader_num_workers > 1,
+        prefetch_factor=4 if cfg.dataloader_num_workers > 0 else None,
     )
 
+    # -----------------------#
+    # Load DeepSpeed Config  #
+    # -----------------------#
+    with open(args.deepspeed_config_file, "r") as f:
+        import json
+
+        ds_config = json.load(f)
+    ds_config["bf16"] = {"enabled": cfg.precision == "bf16"}
+    ds_config["fp16"] = {"enabled": cfg.precision == "fp16"}
+    ds_config["train_micro_batch_size_per_gpu"] = cfg.batch_size
+    ds_config["gradient_accumulation_steps"] = cfg.gradient_accumulation_steps
+    ds_config["optimizer"]["params"]["lr"] = cfg.lr
+    ds_config["optimizer"]["params"]["betas"] = [0.9, 0.999]
+    ds_config["optimizer"]["params"]["eps"] = 1e-8
+    ds_config["optimizer"]["params"]["weight_decay"] = cfg.weight_decay
+    steps = (
+        cfg.max_steps
+        if cfg.max_steps
+        else (
+            len(train_dataloader)
+            / (dist.get_world_size() * cfg.gradient_accumulation_steps)
+        )
+    )
+    ds_config["optimizer"]["params"]["warmup_num_steps"] = int(
+        cfg.warmup_ratio * (steps)
+    )
+
+    logger.info(f"bf16: {ds_config['bf16']}")
+    logger.info(f"bf16: {ds_config['fp16']}")
+    logger.info(
+        f"train_micro_batch_size_per_gpu: {ds_config['train_micro_batch_size_per_gpu']}"
+    )
+    logger.info(
+        f"gradient_accumulation_steps: {ds_config['gradient_accumulation_steps']}"
+    )
+    logger.info(f"lr: {ds_config['optimizer']['params']['lr']}")
+    logger.info(f"betas: {ds_config['optimizer']['params']['betas']}")
+    logger.info(f"eps: {ds_config['optimizer']['params']['eps']}")
+    logger.info(f"weight_decay: {ds_config['optimizer']['params']['weight_decay']}")
+    logger.info(
+        f"warmup_num_step: {ds_config['optimizer']['params']['warmup_num_step']}"
+    )
     # -------#
     # Model  #
     # -------#
 
-    print_rank(0, f"Loading model '{model_path}' dtype={dtype}")
+    logger.info(f"Loading model '{model_path}' dtype={dtype}")
     model = load_model(model_path, dtype, ds_config)
 
     ram_gb = psutil.Process(os.getpid()).memory_info().rss / 1e9
-    print_rank(rank, f"CPU RAM after model load: {ram_gb:.1f} GB")
+    logger_rank.info(f"CPU RAM after model load: {ram_gb:.1f} GB")
 
     if hasattr(model, "tie_weights"):
         model.tie_weights()
     if hasattr(model.config, "use_cache"):
         model.config.use_cache = False
-        print_rank(rank, "Disabled model cache")
+        logger_rank.info("Disabled model cache")
 
-    if args.gradient_checkpointing:
+    if cfg.gradient_checkpointing:
         model.gradient_checkpointing_enable()
-        print_rank(rank, "Gradient checkpointing enabled")
+        logger_rank.info("Gradient checkpointing enabled")
 
-    if args.enable_compile:
-        print_rank(0, "torch.compile enabled.")
+    if cfg.enable_compile:
+        logger.info("torch.compile enabled.")
         model = torch.compile(model, backend="inductor", mode="default")
-        print_rank(0, "Model compilation finished.")
+        logger.info("Model compilation finished.")
 
     # -----------------#
     # Training config  #
     # -----------------#
-    grad_accum_steps: int = args.gradient_accumulation_steps
+    grad_accum_steps: int = cfg.gradient_accumulation_steps
     steps_per_epoch = math.ceil(len(train_dataloader) / grad_accum_steps)
 
-    logging_steps: int = args.logging_steps
-    num_epochs = args.epochs if args.epochs is not None and args.epochs > 0 else 1
+    logging_steps: int = cfg.logging_steps
+    num_epochs = cfg.epochs if cfg.epochs is not None and cfg.epochs > 0 else 1
     total_steps = (
-        int(args.max_steps)
-        if args.max_steps is not None
+        int(cfg.max_steps)
+        if cfg.max_steps is not None
         else steps_per_epoch * num_epochs
     )
 
-    peak_gpu_tflops = (
-        float(os.environ["GPU_PEAK_TFLOPS"])
-        if os.environ.get("GPU_PEAK_TFLOPS")
-        else None
-    )
     gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    print_rank(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {peak_gpu_tflops}")
+    logger.info(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {cfg.peak_flops}")
 
     # ########################################################################
     # DeepSpeed initialisation                                               #
@@ -209,7 +237,7 @@ def main():
         model_parameters=model.parameters(),
         config=ds_config,
     )
-    print_rank(rank, "DeepSpeed engine initialised")
+    logger.info(rank, "DeepSpeed engine initialised")
 
     # ------------------------------------------------------------------
     # GPU background monitor
@@ -234,19 +262,20 @@ def main():
     # ------------------------------------------------------------------
     # Training loop
     # ------------------------------------------------------------------
-    print_rank(0, "Starting training...")
+    logger.info(0, "Starting training...")
     engine.train()
     train_start = time.time()
 
     flopsCallback_megatronLM = mfu_callback_from_hf_config(
         AutoConfig.from_pretrained(model_path),
         tokenizer,
-        gpu_peak_flops=peak_gpu_tflops,
-        seq_length=args.max_length,
+        gpu_peak_flops=cfg.peak_flops,
+        seq_length=cfg.max_length,
         trainer_callback=False,
     )
     training_done = False
     step_loss = 0
+    step_time = 0
     for epoch in range(num_epochs):
         if training_done:
             break
@@ -278,28 +307,31 @@ def main():
 
             # ---------- optimizer step ---------------
             if micro_step % grad_accum_steps == 0:
-                step_time = time.time() - step_start
+                step_time += time.time() - step_start
+                global_step += 1
+                avg_step_time = step_time / global_step
 
                 # engine.step() also clips gradients (configured in DS JSON)
                 engine.step()
                 torch.cuda.empty_cache()
 
                 flopsCallback_megatronLM.on_step_end(
-                    micro_batch_size=args.batch_size,
+                    micro_batch_size=cfg.batch_size,
                     world_size=world_size,
                     gradient_accumulation_steps=grad_accum_steps,
                     global_step=global_step,
                 )
 
-                if global_step % args.logging_steps == 0:
-                    print_rank(
+                if global_step % cfg.logging_steps == 0:
+                    logger.info(
                         0,
-                        f"epoch {epoch} step {global_step}/{total_steps} | "
-                        f"loss {outputs.loss.item():.4f} | "
-                        f"lr {lr_scheduler.get_last_lr()[0]:.5e} | "
-                        f"TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f} | "
-                        f"MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]} | "
-                        f"gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
+                        f" | epoch {epoch} step {global_step}/{total_steps}"
+                        f" | loss {outputs.loss.item():.4f}"
+                        f" | lr {lr_scheduler.get_last_lr()[0]:.5e}"
+                        f" | TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f}"
+                        f" | MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]}"
+                        f" | gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
+                        f" | avg_step_time {avg_step_time:.4f}sec",
                     )
                 # All-reduce token count to get global tokens this step
                 tokens_tensor = torch.tensor(
@@ -316,13 +348,12 @@ def main():
                 total_loss_sum += step_loss
 
                 # ------ reset micro accumulators -----
-                global_step += 1
                 accum_loss = 0.0
                 accum_tokens_local = 0
                 step_start = time.time()
 
                 # ------ max_steps guard --------------
-                if args.max_steps is not None and global_step >= args.max_steps:
+                if cfg.max_steps is not None and global_step >= cfg.max_steps:
                     training_done = True
                     break
 
@@ -384,23 +415,26 @@ def main():
         f"* Avg MFU: {avg_mfu}",
     ]
 
-    for i in range(world_size):
-        print_rank(i, "=== TRAINING SUMMARY ===")
-        print_rank(i, "\n".join(summary_log))
+    logger_rank.info("=== TRAINING SUMMARY ===")
+    logger_rank.info("\n".join(summary_log))
 
     # ------------------------------------------------------------------
     # Save summary — identical schema to the original
     # ------------------------------------------------------------------
     save_training_summary(
-        output_dir=output_dir,
+        output_file=os.path.join(
+            args.output_dir,
+            f"repeatid-{repeatid}",
+            f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+        ),
         rank=rank,
         model_name=model_name,
-        dataset_name=args.dataset,
+        dataset_name=cfg.dataset,
         framework="accelerate",
         parallelism_type="fsdp",
-        batch_size=args.batch_size,
-        gradient_accumulation=args.gradient_accumulation_steps,
-        learning_rate=args.lr,
+        batch_size=cfg.batch_size,
+        gradient_accumulation=cfg.gradient_accumulation_steps,
+        learning_rate=cfg.lr,
         total_training_time_secs=elapsed_total,
         total_tokens_this_gpu=tokens_per_gpu_all_epochs,
         total_tokens_global=total_tokens_global,
@@ -409,8 +443,9 @@ def main():
         gpu_stats=gpu_stats_during,
         training_loss=final_step_loss,
     )
-    print_rank(rank, "Fine-tuning completed successfully.")
+    logger_rank.info("Fine-tuning completed successfully.")
 
 
 if __name__ == "__main__":
-    main()
+    for repeatid in range(config.experiment.repeat):
+        main(repeatid)

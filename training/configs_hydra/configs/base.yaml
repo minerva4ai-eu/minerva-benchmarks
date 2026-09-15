@@ -31,7 +31,7 @@ machine:
 experiment:
   name: "benchmark_run"           # Do not change here, only in inherited configuration
   output_dir: "results/"          # DEPRECATED(?), overwritten by RUNS_DIR global variable in 'hydra_app.py'
-  repeat: 1                       # Do not change, default value for all benchmarks across computers
+  repeat: 2                       # Do not change, default value for all benchmarks across computers
   yaml_filename:                  # Do not fill in, value filled during compose runtime
   env:                            # DO NOT TUCH. UNIVERSAL ENV VARS FOR BENCHMARKS
     PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"

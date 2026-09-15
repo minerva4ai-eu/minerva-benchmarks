@@ -157,7 +157,14 @@ class FrameworkParallelismValidityRule(ConstraintRule):
         return RuleResult(True, "parallelism_gpu_floor")
 
 
-BYTES_PER_PARAM = {"fp32": 4, "bf16": 2, "fp16": 2, "fp8": 1}
+BYTES_PER_PARAM = {
+    "fp32": 4,
+    "bf16": 2,
+    "fp16": 2,
+    "bf16_fp8": 2,
+    "fp16_fp8": 2,
+    "fp8": 1,
+}
 OPTIMIZER_BYTES = {"adamw": 8, "adam": 8, "sgd": 0, "adafactor": 4}
 MAX_GPUS_SCALE = 256
 PARALLELISM_DIVISOR = {
@@ -288,8 +295,32 @@ def megatron_divisors(
 
 class MinNodesMemoryRule(ConstraintRule):
     SAFETY_MARGIN = 0.85
+    # Megatron/NeMo allocates additional buffers for distributed execution,
+    # compilation, and temporary collectives beyond the model estimate.
+    MEGATRON_SAFETY_MARGIN = 0.70
 
     def check(self, c: DictConfig) -> RuleResult:
+
+        if c.framework.megatron_parallelism:
+            actual_gpus = c.arch.node.gpus_per_node * c.slurm.sbatch.nodes
+            parallelism = c.framework.megatron_parallelism
+            combo = {
+                axis: getattr(parallelism, axis)
+                for axis in ("tp", "pp", "cp", "dp", "ep")
+                if axis in c.model.megatron_parallelism_supported
+            }
+            combo_gpus = math.prod(combo.values())
+            if combo_gpus == actual_gpus:
+                breakdown = self._megatron_combo_memory(c, combo)
+                if breakdown["per_gpu"] > breakdown["gpu_usable"]:
+                    return RuleResult(
+                        False,
+                        "min_nodes_memory",
+                        f"Requested Megatron tiling {combo} needs ~{breakdown['per_gpu_gb']} GB per GPU; "
+                        f"usable memory is ~{breakdown['gpu_usable_gb']} GB. "
+                        f"Breakdown: {breakdown}",
+                    )
+                return RuleResult(True, "min_nodes_memory", str(breakdown))
 
         min_gpus, breakdown = self._min_gpus_required(c)
         if min_gpus == -1:
@@ -311,6 +342,65 @@ class MinNodesMemoryRule(ConstraintRule):
             )
         return RuleResult(True, "min_nodes_memory", str(breakdown))
 
+    def _megatron_combo_memory(self, c: DictConfig, combo: dict[str, int]) -> dict:
+        """Estimate memory for the exact Megatron tiling being submitted."""
+        arch_type = c.model.architecture_type
+        precision = c.model.training.precision
+        optimizer = _cfg_get(c.model.training, "optimizer", "adamw")
+        bpp = BYTES_PER_PARAM[precision]
+        opt_bytes = OPTIMIZER_BYTES.get(optimizer, 8)
+        safety_margin = (
+            self.MEGATRON_SAFETY_MARGIN
+            if c.framework.megatron_parallelism
+            else self.SAFETY_MARGIN
+        )
+        gpu_vram = c.arch.gpu.vram_gb * 1e9 * safety_margin
+
+        if arch_type == "moe":
+            params = c.model.total_params_billions * 1e9
+            compute_params = c.model.active_params_billions * 1e9
+        else:
+            params = c.model.total_params_billions * 1e9
+            compute_params = params
+
+        m_params = params * bpp
+        m_gradients = compute_params * bpp
+        m_optimizer = compute_params * opt_bytes
+        divisors = megatron_divisors(
+            combo,
+            arch_type,
+            bool(_cfg_get(c.model.training, "use_distributed_optimizer", True)),
+        )
+        layers_per_stage = math.ceil(c.model.num_layers / combo["pp"])
+        activations = (
+            self._activation_memory(
+                c,
+                arch_type,
+                c.model.training.batch_size,
+                c.model.training.max_model_length,
+                bpp,
+                num_layers_override=layers_per_stage,
+            )
+            / divisors["activations"]
+        )
+        per_gpu = (
+            m_params / divisors["params"]
+            + m_gradients / divisors["gradients"]
+            + m_optimizer / divisors["optimizer"]
+            + activations
+        )
+        return {
+            "params_gb": round(m_params / divisors["params"] / 1e9, 2),
+            "gradients_gb": round(m_gradients / divisors["gradients"] / 1e9, 2),
+            "optimizer_gb": round(m_optimizer / divisors["optimizer"] / 1e9, 2),
+            "activations_gb": round(activations / 1e9, 2),
+            "per_gpu_gb": round(per_gpu / 1e9, 2),
+            "gpu_usable_gb": round(gpu_vram / 1e9, 2),
+            "per_gpu": per_gpu,
+            "gpu_usable": gpu_vram,
+            "combo": combo,
+        }
+
     def _min_nodes_required(self, c: BenchmarkConfig) -> int:
         min_gpus, _ = self._min_gpus_required(c)
         return math.ceil(min_gpus / c.arch.node.gpus_per_node)
@@ -321,7 +411,7 @@ class MinNodesMemoryRule(ConstraintRule):
         precision = c.model.training.precision
         optimizer = c.model.training.get("optimizer", "adamw")
 
-        gpu_vram = c.arch.gpu.vram_gb * 1e9 * self.SAFETY_MARGIN
+        gpu_vram = c.arch.gpu.vram_gb * 1e9 * self.MEGATRON_SAFETY_MARGIN
 
         bpp = BYTES_PER_PARAM[precision]
         opt_bytes = OPTIMIZER_BYTES.get(optimizer, 8)
@@ -627,44 +717,43 @@ def megatron_parallelism_combos(
         axes: List of target parallelism axes (e.g., ["tp", "pp", "cp", "dp", "ep", "sp"]).
 
     Rules & Constraints:
-        - `tp` is fixed to `gpus_per_node` (if present in `axes`).
+        - `sp` is a boolean flag (sequence parallelism on/off), NOT a multiplicative
+          axis: it is excluded from the GPU product and can only be True if `tp > 1`.
+        - Product of the multiplicative axes (any of tp/pp/cp/dp/ep present in
+          `axes`) equals `total_gpus`. All axis values >= 1.
+        - `tp <= gpus_per_node` (keep TP groups intra-node, where NVLink lives).
         - `pp <= nnodes` (if present in `axes`).
-        - `sp` can only be > 1 if `tp > 1` (if present in `axes`).
-        - Product of all selected axes equals `total_gpus`.
-        - All axis values >= 1.
     """
+    MAX_PP = nnodes
+    MIN_TP = int(gpus_per_node / 2)
+    MAX_TP = gpus_per_node
+    MIN_EP = 2
+    MAX_EP = gpus_per_node
+    MAX_CP = 2
+    EP_ENABLED = "ep" in axes
     # Remove duplicates while maintaining insertion order
     clean_axes = list(dict.fromkeys(axes))
     total_gpus = gpus_per_node * nnodes
 
-    fixed_values: dict[str, int] = {}
+    # sp is boolean: it does not participate in the GPU product
+    has_sp = "sp" in clean_axes
+    multiplicative_axes = [a for a in clean_axes if a != "sp"]
 
-    # 1. Handle fixed TP constraint
-    if "tp" in clean_axes:
-        fixed_values["tp"] = gpus_per_node
+    def with_sp_variants(assignment: dict[str, int]) -> list[dict[str, int]]:
+        """Expand a multiplicative-axes assignment into its valid sp variants."""
+        base = {"nnodes": nnodes, **assignment}
+        if not has_sp:
+            return [base]
+        variants = [{**base, "sp": False}]
+        if assignment.get("tp", 1) > 1:
+            variants.append({**base, "sp": True})
+        return variants
 
-    # Determine effective TP to enforce SP rule
-    effective_tp = fixed_values.get("tp", 1)
-
-    # 2. Handle SP constraint when TP <= 1
-    if "sp" in clean_axes and effective_tp <= 1:
-        fixed_values["sp"] = 1
-
-    dynamic_axes = [a for a in clean_axes if a not in fixed_values]
-
-    # Calculate remaining allocation space after applying fixed axes
-    fixed_product = 1
-    for val in fixed_values.values():
-        fixed_product *= val
-
-    if total_gpus % fixed_product != 0:
-        return []
-
-    target_product = total_gpus // fixed_product
-
-    # Special Case: No dynamic axes left to tile
-    if not dynamic_axes:
-        return [{"nnodes": nnodes, **fixed_values}] if target_product == 1 else []
+    # Special Case: no multiplicative axes to tile (e.g. axes == ["sp"])
+    if not multiplicative_axes:
+        if total_gpus != 1:
+            return []
+        return with_sp_variants({})
 
     @cache
     def find_factor_tuples(target: int, count: int) -> list[tuple[int, ...]]:
@@ -682,21 +771,36 @@ def megatron_parallelism_combos(
 
     results: list[dict[str, int]] = []
 
-    # Get all possible integer partitions for dynamic axes
-    all_tuples = find_factor_tuples(target_product, len(dynamic_axes))
+    # Get all possible integer partitions for the multiplicative axes
+    all_tuples = find_factor_tuples(total_gpus, len(multiplicative_axes))
 
     # Map and validate combinations against rules
     for combo in all_tuples:
-        assignment = dict(zip(dynamic_axes, combo))
+        assignment = dict(zip(multiplicative_axes, combo))
+
+        # Enforce TP constraint (TP stays intra-node)
+        tp = assignment.get("tp", 1)
+        pp = assignment.get("pp", 1)
+        ep = assignment.get("ep", 1)
+        cp = assignment.get("cp", 1)
+        if tp < MIN_TP or tp > MAX_TP:
+            continue
 
         # Enforce PP constraint
-        if assignment.get("pp", 1) > nnodes:
+        if pp > MAX_PP:
             continue
 
-        # Enforce SP constraint (sp > 1 requires tp > 1)
-        if assignment.get("sp", 1) > 1 and effective_tp <= 1:
+        if cp > MAX_CP:
             continue
 
-        results.append({"nnodes": nnodes, **fixed_values, **assignment})
+        if EP_ENABLED and (ep < MIN_EP or ep > MAX_EP):
+            continue
+        total_parallelism = tp * pp * cp
+        if EP_ENABLED:
+            total_parallelism *= ep
+
+        if total_parallelism > gpus_per_node * nnodes:
+            continue
+        results.extend(with_sp_variants(assignment))
 
     return results

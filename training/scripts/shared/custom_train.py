@@ -3,21 +3,13 @@ import os
 import time
 
 import torch
-import torch._inductor.config as inductor_config
 import torch.distributed as dist
+from scripts.shared.logger import RankAdapter
 from scripts.shared.utils import save_summary_stats_json
 from trl import SFTTrainer
 
-# Save tuning results to disk so next run skips benchmarking
-inductor_config.autotune_local_cache = True
-torch.backends.cuda.matmul.allow_tf32 = False
-torch.backends.cudnn.allow_tf32 = False
-
-# torch.compiler.config.assume_static_by_default = False
-# torch._dynamo.config.capture_dynamic_shapes = True
-# torch._dynamo.config.recompile_limit = 16
-
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
 
 
 def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
@@ -83,13 +75,12 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         # Pass None to skip MFU logging.
         self.peak_gpu_tflops = peak_gpu_tflops
 
-        print_rank(
-            0,
+        logger.info(
             f"Initialized PerformanceTrackingTrainer on rank {dist.get_rank() if dist.is_available() and dist.is_initialized() else 0}",
         )
         print_rank(0, f"Trainer args: \n{self.args}")
-        # print_rank(0, f"Model architecure: \n{model_config.architectures}")
-        # print_rank(0, f"Number of model parameters: {self._num_params / 1e9:.2f}B")
+        # logger.info( f"Model architecure: \n{model_config.architectures}")
+        # logger.info( f"Number of model parameters: {self._num_params / 1e9:.2f}B")
         # print_rank(
         #    int(os.environ["RANK"]),
         #    f"Number of model parameters on this GPU: {self._num_params_this_gpu / 1e9:.2f}B",
@@ -233,6 +224,13 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             self.total_tokens_global = self.total_tokens_this_gpu
 
     def _finalize_flop_counts(self):
+        for callback in self.callback_handler.callbacks:
+            callback_state = getattr(callback, "state", None)
+            callback_tflops = getattr(callback_state, "tflops_this_gpu", None)
+            if callback_tflops:
+                self.logged_flops_this_gpus = callback_tflops
+                break
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         global_average_flops = 0
         local_avg_flops = (
@@ -244,13 +242,15 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         local_flops = torch.tensor(local_avg_flops, device=device)
         if dist.is_available() and dist.is_initialized():
             try:
-                dist.all_reduce(local_flops, op=dist.ReduceOp.SUM)
+                dist.all_reduce(local_flops, op=dist.ReduceOp.AVG)
                 global_average_flops = local_flops.item()
             except Exception:
                 print_rank(
                     0,
                     "Warning: Failed to reduce FLOP counts across GPUs! Setting global FLOPs equal to local FLOPs on each GPU.",
                 )
+        else:
+            global_average_flops = local_avg_flops
         self.global_average_flops = float(global_average_flops)
         self.avg_flops_this_gpu = local_avg_flops
         # self.global_average_flops_per_gpu = (
@@ -258,6 +258,12 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         # )
 
     def _finalize_mfu_counts(self):
+        for callback in self.callback_handler.callbacks:
+            callback_state = getattr(callback, "state", None)
+            callback_mfu = getattr(callback_state, "mfu_this_gpu", None)
+            if callback_mfu:
+                self.logged_mfu_this_gpus = callback_mfu
+                break
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         global_average_mfu = 0
         local_avg_mfu = (
@@ -268,8 +274,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         local_mfu = torch.tensor(local_avg_mfu, device=device)
         if dist.is_available() and dist.is_initialized():
             try:
-                dist.all_reduce(local_mfu, op=dist.ReduceOp.SUM)
-                global_average_mfu = local_mfu.item() / dist.get_world_size()
+                dist.all_reduce(local_mfu, op=dist.ReduceOp.AVG)
+                global_average_mfu = local_mfu.item()
             except Exception:
                 print_rank(
                     0,
@@ -325,38 +331,35 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                         self.train_dataset.__dict__["collate_fn"]
                     ) / len(self.train_dataset.__dict__["collate_fn"])
         except Exception:
-            print_rank(
+            logger.info(
                 "WARNING! Could not calculate 'average_get_item_time' or 'average_collate_fn_time'..."
             )
 
         # print summary on rank 0
-        print_rank("\n=== TOKEN / THROUGHPUT SUMMARY (PerformanceTrackingTrainer) ===")
-        print_rank(f"Total tokens per GPU (ALL epochs): {self.total_tokens_this_gpu:,}")
-        print(f"Total tokens GLOBAL (ALL epochs): {self.total_tokens_global:,}")
+        logger.info("=== TOKEN / THROUGHPUT SUMMARY (PerformanceTrackingTrainer) ===")
+        logger.info(
+            f"Total tokens per GPU (ALL epochs): {self.total_tokens_this_gpu:,}"
+        )
+        logger.info(f"Total tokens GLOBAL (ALL epochs): {self.total_tokens_global:,}")
 
         if elapsed > 0:
-            print_rank(0, f"Total training time (s): {elapsed:.2f}")
-            print_rank(
-                0, f"Tokens/sec per GPU: {self.total_tokens_this_gpu / elapsed:.2f}"
+            logger.info(f"Total training time (s): {elapsed:.2f}")
+            logger.info(
+                f"Tokens/sec per GPU: {self.total_tokens_this_gpu / elapsed:.2f}"
             )
-            print_rank(
-                0, f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:.2f}"
+            logger.info(f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:.2f}")
+            logger.info(
+                f"Global Average FLOPs: {self.global_average_flops / dist.get_world_size() / 1e12:.2f} TFLOPs/sec/GPU",
             )
-            print_rank(
-                0,
-                f"Average FLOPs over all GPUs: {self.global_average_flops / 1e12:.2f} TFLOPs/sec",
-            )
-            print_rank(
-                0,
-                f"Average FLOPs per GPU: {self.global_average_flops / dist.get_world_size() / 1e12:.2f} TFLOPs/sec/GPU",
-            )
-            print_rank(0, f"Average MFU per GPU: {self.global_average_mfu:.2f}%")
-            print_rank(
-                0, "==========================================================\n"
-            )
+            logger.info(f"Global Average MFU: {self.global_average_mfu:.2f}%")
+            logger.info("==========================================================\n")
 
-            print_rank(f"Average TFLOPs: {self.avg_flops_this_gpu:.2f}")
-            print_rank(f"Average MFU: {self.avg_mfu_this_gpu:.2f}")
+            logger_rank.info(
+                f"Average TFLOPs {os.getenv('RANK')}: {self.avg_flops_this_gpu:.2f}"
+            )
+            logger_rank.info(
+                f"Average MFU {os.getenv('RANK')}: {self.avg_mfu_this_gpu:.2f}"
+            )
         return output
 
     def write_summary(

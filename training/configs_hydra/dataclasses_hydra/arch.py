@@ -50,20 +50,20 @@ class PrecisionType(str, Enum):
     bf16 = "bf16"
     fp16 = "fp16"
     fp8 = "fp8"
+    bf16_fp8 = "bf16_fp8"  # Only applies for Megatron bench
 
 
 def get_peak_flops(cfg: GpuConfig, precision: str) -> int:
-    peak_flops = -100
     if precision == PrecisionType.fp32:
-        peak_flops = cfg.theoretical_peak_fp32_tflops
+        return cfg.theoretical_peak_fp32_tflops
     if precision == PrecisionType.bf16:
-        peak_flops = cfg.theoretical_peak_bf16_tensor_tflops
+        return cfg.theoretical_peak_bf16_tensor_tflops
     if precision == PrecisionType.fp16:
-        peak_flops = cfg.theoretical_peak_fp16_tensor_tflops
+        return cfg.theoretical_peak_fp16_tensor_tflops
+    if precision == PrecisionType.bf16_fp8:
+        return cfg.theoretical_peak_fp16_tensor_tflops
     if precision == PrecisionType.fp8:
-        peak_flops = cfg.theoretical_peak_fp8_tensor_tflops
-
-    return peak_flops
+        return cfg.theoretical_peak_fp8_tensor_tflops
 
 
 @dataclass

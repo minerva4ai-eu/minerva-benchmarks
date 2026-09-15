@@ -5,7 +5,7 @@ from configs_hydra.dataclasses_hydra import arch as a
 from omegaconf import MISSING
 
 VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
-VALID_PRECISIONS = set([precisiontype.value for precisiontype in a.PrecisionType])
+VALID_PRECISIONS = {precisiontype.value for precisiontype in a.PrecisionType}
 
 
 class ArchitectureType(str, Enum):
