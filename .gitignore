@@ -34,3 +34,4 @@ training/cli-logs/*
 *copy
 *.deepspeed_env
 
+*nemo_experiments*
