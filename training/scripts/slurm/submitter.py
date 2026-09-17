@@ -4,6 +4,8 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
+import uuid
 from pathlib import Path
 
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, MachineConfig
@@ -195,24 +197,39 @@ def build_srun_env():
 
 def build_sbatch_env(
     machine: MachineConfig, yamls: list[str], results_dir: str
-) -> dict:
+) -> dict[str, str]:
 
-    env = {**os.environ}
-    # TODO: try-except
-    env |= {
-        "MODULES": " ".join(machine.modules) if machine.modules else "",
-        "EXECUTION_MODE": machine.runtime_env_mode,
-        "SINGULARITY_BINDS": "".join(machine.singularity_binds)
-        if machine.singularity_binds
-        else "",
-        "SINGULARITY_ARGS": " ".join(machine.singularity_args)
-        if machine.singularity_args
-        else "",
-    }
+    # 1. Create results directory if it doesn't exist
+    os.makedirs(results_dir, exist_ok=True)
 
-    env |= {"MINERVA_WORKDIR": results_dir, "YAMLS": ":".join(yamls)}
+    # 2. Save YAML paths to a manifest file to bypass ARG_MAX limits
+    manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
+    while os.path.exists(manifest_path):
+        manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
+    with open(manifest_path, "w") as f:
+        f.write("\n".join(yamls) + "\n")
 
-    # TODO: check
+    # 3. Build environment safely
+    env = os.environ.copy()
+
+    env.update(
+        {
+            "MODULES": " ".join(machine.modules) if machine.modules else "",
+            "EXECUTION_MODE": str(machine.runtime_env_mode),
+            "SINGULARITY_BINDS": " ".join(machine.singularity_binds)
+            if machine.singularity_binds
+            else "",
+            "SINGULARITY_ARGS": " ".join(machine.singularity_args)
+            if machine.singularity_args
+            else "",
+            "MINERVA_WORKDIR": str(results_dir),
+            "MINERVA_MANIFEST_FILE": str(
+                manifest_path
+            ),  # Pass path to file instead of long string
+        }
+    )
+
+    # Ensure all values are strictly string-formatted
     def _serialize(value):
         if value is None:
             return ""
@@ -220,16 +237,20 @@ def build_sbatch_env(
             return json.dumps(list(value))
         return str(value)
 
-    # Make sure that all values are serialized/cast to string
-    for k, v in env.items():
-        env[k] = _serialize(v)
-    return env
+    return {k: _serialize(v) for k, v in env.items()}
 
 
-def get_job_nodes(cfgs: list[BenchmarkConfig]) -> int:
+def get_job_nodes(cfgs: list[BenchmarkConfig], nnodes: int) -> int:
     max_nodes = -1
     for cfg in cfgs:
         max_nodes = max(max_nodes, cfg.slurm.sbatch.nodes)
+    if nnodes:
+        if nnodes < max_nodes:
+            click.echo(
+                f"\n{u.FAILURE_HEAVY}{u.RED} Incorrect number of nodes requested! --nnodes={nnodes} < max_nodes={max_nodes}{u.RESET}"
+            )
+            sys.exit(2)
+        return nnodes
     return max_nodes
 
 
@@ -238,6 +259,7 @@ def submit_job(
     cfgs_paths: list[str],
     runs_dir: str,
     run_date: str,
+    nnodes: int,
 ) -> str:
 
     job_id = ""
@@ -250,7 +272,7 @@ def submit_job(
     # Get system-level configs
     ################################################################################
     # Get nodes to run job on
-    job_nodes = get_job_nodes(cfgs)
+    job_nodes = get_job_nodes(cfgs, nnodes=nnodes)
 
     # Get system slurm & machine configs
     # Sample only one of valid configurations, cause
@@ -323,7 +345,6 @@ def submit_job(
 
 
 if __name__ == "__main__":
-    import sys
     from argparse import ArgumentParser
 
     argsparser = ArgumentParser()

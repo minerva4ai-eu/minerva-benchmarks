@@ -39,6 +39,7 @@ singularity exec \
         --nproc-per-node="$SLURM_GPUS_ON_NODE" \
         --rdzv_backend=c10d \
         --rdzv_endpoint="$HEAD_NODE:$HEAD_PORT" \
-        $TRAIN_MODULE --yaml "$1" --enable-flop-counter 
+        $TRAIN_MODULE --yaml "$1"
+        # --enable-flop-counter 
 
 date

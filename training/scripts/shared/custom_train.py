@@ -4,6 +4,7 @@ import time
 
 import torch
 import torch.distributed as dist
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from scripts.shared.logger import RankAdapter
 from scripts.shared.utils import save_summary_stats_json
 from trl import SFTTrainer
@@ -42,6 +43,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
 
     def __init__(
         self,
+        cfg: "BenchmarkConfig",
         train_dataloader=None,
         eval_dataloader=None,
         peak_gpu_tflops=None,
@@ -52,6 +54,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         # self._num_params = sum(p.numel() for p in model_config.parameters())
         super().__init__(*args, **kwargs)
         # self._num_params_this_gpu = sum(p.numel() for p in kwargs["model"].parameters())
+        self.cfg = cfg
         self.custom_train_dataloader = train_dataloader
         self.custom_eval_dataloader = eval_dataloader
 
@@ -355,10 +358,10 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             logger.info("==========================================================\n")
 
             logger_rank.info(
-                f"Average TFLOPs {os.getenv('RANK')}: {self.avg_flops_this_gpu:.2f}"
+                f"Average TFLOPs DeviceID{os.getenv('RANK')}: {self.avg_flops_this_gpu:.2f}"
             )
             logger_rank.info(
-                f"Average MFU {os.getenv('RANK')}: {self.avg_mfu_this_gpu:.2f}"
+                f"Average MFU DeviceID{os.getenv('RANK')}: {self.avg_mfu_this_gpu:.2f}"
             )
         return output
 
@@ -432,10 +435,10 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             "nodes": int(os.environ.get("SLURM_NNODES", "1")),
             "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
             "total_gpus": dist.get_world_size(),
-            "model": self.model.config.name_or_path,
-            "dataset": os.environ.get("DATASET_PATH", "Unknown"),
-            "framework": "accelerate",
-            "parallelism_type": os.environ.get("PARALLELISM", "Unknown"),
+            "model": self.cfg.model.name,
+            "dataset": self.cfg.dataset.path,
+            "framework": self.cfg.framework.name,
+            "parallelism_type": self.cfg.framework.parallelism_name,
             "batch_size": self.args.per_device_train_batch_size,
             "gradient_accumulation": self.args.gradient_accumulation_steps,
             "learning_rate": self.args.learning_rate,

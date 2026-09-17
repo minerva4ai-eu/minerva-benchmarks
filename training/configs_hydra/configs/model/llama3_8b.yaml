@@ -50,4 +50,6 @@ frameworks_supported:
   - deepspeed-accelerate-cuda130
 parallelism_supported:
   - fsdp
+  - zero2
+  - zero3
 

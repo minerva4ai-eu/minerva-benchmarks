@@ -13,8 +13,8 @@ parallelism:
   fsdp: { min_gpus: 2 }
 
 scripts:
-  run: scripts/torchrun-common/run-${framework.parallelism_name}.sh
-  finetune: scripts/torchrun-common/finetune-${framework.parallelism_name}.py
+  run: scripts/torchrun_common/run-${framework.parallelism_name}.sh
+  finetune: scripts/torchrun_common/finetune-${framework.parallelism_name}.py
 
 datasets_allowed:
   - alpaca

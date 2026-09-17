@@ -137,6 +137,7 @@ def main(repeatid: int):
         seq_length=args.max_length,
     )
     trainer = PerformanceTrackingSFTTrainer(
+        cfg=config,
         model=args.model_path,
         args=training_args,
         train_dataset=train_dataset,
@@ -167,7 +168,7 @@ def main(repeatid: int):
             output_file=os.path.join(
                 args.output_dir,
                 f"repeatid-{repeatid}",
-                f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+                f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
             ),
             gpu_stats=gpu_stats_during,
         )
@@ -179,7 +180,7 @@ def main(repeatid: int):
             output_file=os.path.join(
                 args.output_dir,
                 f"repeatid-{repeatid}",
-                f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+                f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
             ),
             gpu_stats={},
             exception_msg=str(e),

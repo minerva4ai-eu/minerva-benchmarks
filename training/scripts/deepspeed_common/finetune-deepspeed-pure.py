@@ -425,7 +425,7 @@ def main(repeatid: int):
         output_file=os.path.join(
             args.output_dir,
             f"repeatid-{repeatid}",
-            f"training_summary_job{jobid}-step{jobstepid}-task{jobsteprocid}-{rank}.json",
+            f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
         ),
         rank=rank,
         model_name=model_name,

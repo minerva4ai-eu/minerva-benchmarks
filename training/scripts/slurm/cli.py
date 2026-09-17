@@ -8,7 +8,6 @@ import click
 import configs_hydra.model_framework_dataset as mfd
 import scripts.slurm.utils as u
 from configs_hydra.hydra_app import generate_valid_combos
-from omegaconf import DictConfig
 from scripts.slurm.cli_utils import *
 from scripts.slurm.submitter import submit_job, write_config
 
@@ -118,6 +117,12 @@ def cli():
         "First run a '--dry-run' to compose YAML configuration files and then use their paths to run them individually."
     ),
 )
+@click.option(
+    "--nnodes",
+    default=None,
+    type=int,
+    help="Output directory for generated configs and results (default: benchmark-runs/).",
+)
 def run(
     dry_run,
     configs_path,
@@ -129,6 +134,7 @@ def run(
     frameworks,
     datasets,
     yamls,
+    nnodes,
 ):
     """Generate benchmark configurations and submit SLURM job with steps.
 
@@ -292,6 +298,7 @@ def run(
                 cfgs=combinations["cfgs_valid"],
                 cfgs_paths=combinations["cfgs_paths"],
                 run_date=run_date,
+                nnodes=nnodes,
             )
         return
     if per_nodes_jobs:
@@ -314,6 +321,7 @@ def run(
                 cfgs=combinations["cfgs_valid"],
                 cfgs_paths=combinations["cfgs_paths"],
                 run_date=run_date,
+                nnodes=nnodes,
             )
         return
 
@@ -326,6 +334,7 @@ def run(
         cfgs=cfgs_valid,
         cfgs_paths=cfgs_paths,
         run_date=run_date,
+        nnodes=nnodes,
     )
     click.echo(
         f"\n\t{u.EMOJI_INFO}   Results in: "
@@ -333,63 +342,63 @@ def run(
     )
 
 
-def _parse_delimiter_separated(value: str | None, delimiter: str = " ") -> set:
-    """Parse a space-separated string into a set of values, or return None."""
-    if not value:
-        return set()
-    return set(value.split(delimiter))
-
-
-def _filter_jobs_by_config(
-    run_jobs: list[dict],
-    runs_dir: str,
-    run_date: str,
-    run_id: str,
-    rerun_id: int | None,
-    model_names: set | None = None,
-    framework_names: set | None = None,
-    parallelism_names: set | None = None,
-    nodes_values: set | None = None,
-) -> list[dict]:
-    """
-    Filter jobs by loading their YAML configs and matching against provided criteria.
-    All provided filters use AND logic — a job must match ALL specified filters.
-    Returns the filtered list of jobs.
-    """
-    filtered = []
-    for job in run_jobs:
-        config_dir = "/".join(job["launch_folder"].split("/")[:-2])
-        yaml_path = os.path.join(config_dir, job["yaml_filename"])
-
-        try:
-            cfg: BenchmarkConfig = DictConfig(u.load_yaml(yaml_path))
-        except Exception:
-            # If we can't load the config, skip this job
-            continue
-
-        # Check each filter (AND logic)
-        match = True
-
-        if model_names is not None:
-            if cfg.model.name not in model_names:
-                match = False
-
-        if match and framework_names is not None:
-            if cfg.framework.name not in framework_names:
-                match = False
-
-        if match and parallelism_names is not None:
-            if cfg.framework.parallelism_name not in parallelism_names:
-                match = False
-
-        if match and nodes_values is not None:
-            if str(cfg.slurm.sbatch.nodes) not in nodes_values:
-                match = False
-
-        if match:
-            filtered.append(job)
-
-    return filtered
+# def _parse_delimiter_separated(value: str | None, delimiter: str = " ") -> set:
+#    """Parse a space-separated string into a set of values, or return None."""
+#    if not value:
+#        return set()
+#    return set(value.split(delimiter))
+#
+#
+# def _filter_jobs_by_config(
+#    run_jobs: list[dict],
+#    runs_dir: str,
+#    run_date: str,
+#    run_id: str,
+#    rerun_id: int | None,
+#    model_names: set | None = None,
+#    framework_names: set | None = None,
+#    parallelism_names: set | None = None,
+#    nodes_values: set | None = None,
+# ) -> list[dict]:
+#    """
+#    Filter jobs by loading their YAML configs and matching against provided criteria.
+#    All provided filters use AND logic — a job must match ALL specified filters.
+#    Returns the filtered list of jobs.
+#    """
+#    filtered = []
+#    for job in run_jobs:
+#        config_dir = "/".join(job["launch_folder"].split("/")[:-2])
+#        yaml_path = os.path.join(config_dir, job["yaml_filename"])
+#
+#        try:
+#            cfg: BenchmarkConfig = DictConfig(u.load_yaml(yaml_path))
+#        except Exception:
+#            # If we can't load the config, skip this job
+#            continue
+#
+#        # Check each filter (AND logic)
+#        match = True
+#
+#        if model_names is not None:
+#            if cfg.model.name not in model_names:
+#                match = False
+#
+#        if match and framework_names is not None:
+#            if cfg.framework.name not in framework_names:
+#                match = False
+#
+#        if match and parallelism_names is not None:
+#            if cfg.framework.parallelism_name not in parallelism_names:
+#                match = False
+#
+#        if match and nodes_values is not None:
+#            if str(cfg.slurm.sbatch.nodes) not in nodes_values:
+#                match = False
+#
+#        if match:
+#            filtered.append(job)
+#
+#    return filtered
 
 
 # DEPRECATED subcommand
