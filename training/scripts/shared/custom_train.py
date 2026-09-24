@@ -5,8 +5,11 @@ import time
 import torch
 import torch.distributed as dist
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
+from scripts.shared.comm_metrics import collect_comm_metrics
 from scripts.shared.logger import RankAdapter
 from scripts.shared.utils import save_summary_stats_json
+from transformers.distributed.fsdp import is_fsdp_enabled
+from transformers.modeling_utils import is_local_dist_rank_0
 from trl import SFTTrainer
 
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
@@ -28,7 +31,7 @@ def print_rank(rank_or_msg: int | str | None, msg: str | None = None):
     if dist.is_initialized():
         device_rank = dist.get_rank()
     else:
-        device_rank = int(os.environ["RANK"])
+        device_rank = int(os.getenv("RANK", "0"))
     if rank is None or device_rank == rank:
         print(f"[ RANK {device_rank} ]: {msg}")
 
@@ -71,6 +74,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         self.global_average_mfu = 0
         self.avg_mfu_this_gpu = 0
 
+        self.total_training_seconds = 0
         self.training_step_times = []
 
         # Peak GPU TFLOPs for MFU calculation (bf16/fp16 tensor core peak).
@@ -81,7 +85,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         logger.info(
             f"Initialized PerformanceTrackingTrainer on rank {dist.get_rank() if dist.is_available() and dist.is_initialized() else 0}",
         )
-        print_rank(0, f"Trainer args: \n{self.args}")
+        logger.info(f"Trainer args: \n{self.args}")
         # logger.info( f"Model architecure: \n{model_config.architectures}")
         # logger.info( f"Number of model parameters: {self._num_params / 1e9:.2f}B")
         # print_rank(
@@ -155,8 +159,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 )
 
             # Batch size info
-            logs[f"D{os.environ['RANK']}:seen_batches"] = self.batches_seen_this_gpu
-            logs[f"D{os.environ['RANK']}:seen_tokens"] = self.total_tokens_this_gpu
+            logs[f"D{rank}:seen_batches"] = self.batches_seen_this_gpu
+            logs[f"D{rank}:seen_tokens"] = self.total_tokens_this_gpu
             logs["effective_batch_size"] = (
                 self.args.per_device_train_batch_size
                 * self.args.gradient_accumulation_steps
@@ -220,9 +224,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             self.total_tokens_global = int(local.item())
 
         except Exception:
-            print_rank(
-                0,
-                "Warning: Failed to reduce token counts across GPUs! Setting global tokens equal to local tokens on each GPU.",
+            logger.warning(
+                "logger.warning: Failed to reduce token counts across GPUs! Setting global tokens equal to local tokens on each GPU.",
             )
             self.total_tokens_global = self.total_tokens_this_gpu
 
@@ -248,8 +251,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 dist.all_reduce(local_flops, op=dist.ReduceOp.AVG)
                 global_average_flops = local_flops.item()
             except Exception:
-                print_rank(
-                    0,
+                logger.warning(
                     "Warning: Failed to reduce FLOP counts across GPUs! Setting global FLOPs equal to local FLOPs on each GPU.",
                 )
         else:
@@ -280,8 +282,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 dist.all_reduce(local_mfu, op=dist.ReduceOp.AVG)
                 global_average_mfu = local_mfu.item()
             except Exception:
-                print_rank(
-                    0,
+                logger.warning(
                     "Warning: Failed to reduce MFU counts across GPUs! Setting global MFUs equal to local MFUs on each GPU.",
                 )
         self.global_average_mfu = float(global_average_mfu)
@@ -295,15 +296,12 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
     # ************************************
     def train(self, *args, **kwargs):
 
-        print_rank(
+        logger.info(
             f"ACCELERATE_USE_FSDP={os.environ.get('ACCELERATE_USE_FSDP')}, "
             f"FSDP_CPU_RAM_EFFICIENT_LOADING={os.environ.get('FSDP_CPU_RAM_EFFICIENT_LOADING')}",
         )
 
-        from transformers.distributed.fsdp import is_fsdp_enabled
-        from transformers.modeling_utils import is_local_dist_rank_0
-
-        print_rank(
+        logger.info(
             f"is_fsdp_enabled={is_fsdp_enabled()}, is_local_dist_rank_0={is_local_dist_rank_0()}",
         )
 
@@ -334,8 +332,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                         self.train_dataset.__dict__["collate_fn"]
                     ) / len(self.train_dataset.__dict__["collate_fn"])
         except Exception:
-            logger.info(
-                "WARNING! Could not calculate 'average_get_item_time' or 'average_collate_fn_time'..."
+            logger.warning(
+                "logger.warning! Could not calculate 'average_get_item_time' or 'average_collate_fn_time'..."
             )
 
         # print summary on rank 0
@@ -484,6 +482,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             else None,
             "validation_loss": avg_validation_loss,
         }
+        # NCCL communication volumes (rank 0 only; None elsewhere/unavailable).
+        metrics_summary |= collect_comm_metrics(skip_steps=1)
         save_summary_stats_json(
             summary={**summary, **metrics_summary}, output_file=output_file
         )

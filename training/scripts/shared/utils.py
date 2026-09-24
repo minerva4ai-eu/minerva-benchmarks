@@ -73,9 +73,49 @@ def count_parameters(model):
 
 def save_summary_stats_json(summary, output_file):
     output_dir = Path(output_file).parent
-    output_dir.mkdir(exist_ok=True)
+    output_dir.mkdir(exist_ok=True, parents=True)
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
+
+
+def save_error_summary(
+    *,
+    output_file: str,
+    rank: int,
+    model_name: str,
+    dataset_name: str,
+    framework: str = "Unknown",
+    parallelism_type: str = "Unknown",
+    batch_size: int | None = None,
+    gradient_accumulation: int | None = None,
+    learning_rate: float | None = None,
+    exception_msg: str = "",
+):
+    """Persist a minimal summary when training crashes.
+
+    Mirrors the configuration fields written by ``save_training_summary`` /
+    ``PerformanceTrackingSFTTrainer.write_summary`` and adds an ``error`` field,
+    so failed runs still leave a parseable JSON artifact.
+    """
+    if dist.is_initialized():
+        world_size = dist.get_world_size()
+    else:
+        world_size = 1
+
+    summary = {
+        "nodes": int(os.environ.get("SLURM_NNODES", "1")),
+        "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
+        "total_gpus": world_size,
+        "model": model_name,
+        "dataset": dataset_name,
+        "framework": framework,
+        "parallelism_type": parallelism_type,
+        "batch_size": batch_size,
+        "gradient_accumulation": gradient_accumulation,
+        "learning_rate": learning_rate,
+        "error": exception_msg,
+    }
+    save_summary_stats_json(summary, output_file)
 
 
 def timed(attr: str):
@@ -201,10 +241,11 @@ def save_training_summary(
     total_training_time_secs: float = 0,
     total_tokens_this_gpu: int = 0,
     total_tokens_global: int = 0,
-    avg_gpu_flops: float = 0,
-    avg_gpu_mfu: float = 0,
+    avg_gpu_flops: float | None = 0,
+    avg_gpu_mfu: float | None = 0,
     gpu_stats: dict[str, list[float]] | None = None,
     training_loss: float = 0,
+    comm_metrics: dict[str, float | None] | None = None,
     exception_msg: str = "",
 ):
     if dist.is_initialized():
@@ -299,6 +340,10 @@ def save_training_summary(
         "training_loss": training_loss,
         "validation_loss": None,
     }
+    if comm_metrics:
+        # Generic NCCL communication volumes (bytes on the wire per NCCL-tests
+        # bus-bandwidth conventions). Any framework can populate the same keys.
+        metrics_summary |= comm_metrics
 
     final_summary = {**summary, **metrics_summary}
     save_summary_stats_json(final_summary, output_file)

@@ -1,0 +1,6 @@
+defaults:
+  - alia_40b
+  - _self_
+
+name: alia_40b # MUST BE same as the filename
+path: /apps/ai-hub/models/text-models/ALIA-40b/

@@ -45,6 +45,7 @@ if int(os.environ.get("RANK", 0)) != 0:
     os.environ["NCCL_DEBUG"] = "WARN"
     os.environ.pop("NCCL_DEBUG_FILE", None)
 
+import gc
 import json
 import logging
 import os
@@ -67,7 +68,12 @@ from scripts.shared.args import (
 )
 
 # scripts.shared.data import load_and_prepare_raw_dataset
+from scripts.shared.gpu_monitor import start_gpu_monitor
 from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.shared.utils import (
+    save_error_summary,
+    save_training_summary,
+)
 from scripts.slurm.utils import load_config
 from torch.profiler import (
     ProfilerActivity,
@@ -137,6 +143,14 @@ class FlopCounterCallback(pl.Callback):
                 f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs"
             )
 
+    def median_flops_per_step(self) -> float | None:
+        """Median total FLOPs per global step, or None if the counter was disabled."""
+        if not self.enabled or not self.flops_list:
+            return None
+        import numpy as np
+
+        return float(np.median(self.flops_list))
+
 
 class TorchProfilerCallback(pl.Callback):
     """PyTorch Profiler as a Lightning Callback."""
@@ -172,6 +186,37 @@ class TorchProfilerCallback(pl.Callback):
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
     ) -> None:
         self.profiler.stop()
+
+
+class LossCaptureCallback(pl.Callback):
+    """Capture the last logged training loss from the Lightning trainer.
+
+    NeMo logs the reduced (cross-rank averaged) loss per step; the exact key
+    varies by version, so we try a fallback chain.
+    """
+
+    LOSS_KEYS = ("reduced_train_loss", "loss", "train_loss")
+
+    def __init__(self) -> None:
+        self.training_loss: float | None = None
+
+    def on_train_end(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
+        metrics = getattr(trainer, "callback_metrics", {}) or {}
+        for key in self.LOSS_KEYS:
+            value = metrics.get(key)
+            if value is None:
+                continue
+            try:
+                self.training_loss = float(value)
+                return
+            except (TypeError, ValueError):
+                try:
+                    self.training_loss = float(value.item())
+                    return
+                except (AttributeError, TypeError, ValueError):
+                    continue
 
 
 def prepare(cfg: "MegatronConfiguration") -> None:
@@ -331,21 +376,23 @@ def main(repeatid: int):
     callbacks = []
     plugins = []
     # Benchmark logging
-    callbacks.append(
-        MegatronBenchmarkCallback(
-            rank,
-            max_steps,  # total number of weight updates
-            args.global_batch_size,  # number of samples per weight update
-            args.max_length,  # number of tokens per sample
-            ceil(n_train / args.global_batch_size),  # number of steps per epoch
-            1,  # 1 warmup step
-        )
+    benchmark_callback = MegatronBenchmarkCallback(
+        rank,
+        max_steps,  # total number of weight updates
+        args.global_batch_size,  # number of samples per weight update
+        args.max_length,  # number of tokens per sample
+        ceil(n_train / args.global_batch_size),  # number of steps per epoch
+        1,  # 1 warmup step
     )
+    callbacks.append(benchmark_callback)
 
     # FLOPs counting
-    callbacks.append(
-        FlopCounterCallback(enabled=args.enable_flop_counter and rank == 0)
-    )
+    flop_callback = FlopCounterCallback(enabled=args.enable_flop_counter and rank == 0)
+    callbacks.append(flop_callback)
+
+    # Training loss capture (for the shared training summary)
+    loss_callback = LossCaptureCallback()
+    callbacks.append(loss_callback)
 
     # Pytorch Profiler
     if args.pytorch_profiler:
@@ -426,36 +473,100 @@ def main(repeatid: int):
         # No accumulate_grad_batches / gradient_clip_val here: micro-batching is managed by
         # Megatron's microbatch calculator, and grad clipping by OptimizerConfig.clip_grad (TP-safe).
     )
+    gpu_stats, stop_flag = start_gpu_monitor(
+        interval_sec=5, n_gpus=args.devices_per_node
+    )
+    try:
+        jobid = os.environ.get("SLURM_JOB_ID", "unknown")
+        jobstepid = os.environ.get("SLURM_STEP_ID", "0")
+        jobsteprocid = os.environ.get("SLURM_PROCID", "0")
+        summary_file = os.path.join(
+            args.output_dir,
+            f"nemo_experiments-{jobid}-step{jobstepid}-task{jobsteprocid}",
+            f"repeatid-{repeatid}",
+        )
+        os.makedirs(os.path.dirname(summary_file), exist_ok=True)
+        nemo_logger = nl.NeMoLogger(
+            log_dir=os.path.abspath(os.path.dirname(summary_file)),
+            name="MINERVA-Bench-Nemo-Megatron",
+        )
+        nemo_logger.setup(trainer, resume_if_exists=True)
 
-    jobid = os.environ.get("SLURM_JOB_ID", "unknown")
-    jobstepid = os.environ.get("SLURM_STEP_ID", "0")
-    jobsteprocid = os.environ.get("SLURM_PROCID", "0")
-    summary_file = os.path.join(
-        args.output_dir,
-        f"nemo_experiments-{jobid}-step{jobstepid}-task{jobsteprocid}",
-        f"repeatid-{repeatid}",
-    )
-    os.makedirs(os.path.dirname(summary_file), exist_ok=True)
-    nemo_logger = nl.NeMoLogger(
-        log_dir=os.path.abspath(os.path.dirname(summary_file)),
-        name="MINERVA-Bench-Nemo-Megatron",
-    )
-    nemo_logger.setup(trainer, resume_if_exists=True)
+        # Restore local HF weights (the model's "hf" importer converts them on the fly).
+        resume = nl.AutoResume(
+            restore_config=nl.RestoreConfig(path=str(args.nemo_ckpt_path))
+        )
 
-    # Restore local HF weights (the model's "hf" importer converts them on the fly).
-    resume = nl.AutoResume(
-        restore_config=nl.RestoreConfig(path=str(args.nemo_ckpt_path))
-    )
+        # The loss (masked cross-entropy) lives in the model, not here.
+        llm.finetune(
+            model=model,
+            data=data,
+            trainer=trainer,
+            optim=optim,
+            resume=resume,
+            peft=None,
+        )
 
-    # The loss (masked cross-entropy) lives in the model, not here.
-    llm.finetune(
-        model=model,
-        data=data,
-        trainer=trainer,
-        optim=optim,
-        resume=resume,
-        peft=None,
-    )
+        try:
+            stop_flag["stop"] = True
+
+            # MegatronStrategy owns the dataloader/sampler, so token counts are
+            # computed analytically (matches the callback's throughput formula).
+            measured_steps = max_steps - benchmark_callback.n_warmup_steps
+            total_tokens_global = int(
+                measured_steps * args.global_batch_size * args.max_length
+            )
+            total_tokens_this_gpu = int(total_tokens_global / world)
+
+            # FLOPs -> TFLOPs/s/GPU and MFU (only with --enable_flop_counter)
+            avg_tflops = None
+            avg_mfu = None
+            median_flops = flop_callback.median_flops_per_step()
+            if median_flops is not None and benchmark_callback.avg_step_time_sec:
+                avg_tflops = median_flops / benchmark_callback.avg_step_time_sec / 1e12
+                if args.peak_flops:
+                    avg_mfu = avg_tflops / args.peak_flops
+
+            save_training_summary(
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"repeatid-{repeatid}",
+                    f"training_summary_job{jobid}"
+                    f"-step{jobstepid}"
+                    f"-nodeid{jobsteprocid}"
+                    f"-deviceid{rank}.json",
+                ),
+                rank=rank,
+                model_name=args.model_name,
+                dataset_name=args.dataset_name,
+                framework=config.framework.name,
+                parallelism_type=getattr(
+                    config.framework, "parallelism_name", "nemo_megatron_2506"
+                ),
+                batch_size=args.batch_size,
+                gradient_accumulation=grad_acc,
+                learning_rate=args.lr,
+                total_training_time_secs=benchmark_callback.training_duration or 0,
+                total_tokens_this_gpu=total_tokens_this_gpu,
+                total_tokens_global=total_tokens_global,
+                avg_gpu_flops=avg_tflops,
+                avg_gpu_mfu=avg_mfu,
+                gpu_stats=gpu_stats,
+                training_loss=loss_callback.training_loss or 0,
+                comm_metrics=benchmark_callback.comm_metrics,
+            )
+            logger.info("Training summary written.")
+        except Exception:
+            logger.exception("Failed to save training summary.")
+    except Exception as e:
+        logger.exception("Fine-tuning failed with error!")
+        raise e
+
+    finally:
+        stop_flag["stop"] = True
+        del trainer
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
@@ -466,12 +577,38 @@ if __name__ == "__main__":
 
         prepare(args)
     else:
-        try:
-            for repeatid in range(config.experiment.repeat):
+        for repeatid in range(config.experiment.repeat):
+            try:
                 logger.info("_________________________________")
                 logger.info(f"Running repeatid: {repeatid}")
                 logger.info("_________________________________")
                 main(repeatid)
-        except Exception as e:
-            logger.exception("Error occured during execution of main")
-            raise e
+            except Exception as e:
+                logger.exception("Fine-tuning failed with error!")
+
+                rank = int(os.environ.get("RANK", 0))  # Set by torchrun
+                try:
+                    save_error_summary(
+                        output_file=os.path.join(
+                            args.output_dir,
+                            f"repeatid-{repeatid}",
+                            f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
+                            f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
+                            f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
+                            f"-deviceid{rank}.json",
+                        ),
+                        rank=rank,
+                        model_name=args.model_name,
+                        dataset_name=args.dataset_name,
+                        framework=config.framework.name,
+                        parallelism_type=getattr(
+                            config.framework, "parallelism_name", "nemo_megatron_2506"
+                        ),
+                        batch_size=config.batch_size,
+                        gradient_accumulation=config.gradient_accumulation_steps,
+                        learning_rate=config.lr,
+                        exception_msg=str(e),
+                    )
+                except Exception:
+                    logger.exception("Failed to save error summary.")
+                raise e
