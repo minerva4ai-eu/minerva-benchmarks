@@ -48,7 +48,7 @@ training_build_runtime_prefix() {
             if [[ -n "${SINGULARITY_BINDS:-}" ]]; then
                 runtime_prefix+=" ${SINGULARITY_BINDS}"
             fi
-            runtime_prefix+=" --home ${LAUNCH_FOLDER:-$PWD} ${SINGULARITY_CONTAINER}"
+            runtime_prefix+=" ${SINGULARITY_CONTAINER}"
             echo "$runtime_prefix "
             ;;
         venv|host)

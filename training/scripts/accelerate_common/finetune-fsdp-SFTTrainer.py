@@ -113,7 +113,7 @@ def main():
             print_rank(0, f"Compilation arguments: {compilation_args}")
         # --- 1. LOAD MODEL EFFICIENTLY ON META DEVICE / LOW MEMORY ---
         model_init_kwargs = {
-            "torch_dtype": dtype,
+            "dtype": dtype,
             "attn_implementation": "flash_attention_2",
             "low_cpu_mem_usage": True,
             # "device_map": "auto",

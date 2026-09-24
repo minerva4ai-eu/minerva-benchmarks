@@ -280,10 +280,17 @@ def build_row(
             row[display_key] = value
         row[key] = value
 
-    if not metrics and not config_error:
-        row["Comment"] = metrics.get("error", "Error during training")
-    elif metrics.get("error"):
-        row["Comment"] = metrics["error"]
+    # Insert the captured error into the Comment column when the experiment
+    # failed. The error may be stored under the flattened key "error" or under
+    # a nested summary key ending in ".error".
+    error_message = metrics.get("error") or next(
+        (value for key, value in metrics.items() if key.endswith(".error")),
+        "",
+    )
+    if error_message:
+        row["Comment"] = error_message
+    elif not metrics and not config_error:
+        row["Comment"] = "Error during training"
     return row
 
 
@@ -351,11 +358,11 @@ def collect_rows(job_dirs, model_type_map):
                 )
                 if repeat_label is not None:
                     row["Comment"] = "Did not run"
-                elif not metrics:
+                elif not row["Comment"]:
+                    # No captured error from the summary; fall back to scanning
+                    # the Slurm logs for a generic failure signature.
                     row["Comment"] = (
-                        check_step_error(job_dir, step_dir)
-                        or row["Comment"]
-                        or "Error during training"
+                        check_step_error(job_dir, step_dir) or "Error during training"
                     )
                 rows.append(row)
     return rows

@@ -17,12 +17,13 @@
 #   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
 MODELS = [
     "gemma3_1b",
-    "qwen2.5_7B_Instruct",
-    "qwen2.5_72B_Instruct",
     "mistral_7b",
     "llama3_8b",
-    "gemma3_12b",
     "llama3_70b",
+    "alia_40b",
+    "qwen2.5_7B_Instruct",
+    "qwen2.5_72B_Instruct",
+    # "gemma3_12b",
 ]
 FRAMEWORKS = [
     "accelerate-cuda130",

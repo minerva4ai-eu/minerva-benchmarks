@@ -11,3 +11,4 @@ machine:
     - "--nv"
     - "--network=host"
   singularity_binds:
+    - "${model.path}"

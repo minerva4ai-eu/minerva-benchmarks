@@ -198,14 +198,14 @@ def run(
             if len(models) == 0:
                 click.echo(
                     f"\t{u.FAILURE_HEAVY} {u.RED} Model names provided must be separated by comma ','. Provided: '{models}'{u.RESET}"
-                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                 )
                 sys.exit(1)
             for m in models:
                 if m not in mfd.MODELS:
                     click.echo(
                         f"\t{u.FAILURE_HEAVY} {u.RED} Model '{m}' could not be found in available models.{u.RESET}"
-                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                     )
                     sys.exit(1)
             mfd.MODELS = models
@@ -216,14 +216,14 @@ def run(
             if len(frameworks) == 0:
                 click.echo(
                     f"\t{u.FAILURE_HEAVY} {u.RED} Framework names provided must be separated by comma ','. Provided: '{frameworks}'{u.RESET}"
-                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                 )
                 sys.exit(1)
             for m in frameworks:
                 if m not in mfd.FRAMEWORKS:
                     click.echo(
                         f"\t{u.FAILURE_HEAVY} {u.RED} Framework '{m}' could not be found in available frameworks.{u.RESET}"
-                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                     )
                     sys.exit(1)
             mfd.FRAMEWORKS = frameworks
@@ -234,14 +234,14 @@ def run(
             if len(datasets) == 0:
                 click.echo(
                     f"\t{u.FAILURE_HEAVY} {u.RED} Dataset names provided must be separated by comma ','. Provided: '{datasets}'{u.RESET}"
-                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                    + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                 )
                 sys.exit(1)
             for m in datasets:
                 if m not in mfd.DATASETS:
                     click.echo(
                         f"\t{u.FAILURE_HEAVY} {u.RED} Dataset '{m}' could not be found in available datasets.{u.RESET}"
-                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.' {u.RESET}"
+                        + f"\n\t{u.FAILURE_HEAVY} {u.YELLOW} Run 'bash minerva-cli.sh run --help' for more information.{u.RESET}"
                     )
                     sys.exit(1)
             mfd.DATASETS = datasets

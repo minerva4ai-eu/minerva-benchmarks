@@ -117,7 +117,7 @@ def main():
         training_args = SFTConfig(
             output_dir=output_dir,
             model_init_kwargs={
-                "torch_dtype": dtype,
+                "dtype": dtype,
                 "attn_implementation": "flash_attention_2",
                 "low_cpu_mem_usage": True,
             },

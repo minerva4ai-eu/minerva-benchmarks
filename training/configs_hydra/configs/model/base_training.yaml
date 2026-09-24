@@ -13,13 +13,13 @@ training:
 
 combinations:
   global_batch_sizes: [256]
-  batch_sizes: [1, 2]
+  batch_sizes: [1, 2 , 4]
   precisions: ["bf16"]
-  #grad_accums: [8, 16]
+  #grad_accums: [8, 16]             # Auto-inferred based on world-size and global_batch_sizes
   gradient_checkpointing: [True]    
-  enable_compile: [False, True]
+  enable_compile: [False]
   steps: [50]
   epochs: 
   lr: [2e-5]                        # Has no effect, by default checkpointing is enabled for all  
   optimizer: ["adamw"]              # Has no effect, by default checkpointing is enabled for all
-  max_seq_lens: [1024, 2048]
+  max_seq_lens: [1024]

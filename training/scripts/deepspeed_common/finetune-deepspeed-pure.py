@@ -1,3 +1,5 @@
+import gc
+import json
 import logging
 import math
 import os
@@ -8,6 +10,7 @@ import psutil
 import torch
 import torch.distributed as dist
 from scripts.shared.args import construct_config, get_deepspeed_parser
+from scripts.shared.comm_metrics import collect_comm_metrics
 from scripts.shared.data import (
     collate_fn,
     get_train_eval_path,
@@ -18,6 +21,7 @@ from scripts.shared.gpu_monitor import start_gpu_monitor
 from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
     is_main_process,
+    save_error_summary,
     save_training_summary,
     setup_distributed,
 )
@@ -49,10 +53,9 @@ def load_model(model_path, dtype, ds_config):
     #    estimate_zero3_model_states_mem_needs_all_live,
     # )
 
-    ds_hf_config = HfDeepSpeedConfig(ds_config)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
-        torch_dtype=dtype,
+        dtype=dtype,
         attn_implementation="flash_attention_2",
         low_cpu_mem_usage=True,
     )
@@ -140,17 +143,15 @@ def main(repeatid: int):
     # Load DeepSpeed Config  #
     # -----------------------#
     with open(args.deepspeed_config_file, "r") as f:
-        import json
-
         ds_config = json.load(f)
     ds_config["bf16"] = {"enabled": cfg.precision == "bf16"}
     ds_config["fp16"] = {"enabled": cfg.precision == "fp16"}
     ds_config["train_micro_batch_size_per_gpu"] = cfg.batch_size
     ds_config["gradient_accumulation_steps"] = cfg.gradient_accumulation_steps
-    ds_config["optimizer"]["params"]["lr"] = cfg.lr
     ds_config["optimizer"]["params"]["betas"] = [0.9, 0.999]
     ds_config["optimizer"]["params"]["eps"] = 1e-8
     ds_config["optimizer"]["params"]["weight_decay"] = cfg.weight_decay
+    ds_config["optimizer"]["params"]["lr"] = cfg.lr
     steps = (
         cfg.max_steps
         if cfg.max_steps
@@ -159,28 +160,38 @@ def main(repeatid: int):
             / (dist.get_world_size() * cfg.gradient_accumulation_steps)
         )
     )
-    ds_config["optimizer"]["params"]["warmup_num_steps"] = int(
+    ds_config["scheduler"]["params"]["warmup_num_steps"] = int(
         cfg.warmup_ratio * (steps)
+    )
+    ds_config["scheduler"]["params"]["warmup_max_lr"] = cfg.lr
+    ds_config["scheduler"]["params"]["warmup_min_lr"] = (
+        cfg.lr - cfg.warmup_ratio * cfg.lr
     )
 
     logger.info(f"bf16: {ds_config['bf16']}")
-    logger.info(f"bf16: {ds_config['fp16']}")
+    logger.info(f"fp16: {ds_config['fp16']}")
     logger.info(
         f"train_micro_batch_size_per_gpu: {ds_config['train_micro_batch_size_per_gpu']}"
     )
     logger.info(
         f"gradient_accumulation_steps: {ds_config['gradient_accumulation_steps']}"
     )
-    logger.info(f"lr: {ds_config['optimizer']['params']['lr']}")
+    logger.info(f"warmup_min_lr: {ds_config['scheduler']['params']['warmup_min_lr']}")
+    logger.info(f"warmup_max_lr: {ds_config['scheduler']['params']['warmup_max_lr']}")
+    logger.info(
+        f"warmup_num_steps: {ds_config['scheduler']['params']['warmup_num_steps']}"
+    )
+    logger.info(f"optimizer lr: {ds_config['optimizer']['params']['lr']}")
     logger.info(f"betas: {ds_config['optimizer']['params']['betas']}")
     logger.info(f"eps: {ds_config['optimizer']['params']['eps']}")
     logger.info(f"weight_decay: {ds_config['optimizer']['params']['weight_decay']}")
-    logger.info(
-        f"warmup_num_step: {ds_config['optimizer']['params']['warmup_num_step']}"
-    )
+    # logger.info(f"DeepSpeed Config: \n{ds_config}")
     # -------#
     # Model  #
     # -------#
+    if repeatid == 0:
+        # Necessary to initiliaze distributed deepspeed
+        _ = HfDeepSpeedConfig(ds_config)
 
     logger.info(f"Loading model '{model_path}' dtype={dtype}")
     model = load_model(model_path, dtype, ds_config)
@@ -218,7 +229,7 @@ def main(repeatid: int):
     )
 
     gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
-    logger.info(0, f"GPU: {gpu_name} | peak TFLOPs for MFU: {cfg.peak_flops}")
+    logger.info(f"GPU: {gpu_name} | peak TFLOPs for MFU: {cfg.peak_flops}")
 
     # ########################################################################
     # DeepSpeed initialisation                                               #
@@ -226,8 +237,6 @@ def main(repeatid: int):
     # We do NOT build an optimizer here — DS reads it from the JSON.         #
     # Works identically for ZeRO-1, ZeRO-2, and ZeRO-3.                      #
     ##########################################################################
-
-    print(f"DeepSpeed Config: \n{ds_config}")
 
     ########################
     # Get DeepSpeed Engine #
@@ -237,7 +246,7 @@ def main(repeatid: int):
         model_parameters=model.parameters(),
         config=ds_config,
     )
-    logger.info(rank, "DeepSpeed engine initialised")
+    logger_rank.info("DeepSpeed engine initialised")
 
     # ------------------------------------------------------------------
     # GPU background monitor
@@ -262,190 +271,251 @@ def main(repeatid: int):
     # ------------------------------------------------------------------
     # Training loop
     # ------------------------------------------------------------------
-    logger.info(0, "Starting training...")
-    engine.train()
-    train_start = time.time()
+    try:
+        logger.info("Starting training...")
+        engine.train()
+        train_start = time.time()
 
-    flopsCallback_megatronLM = mfu_callback_from_hf_config(
-        AutoConfig.from_pretrained(model_path),
-        tokenizer,
-        gpu_peak_flops=cfg.peak_flops,
-        seq_length=cfg.max_length,
-        trainer_callback=False,
-    )
-    training_done = False
-    step_loss = 0
-    step_time = 0
-    for epoch in range(num_epochs):
-        if training_done:
-            break
+        flopsCallback_megatronLM = mfu_callback_from_hf_config(
+            AutoConfig.from_pretrained(model_path),
+            tokenizer,
+            gpu_peak_flops=cfg.peak_flops,
+            seq_length=cfg.max_length,
+            trainer_callback=False,
+        )
+        training_done = False
+        step_loss = 0
+        step_time = 0
+        for epoch in range(num_epochs):
+            if training_done:
+                break
 
-        train_sampler.set_epoch(epoch)
+            train_sampler.set_epoch(epoch)
 
-        micro_step = 0  # counts every forward/backward call
-        accum_loss: float = 0.0
-        accum_tokens_local: int = 0
+            micro_step = 0  # counts every forward/backward call
+            accum_loss: float = 0.0
+            accum_tokens_local: int = 0
 
-        if global_step == 0:
-            flopsCallback_megatronLM.on_step_begin()
-        step_start = time.time()
+            if global_step == 0:
+                flopsCallback_megatronLM.on_step_begin()
+            step_start = time.time()
 
-        for micro_step, batch in enumerate(train_dataloader):
-            # ---------- move batch to device ----------
-            batch = {k: v.to(local_rank, non_blocking=True) for k, v in batch.items()}
+            for micro_step, batch in enumerate(train_dataloader):
+                # ---------- move batch to device ----------
+                batch = {
+                    k: v.to(local_rank, non_blocking=True) for k, v in batch.items()
+                }
 
-            # ---------- forward + backward -----------
-            # engine.backward() handles ZeRO gradient sharding correctly
-            # for all stages; never call loss.backward() directly.
-            outputs = engine(**batch)
-            engine.backward(outputs.loss)
+                # ---------- forward + backward -----------
+                # engine.backward() handles ZeRO gradient sharding correctly
+                # for all stages; never call loss.backward() directly.
+                outputs = engine(**batch)
+                engine.backward(outputs.loss)
 
-            accum_tokens_local += batch["input_ids"].numel()
-            accum_loss += outputs.loss.item()
+                accum_tokens_local += batch["input_ids"].numel()
+                accum_loss += outputs.loss.item()
 
-            micro_step += 1
+                micro_step += 1
 
-            # ---------- optimizer step ---------------
-            if micro_step % grad_accum_steps == 0:
-                step_time += time.time() - step_start
-                global_step += 1
-                avg_step_time = step_time / global_step
+                # ---------- optimizer step ---------------
+                if micro_step % grad_accum_steps == 0:
+                    step_time += time.time() - step_start
+                    global_step += 1
+                    avg_step_time = step_time / global_step
 
-                # engine.step() also clips gradients (configured in DS JSON)
-                engine.step()
-                torch.cuda.empty_cache()
+                    # engine.step() also clips gradients (configured in DS JSON)
+                    engine.step()
+                    torch.cuda.empty_cache()
 
-                flopsCallback_megatronLM.on_step_end(
-                    micro_batch_size=cfg.batch_size,
-                    world_size=world_size,
-                    gradient_accumulation_steps=grad_accum_steps,
-                    global_step=global_step,
-                )
-
-                if global_step % cfg.logging_steps == 0:
-                    logger.info(
-                        0,
-                        f" | epoch {epoch} step {global_step}/{total_steps}"
-                        f" | loss {outputs.loss.item():.4f}"
-                        f" | lr {lr_scheduler.get_last_lr()[0]:.5e}"
-                        f" | TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f}"
-                        f" | MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]}"
-                        f" | gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
-                        f" | avg_step_time {avg_step_time:.4f}sec",
+                    flopsCallback_megatronLM.on_step_end(
+                        micro_batch_size=cfg.batch_size,
+                        world_size=world_size,
+                        gradient_accumulation_steps=grad_accum_steps,
+                        global_step=global_step,
                     )
-                # All-reduce token count to get global tokens this step
-                tokens_tensor = torch.tensor(
-                    accum_tokens_local, dtype=torch.float32, device=engine.device
-                )
 
-                # ------ accumulate global metrics ----
+                    if global_step % cfg.logging_steps == 0:
+                        step_info_msg = (
+                            f" | epoch {epoch} step {global_step}/{total_steps}"
+                            f" | loss {outputs.loss.item():.4f}"
+                            f" | lr {lr_scheduler.get_last_lr()[0]:.5e}"
+                            f" | TFLOPs/s/GPU {flopsCallback_megatronLM.state.tflops_this_gpu[-1]:.2f}"
+                            f" | MFU {flopsCallback_megatronLM.state.mfu_this_gpu[-1]}"
+                            f" | gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB"
+                            f" | avg_step_time {avg_step_time:.4f}sec"
+                        )
+                        logger.info(step_info_msg)
+                    # All-reduce token count to get global tokens this step
+                    tokens_tensor = torch.tensor(
+                        accum_tokens_local, dtype=torch.float32, device=engine.device
+                    )
+
+                    # ------ accumulate global metrics ----
+                    tokens_per_gpu_all_epochs += accum_tokens_local
+
+                    # ------ loss logging -----------------
+                    # accum_loss was already divided by grad_accum_steps each step;
+                    # multiply back so we log the mean of the original micro-losses.
+                    step_loss = accum_loss / grad_accum_steps
+                    total_loss_sum += step_loss
+
+                    # ------ reset micro accumulators -----
+                    accum_loss = 0.0
+                    accum_tokens_local = 0
+                    step_start = time.time()
+
+                    # ------ max_steps guard --------------
+                    if cfg.max_steps is not None and global_step >= cfg.max_steps:
+                        training_done = True
+                        break
+
+                    flopsCallback_megatronLM.on_step_begin()
+            # end of epoch — handle leftover micro-steps (partial accumulation)
+            # If micro_step % grad_accum_steps != 0 there are un-stepped gradients;
+            # we flush them so the last partial batch isn't silently dropped.
+            if not training_done and micro_step % grad_accum_steps != 0:
+                step_time = time.time() - step_start
+
+                engine.step()
+
                 tokens_per_gpu_all_epochs += accum_tokens_local
 
-                # ------ loss logging -----------------
-                # accum_loss was already divided by grad_accum_steps each step;
-                # multiply back so we log the mean of the original micro-losses.
                 step_loss = accum_loss / grad_accum_steps
-                total_loss_sum += step_loss
+                global_step += 1
 
-                # ------ reset micro accumulators -----
-                accum_loss = 0.0
-                accum_tokens_local = 0
-                step_start = time.time()
+        elapsed_total = time.time() - train_start
 
-                # ------ max_steps guard --------------
-                if cfg.max_steps is not None and global_step >= cfg.max_steps:
-                    training_done = True
-                    break
+        # ------------------------------------------------------------------
+        # Stop GPU monitor
+        # ------------------------------------------------------------------
+        stop_flag["stop"] = True
+        time.sleep(2)
 
-                flopsCallback_megatronLM.on_step_begin()
-        # end of epoch — handle leftover micro-steps (partial accumulation)
-        # If micro_step % grad_accum_steps != 0 there are un-stepped gradients;
-        # we flush them so the last partial batch isn't silently dropped.
-        if not training_done and micro_step % grad_accum_steps != 0:
-            step_time = time.time() - step_start
+        # ------------------------#
+        # Aggregate final metrics #
+        # ------------------------#
 
-            engine.step()
+        # All-reduce token count to get global tokens this step
+        tokens_tensor = torch.tensor(
+            tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
+        )
+        reduce_tensor(tokens_tensor, world_size)
+        total_tokens_global = int(tokens_tensor.item())
+        tokens_tensor = torch.tensor(
+            tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
+        )
+        step_loss_tensor = torch.tensor(
+            step_loss, dtype=torch.long, device=engine.device
+        )
+        reduce_tensor(step_loss_tensor, world_size)
+        final_step_loss = int(step_loss_tensor.item()) / dist.get_world_size()
 
-            tokens_per_gpu_all_epochs += accum_tokens_local
+        avg_mfu = (
+            sum(flopsCallback_megatronLM.state.mfu_this_gpu)
+            / len(flopsCallback_megatronLM.state.mfu_this_gpu)
+            if flopsCallback_megatronLM.state.mfu_this_gpu
+            else None
+        )
+        avg_tflops = (
+            sum(flopsCallback_megatronLM.state.tflops_this_gpu)
+            / len(flopsCallback_megatronLM.state.tflops_this_gpu)
+            if flopsCallback_megatronLM.state.tflops_this_gpu
+            else None
+        )
+        summary_log = [
+            f"* Total training time (s): {elapsed_total:.2f}",
+            f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
+            f"* Avg TFLOPs/s/GPU: {avg_tflops}",
+            f"* Avg MFU: {avg_mfu}",
+        ]
 
-            step_loss = accum_loss / grad_accum_steps
-            global_step += 1
+        logger_rank.info("=== TRAINING SUMMARY ===")
+        logger_rank.info("\n".join(summary_log))
 
-    elapsed_total = time.time() - train_start
-
-    # ------------------------------------------------------------------
-    # Stop GPU monitor
-    # ------------------------------------------------------------------
-    stop_flag["stop"] = True
-    time.sleep(2)
-
-    # ------------------------#
-    # Aggregate final metrics #
-    # ------------------------#
-
-    # All-reduce token count to get global tokens this step
-    tokens_tensor = torch.tensor(
-        tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
-    )
-    reduce_tensor(tokens_tensor, world_size)
-    total_tokens_global = int(tokens_tensor.item())
-    tokens_tensor = torch.tensor(
-        tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
-    )
-    step_loss_tensor = torch.tensor(step_loss, dtype=torch.long, device=engine.device)
-    reduce_tensor(step_loss_tensor, world_size)
-    final_step_loss = int(step_loss_tensor.item()) / dist.get_world_size()
-
-    avg_mfu = (
-        sum(flopsCallback_megatronLM.state.mfu_this_gpu)
-        / len(flopsCallback_megatronLM.state.mfu_this_gpu)
-        if flopsCallback_megatronLM.state.mfu_this_gpu
-        else None
-    )
-    avg_tflops = (
-        sum(flopsCallback_megatronLM.state.tflops_this_gpu)
-        / len(flopsCallback_megatronLM.state.tflops_this_gpu)
-        if flopsCallback_megatronLM.state.tflops_this_gpu
-        else None
-    )
-    summary_log = [
-        f"* Total training time (s): {elapsed_total:.2f}",
-        f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
-        f"* Avg TFLOPs/s/GPU: {avg_tflops}",
-        f"* Avg MFU: {avg_mfu}",
-    ]
-
-    logger_rank.info("=== TRAINING SUMMARY ===")
-    logger_rank.info("\n".join(summary_log))
-
-    # ------------------------------------------------------------------
-    # Save summary — identical schema to the original
-    # ------------------------------------------------------------------
-    save_training_summary(
-        output_file=os.path.join(
-            args.output_dir,
-            f"repeatid-{repeatid}",
-            f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
-        ),
-        rank=rank,
-        model_name=model_name,
-        dataset_name=cfg.dataset,
-        framework="accelerate",
-        parallelism_type="fsdp",
-        batch_size=cfg.batch_size,
-        gradient_accumulation=cfg.gradient_accumulation_steps,
-        learning_rate=cfg.lr,
-        total_training_time_secs=elapsed_total,
-        total_tokens_this_gpu=tokens_per_gpu_all_epochs,
-        total_tokens_global=total_tokens_global,
-        avg_gpu_flops=avg_tflops,
-        avg_gpu_mfu=avg_mfu,
-        gpu_stats=gpu_stats_during,
-        training_loss=final_step_loss,
-    )
-    logger_rank.info("Fine-tuning completed successfully.")
+        # ------------------------------------------------------------------
+        # Save summary — identical schema to the original
+        # ------------------------------------------------------------------
+        save_training_summary(
+            output_file=os.path.join(
+                args.output_dir,
+                f"repeatid-{repeatid}",
+                f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
+            ),
+            rank=rank,
+            model_name=model_name,
+            dataset_name=cfg.dataset_name,
+            framework="deepspeed",
+            parallelism_type=config.framework.parallelism_name,
+            batch_size=cfg.batch_size,
+            gradient_accumulation=cfg.gradient_accumulation_steps,
+            learning_rate=cfg.lr,
+            total_training_time_secs=elapsed_total,
+            total_tokens_this_gpu=tokens_per_gpu_all_epochs,
+            total_tokens_global=total_tokens_global,
+            avg_gpu_flops=avg_tflops,
+            avg_gpu_mfu=avg_mfu,
+            gpu_stats=gpu_stats_during,
+            training_loss=final_step_loss,
+            comm_metrics=collect_comm_metrics(skip_steps=1),
+        )
+        logger_rank.info("Fine-tuning completed successfully.")
+    except Exception:
+        logger.exception("Fine-tuning failed with error!")
+        save_training_summary(
+            output_file=os.path.join(
+                args.output_dir,
+                f"repeatid-{repeatid}",
+                f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
+            ),
+            rank=rank,
+            model_name=model_name,
+            dataset_name=args.dataset_name,
+            framework="deepspeed",
+            parallelism_type=config.framework.parallelism_name,
+            batch_size=args.batch_size,
+            gradient_accumulation=args.gradient_accumulation_steps,
+            learning_rate=args.lr,
+            exception_msg=str(e),
+        )
+        raise e
+    finally:
+        del model, engine, lr_scheduler
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
     for repeatid in range(config.experiment.repeat):
-        main(repeatid)
+        try:
+            logger.info("_________________________________")
+            logger.info(f"Running repeatid: {repeatid}")
+            logger.info("_________________________________")
+            main(repeatid)
+        except Exception as e:
+            logger.exception("Fine-tuning failed with error!")
+            try:
+                _cfg = construct_config(get_deepspeed_parser().parse_args())
+                save_error_summary(
+                    output_file=os.path.join(
+                        _cfg.output_dir,
+                        f"repeatid-{repeatid}",
+                        f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
+                        f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
+                        f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
+                        f"-deviceid{rank}.json",
+                    ),
+                    rank=rank,
+                    model_name=_cfg.model_name,
+                    dataset_name=_cfg.dataset_name,
+                    framework=config.framework.name,
+                    parallelism_type=getattr(
+                        config.framework, "parallelism_name", "deepspeed"
+                    ),
+                    batch_size=_cfg.batch_size,
+                    gradient_accumulation=_cfg.gradient_accumulation_steps,
+                    learning_rate=_cfg.lr,
+                    exception_msg=str(e),
+                )
+            except Exception:
+                logger.exception("Failed to save error summary.")
+            raise e

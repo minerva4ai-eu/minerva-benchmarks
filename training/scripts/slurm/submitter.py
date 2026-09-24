@@ -135,7 +135,7 @@ def build_srun_env():
         **(
             {
                 "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
-                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+                "SINGULARITY_BINDS": "-B " + "-B ".join(cfg.machine.singularity_binds)
                 if cfg.machine.singularity_binds
                 else "",
                 "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
