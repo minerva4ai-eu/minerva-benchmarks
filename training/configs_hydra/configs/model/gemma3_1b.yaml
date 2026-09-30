@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: gemma_1b # MUST BE same as the filename
-path: /path/to/gemma_1b
+path: ${oc.env:MODEL_GEMMA3_1B_PATH}
 # architecture dims — used by memory rule
 total_params_billions: 1.0
 architecture_type: dense
@@ -30,9 +30,6 @@ frameworks_supported:
   - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
-  - deepspeed-accelerate-cuda121
-  - deepspeed-accelerate-cuda128
-  - deepspeed-accelerate-cuda130
 parallelism_supported:
   - none
   - ddp

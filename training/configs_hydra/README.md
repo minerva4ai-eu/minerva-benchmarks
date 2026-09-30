@@ -85,7 +85,7 @@ Defines model-specific parameters:
 
 **Validation**: MoE models require `active_params_billions`, `num_experts`, and `top_k_experts`. Architecture type is validated against the `ArchitectureType` enum.
 
-**Currently registered models**: `llama3_8b`, `mistral_7b`, `llama3_70b`. Each has a corresponding YAML file in `configs/model/` with architecture dimensions and GPU requirements. Machine-specific path overrides are stored in `*-MN5.yaml` files. Note: `gemma3_1b` and `gemma3_12b` have YAML files but are not yet registered in `dataclasses_hydra/__init__.py`.
+**Currently registered models**: `llama3_8b`, `mistral_7b`, `llama3_70b`. Each has a corresponding YAML file in `configs/model/` with architecture dimensions and GPU requirements. Machine-specific path overrides are stored in `MN5/` subdirectories (e.g., `MN5/llama3_8b-MN5.yaml`). Note: `gemma3_1b` and `gemma3_12b` have YAML files but are not yet registered in `dataclasses_hydra/__init__.py`.
 
 ### `FrameworkConfig` (`framework.py`)
 
@@ -255,7 +255,7 @@ YAML files are organized by Hydra group and registered in `dataclasses_hydra/__i
 
 ### Directory Structure
 
-Machine-specific configs are organized in subdirectories named after the HPC machine's `name_pattern` (defined in `base.yaml` under `machine.name_pattern`). For example, all MareNostrum5 (MN5) machine-specific overrides are in the `MN5/` subdirectory. When adding a new HPC machine, create a new subdirectory with the same name as the `machine.name_pattern` value.
+Machine-specific configs are organized in subdirectories named after the HPC machine's `name_pattern` (defined in `base.yaml` under `machine.name_pattern`). Currently, only **model** configs have machine-specific overrides (for model weight paths). **Framework** and **dataset** configs are fully portable — machine-specific paths are resolved at composition time via the `abs_path` resolver, so no machine-specific YAML files are needed for them.
 
 ```
 configs/
@@ -267,22 +267,14 @@ configs/
 │   └── MN5.yaml                 # MareNostrum5 GPU specs (H100-SXM, 64GB VRAM, TFLOPs)
 ├── dataset/
 │   ├── base.yaml                # Base dataset template
-│   ├── alpaca.yaml              # Alpaca instruction-tuning dataset (portable across machines)
-│   ├── squadv2.yaml             # SQuAD v2 question-answering dataset (portable)
-│   └── MN5/
-│       ├── alpaca.yaml          # MN5-specific path override for Alpaca
-│       └── squadv2.yaml         # MN5-specific path override for SQuAD v2
+│   ├── alpaca.yaml              # Alpaca instruction-tuning dataset (portable, paths resolved at composition time)
+│   └── squadv2.yaml             # SQuAD v2 question-answering dataset (portable)
 ├── framework/
 │   ├── base.yaml                # Base framework template (empty)
 │   ├── accelerate.yaml          # HuggingFace Accelerate (portable, defines parallelism + scripts)
 │   ├── deepspeed.yaml           # Microsoft DeepSpeed (portable)
 │   ├── deepspeed-accelerate.yaml  # DeepSpeed with Accelerate integration (portable)
-│   ├── torchrun.yaml            # PyTorch native (portable)
-│   └── MN5/
-│       ├── accelerate.yaml      # MN5-specific overrides (Singularity container path, etc.)
-│       ├── deepspeed.yaml
-│       ├── deepspeed-accelerate.yaml
-│       └── torchrun.yaml
+│   └── torchrun.yaml            # PyTorch native (portable)
 ├── model/
 │   ├── base_training.yaml       # Base model template + training hyperparameter combinations
 │   ├── llama3_8b.yaml           # LLaMA 3 8B (portable, dense architecture)
@@ -301,7 +293,7 @@ configs/
 │   └── MN5.yaml                 # MareNostrum5 SLURM settings (account, QoS, partition, 4 GPUs/node)
 ```
 
-**Naming Convention**: Portable (machine-agnostic) configs are stored at the top level of their group. Machine-specific overrides are stored in `{machine.name_pattern}/` subdirectories.
+**Naming Convention**: Portable (machine-agnostic) configs are stored at the top level of their group. Machine-specific overrides are stored in `{machine.name_pattern}/` subdirectories — currently only `model/` has machine-specific overrides.
 
 ### Config Composition
 
@@ -334,31 +326,31 @@ cfg = compose(
     config_name,  # e.g., "MN5"
     overrides=[
         f"model={machine.name_pattern}/{model}-{machine.name_pattern}",  # e.g., model=MN5/llama3_8b-MN5
-        f"framework={machine.name_pattern}/{framework}-{machine.name_pattern}",  # e.g., framework=MN5/accelerate-MN5
-        f"dataset={machine.name_pattern}/{dataset}-{machine.name_pattern}",  # e.g., dataset=MN5/alpaca-MN5
     ]
 )
 ```
 
+Only **model** configs use machine-specific overrides (for model weight paths). Framework and dataset configs are fully portable — their paths are resolved at composition time via the `abs_path` resolver, so no machine-specific YAML files are needed for them.
+
 This pattern allows:
-- **Portable base configs** (e.g., `llama3_8b.yaml`, `accelerate.yaml`) to be shared across HPC machines
-- **Machine-specific overrides** (e.g., `MN5/llama3_8b.yaml`) to customize paths, Singularity containers, and environment settings per machine
-- **Easy extensibility**: Adding a new HPC machine (e.g., `LUMI`) simply requires creating a new `LUMI/` subdirectory with overrides and a corresponding `LUMI.yaml` root config
+- **Portable base configs** (e.g., `llama3_8b.yaml`, `accelerate.yaml`, `alpaca.yaml`) to be shared across HPC machines
+- **Machine-specific model overrides** (e.g., `MN5/llama3_8b.yaml`) to customize model weight paths per machine
+- **Easy extensibility**: Adding a new HPC machine (e.g., `LUMI`) requires creating a new `LUMI/` subdirectory **only for model configs** and a corresponding `LUMI.yaml` root config
 
 **Variable interpolation** is supported throughout the config system using Hydra's interpolation syntax `${group.field}`. This allows configs to reference values from other groups without duplication:
 
 ```yaml
 # In framework/accelerate.yaml
-run: scripts/accelerate_common/run-${framework.parallelism_name}.sh
-finetune: scripts/accelerate_common/finetune-${framework.parallelism_name}.py
+run: scripts/accelerate-common/run-${framework.parallelism_name}.sh
+finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
 
 # In slurm/MN5.yaml
 gres: gpu:${arch.node.gpus_per_node}
 
 # In framework configs
 scripts:
-  run: scripts/deepspeed_common/run-deepspeed.sh
-  finetune: scripts/deepspeed_common/finetune-deepspeed-pure.py
+  run: scripts/deepspeed-common/run-deepspeed.sh
+  finetune: scripts/deepspeed-common/finetune-deepspeed-pure.py
 ```
 
 When composing a config, Hydra resolves all interpolations to produce a fully concrete `BenchmarkConfig` object.
@@ -438,14 +430,14 @@ When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpu
    MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b", "phi3_3b"]
    ```
 
-3. **(Per HPC machine) Create machine-specific overrides** at `configs/model/{machine.name_pattern}/<name>-{machine.name_pattern}.yaml` to override the model path and other machine-specific settings:
+3. **(Per HPC machine) Create machine-specific overrides** at `configs/model/{machine.name_pattern}/<name>-{machine.name_pattern}.yaml` to override the model path:
 
    ```yaml
    # configs/model/MN5/phi3_3b-MN5.yaml
    path: /gpfs/scratch/bsc99/phi3-3b-mn5  # MN5-specific GPFS path
    ```
 
-   This file is composed when the generator uses `model=MN5/phi3_3b-MN5`, allowing each HPC machine to have its own model paths while sharing the same portable config structure.
+   This file is composed when the generator uses `model=MN5/phi3_3b-MN5`, allowing each HPC machine to have its own model weight paths while sharing the same portable config structure.
 
 ### Adding a New Dataset
 
@@ -454,7 +446,7 @@ When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpu
    ```yaml
    # configs/dataset/fineweb.yaml
    name: fineweb
-   path: /path/to/fineweb/train.jsonl  # Generic/default path
+   path: /path/to/fineweb/train.jsonl  # Generic/default path (resolved at composition time via abs_path resolver)
    task: Pretraining
    train: train
    max_seq_len: 4096
@@ -466,18 +458,13 @@ When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpu
    DATASETS = ["alpaca", "squadv2", "fineweb"]
    ```
 
-3. **(Per HPC machine) Create machine-specific overrides** at `configs/dataset/{machine.name_pattern}/<name>-{machine.name_pattern}.yaml` to override paths for that machine:
+3. **(Optional) Create a dataset handler** in `scripts/shared/datasets/` if the dataset requires custom preprocessing. Register the handler in `DATASET_HANDLER_MAP`.
 
-   ```yaml
-   # configs/dataset/MN5/fineweb-MN5.yaml
-   path: /gpfs/scratch/bsc99/fineweb/train.jsonl  # MN5-specific path
-   ```
-
-4. **(Optional) Create a dataset handler** in `scripts/shared/datasets/` if the dataset requires custom preprocessing. Register the handler in `DATASET_HANDLER_MAP`.
+**Note**: Dataset configs are fully portable — no machine-specific YAML files are needed. Paths are resolved at composition time via the `abs_path` resolver.
 
 ### Adding a New Framework
 
-1. **Create the portable framework YAML file** at `configs/framework/<name>.yaml` with base parallelism specs and scripts. This should be machine-agnostic:
+1. **Create the portable framework YAML file** at `configs/framework/<name>.yaml` with base parallelism specs and scripts. This is fully machine-agnostic:
 
    ```yaml
    # configs/framework/vllm.yaml
@@ -487,7 +474,7 @@ When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpu
    
    name: vllm
    python_environment:
-   singularity_container: # Leave empty if overriding per machine
+   singularity_container:
    
    parallelism_name: ""
    parallelism:
@@ -509,14 +496,9 @@ When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpu
    FRAMEWORKS = ["accelerate", "torchrun", "deepspeed", "vllm"]
    ```
 
-3. **(Per HPC machine) Create machine-specific overrides** at `configs/framework/{machine.name_pattern}/<name>-{machine.name_pattern}.yaml` to set Singularity containers or other machine-specific settings:
+3. **Create the corresponding script directories** under `scripts/<name>-common/` with launcher scripts, training entry points, and utilities.
 
-   ```yaml
-   # configs/framework/MN5/vllm-MN5.yaml
-   singularity_container: /gpfs/scratch/bsc99/vllm-latest.sif
-   ```
-
-4. **Create the corresponding script directories** under `scripts/<name>-common/` with launcher scripts, training entry points, and utilities.
+**Note**: Framework configs are fully portable — no machine-specific YAML files are needed.
 
 ---
 
@@ -546,14 +528,12 @@ def generate_valid_combos(config_path, config_name, outpath):
 
 1. **Iterate over combinations**: For each `(model, framework, dataset)` triple from the `MODELS`, `FRAMEWORKS`, `DATASETS` lists:
    - Get the machine name pattern from the initial config (e.g., `_init_cfg.machine.name_pattern = "MN5"`)
-   - Compose a base config via Hydra with machine-specific overrides:
+   - Compose a base config via Hydra with machine-specific model overrides only. Framework and dataset configs are fully portable — their paths are resolved at composition time via the `abs_path` resolver, so no machine-specific YAML files are needed for them:
      ```python
      cfg = compose(
          config_name,  # e.g., "MN5"
          overrides=[
              f"model={name_pattern}/{model}-{name_pattern}",
-             f"framework={name_pattern}/{framework}-{name_pattern}",
-             f"dataset={name_pattern}/{dataset}-{name_pattern}",
          ]
      )
      ```
@@ -697,17 +677,7 @@ The configuration system is designed to support multiple HPC machines through th
      path: /scratch/llama3-8b  # LUMI-specific model path
      ```
 
-   - `configs/framework/LUMI/` — Create one override file per framework:
-     ```yaml
-     # configs/framework/LUMI/accelerate-LUMI.yaml
-     singularity_container: /scratch/containers/accelerate-latest.sif
-     ```
-
-   - `configs/dataset/LUMI/` — Create one override file per dataset:
-     ```yaml
-     # configs/dataset/LUMI/alpaca-LUMI.yaml
-     path: /scratch/datasets/alpaca/train.jsonl
-     ```
+   **Note**: Framework and dataset configs are fully portable — no machine-specific override files are needed for them. Their paths are resolved at composition time via the `abs_path` resolver.
 
    **Naming convention**: `<config_name>-<machine.name_pattern>.yaml`
 
@@ -730,17 +700,17 @@ When the generator composes configs, it uses the machine root config name (e.g.,
 cfg = compose(
     "LUMI",  # Load LUMI.yaml and its defaults (arch/LUMI, slurm/LUMI, base, etc.)
     overrides=[
-        "model=LUMI/llama3_8b-LUMI",     # Load base llama3_8b.yaml, then override with LUMI/llama3_8b-LUMI.yaml
-        "framework=LUMI/accelerate-LUMI",
-        "dataset=LUMI/alpaca-LUMI",
+        "model=LUMI/llama3_8b-LUMI",  # Load base llama3_8b.yaml, then override with LUMI/llama3_8b-LUMI.yaml
     ]
 )
 ```
 
-This two-layer approach (portable base + machine-specific overrides) ensures:
+Only **model** configs use machine-specific overrides (for model weight paths). Framework and dataset configs are fully portable — their paths are resolved at composition time via the `abs_path` resolver, so no machine-specific YAML files are needed for them.
+
+This two-layer approach (portable base + machine-specific model overrides) ensures:
 - **Code reuse**: Base configs are written once and reused across machines
-- **Maintainability**: Machine-specific paths and settings are isolated
-- **Scalability**: Adding a new machine requires only creating one new subdirectory per config group, not duplicating entire configs
+- **Maintainability**: Machine-specific model paths are isolated
+- **Scalability**: Adding a new machine requires only creating one new `model/<MACHINE>/` subdirectory and a corresponding `<MACHINE>.yaml` root config
 
 ---
 

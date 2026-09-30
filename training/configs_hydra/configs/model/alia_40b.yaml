@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: alia_40b # MUST BE same as the filename
-path: /path/to/alia_40b
+path: ${oc.env:MODEL_ALIA_40B_PATH}
 # architecture dims — used by memory rule
 total_params_billions: 40.4
 architecture_type: dense
@@ -29,11 +29,17 @@ frameworks_supported:
   - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
-  - deepspeed-accelerate-cuda121
-  - deepspeed-accelerate-cuda128
-  - deepspeed-accelerate-cuda130
+  - megatron-nemo-2509
 parallelism_supported:
   - fsdp
   #- zero2
   - zero3
-      
+megatron_parallelism_supported:
+  - tp 
+  - pp
+  - dp
+
+
+combinations:
+  global_batch_sizes: [256]
+  batch_sizes: [4]

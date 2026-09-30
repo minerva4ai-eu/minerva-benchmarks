@@ -35,6 +35,7 @@ BARRIER_FILE="${BARRIER_DIR}/.deepspeed-rak0-$SLURM_JOB_ID.$SLURM_STEP_ID.lock"
 GPUS_PER_NODE=${GPUS_PER_NODE:-$SLURM_GPUS_ON_NODE}
 
 # HOSTFILE must be on a shared filesystem so all nodes can read it
+export DS_ENV_FILE="${SRUN_LOGS}/.deepspeed_env-$SLURM_JOB_ID.$SLURM_STEP_ID"
 HOSTFILE="${SRUN_LOGS}/.deepspeed-hostfile-$SLURM_JOB_ID.$SLURM_STEP_ID"
 deepspeed_config_path="scripts/deepspeed_common/configs/${ZERO_STAGE}.json"
 tmp_deepspeed_config_path="${SRUN_LOGS}/.deepspeed-config-$SLURM_JOB_ID.$SLURM_STEP_ID.json"

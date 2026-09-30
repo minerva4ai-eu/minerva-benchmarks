@@ -176,76 +176,18 @@ bash build-all-singularity.sh
 
 Both scripts can be run from either `training/` or `training/install/`.
 
-### Local Development
-
-```bash
-# Benchmarks environment
-cd envs/benchmarks/cuda121-flash-attn
-uv venv
-source .venv/bin/activate
-uv sync --locked
-
-# CLI environment
-cd envs/cli
-uv venv
-source .venv/bin/activate
-uv sync --locked
-```
-
-### Build Singularity Container
-
-```bash
-# Benchmarks environment
-cd envs/benchmarks/cuda121-flash-attn
-singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
-
-# CLI environment
-cd envs/cli
-singularity build singularity-uv.sif singularity-uv.def
-```
-
----
-
-## Using the Environments
-
-### Running Benchmarks
-
-The `minerva-cli.sh` wrapper automatically runs commands inside the Singularity container:
-
-```bash
-bash minerva-cli.sh run --config-name base-MN5
-```
-
-### Direct Singularity Execution
-
-```bash
-# Execute a Python script inside the container
-singularity exec --nv envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif python script.py
-
-# Start an interactive shell
-singularity shell --nv envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif
-```
-
-### GPU Access
-
-The `--nv` flag enables NVIDIA GPU access inside the container:
-
-```bash
-singularity exec --nv ...  # Enables CUDA, cuDNN, NCCL
-```
 
 ---
 
 ## Directory Structure
 
-### `benchmarks/cuda121-flash-attn/`
+### `benchmarks/cuda130-flash-attn/`
 
 ```
-cuda121-flash-attn/
+cuda130-flash-attn/
 ├── pyproject.toml               # Python dependencies (PyTorch, transformers, DeepSpeed, etc.)
 ├── uv.lock                      # Locked dependency versions
-├── singularity_uv-runtime.def   # Singularity definition (runtime image)
-└── singularity_uv-devel.def     # Singularity definition (development image)
+└── ingularity_uv-runtime.def   # Singularity definition (runtime image)
 ```
 
 ### `cli/`
@@ -254,7 +196,6 @@ cuda121-flash-attn/
 cli/
 ├── pyproject.toml         # CLI dependencies (click, hydra, rich, etc.)
 ├── uv.lock                # Locked dependencies
-└── singularity-uv.def     # Singularity definition file
 ```
 
 ---
@@ -314,11 +255,11 @@ singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
 
 ## Adding a New CUDA Version
 
-To add a new CUDA version (e.g., CUDA 12.4):
+To add a new CUDA version (e.g., CUDA 13.3):
 
 1. **Copy existing directory:**
    ```bash
-   cp -r envs/benchmarks/cuda121-flash-attn envs/benchmarks/cuda124-flash-attn
+   cp -r envs/benchmarks/cuda130-flash-attn envs/benchmarks/cuda130-flash-attn
    ```
 
 2. **Update Singularity definition files:**
@@ -365,9 +306,7 @@ Run `uv lock --upgrade` to resolve conflicts. Check that `pyproject.toml` depend
 
 - [install/install-all-envs.sh](../install/install-all-envs.sh) — Install all Python environments with `uv`
 - [install/build-all-singularity.sh](../install/build-all-singularity.sh) — Build all Singularity containers
-- [envs/benchmarks/how-to-build.md](benchmarks/how-to-build.md) — Detailed build instructions for training environment
-- [envs/cli/how-to-build.md](cli/how-to-build.md) — Detailed build instructions for CLI environment
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system (references container path)
 - [scripts/README.md](../scripts/README.md) — Training scripts (run inside containers)
 - [scripts/slurm/README.md](../scripts/slurm/README.md) — SLURM submission (uses containers)
-- [training_MN5/README.md](../../README.md) — Root project overview
+- [training/README.md](../../README.md) — Root project overview

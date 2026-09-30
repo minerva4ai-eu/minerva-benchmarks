@@ -3,7 +3,8 @@ defaults:
   - _self_
 
 name: mistral_7b # MUST BE same as the filename
-path: path/to/mistral_7b
+path: ${oc.env:MODEL_MISTRAL_7B_PATH}
+
 
 # transformer dims
 total_params_billions: 7.24
@@ -45,10 +46,12 @@ frameworks_supported:
   - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
-  - deepspeed-accelerate-cuda121
-  - deepspeed-accelerate-cuda128
-  - deepspeed-accelerate-cuda130
 parallelism_supported:
   - fsdp
   - zero2
   - zero3
+
+
+combinations:
+  global_batch_sizes: [256]
+  batch_sizes: [4]

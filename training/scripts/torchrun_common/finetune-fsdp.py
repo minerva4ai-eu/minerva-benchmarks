@@ -289,6 +289,10 @@ def main(repeatid: int):
         if args.max_steps is not None
         else steps_per_epoch * num_epochs
     )
+    if args.max_steps is not None:
+        total_steps = int(args.max_steps)
+        if total_steps > steps_per_epoch * num_epochs:
+            num_epochs = math.ceil(total_steps / steps_per_epoch)
 
     lr_scheduler = get_linear_schedule_with_warmup(
         optimizer,

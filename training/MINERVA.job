@@ -87,7 +87,7 @@ VENV_PATH : $VENV_PATH"
 
     export TORCHINDUCTOR_CACHE_DIR="$TMPDIR/torchinductor_$USER/$SLURM_JOB_ID.$SLURM_STEP_ID"
     export TENSORBOARD_LOGGING_DIR="$TMPDIR/tensorboard_$SLURM_JOB_ID.$SLURM_STEP_ID"
-
+    
     export NCCL_DEBUG=INFO
     export NCCL_DEBUG_SUBSYS=INIT,P2P,COLL,NET,GRAPH,TUNING,NVLS,PROXY
     export NCCL_DEBUG_TIMESTAMP_LEVELS=WARN,INFO
@@ -99,7 +99,8 @@ VENV_PATH : $VENV_PATH"
     export HEAD_NODE=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
 
     echo "HEAD_NODE=$HEAD_NODE"
-
+    
+    export JOB_CACHE="$SRUN_LOGS/.cache"
     export PROFILER_OUTDIR="$SRUN_LOGS/outputs/gpus-monitor/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURMD_NODENAME"
     
     bash "$SRUN_SCRIPT" "$YAML_PATH" 

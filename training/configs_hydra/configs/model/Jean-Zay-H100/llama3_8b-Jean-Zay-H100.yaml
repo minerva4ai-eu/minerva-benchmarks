@@ -1,6 +1,0 @@
-defaults:
-  - llama3_8b
-  - _self_
-
-path: "fill in path to model"
-max_gpus_scale: 8

@@ -18,7 +18,7 @@ machine:
   modules:                        # list of modules to load, necesary to run training
     - module1 
     - module2
-  runtime_env_mode: ???           # Must provide either "venv" or "singularity"
+  runtime_env_mode: ${oc.env:RUNTIME_ENV_MODE}           # Must provide either "venv" or "singularity"
   singularity_binds:              # singularity binds to apply on runtime
     - "/path/host:/path/container"
     - "/another/path/host:/another/path/container"

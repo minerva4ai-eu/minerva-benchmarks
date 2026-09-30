@@ -1,4 +1,4 @@
 name: alpaca
-path: ${abs_path:datasets/alpaca/alpaca_data_cleaned.json}
+path: ${oc.env:DATASET_ALPACA_PATH, ${abs_path:datasets/alpaca/alpaca_data_cleaned.json}} 
 task: Instruction-Finetuning
 max_seq_len: 1024

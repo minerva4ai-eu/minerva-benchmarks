@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: llama3_8b # MUST BE same as the filename
-path: /path/to/llama3_8b
+path: ${oc.env:MODEL_LLAMA3_8B_PATH}
 
 # architecture dims — used by memory rule
 total_params_billions: 8.03
@@ -45,9 +45,6 @@ frameworks_supported:
   - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
-  - deepspeed-accelerate-cuda121
-  - deepspeed-accelerate-cuda128
-  - deepspeed-accelerate-cuda130
 parallelism_supported:
   - fsdp
   - zero2

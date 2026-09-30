@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: llama3_70b # MUST BE same as the filename
-path: /path/to/llama3_70b
+path: ${oc.env:MODEL_LLAMA3_70B_PATH}
 
 # transformer dims
 total_params_billions: 70.6      # Llama 2 was ~68.9B
@@ -32,7 +32,7 @@ tokenizer_type:       tiktoken   # Llama 2 used sentencepiece
 #norm_eps:             1.0e-5
 #activation_function:  silu       # SwiGLU
 
-max_gpus_scale: 32
+max_gpus_scale: 128
 frameworks_supported:
   - torchrun-cuda121
   - torchrun-cuda128
@@ -43,10 +43,15 @@ frameworks_supported:
   - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
-  - deepspeed-accelerate-cuda121
-  - deepspeed-accelerate-cuda128
-  - deepspeed-accelerate-cuda130
+  - megatron-nemo-2509
 parallelism_supported:
   - fsdp
   - zero3
+megatron_parallelism_supported:
+  - tp 
+  - pp
+  - dp
 
+combinations:
+  global_batch_sizes: [256]
+  batch_sizes: [1]

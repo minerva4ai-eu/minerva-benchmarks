@@ -12,6 +12,7 @@ warnings.filterwarnings(
 
 warnings.filterwarnings("ignore")
 
+import dotenv
 from configs_hydra.constraints import rules
 from configs_hydra.dataclasses_hydra import BenchmarkConfig, register_configs
 from configs_hydra.model_framework_dataset import *
@@ -22,6 +23,9 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
+
+# Load training/.env
+dotenv.load_dotenv()
 
 # Color Codes
 GREEN = "\033[92m"
@@ -96,7 +100,7 @@ def generate_valid_combos(
             cfg: BenchmarkConfig = compose(
                 config_name,
                 overrides=[
-                    f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
+                    f"model={model}",
                     f"framework={framework}",
                     f"dataset={dataset}",
                     f"slurm={_init_cfg.machine.name_pattern}",
@@ -370,6 +374,7 @@ def _multi_parallelism_framework(
                 nnodes=n,
                 axes=tmp_cfg.model.megatron_parallelism_supported,
             )
+            print(f"{parallelism_combinations[0]}")
             for c in parallelism_combinations:
                 tmp_cfg.slurm.sbatch.nodes = c["nnodes"]
                 total_gpus = (
@@ -379,32 +384,38 @@ def _multi_parallelism_framework(
                 tmp_cfg.model.training.grad_accum = grad_acc
 
                 parallelism_comb_str = ""
-                if c.get("tp", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.tp = c["tp"]
-                    parallelism_comb_str += (
-                        f"tp-{tmp_cfg.framework.megatron_parallelism.tp}"
-                    )
-                if c.get("pp", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.pp = c["pp"]
-                    parallelism_comb_str += (
-                        f"_pp-{tmp_cfg.framework.megatron_parallelism.pp}"
-                    )
-                if c.get("cp", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.cp = c["cp"]
-                    parallelism_comb_str += (
-                        f"_cp-{tmp_cfg.framework.megatron_parallelism.cp}"
-                    )
-                if c.get("dp", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.dp = c["dp"]
-                    parallelism_comb_str += (
-                        f"_dp-{tmp_cfg.framework.megatron_parallelism.dp}"
-                    )
-                if c.get("ep", -1) != -1:
-                    tmp_cfg.framework.megatron_parallelism.ep = c["ep"]
-                    parallelism_comb_str += (
-                        f"_ep-{tmp_cfg.framework.megatron_parallelism.ep}"
-                    )
-                tmp_cfg.framework.megatron_parallelism.sp = c.get("sp", False)
+                assert "dp" in list(c.keys()), (
+                    f"{RED} !! model.megatron_parallelism_supported must include 'dp'!! Key 'dp' was not found. "
+                )
+                _c = {
+                    "tp": c.get("tp", 1),
+                    "pp": c.get("pp", 1),
+                    "cp": c.get("cp", 1),
+                    "sp": c.get("sp", False),
+                    "ep": c.get("ep", 1),
+                    "dp": c["dp"],
+                }
+                tmp_cfg.framework.megatron_parallelism.tp = _c["tp"]
+                parallelism_comb_str += (
+                    f"tp-{tmp_cfg.framework.megatron_parallelism.tp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.pp = _c["pp"]
+                parallelism_comb_str += (
+                    f"_pp-{tmp_cfg.framework.megatron_parallelism.pp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.cp = _c["cp"]
+                parallelism_comb_str += (
+                    f"_cp-{tmp_cfg.framework.megatron_parallelism.cp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.dp = _c["dp"]
+                parallelism_comb_str += (
+                    f"_dp-{tmp_cfg.framework.megatron_parallelism.dp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.ep = _c["ep"]
+                parallelism_comb_str += (
+                    f"_ep-{tmp_cfg.framework.megatron_parallelism.ep}"
+                )
+                tmp_cfg.framework.megatron_parallelism.sp = _c["sp"]
                 parallelism_comb_str += (
                     f"_sp-{tmp_cfg.framework.megatron_parallelism.sp}"
                 )
@@ -450,7 +461,7 @@ def _multi_parallelism_framework(
                 # outpath_yaml = os.path.join(run_path, yaml_filename)
                 passed, results_msg = rules.is_valid(tmp_cfg)
                 msg = (
-                    f"\t· tp:{c['tp']}-pp:{c['pp']}-cp:{c['cp']}-dp:{c['dp']}"
+                    f"\t· tp:{_c['tp']}-pp:{_c['pp']}-cp:{_c['cp']}-dp:{_c['dp']}"
                     + f" | nodes:{tmp_cfg.slurm.sbatch.nodes}"
                     + f" | gpus:{total_gpus}"
                     + f" | gbs:{gbs}"
