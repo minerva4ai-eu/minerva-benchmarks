@@ -22,7 +22,7 @@ attention_type:       gqa
 vocab_size:           152064
 
 # GPU requirements — constraint metadata
-max_gpus_scale: 64
+max_gpus_scale: 16
 
 
 frameworks_supported:
@@ -31,8 +31,6 @@ megatron_parallelism_supported:
   - dp
   - tp
   - pp
-  - cp
-  - sp
 
 
 combinations:

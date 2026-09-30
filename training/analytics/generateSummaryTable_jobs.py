@@ -297,8 +297,6 @@ def build_row(
     )
     if error_message:
         row["Comment"] = error_message
-    elif not metrics and not config_error:
-        row["Comment"] = "Error during training"
     return row
 
 
@@ -316,6 +314,7 @@ def collect_rows(job_dirs, model_type_map):
             key=numeric_step_key,
         )
         for step_dir in step_dirs:
+            print(f"step_dir {step_dir}")
             yaml_path, config_values, config_error = load_step_config(job_dir, step_dir)
             repeat_dirs = sorted(
                 path for path in step_dir.glob("repeatid-*") if path.is_dir()
@@ -349,6 +348,7 @@ def collect_rows(job_dirs, model_type_map):
                 or int(re.fullmatch(r"repeatid-(\d+)", repeat_dir.name).group(1))
                 >= expected_repeats
             )
+            print(f"repeat_items {repeat_items}")
 
             for repeat_dir, repeat_label in repeat_items:
                 summaries = sorted(repeat_dir.rglob("training_summary*.json"))
@@ -366,12 +366,8 @@ def collect_rows(job_dirs, model_type_map):
                 )
                 if repeat_label is not None:
                     row["Comment"] = "Did not run"
-                elif not row["Comment"]:
-                    # No captured error from the summary; fall back to scanning
-                    # the Slurm logs for a generic failure signature.
-                    row["Comment"] = (
-                        check_step_error(job_dir, step_dir) or "Error during training"
-                    )
+                # elif not row["Comment"]:
+                #    row["Comment"] = check_step_error(job_dir, step_dir)
                 rows.append(row)
     return rows
 
@@ -405,10 +401,14 @@ def main():
         print(f"Warning: no training results found for job IDs: {', '.join(missing)}")
 
     rows = collect_rows(job_dirs, {})
-    raw_columns = sorted(
-        {key for row in rows for key in row if key not in DISPLAY_COLUMNS}
-    )
-    fieldnames = DISPLAY_COLUMNS + raw_columns
+
+    # Note: Keep only DISPLAY_COLUMNS
+    # raw_columns = sorted(
+    #    {key for row in rows for key in row if key not in DISPLAY_COLUMNS}
+    # )
+    # fieldnames = DISPLAY_COLUMNS + raw_columns
+
+    fieldnames = DISPLAY_COLUMNS
     if args.output is None:
         args.output = Path(
             f"analytics/results/training_summary_jobs_{'-'.join(set(args.job_ids))}.csv"

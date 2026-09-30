@@ -1,9 +1,7 @@
 account: ""    # Must fill in
 qos:           # Optional fill in
-partition:     # Must fill in
-constraint:    # Must fill in
-# Only set qos/partition or constraint, based on your SLURM configuration
-# If using one, let the other unfilled
+partition:     # Optional fill in
+constraint:    # Optional fill in
 
 sbatch:
   gpus_per_node: 0                        # Must fill in
@@ -15,11 +13,12 @@ sbatch:
   tasks_per_node: 1                       # Not touch
   output: run-%j.out                      # Not touch
   error: run-%j.err                       # Not touch
-  extra_args:
+  extra_args:                             # Adapt extra args according to needs
     - "--exclusive"                       # Not touch
-    - "--time=00:30:00"                   # Not touch
+    - "--time=02:00:00"                   # Not touch
   logs_folder: "slurm-logs"
 
+# DEPRECATED
 #srun:                                     # Field not implemented
 #  gpus_per_node: 0
 #  cpus_per_gpu: 0
