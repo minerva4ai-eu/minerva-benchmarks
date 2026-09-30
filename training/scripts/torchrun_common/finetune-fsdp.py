@@ -312,6 +312,7 @@ def main(repeatid: int):
         total_tokens_this_gpu = 0
         global_step = 0
         step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
+        last_step_loss = step_loss.clone()
         start_time = time.time()
 
         flopsCallback_megatronLM = mfu_callback_from_hf_config(
@@ -339,8 +340,7 @@ def main(repeatid: int):
                 outputs = model(**batch)
                 loss = outputs.loss / grad_accum_steps
                 loss.backward()
-                step_loss += outputs.loss
-
+                step_loss += outputs.loss.detach()
                 total_tokens_this_gpu += batch["input_ids"].numel()
 
                 if (micro_step + 1) % grad_accum_steps == 0:
@@ -360,7 +360,7 @@ def main(repeatid: int):
                         global_step=global_step,
                     )
                     step_loss = step_loss / grad_accum_steps
-
+                    last_step_loss = step_loss.clone()
                     if global_step % args.logging_steps == 0:
                         logger.info(
                             f"epoch {epoch} step {global_step}/{total_steps} | "
@@ -391,8 +391,8 @@ def main(repeatid: int):
         dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
         total_tokens_global = tokens_tensor.item()
 
-        avg_final_loss = torch.tensor(0, device=local_rank)
-        dist.all_reduce(step_loss, op=dist.ReduceOp.AVG)
+        avg_final_loss = last_step_loss
+        dist.all_reduce(avg_final_loss, op=dist.ReduceOp.AVG)
 
         avg_mfu = (
             sum(flopsCallback_megatronLM.state.mfu_this_gpu)

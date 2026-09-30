@@ -258,6 +258,23 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 f"Failed to reduce {name} across GPUs! Using the local value on each GPU.",
             )
             return float(local_value)
+        self.global_average_flops = self._average_across_ranks(local_avg_flops, "FLOP")
+        self.avg_flops_this_gpu = local_avg_flops
+
+    def _average_across_ranks(self, local_value: float, name: str) -> float:
+        """Mean of a per-rank scalar; falls back to the local value on 1 GPU or on failure."""
+        if not (dist.is_available() and dist.is_initialized()):
+            return float(local_value)
+        try:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            value = torch.tensor(float(local_value), device=device)
+            dist.all_reduce(value, op=dist.ReduceOp.SUM)
+            return float(value.item()) / dist.get_world_size()
+        except Exception:
+            logger.warning(
+                f"Failed to reduce {name} across GPUs! Using the local value on each GPU.",
+            )
+            return float(local_value)
 
     def _finalize_mfu_counts(self):
         for callback in self.callback_handler.callbacks:
@@ -271,6 +288,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             if self.logged_mfu_this_gpus
             else 0
         )
+        self.global_average_mfu = self._average_across_ranks(local_avg_mfu, "MFU")
         self.global_average_mfu = self._average_across_ranks(local_avg_mfu, "MFU")
         self.avg_mfu_this_gpu = local_avg_mfu
 
@@ -333,15 +351,16 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             logger.info(f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:.2f}")
             logger.info(
                 f"Global Average FLOPs: {self.global_average_flops:.2f} TFLOPs/sec/GPU",
+                f"Global Average FLOPs: {self.global_average_flops:.2f} TFLOPs/sec/GPU",
             )
             logger.info(f"Global Average MFU: {self.global_average_mfu:.2f}%")
             logger.info("==========================================================\n")
 
             logger_rank.info(
-                f"Average TFLOPs DeviceID{os.getenv('RANK')}: {self.avg_flops_this_gpu:.2f}"
+                f"Average TFLOPs DeviceID{os.getenv('RANK', '0')}: {self.avg_flops_this_gpu:.2f}"
             )
             logger_rank.info(
-                f"Average MFU DeviceID{os.getenv('RANK')}: {self.avg_mfu_this_gpu:.2f}"
+                f"Average MFU DeviceID{os.getenv('RANK', '0')}: {self.avg_mfu_this_gpu:.2f}"
             )
         return output
 
@@ -369,8 +388,8 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         tokens_per_gpu_all_epochs = self.total_tokens_this_gpu
 
         tokens_global_all_epochs = self.total_tokens_global
-        avg_gpu_flops = self.global_average_flops
-        avg_gpu_mfu = self.global_average_mfu
+        avg_gpu_flops = self.avg_flops_this_gpu
+        avg_gpu_mfu = self.avg_mfu_this_gpu
 
         steps_per_epoch = None
         if self.args.max_steps and self.args.max_steps > 0:
@@ -477,9 +496,14 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             "avg_step_training_time_hours": avg_step_time_hours,
             "avg_gpu_flops": avg_gpu_flops,
             "avg_gpu_mfu": avg_gpu_mfu,
-            "training_loss": log_history[-1]["loss"]
-            if log_history and "loss" in log_history[-1]
-            else None,
+            "training_loss": next(
+                (
+                    float(entry["loss"])
+                    for entry in reversed(log_history)
+                    if "loss" in entry
+                ),
+                None,
+            ),
             "validation_loss": avg_validation_loss,
         }
         save_summary_stats_json(

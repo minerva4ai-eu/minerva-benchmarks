@@ -434,10 +434,10 @@ def main(repeatid: int):
             tokens_per_gpu_all_epochs, dtype=torch.long, device=engine.device
         )
         step_loss_tensor = torch.tensor(
-            step_loss, dtype=torch.long, device=engine.device
+            step_loss, dtype=torch.float32, device=engine.device
         )
         reduce_tensor(step_loss_tensor, world_size)
-        final_step_loss = int(step_loss_tensor.item()) / dist.get_world_size()
+        final_step_loss = step_loss_tensor.item() / dist.get_world_size()
 
         avg_mfu = (
             sum(flopsCallback_megatronLM.state.mfu_this_gpu)

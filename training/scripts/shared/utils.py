@@ -247,11 +247,30 @@ def save_training_summary(
     training_loss: float = 0,
     comm_metrics: dict[str, float | None] | None = None,
     exception_msg: str = "",
+    global_steps: int | None = None,
+    steps_per_epoch: int | None = None,
+    avg_step_time_sec: float | None = None,
+    global_batch_size: int | None = None,
 ):
     if dist.is_initialized():
         world_size = dist.get_world_size()
     else:
-        world_size = 1
+        world_size = int(os.environ.get("WORLD_SIZE", "1"))
+
+    # Prefer a measured step time; else derive it from wall time and step count.
+    if avg_step_time_sec is None and global_steps and total_training_time_secs:
+        avg_step_time_sec = total_training_time_secs / global_steps
+    avg_epoch_time_sec = (
+        avg_step_time_sec * steps_per_epoch
+        if avg_step_time_sec is not None and steps_per_epoch
+        else None
+    )
+    samples_per_sec = (
+        (global_batch_size or batch_size * gradient_accumulation * world_size)
+        / avg_step_time_sec
+        if avg_step_time_sec
+        else None
+    )
 
     avg_gpu_power_watts = (
         sum(gpu_stats["power"]) / len(gpu_stats["power"])
@@ -269,8 +288,9 @@ def save_training_summary(
         if total_training_time_secs and total_training_time_secs > 0
         else None
     )
+    # avg_gpu_power_watts is per GPU, so total power is scaled by the GPU count.
     tokens_per_sec_per_watt_global = (
-        training_throughput_tokens_per_sec_global / avg_gpu_power_watts
+        training_throughput_tokens_per_sec_global / (avg_gpu_power_watts * world_size)
         if training_throughput_tokens_per_sec_global is not None and avg_gpu_power_watts
         else None
     )
@@ -325,16 +345,20 @@ def save_training_summary(
         "training_throughput_tokens_per_sec_global": training_throughput_tokens_per_sec_global,
         "training_throughput_tokens_per_sec_per_gpu": training_throughput_tokens_per_sec_per_gpu,
         "tokens_per_sec_per_watt_global": tokens_per_sec_per_watt_global,
-        "samples_per_sec": None,
+        "samples_per_sec": samples_per_sec,
         "total_tokens_per_gpu_all_epochs": total_tokens_this_gpu,
         "total_tokens_global_all_epochs": total_tokens_global,
         "total_training_time_hours": total_training_time_secs / 3600
         if total_training_time_secs is not None
         else None,
-        "avg_epoch_training_time_sec": None,
-        "avg_epoch_training_time_hours": None,
-        "avg_step_training_time_sec": None,
-        "avg_step_training_time_hours": None,
+        "avg_epoch_training_time_sec": avg_epoch_time_sec,
+        "avg_epoch_training_time_hours": avg_epoch_time_sec / 3600
+        if avg_epoch_time_sec is not None
+        else None,
+        "avg_step_training_time_sec": avg_step_time_sec,
+        "avg_step_training_time_hours": avg_step_time_sec / 3600
+        if avg_step_time_sec is not None
+        else None,
         "avg_gpu_flops": avg_gpu_flops,
         "avg_gpu_mfu": avg_gpu_mfu,
         "training_loss": training_loss,
