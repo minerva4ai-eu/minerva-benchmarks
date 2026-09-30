@@ -9,6 +9,33 @@ These benchmarks measure:
 - **GPU utilization** — Power draw, memory bandwidth, compute utilization
 - **Scaling behavior** — Single-GPU → DDP → FSDP → ZeRO → Megatron comparison
 
+## Table of Contents
+
+- [Documentation](#documentation)
+- [Architecture](#architecture)
+- [Supported Frameworks & Parallelism](#supported-frameworks--parallelism)
+- [Project Structure](#project-structure)
+- [Setup](#setup)
+  - [0. Prerequisites](#0-prerequisites)
+  - [1. Install the environments](#1-install-the-environments-install)
+  - [2. Download the datasets](#2-download-the-datasets)
+  - [3. Create the `.env` file](#3-create-the-env-file)
+  - [4. Pick a configuration profile](#4-pick-a-configuration-profile)
+- [Using `minerva-cli.sh`](#using-minerva-clish)
+  - [`run` options](#run-options)
+  - [Typical workflow](#typical-workflow)
+- [Configuration](#configuration)
+- [Results](#results)
+  - [Output Structure](#output-structure)
+  - [Aggregation](#aggregation)
+- [Supported Machines](#supported-machines)
+- [Requirements](#requirements)
+- [Notes & Limitations](#notes--limitations)
+- [License](#license)
+- [References](#references)
+
+---
+
 ## Documentation
 
 | Topic | README |

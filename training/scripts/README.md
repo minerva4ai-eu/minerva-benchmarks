@@ -2,6 +2,31 @@
 
 This directory contains all training scripts, launchers, and utilities for LLM training and fine-tuning benchmarks. Scripts are organized by framework (Accelerate, TorchRun, DeepSpeed) with shared code that is common across all frameworks.
 
+## Table of Contents
+
+- [Overview](#overview)
+  - [How Launchers Work](#how-launchers-work)
+- [Directory Structure](#directory-structure)
+- [Shared Code (`shared/`)](#shared-code-shared)
+  - [`custom_train.py` — CustomTrainer](#custom_trainpy--customtrainer)
+  - [`data.py` — Data Loading](#datapy--data-loading)
+  - [`utils.py` — Shared Utilities](#utilspy--shared-utilities)
+  - [`datasets/` — Dataset Handlers](#datasets--dataset-handlers)
+- [Framework-Specific Scripts](#framework-specific-scripts)
+  - [Accelerate (`accelerate_common/`)](#accelerate-accelerate_common)
+  - [TorchRun (`torchrun-common/`)](#torchrun-torchrun-common)
+  - [DeepSpeed (`deepspeed_common/`)](#deepspeed-deepspeed_common)
+- [Cross-Cutting Utilities](#cross-cutting-utilities)
+  - [`activate-env-variables-per-supercomputer.sh`](#activate-env-variables-per-supercomputersh)
+  - [`utils.sh` — Shell Utilities](#utilssh--shell-utilities)
+  - [`gpu_plots.py` — GPU Utilization Plotting](#gpu_plotspy--gpu-utilization-plotting)
+- [How Launchers Work](#how-launchers-work-1)
+  - [Launcher Execution Flow (singularity_prefix pattern)](#launcher-execution-flow-singularity_prefix-pattern)
+  - [Training Entry Point Command Signatures](#training-entry-point-command-signatures)
+- [Adding a New Framework](#adding-a-new-framework)
+- [Using `minerva-cli.sh`](#using-minerva-clish)
+- [See Also](#see-also)
+
 ## Overview
 
 The scripts directory provides:
@@ -505,9 +530,28 @@ To add support for a new training framework:
 
 ---
 
+## Using `minerva-cli.sh`
+
+Scripts in this directory are never invoked directly. For each valid model × framework × dataset × parallelism combination, the CLI wrapper at `training/minerva-cli.sh` copies the matching launcher (`run-*.sh`), training entry point (`finetune-*.py`), and `shared/` code into a per-run launch folder, then submits it to SLURM:
+
+```bash
+cd training
+bash minerva-cli.sh run --config-name MN5-singularity
+```
+
+`minerva-cli.sh` activates `envs/cli/.venv` and runs `python -m scripts.slurm.cli run ...`, which:
+
+1. Composes and validates one `BenchmarkConfig` YAML per combination (Hydra, see [configs_hydra/README.md](../configs_hydra/README.md)).
+2. Copies the launcher, training entry point, and shared code into `benchmark-runs-{config-name}/{machine}/{date}/{job_id}/...`.
+3. Submits `MINERVA.job` to SLURM, which `srun`s each launcher with the environment variables described in [Training Entry Point Command Signatures](#training-entry-point-command-signatures).
+
+See [training/README.md](../README.md#using-minerva-clish) for the full CLI reference (`run` options, typical workflows) and [scripts/slurm/README.md](slurm/README.md) for job lifecycle details.
+
+---
+
 ## See Also
 
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system
 - [scripts/slurm/README.md](slurm/README.md) — SLURM job submission CLI
 - [envs/README.md](../envs/README.md) — Environment management
-- [training_MN5/README.md](../../README.md) — Root project overview
+- [training/README.md](../../README.md) — Root project overview

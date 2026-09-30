@@ -310,6 +310,7 @@ def main(repeatid: int):
         total_tokens_this_gpu = 0
         global_step = 0
         step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
+        last_step_loss = step_loss.clone()
         start_time = time.time()
 
         flopsCallback_megatronLM = mfu_callback_from_hf_config(
@@ -337,8 +338,7 @@ def main(repeatid: int):
                 outputs = model(**batch)
                 loss = outputs.loss / grad_accum_steps
                 loss.backward()
-                step_loss += outputs.loss
-
+                step_loss += outputs.loss.detach()
                 total_tokens_this_gpu += batch["input_ids"].numel()
 
                 if (micro_step + 1) % grad_accum_steps == 0:
@@ -358,7 +358,7 @@ def main(repeatid: int):
                         global_step=global_step,
                     )
                     step_loss = step_loss / grad_accum_steps
-
+                    last_step_loss = step_loss.clone()
                     if global_step % args.logging_steps == 0:
                         logger.info(
                             f"epoch {epoch} step {global_step}/{total_steps} | "
@@ -403,24 +403,8 @@ def main(repeatid: int):
         print_rank(i, "=== TRAINING SUMMARY ===")
         print_rank(i, "\n".join(summary_log))
 
-    save_training_summary(
-        output_dir=output_dir,
-        rank=rank,
-        model_name=model_name,
-        dataset_name=args.dataset,
-        framework="torchrun",
-        parallelism_type="fsdp",
-        batch_size=BATCH_SIZE,
-        gradient_accumulation=args.gradient_accumulation_steps,
-        learning_rate=args.lr,
-        total_training_time_secs=elapsed_total,
-        total_tokens_this_gpu=total_tokens_this_gpu,
-        total_tokens_global=total_tokens_global,
-        avg_gpu_flops=avg_tflops,
-        avg_gpu_mfu=avg_mfu,
-        gpu_stats=gpu_stats_during,
-        training_loss
-    )
+        avg_final_loss = last_step_loss
+        dist.all_reduce(avg_final_loss, op=dist.ReduceOp.AVG)
 
         avg_mfu = (
             sum(flopsCallback_megatronLM.state.mfu_this_gpu)

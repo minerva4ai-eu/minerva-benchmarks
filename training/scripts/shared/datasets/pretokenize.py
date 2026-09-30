@@ -88,6 +88,7 @@ def main():
             os.remove(sync_path)
         finally:
             fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            os.remove(lock_path)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,6 @@ deepspeed_common/
 │   ├── zero1.json               # ZeRO-1 configuration
 │   ├── zero2.json               # ZeRO-2 configuration
 │   ├── zero3.json               # ZeRO-3 configuration
-│   └── accelerate_config.yaml   # Accelerate config for DeepSpeed integration
 ├── run-deepspeed.sh             # Pure DeepSpeed launcher
 ├── run-deepspeed-accelerate.sh  # DeepSpeed + Accelerate launcher
 ├── finetune-deepspeed-pure.py   # Pure DeepSpeed training entry point
