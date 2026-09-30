@@ -87,75 +87,65 @@ This environment is used by `minerva-cli.sh` to provide the Click-based CLI for 
 ### Build Commands
 
 ```bash
-# Build runtime container
-cd envs/uv/cuda121-flash-attn/
-singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
+# From the training/ directory
+cd install
 
-# Build development container
-singularity build singularity_uv-devel.sif singularity_uv-devel.def
+# Install all Python environments (uv sync)
+bash install-all-envs.sh
+
+# Build all Singularity containers
+bash build-all-singularity.sh
 ```
 
-### Build Process
+Both scripts can be run from either `training/` or `training/install/`.
 
-The Singularity definition file executes these steps in `%post`:
 
-1. **Install system dependencies** — Python dev headers, build tools, NCCL, CUDA toolkit
-2. **Install uv** — Via pip
-3. **Sync Python packages** — `uv sync --locked` reads `pyproject.toml` + `uv.lock`
-4. **Create symlinks** — Python 3.11 linked to `/usr/local/bin/python`
-5. **Set environment** — PATH, locale, uv project environment
+---
 
-### Output
+## Directory Structure
 
-The build produces a `.sif` (Singularity Image Format) file:
+### `benchmarks/cuda130-flash-attn/`
 
 ```
-singularity_uv-runtime.sif   # ~6 GB depending on dependencies
+cuda130-flash-attn/
+├── pyproject.toml               # Python dependencies (PyTorch, transformers, DeepSpeed, etc.)
+├── uv.lock                      # Locked dependency versions
+└── ingularity_uv-runtime.def   # Singularity definition (runtime image)
+```
+
+### `cli/`
+
+```
+cli/
+├── pyproject.toml         # CLI dependencies (click, hydra, rich, etc.)
+├── uv.lock                # Locked dependencies
 ```
 
 ---
 
-## Using Containers
+## Key Dependencies
 
-### Via CLI
+### Benchmarks Environment
 
-The `minerva-cli.sh` wrapper automatically runs commands inside the Singularity container:
+| Category | Packages |
+|----------|----------|
+| Deep Learning | `torch==2.5.1`, `transformers==4.57.0`, `accelerate==1.10.1`, `trl==1.4.0`, `torchtune==0.6.0`, `lightning==2.5.5` |
+| Training | `deepspeed==0.15.4`, `bitsandbytes==0.45.0`, `ray==2.38.0`, `torchmetrics==1.8.2`, `torchdata==0.11.0` |
+| Attention | `flash-attn==2.8.3` (requires CUDA + compilation) |
+| Data | `datasets==4.8.5`, `tiktoken==0.9.0`, `tokenizers==0.22.1`, `sentencepiece==0.2.0`, `safetensors==0.5.0` |
+| Monitoring | `psutil==6.1.1`, `pynvml==13.0.1`, `memray==1.14.0` |
+| Visualization | `matplotlib==3.10.7`, `seaborn==0.13.2`, `pandas==2.2.3`, `numpy==2.4.6` |
 
-```bash
-bash minerva-cli.sh run --config-name base-MN5
-```
+PyTorch wheels are sourced from `https://download.pytorch.org/whl/cu121` via `[[tool.uv.index]]` in `pyproject.toml`.
 
+### CLI Environment
 
-### Bind Mounts
-
-Key bind mounts used by `minerva-cli.sh`:
-
-| Host Path | Container Path | Purpose |
-|-----------|----------------|---------|
-| `$HOME` | `$HOME` | User home directory |
-| `$PWD` | `$PWD` | Current working directory |
-| `/etc/passwd` | `/etc/passwd` | User identity |
-| `/etc/group` | `/etc/group` | Group membership |
-| `$(which sbatch)` | `/usr/local/bin/sbatch` | SLURM job submission |
-| `$(which sacct)` | `/usr/local/bin/sacct` | SLURM account info |
-| `/var/run/munge` | `/var/run/munge` | SLURM authentication socket |
-| `/etc/munge` | `/etc/munge` | Munge config |
-| `/etc/slurm` | `/etc/slurm` | SLURM daemon config |
-| `/usr/lib64/slurm` | `/usr/lib64/slurm` | SLURM libraries |
-| `/usr/lib64/libmunge.so.2` | `/usr/lib64/libmunge.so.2` | Munge library |
-| `/lib64/libc.so.6` | `/lib64/libc.so.6` | C library |
-| `/lib64/libm.so.6` | `/lib64/libm.so.6` | Math library |
-| `/lib64/libresolv.so.2` | `/lib64/libresolv.so.2` | DNS resolver library |
-
-### GPU Access
-
-The `--nv` flag enables NVIDIA GPU access inside the container:
-
-```bash
-singularity exec --nv ...  # Enables CUDA, cuDNN, NCCL
-```
-
-For AMD ROCm GPUs, use `--rocm` instead (if supported by the container).
+| Category | Packages |
+|----------|----------|
+| CLI/UX | `click>=8.4.1`, `rich>=15.0.0`, `prompt-toolkit`, `tqdm` |
+| Config | `pyyaml`, `omegaconf`, `hydra-core>=1.3.2` |
+| Data | `numpy`, `pandas`, `seaborn`, `matplotlib` |
+| Utilities | `python-dotenv`, `psutil`, `setuptools` |
 
 ---
 
@@ -216,11 +206,11 @@ singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
 
 ## Adding a New CUDA Version
 
-To add a new CUDA version (e.g., CUDA 12.4):
+To add a new CUDA version (e.g., CUDA 13.3):
 
 1. **Copy existing directory:**
    ```bash
-   cp -r envs/uv/cuda121-flash-attn envs/uv/cuda124-flash-attn
+   cp -r envs/benchmarks/cuda130-flash-attn envs/benchmarks/cuda130-flash-attn
    ```
 
 2. **Update Singularity definition files:**
@@ -281,7 +271,9 @@ Run `uv lock --upgrade` to resolve conflicts. Check that `pyproject.toml` depend
 
 ## See Also
 
+- [install/install-all-envs.sh](../install/install-all-envs.sh) — Install all Python environments with `uv`
+- [install/build-all-singularity.sh](../install/build-all-singularity.sh) — Build all Singularity containers
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system (references container path)
 - [scripts/README.md](../scripts/README.md) — Training scripts (run inside containers)
 - [scripts/slurm/README.md](../scripts/slurm/README.md) — SLURM submission (uses containers)
-- [training_MN5/README.md](../../README.md) — Root project overview
+- [training/README.md](../../README.md) — Root project overview

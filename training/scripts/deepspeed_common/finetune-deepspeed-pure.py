@@ -10,7 +10,6 @@ import psutil
 import torch
 import torch.distributed as dist
 from scripts.shared.args import construct_config, get_deepspeed_parser
-from scripts.shared.comm_metrics import collect_comm_metrics
 from scripts.shared.data import (
     collate_fn,
     get_train_eval_path,
@@ -75,6 +74,31 @@ def load_model(model_path, dtype, ds_config):
     #    num_nodes=int(os.environ["SLURM_NNODES"]),
     # )
     return model
+
+
+def cleanup_deepspeed_engine(model_engine):
+    # 1. Destroy/Release DeepSpeed engine internal hooks & communication
+    if hasattr(model_engine, "destroy"):
+        model_engine.destroy()  # Available in recent DeepSpeed releases
+
+    # 2. Extract underlying modules & optimizer to delete explicitly
+    if hasattr(model_engine, "optimizer") and model_engine.optimizer is not None:
+        # Clear optimizer internal state buffers (momentum, fp32 master weights, etc.)
+        model_engine.optimizer.state.clear()
+        del model_engine.optimizer
+
+    if hasattr(model_engine, "module"):
+        del model_engine.module
+
+    # 3. Explicitly delete the engine object
+    del model_engine
+
+    # 4. Force Python garbage collection (frees C++ PyTorch tensor references)
+    gc.collect()
+
+    # 5. Flush PyTorch CUDA caching allocator
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
 
 
 # ------#
@@ -228,6 +252,11 @@ def main(repeatid: int):
         else steps_per_epoch * num_epochs
     )
 
+    if cfg.max_steps is not None:
+        total_steps = int(cfg.max_steps)
+        if total_steps > steps_per_epoch * num_epochs:
+            num_epochs = math.ceil(total_steps / steps_per_epoch)
+
     gpu_name = os.environ.get("GPU_NAME", "Unknown GPU")
     logger.info(f"GPU: {gpu_name} | peak TFLOPs for MFU: {cfg.peak_flops}")
 
@@ -281,7 +310,7 @@ def main(repeatid: int):
             tokenizer,
             gpu_peak_flops=cfg.peak_flops,
             seq_length=cfg.max_length,
-            trainer_callback=False,
+            trainer_callback="custom",
         )
         training_done = False
         step_loss = 0
@@ -456,10 +485,10 @@ def main(repeatid: int):
             avg_gpu_mfu=avg_mfu,
             gpu_stats=gpu_stats_during,
             training_loss=final_step_loss,
-            comm_metrics=collect_comm_metrics(skip_steps=1),
+            # #comm_metrics=collect_comm_metrics(skip_steps=1),
         )
         logger_rank.info("Fine-tuning completed successfully.")
-    except Exception:
+    except Exception as e:
         logger.exception("Fine-tuning failed with error!")
         save_training_summary(
             output_file=os.path.join(
@@ -479,7 +508,8 @@ def main(repeatid: int):
         )
         raise e
     finally:
-        del model, engine, lr_scheduler
+        cleanup_deepspeed_engine(engine)
+        del model, lr_scheduler
         gc.collect()
         torch.cuda.empty_cache()
 
@@ -518,4 +548,3 @@ if __name__ == "__main__":
                 )
             except Exception:
                 logger.exception("Failed to save error summary.")
-            raise e

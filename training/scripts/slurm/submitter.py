@@ -7,10 +7,10 @@ import sys
 import uuid
 from pathlib import Path
 
+import click
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, MachineConfig
 from omegaconf import OmegaConf
 from scripts.slurm import utils as u
-from scripts.slurm.cli_utils import *
 
 import logging
 
@@ -120,6 +120,7 @@ def build_srun_env():
     )
 
     env = {
+        "MODEL_PATH": cfg.model.path,
         **(
             {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
             if cfg.machine.modules is not None

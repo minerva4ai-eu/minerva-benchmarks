@@ -2,7 +2,7 @@ defaults:
   - base
   - _self_
 name: squadv2
-path: "/gpfs/scratch/bsc99/ai_operations/minerva_benchmarking/training/training_MN5/datasets/squad_v2/squad_v2"
+path: ${oc.env:DATASET_SQUADV2_PATH,  ${abs_path:datasets/squad_v2}} 
 task: ""
 train:
   - "train-00000-of-00001.parquet"

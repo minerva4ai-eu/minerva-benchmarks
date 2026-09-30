@@ -290,6 +290,11 @@ def main(repeatid: int):
         else steps_per_epoch * num_epochs
     )
 
+    if args.max_steps is not None:
+        total_steps = int(args.max_steps)
+        if total_steps > steps_per_epoch * num_epochs:
+            num_epochs = math.ceil(total_steps / steps_per_epoch)
+
     lr_scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=max(1, int(0.03 * total_steps)),
@@ -433,6 +438,7 @@ def main(repeatid: int):
             avg_gpu_mfu=avg_mfu,
             gpu_stats=gpu_stats_during,
             training_loss=avg_final_loss.item(),
+            # comm_metrics=collect_comm_metrics(skip_steps=1),
         )
         logger.info("Fine-tuning completed successfully.")
     except Exception as e:

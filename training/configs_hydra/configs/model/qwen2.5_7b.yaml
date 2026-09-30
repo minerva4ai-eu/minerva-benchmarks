@@ -2,8 +2,9 @@ defaults:
   - base_training
   - _self_
 
-name: qwen2.5_7B_Instruct
-path: path/to/mistral_7b 
+name: qwen2.5_7b
+path: ${oc.env:MODEL_QWEN25_7B_PATH}
+
 # transformer dims
 total_params_billions: 7.61
 architecture_type: dense

@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: gemma3_12b # MUST BE same as the filename
-path: /path/to/gemma3_12b
+path: ${oc.env:MODEL_GEMMA3_12B_PATH}
 # architecture dims — used by memory rule
 total_params_billions: 12.0
 architecture_type: dense

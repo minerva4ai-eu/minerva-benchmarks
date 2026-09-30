@@ -245,7 +245,7 @@ def construct_config(args: argparse.Namespace) -> Configuration:
 
     train_args = Configuration(
         model_path=config.model.path,
-        model_name=config.model.path.split("/")[-1],
+        model_name=config.model.name,
         dataset_path=config.dataset.path,
         dataset_name=config.dataset.name,
         dataloader_num_workers=args.dataloader_num_workers,
