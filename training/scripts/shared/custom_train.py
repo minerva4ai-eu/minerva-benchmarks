@@ -166,7 +166,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 * self.args.world_size
             )
         if self.logged_flops_this_gpus:
-            logs["TFLOPs/sec/GPU"] = f"{self.logged_flops_this_gpus[-1] / 1e12:.2f}"
+            logs["TFLOPs/sec/GPU"] = f"{self.logged_flops_this_gpus[-1]:.2f}"
         if self.logged_mfu_this_gpus:
             logs["mfu/GPU"] = f"{self.logged_mfu_this_gpus[-1]:.2f}%"
 
@@ -236,30 +236,28 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
                 self.logged_flops_this_gpus = callback_tflops
                 break
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        global_average_flops = 0
         local_avg_flops = (
             sum(self.logged_flops_this_gpus) / len(self.logged_flops_this_gpus)
             if self.logged_flops_this_gpus
             else 0
         )
-
-        local_flops = torch.tensor(local_avg_flops, device=device)
-        if dist.is_available() and dist.is_initialized():
-            try:
-                dist.all_reduce(local_flops, op=dist.ReduceOp.AVG)
-                global_average_flops = local_flops.item()
-            except Exception:
-                logger.warning(
-                    "Warning: Failed to reduce FLOP counts across GPUs! Setting global FLOPs equal to local FLOPs on each GPU.",
-                )
-        else:
-            global_average_flops = local_avg_flops
-        self.global_average_flops = float(global_average_flops)
+        self.global_average_flops = self._average_across_ranks(local_avg_flops, "FLOP")
         self.avg_flops_this_gpu = local_avg_flops
-        # self.global_average_flops_per_gpu = (
-        #    float(global_average_flops) / dist.get_world_size()
-        # )
+
+    def _average_across_ranks(self, local_value: float, name: str) -> float:
+        """Mean of a per-rank scalar; falls back to the local value on 1 GPU or on failure."""
+        if not (dist.is_available() and dist.is_initialized()):
+            return float(local_value)
+        try:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            value = torch.tensor(float(local_value), device=device)
+            dist.all_reduce(value, op=dist.ReduceOp.SUM)
+            return float(value.item()) / dist.get_world_size()
+        except Exception:
+            logger.warning(
+                f"Failed to reduce {name} across GPUs! Using the local value on each GPU.",
+            )
+            return float(local_value)
 
     def _finalize_mfu_counts(self):
         for callback in self.callback_handler.callbacks:
@@ -268,27 +266,13 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             if callback_mfu:
                 self.logged_mfu_this_gpus = callback_mfu
                 break
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        global_average_mfu = 0
         local_avg_mfu = (
             sum(self.logged_mfu_this_gpus) / len(self.logged_mfu_this_gpus)
             if self.logged_mfu_this_gpus
             else 0
         )
-        local_mfu = torch.tensor(local_avg_mfu, device=device)
-        if dist.is_available() and dist.is_initialized():
-            try:
-                dist.all_reduce(local_mfu, op=dist.ReduceOp.AVG)
-                global_average_mfu = local_mfu.item()
-            except Exception:
-                logger.warning(
-                    "Warning: Failed to reduce MFU counts across GPUs! Setting global MFUs equal to local MFUs on each GPU.",
-                )
-        self.global_average_mfu = float(global_average_mfu)
+        self.global_average_mfu = self._average_across_ranks(local_avg_mfu, "MFU")
         self.avg_mfu_this_gpu = local_avg_mfu
-        # self.global_average_mfu_per_gpu = (
-        #    float(global_average_mfu) / dist.get_world_size()
-        # )
 
     # ************************************
     # WRAP TRAINING WITH TIMING + FINAL REDUCTION
@@ -341,7 +325,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             f"Total tokens per GPU (ALL epochs): {self.total_tokens_this_gpu:,}"
         )
         logger.info(f"Total tokens GLOBAL (ALL epochs): {self.total_tokens_global:,}")
-
         if elapsed > 0:
             logger.info(f"Total training time (s): {elapsed:.2f}")
             logger.info(
@@ -349,7 +332,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             )
             logger.info(f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:.2f}")
             logger.info(
-                f"Global Average FLOPs: {self.global_average_flops / dist.get_world_size() / 1e12:.2f} TFLOPs/sec/GPU",
+                f"Global Average FLOPs: {self.global_average_flops:.2f} TFLOPs/sec/GPU",
             )
             logger.info(f"Global Average MFU: {self.global_average_mfu:.2f}%")
             logger.info("==========================================================\n")
@@ -370,7 +353,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
     ):
         # trainable_params, total_params, trainable_pct = count_parameters(model)
         trainable_params, total_params, trainable_pct = 0, 0, 0
-
+        world_size = dist.get_world_size() if dist.is_initialized() else 1
         log_history = self.state.log_history
         print(f"log_history: {log_history}")
         avg_training_loss = avg_validation_loss = None
@@ -389,19 +372,37 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         avg_gpu_flops = self.global_average_flops
         avg_gpu_mfu = self.global_average_mfu
 
-        if self.args.max_steps:
+        steps_per_epoch = None
+        if self.args.max_steps and self.args.max_steps > 0:
             avg_step_time_sec = total_training_time_secs / self.args.max_steps
-            avg_step_time_hours = avg_step_time_sec / 3600
+            try:
+                steps_per_epoch = len(self.train_dataset) // (
+                    self.args.per_device_train_batch_size
+                    * self.args.gradient_accumulation_steps
+                    * world_size
+                )
+            except TypeError:
+                steps_per_epoch = None
         else:
-            avg_epoch_time_sec = total_training_time_secs / self.args.num_train_epochs
-            avg_epoch_time_hours = avg_epoch_time_sec / 3600
-            avg_step_time_sec = avg_epoch_time_sec / len(self.args.train_dataset)
+            avg_epoch_time_sec = total_training_time_secs / max(
+                self.args.num_train_epochs, 1
+            )
+            avg_step_time_sec = (
+                total_training_time_secs / self.state.global_step
+                if self.state.global_step
+                else None
+            )
+        if avg_step_time_sec is not None:
             avg_step_time_hours = avg_step_time_sec / 3600
+            if steps_per_epoch:
+                avg_epoch_time_sec = avg_step_time_sec * steps_per_epoch
+        if avg_epoch_time_sec is not None:
+            avg_epoch_time_hours = avg_epoch_time_sec / 3600
 
         effective_batch_size = (
             self.args.per_device_train_batch_size
             * self.args.gradient_accumulation_steps
-            * dist.get_world_size()
+            * world_size
         )
 
         samples_per_sec = (
@@ -431,7 +432,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
         summary = {
             "nodes": int(os.environ.get("SLURM_NNODES", "1")),
             "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
-            "total_gpus": dist.get_world_size(),
+            "total_gpus": world_size,
             "model": self.cfg.model.name,
             "dataset": self.cfg.dataset.path,
             "framework": self.cfg.framework.name,
