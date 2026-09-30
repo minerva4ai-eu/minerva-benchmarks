@@ -436,6 +436,8 @@ def main(repeatid: int):
             total_tokens_global=int(total_tokens_global),
             avg_gpu_flops=avg_tflops,
             avg_gpu_mfu=avg_mfu,
+            global_steps=global_step,
+            steps_per_epoch=steps_per_epoch,
             gpu_stats=gpu_stats_during,
             training_loss=avg_final_loss.item(),
             # comm_metrics=collect_comm_metrics(skip_steps=1),
