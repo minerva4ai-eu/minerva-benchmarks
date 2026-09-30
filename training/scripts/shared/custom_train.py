@@ -5,7 +5,6 @@ import time
 import torch
 import torch.distributed as dist
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
-from scripts.shared.comm_metrics import collect_comm_metrics
 from scripts.shared.logger import RankAdapter
 from scripts.shared.utils import save_summary_stats_json
 from transformers.distributed.fsdp import is_fsdp_enabled
@@ -482,8 +481,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             else None,
             "validation_loss": avg_validation_loss,
         }
-        # NCCL communication volumes (rank 0 only; None elsewhere/unavailable).
-        metrics_summary |= collect_comm_metrics(skip_steps=1)
         save_summary_stats_json(
             summary={**summary, **metrics_summary}, output_file=output_file
         )
@@ -565,93 +562,3 @@ class FlopCounter:
             f"  avg TFLOPs/s:    {avg_tflops_per_sec:.1f}\n"
             f"  avg ms/step:     {self.total_time_ms / self.step_count:.1f}\n"
         )
-
-
-'''
-
-FLOPS = []
-
-
-def compute_tflops_per_step(
-    batch_size: int,
-    seq_len: int,
-    num_layers: int,
-    hidden_size: int,
-    intermediate_size: int,
-    vocab_size: int,
-    elapsed_seconds: float,
-    num_gpus: int = 1,
-) -> float:
-    """Megatron-style analytical FLOP counting."""
-    B, S, L, H = batch_size, seq_len, num_layers, hidden_size
-
-    # --- Per layer ---
-    # QKV projection: 3 weight matrices of shape [H, H]
-    qkv = 2 * B * S * 3 * H * H
-    # Attention scores + weighted sum (quadratic term)
-    attn = 2 * B * S * S * H  # QK^T and AV
-    # Output projection
-    out_proj = 2 * B * S * H * H
-    # SwiGLU MLP: gate + up projections + down projection
-    mlp = 2 * B * S * (2 * H * intermediate_size + intermediate_size * H)
-
-    per_layer = qkv + attn + out_proj + mlp
-
-    # --- Total forward ---
-    forward = L * per_layer
-
-    # --- Embedding / LM head (once, not per layer) ---
-    lm_head = 2 * B * S * H * vocab_size
-
-    total_forward = forward + lm_head
-
-    # fwd + bwd (bwd ≈ 2× fwd)
-    total_flops = 3 * total_forward
-
-    tflops_per_gpu = total_flops / elapsed_seconds / num_gpus / 1e12
-    return tflops_per_gpu
-
-
-class MegatronFlopsCallback(TrainerCallback):
-    def __init__(
-        self,
-        num_layers,
-        hidden_size,
-        intermediate_size,
-        vocab_size,
-        max_len: int,
-        num_gpus=1,
-    ):
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size
-        self.vocab_size = vocab_size
-        self.intermediate_size = intermediate_size
-        self.num_gpus = num_gpus
-        self._t0 = None
-        self.max_len = max_len
-
-    def on_step_begin(self, args, state, control, **kwargs):
-        torch.cuda.synchronize()
-        self._t0 = time.perf_counter()
-
-    def on_step_end(self, args, state, control, logs=None, **kwargs):
-        torch.cuda.synchronize()
-        elapsed = time.perf_counter() - self._t0
-
-        # grab live batch dims from the dataloader state
-        batch_size = args.per_device_train_batch_size * args.gradient_accumulation_steps
-        seq_len = self.max_len  # or however you track it
-
-        tflops = compute_tflops_per_step(
-            batch_size=batch_size,
-            seq_len=seq_len,
-            num_layers=self.num_layers,
-            hidden_size=self.hidden_size,
-            intermediate_size=self.intermediate_size,
-            vocab_size=self.vocab_size,
-            elapsed_seconds=elapsed,
-            num_gpus=self.num_gpus,
-        )
-
-        FLOPS.append(tflops)
-        print(f"Step {state.global_step:>6} | {tflops:.1f} TFLOP/s per GPU")'''
