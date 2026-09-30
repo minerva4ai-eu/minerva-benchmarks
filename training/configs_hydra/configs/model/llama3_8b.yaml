@@ -34,7 +34,7 @@ tokenizer_type:       tiktoken
 
 # GPU requirements — constraint metadata
 #min_gpus: 1
-max_gpus_scale: 8
+max_gpus_scale: 16
 frameworks_supported:
   - torchrun-cuda121
   - torchrun-cuda128

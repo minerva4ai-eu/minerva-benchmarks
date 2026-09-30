@@ -34,6 +34,9 @@ setup_logging(level=logging.INFO, cfg=config)
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 logger_rank = RankAdapter(logger, {})
 
+args = get_deepspeed_parser().parse_args()
+cfg = construct_config(args)
+
 
 def get_dist_info():
     if dist.is_initialized():

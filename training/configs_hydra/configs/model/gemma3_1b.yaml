@@ -19,7 +19,7 @@ attention_type:       mqa      # multi query attention
 vocab_size:           256000
 tokenizer_type:       sentencepiece
 # GPU requirements — constraint metadata
-max_gpus_scale: 4
+max_gpus_scale: 16
 frameworks_supported:
   - torchrun-cuda121
   - torchrun-cuda128

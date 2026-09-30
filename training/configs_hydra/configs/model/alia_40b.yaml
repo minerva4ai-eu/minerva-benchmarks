@@ -39,7 +39,3 @@ megatron_parallelism_supported:
   - pp
   - dp
 
-
-combinations:
-  global_batch_sizes: [256]
-  batch_sizes: [4]

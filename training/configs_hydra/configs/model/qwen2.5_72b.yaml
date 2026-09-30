@@ -30,4 +30,3 @@ megatron_parallelism_supported:
   - dp
   - tp
   - pp
-  - cp
