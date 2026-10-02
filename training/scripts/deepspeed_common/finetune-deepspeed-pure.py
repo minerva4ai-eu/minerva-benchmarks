@@ -114,9 +114,6 @@ def main(repeatid: int):
     jobstepid = os.environ["SLURM_STEP_ID"]
     jobsteprocid = os.environ["SLURM_PROCID"]
 
-    args = get_deepspeed_parser().parse_args()
-    cfg = construct_config(args)
-
     model_path = cfg.model_path
     model_name = cfg.model_name
     train_path, eval_path = get_train_eval_path(cfg)
@@ -124,9 +121,6 @@ def main(repeatid: int):
     rank, world_size, local_rank = setup_distributed()
     torch.cuda.empty_cache()
 
-    output_dir = args.output_dir
-    if is_main_process(rank):
-        os.makedirs(output_dir, exist_ok=True)
 
     dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
         cfg.precision, torch.float32
@@ -467,16 +461,18 @@ def main(repeatid: int):
         # ------------------------------------------------------------------
         # Save summary — identical schema to the original
         # ------------------------------------------------------------------
+        summary_file = os.path.join(
+            cfg.output_dir,
+            f"repeatid-{repeatid}",
+            f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
+        )
+        logger_rank.info(f"Saving into -> {summary_file}")
         save_training_summary(
-            output_file=os.path.join(
-                args.output_dir,
-                f"repeatid-{repeatid}",
-                f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
-            ),
+            output_file=summary_file,
             rank=rank,
             model_name=model_name,
-            dataset_name=cfg.dataset_name,
-            framework="deepspeed",
+            dataset_name=config.dataset.name,
+            framework=config.framework.parallelism_name,
             parallelism_type=config.framework.parallelism_name,
             batch_size=cfg.batch_size,
             gradient_accumulation=cfg.gradient_accumulation_steps,
@@ -497,17 +493,17 @@ def main(repeatid: int):
         logger.exception("Fine-tuning failed with error!")
         save_training_summary(
             output_file=os.path.join(
-                args.output_dir,
+                cfg.output_dir,
                 f"repeatid-{repeatid}",
                 f"training_summary_job{jobid}-step{jobstepid}-nodeid{jobsteprocid}-deviceid{rank}.json",
             ),
             rank=rank,
             model_name=model_name,
-            dataset_name=args.dataset_name,
-            framework="deepspeed",
+            dataset_name=config.dataset.name,
+            framework=config.framework.parallelism_name,
             parallelism_type=config.framework.parallelism_name,
-            batch_size=args.batch_size,
-            gradient_accumulation=args.gradient_accumulation_steps,
+            batch_size=cfg.batch_size,
+            gradient_accumulation=cfg.gradient_accumulation_steps,
             learning_rate=args.lr,
             exception_msg=str(e),
         )
@@ -529,10 +525,9 @@ if __name__ == "__main__":
         except Exception as e:
             logger.exception("Fine-tuning failed with error!")
             try:
-                _cfg = construct_config(get_deepspeed_parser().parse_args())
                 save_error_summary(
                     output_file=os.path.join(
-                        _cfg.output_dir,
+                        cfg.output_dir,
                         f"repeatid-{repeatid}",
                         f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
                         f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
@@ -540,15 +535,13 @@ if __name__ == "__main__":
                         f"-deviceid{rank}.json",
                     ),
                     rank=rank,
-                    model_name=_cfg.model_name,
-                    dataset_name=_cfg.dataset_name,
+                    model_name=config.model.name,
+                    dataset_name=config.dataset.name,
                     framework=config.framework.name,
-                    parallelism_type=getattr(
-                        config.framework, "parallelism_name", "deepspeed"
-                    ),
-                    batch_size=_cfg.batch_size,
-                    gradient_accumulation=_cfg.gradient_accumulation_steps,
-                    learning_rate=_cfg.lr,
+                    parallelism_type=config.framework.parallelism_name,
+                    batch_size=config.model.training.batch_size,
+                    gradient_accumulation=config.model.training.gradient_accumulation_steps,
+                    learning_rate=config.model.training.lr,
                     exception_msg=str(e),
                 )
             except Exception:

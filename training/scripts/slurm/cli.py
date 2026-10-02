@@ -152,18 +152,9 @@ def run(
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"
     )
 
-    # TODO: Check desired behavior
-    if config_name == DEFAULT_CONFIG_NAME:
-        click.echo(
-            f"\t{u.FAILURE_HEAVY} {u.RED}!WARNING! Argument '--config-name' is defaulting to '{DEFAULT_CONFIG_NAME}'...{u.RESET}"
-        )
-        click.echo(
-            f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Make sure to provide the correct '--config-name' pointing to a .yaml configuration profile inside {DEFAULT_CONFIGS_PATH}{u.RESET}"
-        )
-        exit(1)
-
     # TODO: review output structure
-    runs_dir = f"{runs_dir}-{config_name}"
+    _runs_dir = runs_dir
+    runs_dir = f"{_runs_dir}-{config_name}"
     run_date = datetime.now().date().strftime("%d-%m-%Y")
 
     cfgs_valid: list[BenchmarkConfig] = []
@@ -177,7 +168,18 @@ def run(
                 f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Arguments '--yaml' and '--dry-run' cannot be combined...{u.RESET}"
             )
             exit(1)
+        config_names = set()
         for y in yamls:
+            _config_name = [s for s in y.split("/") if s.find(_runs_dir) != -1]
+
+            assert len(_config_name) == 1, (
+                f"{u.FAILURE_HEAVY}{u.RED}Could not extract config-name from provided YAML config: {u.YELLOW}'{y}'{u.RESET}"
+            )
+            _config_name = str(_config_name[0]).replace(f"{_runs_dir}-", "")
+            config_names.add(_config_name)
+            assert len(config_names) == 1, (
+                f"{u.FAILURE_HEAVY}{u.RED} Only provide paths to YAML configs of the same '--config-name' profile! Found: {u.YELLOW}[{config_names}]{u.RESET}"
+            )
             click.echo(f"\t{u.POINT_SQUARE} {u.YELLOW}Searching for {y}{u.RESET}")
 
             try:
@@ -196,7 +198,18 @@ def run(
                     f"\t{u.FAILURE_HEAVY} {u.RED} Exception occured while trying to read file...{u.RESET}"
                 )
                 raise e
+        config_name = next(iter(config_names))
+        runs_dir = f"{_runs_dir}-{config_name}"
     else:
+        # TODO: Check desired behavior
+        if config_name == DEFAULT_CONFIG_NAME:
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}!WARNING! Argument '--config-name' is defaulting to '{DEFAULT_CONFIG_NAME}'...{u.RESET}"
+            )
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Make sure to provide the correct '--config-name' pointing to a .yaml configuration profile inside {DEFAULT_CONFIGS_PATH}{u.RESET}"
+            )
+            exit(1)
         # Filter benchmarks to run on provided model names
         if models:
             models = models.split(",")
