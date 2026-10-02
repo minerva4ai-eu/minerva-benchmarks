@@ -374,7 +374,7 @@ def _multi_parallelism_framework(
                 nnodes=n,
                 axes=tmp_cfg.model.megatron_parallelism_supported,
             )
-            print(f"{parallelism_combinations[0]}")
+            # print(f"{parallelism_combinations[0]}")
             for c in parallelism_combinations:
                 tmp_cfg.slurm.sbatch.nodes = c["nnodes"]
                 total_gpus = (

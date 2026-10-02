@@ -320,7 +320,7 @@ def main(repeatid: int):
             tokenizer,
             gpu_peak_flops=args.peak_flops,
             seq_length=args.max_length,
-            trainer_callback=False,
+            trainer_callback="custom",
         )
 
         logger.info("Beginning of training...")
@@ -425,8 +425,8 @@ def main(repeatid: int):
             rank=rank,
             model_name=model_name,
             dataset_name=args.dataset_name,
-            framework="torchrun",
-            parallelism_type="fsdp",
+            framework=config.framework.name,
+            parallelism_type=config.framework.parallelism_name,
             batch_size=args.batch_size,
             gradient_accumulation=args.gradient_accumulation_steps,
             learning_rate=args.lr,
@@ -452,8 +452,8 @@ def main(repeatid: int):
             rank=rank,
             model_name=model_name,
             dataset_name=args.dataset_name,
-            framework="accelerate",
-            parallelism_type="fsdp",
+            framework=config.framework.name,
+            parallelism_type=config.framework.parallelism_name,
             batch_size=args.batch_size,
             gradient_accumulation=args.gradient_accumulation_steps,
             learning_rate=args.lr,
@@ -490,9 +490,7 @@ if __name__ == "__main__":
                     model_name=_args.model_name,
                     dataset_name=_args.dataset_name,
                     framework=config.framework.name,
-                    parallelism_type=getattr(
-                        config.framework, "parallelism_name", "fsdp"
-                    ),
+                    parallelism_type=config.framework.parallelism_name,
                     batch_size=_args.batch_size,
                     gradient_accumulation=_args.gradient_accumulation_steps,
                     learning_rate=_args.lr,

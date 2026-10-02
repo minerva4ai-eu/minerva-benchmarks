@@ -351,7 +351,6 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             logger.info(f"Tokens/sec GLOBAL: {self.total_tokens_global / elapsed:.2f}")
             logger.info(
                 f"Global Average FLOPs: {self.global_average_flops:.2f} TFLOPs/sec/GPU",
-                f"Global Average FLOPs: {self.global_average_flops:.2f} TFLOPs/sec/GPU",
             )
             logger.info(f"Global Average MFU: {self.global_average_mfu:.2f}%")
             logger.info("==========================================================\n")
