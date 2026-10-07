@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #SBATCH -J minerva_train
-#SBATCH -t 01:00:00
 
 # ##############################################################################
 #                                  Overview
@@ -110,9 +109,11 @@ VENV_PATH : $VENV_PATH"
 }
 export -f runner_fn
 
+SRUN_LOGS="$MINERVA_WORKDIR/$SLURM_JOB_ID"
 # Read all YAML paths from the manifest into a Bash array
 if [[ -f "$MINERVA_MANIFEST_FILE" ]]; then
     mapfile -t YAMLS < "$MINERVA_MANIFEST_FILE"
+    cp "$MINERVA_MANIFEST_FILE" "$SRUN_LOGS"
     rm "$MINERVA_MANIFEST_FILE"
 else
     echo "Error: Manifest file not found at $MINERVA_MANIFEST_FILE"
@@ -151,7 +152,7 @@ TRAIN_MODULE: $TRAIN_MODULE"
     fi
 
     echo "LOG_DIR: $LOG_DIR"
-    export SRUN_LOGS="$LOG_DIR/$SLURM_JOB_ID"
+    export SRUN_LOGS
 
     NGPUs=$SLURM_GPUS_ON_NODE
     NCPUs=$SLURM_CPUS_ON_NODE
@@ -162,15 +163,17 @@ TRAIN_MODULE: $TRAIN_MODULE"
     fi
 
 
-    #-c "$NCPU" \
+    TIME_LIMIT="$SRUN_TIMELIMIT:00:00"
     srun \
         -N "$NNODES" \
         --ntasks-per-node=1 \
+        --label \
         --cpus-per-task=$NCPUs \
         --gres=gpu:"$NGPUs" \
         --output="$SRUN_LOGS/steps-slurm-logs/srun-%J.out" \
         --error="$SRUN_LOGS/steps-slurm-logs/srun-%J.err" \
         --export=ALL \
+        --time="$TIME_LIMIT" \
         bash -c "runner_fn $YAML_PATH" &
         
 done

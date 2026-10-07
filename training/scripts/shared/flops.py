@@ -26,11 +26,17 @@ The callback logs `mfu` (as a %) to the Trainer log dict every logging step.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from dataclasses import dataclass
+from typing import Any, Literal
 
+import lightning.pytorch as pl
 import torch
+from lightning.pytorch.utilities.types import STEP_OUTPUT
+
+# scripts.shared.data import load_and_prepare_raw_dataset
 from transformers import (
     AutoConfig,
     AutoTokenizer,
@@ -40,6 +46,7 @@ from transformers import (
     TrainingArguments,
 )
 
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 # ---------------------------------------------------------------------------
 # FLOP formula (ported from Megatron-LM num_floating_point_operations)
 # ---------------------------------------------------------------------------
@@ -284,7 +291,7 @@ class MFUCallback(TrainerCallback):
         steps = max(state.global_step - self._last_logged_step, 1)
         self._last_logged_step = state.global_step
 
-        world_size = max(args.world_size, self._num_gpus())
+        world_size = max(args.world_size, 1)
         global_bs = (
             args.per_device_train_batch_size
             * world_size
@@ -305,6 +312,152 @@ class MFUCallback(TrainerCallback):
             f"{self.state.tflops_this_gpu[-1]:.2f}"
         )
         logs[f"D{os.environ.get('RANK')}:mfu"] = f"{self.state.mfu_this_gpu[-1]:.2f}%"
+
+
+class FlopCounterCallback(pl.Callback):
+    def __init__(
+        self,
+        model_config: ModelFLOPConfig,
+        gpu_peak_flops: float,
+        global_batch_size: int,
+        enabled: bool = True,
+        warmup_steps: int = 0,
+    ):
+        self.enabled = enabled
+        self.cfg = model_config
+        self.gpu_peak_flops = gpu_peak_flops
+        self.global_batch_size = global_batch_size
+        self.warmup_steps = max(warmup_steps, 0)
+        self.flops_list: list[float] = []
+        self.mfu_list: list[float] = []
+        self._step_start_time: float | None = None
+        self._step_start_event = None
+        self._step_time_events = []
+        self._step_number = 0
+        self._world_size = 1
+        self._average_metrics: tuple[float, float] | None = None
+        self.logger = logging.getLogger("MINERVA_BENCH.scripts.shared.flops")
+
+    def _flops_per_batch(self) -> float:
+        c = self.cfg
+        return num_floating_point_operations(
+            num_layers=c.num_layers,
+            hidden_size=c.hidden_size,
+            ffn_hidden_size=c.ffn_hidden_size,
+            num_attention_heads=c.num_attention_heads,
+            vocab_size=c.vocab_size,
+            num_query_groups=c.num_query_groups,
+            kv_channels=c.kv_channels,
+            swiglu=c.swiglu,
+            num_experts=c.num_experts,
+            moe_ffn_hidden_size=c.moe_ffn_hidden_size,
+            moe_router_topk=c.moe_router_topk,
+            moe_layer_freq=c.moe_layer_freq,
+            shared_expert_ffn_hidden_size=c.shared_expert_ffn_hidden_size,
+            mtp_num_layers=c.mtp_num_layers,
+            batch_size=self.global_batch_size,
+            seq_length=c.seq_length,
+        )
+
+    def on_train_batch_start(
+        self,
+        trainer: pl.Trainer,
+        pl_module: pl.LightningModule,
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if self.enabled:
+            self._step_start_time = time.perf_counter()
+            self._step_start_event = torch.cuda.Event(enable_timing=True)
+            self._step_start_event.record()
+            self._step_number += 1
+
+    def on_train_batch_end(
+        self,
+        trainer: pl.Trainer,
+        pl_module: pl.LightningModule,
+        outputs: STEP_OUTPUT,
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if (
+            not self.enabled
+            or self._step_start_time is None
+            or self._step_start_event is None
+        ):
+            return
+
+        end_event = torch.cuda.Event(enable_timing=True)
+        end_event.record()
+        self._step_time_events.append((self._step_start_event, end_event))
+        self._step_start_event = None
+        self._world_size = max(trainer.world_size, 1)
+
+        elapsed = time.perf_counter() - self._step_start_time
+        if elapsed <= 0:
+            return
+
+        flops_per_gpu = self._flops_per_batch() / self._world_size
+        tflops_per_second = flops_per_gpu / elapsed / 1e12
+        mfu = tflops_per_second / self.gpu_peak_flops * 100
+        self.flops_list.append(tflops_per_second)
+        self.mfu_list.append(mfu)
+
+        metrics = {
+            "FLOPs/GPU/step": flops_per_gpu,
+            "TFLOPs/sec/GPU": tflops_per_second,
+            "MFU (%)": mfu,
+        }
+        self.logger.info(
+            "step=%d FLOPs/GPU/step=%.3e TFLOPs/sec/GPU=%.2f MFU=%.2f%%",
+            self._step_number,
+            flops_per_gpu,
+            tflops_per_second,
+            mfu,
+        )
+        if trainer.logger:
+            trainer.logger.log_metrics(metrics, step=self._step_number)
+
+    def on_train_end(self, trainer, pl_module):
+        averages = self._get_average_metrics()
+        if averages is not None:
+            self.logger.info(
+                "Average FLOPs/sec/GPU excluding %d warmup steps: %.1f TFLOPs/sec, MFU: %.2f%%",
+                self.warmup_steps,
+                averages[0],
+                averages[1],
+            )
+
+    def _get_average_metrics(self) -> tuple[float, float] | None:
+        measured_events = self._step_time_events[self.warmup_steps :]
+        if not self.enabled or not measured_events:
+            return None
+        if self._average_metrics is None:
+            torch.cuda.synchronize()
+            elapsed_seconds = sum(
+                start.elapsed_time(end) / 1000 for start, end in measured_events
+            )
+            if elapsed_seconds <= 0:
+                return None
+            flops_per_gpu_per_step = self._flops_per_batch() / self._world_size
+            average_tflops = (
+                flops_per_gpu_per_step * len(measured_events) / elapsed_seconds / 1e12
+            )
+            self._average_metrics = (
+                average_tflops,
+                average_tflops / self.gpu_peak_flops * 100,
+            )
+        return self._average_metrics
+
+    def get_avg_flops(self) -> float | None:
+        """Return average TFLOPs/s per GPU, excluding configured warmup steps."""
+        averages = self._get_average_metrics()
+        return averages[0] if averages is not None else None
+
+    def get_avg_mfu(self) -> float | None:
+        """Return average MFU, excluding configured warmup steps."""
+        averages = self._get_average_metrics()
+        return averages[1] if averages is not None else None
 
 
 class FLOPsMFUCalculator:
@@ -424,11 +577,13 @@ def mfu_callback_from_hf_config(
     model_or_config,
     tokenizer_or_config,
     gpu_peak_flops: float,
+    trainer_callback: Literal["lightning", "pytorch", "custom"],
     seq_length: int | None = None,
     log_key: str = "mfu",
-    trainer_callback: bool = True,
+    global_batch_size: int | None = None,
+    warmup_steps: int = 0,
     **kwargs,
-) -> MFUCallback | FLOPsMFUCalculator:
+) -> MFUCallback | FLOPsMFUCalculator | FlopCounterCallback:
     """
     Build an MFUCallback from a HuggingFace PretrainedConfig (or a model).
 
@@ -571,7 +726,17 @@ def mfu_callback_from_hf_config(
     defaults.update(kwargs)  # user overrides win
 
     flop_cfg = ModelFLOPConfig(**defaults)
-    if trainer_callback:
+
+    if trainer_callback == "lightning":
+        if global_batch_size is None:
+            raise ValueError("global_batch_size is required for the Lightning callback")
+        return FlopCounterCallback(
+            model_config=flop_cfg,
+            gpu_peak_flops=gpu_peak_flops,
+            global_batch_size=global_batch_size,
+            warmup_steps=warmup_steps,
+        )
+    if trainer_callback == "pytorch":
         return MFUCallback(
             model_config=flop_cfg, gpu_peak_flops=gpu_peak_flops, log_key=log_key
         )

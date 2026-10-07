@@ -167,6 +167,10 @@ def run(
             logger.error(
                 f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Arguments '--yaml' and '--dry-run' cannot be combined...{u.RESET}"
             )
+
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Arguments '--yaml' and '--dry-run' cannot be combined...{u.RESET}"
+            )
             exit(1)
         config_names = set()
         for y in yamls:
@@ -400,6 +404,146 @@ def results(jobids, output, root, extra_jobids):
     proc = s.run(cmd, cwd=training_dir)
     if proc.returncode != 0:
         sys.exit(proc.returncode)
+
+
+@cli.command()
+@click.option(
+    "--configs-path",
+    default=DEFAULT_CONFIGS_PATH,
+    help="Path to the Hydra config directory (default: ./configs_hydra/configs).",
+)
+@click.option(
+    "--config-name",
+    required=True,
+    help="Base config name to compose (e.g., 'base-MN5').",
+)
+@click.option(
+    "--runs-dir",
+    default=RUNS_DIR,
+    help="Output directory for generated configs and results (default: benchmark-runs/).",
+)
+@click.option(
+    "--models",
+    type=str,
+    default="",
+    help="Comma separated model names to prepare (default: all supporting megatron-nemo-2509).",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Compose configs and list the jobs without submitting them.",
+)
+def prepare(configs_path, config_name, runs_dir, models, dry_run):
+    # TODO: Check desired behavior
+    if config_name == DEFAULT_CONFIG_NAME:
+        click.echo(
+            f"\t{u.FAILURE_HEAVY} {u.RED}!WARNING! Argument '--config-name' is defaulting to '{DEFAULT_CONFIG_NAME}'...{u.RESET}"
+        )
+        click.echo(
+            f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Make sure to provide the correct '--config-name' pointing to a .yaml configuration profile inside {DEFAULT_CONFIGS_PATH}{u.RESET}"
+        )
+        exit(1)
+    """Submit one SLURM job running only the megatron-nemo-2509 preparation stage for every model/dataset."""
+    megatron_prepare(configs_path, config_name, runs_dir, models, dry_run)
+
+
+def megatron_prepare(configs_path, config_name, runs_dir, models, dry_run):
+    from copy import deepcopy
+
+    from configs_hydra.dataclasses_hydra import register_configs
+    from hydra import compose, initialize_config_dir
+    from hydra.core.global_hydra import GlobalHydra
+    from omegaconf import OmegaConf
+
+    framework = "megatron-nemo-2509"
+    selected = [m.strip() for m in models.split(",") if m.strip()]
+    for m in selected:
+        if m not in mfd.MODELS:
+            click.echo(
+                f"{u.FAILURE_HEAVY} {u.RED} Unknown model '{m}'. Valid: {mfd.MODELS}{u.RESET}"
+            )
+            sys.exit(1)
+
+    runs_dir = f"{runs_dir}-{config_name}"
+    run_date = datetime.now().date().strftime("%d-%m-%Y")
+
+    register_configs()
+    GlobalHydra.instance().clear()
+
+    cfgs: list[BenchmarkConfig] = []
+    with initialize_config_dir(
+        config_dir=os.path.abspath(configs_path), version_base="1.3"
+    ):
+        base = compose(config_name)
+        for model in selected or mfd.MODELS:
+            for dataset in mfd.DATASETS:
+                cfg = compose(
+                    config_name,
+                    overrides=[
+                        f"model={model}",
+                        f"framework={framework}",
+                        f"dataset={dataset}",
+                        f"slurm={base.machine.name_pattern}",
+                        f"arch={base.machine.name_pattern}",
+                    ],
+                )
+                if framework not in cfg.model.frameworks_supported:
+                    continue
+                if dataset not in cfg.framework.datasets_allowed:
+                    continue
+
+                cfg = deepcopy(cfg)
+                comb = cfg.model.combinations
+                tr = cfg.model.training
+                tr.global_batch_size = comb.global_batch_sizes[0]
+                tr.batch_size = comb.batch_sizes[0]
+                tr.steps = comb.steps[0]
+                tr.gradient_checkpointing = comb.gradient_checkpointing[0]
+                tr.max_model_length = comb.max_seq_lens[0]
+                tr.precision = comb.precisions[0]
+                tr.grad_accum = 1
+
+                # Preparation only needs one GPU; parallelism is irrelevant here.
+                par = cfg.framework.megatron_parallelism
+                par.tp = par.pp = par.cp = par.dp = par.ep = 1
+                par.sp = False
+
+                cfg.slurm.sbatch.nodes = 1
+                cfg.experiment.output_dir = runs_dir
+                cfg.experiment.yaml_filename = f"prepare-{model}-{dataset}.yaml"
+                cfg.id = f"{cfg.machine.name}_{model}_{framework}_{dataset}_prepare"
+                OmegaConf.resolve(cfg)
+                cfgs.append(cfg)
+
+    if not cfgs:
+        click.echo(
+            f"{u.FAILURE_HEAVY} {u.RED} No models support '{framework}'.{u.RESET}"
+        )
+        return
+
+    # Read by run-nemo_megatron.slurm: exit after the preparation stage.
+    os.environ["PREPARE_ONLY"] = "1"
+
+    cfgs_paths = []
+    for cfg in cfgs:
+        cfg_path = write_config(
+            cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=runs_dir
+        )
+        cfgs_paths.append(cfg_path)
+        click.echo(
+            f"{u.ARROW_SUB_ITEM}{u.CYAN} Prepare {u.YELLOW}{cfg.model.name}{u.CYAN} / {u.YELLOW}{cfg.dataset.name}{u.RESET}"
+        )
+        click.echo(f"\t{u.POINT_BULLET} {cfg_path}")
+    if dry_run:
+        return
+
+    submit_job(
+        runs_dir=runs_dir,
+        cfgs=cfgs,
+        cfgs_paths=cfgs_paths,
+        run_date=run_date,
+        nnodes=1,
+    )
 
 
 def command_tree(obj):

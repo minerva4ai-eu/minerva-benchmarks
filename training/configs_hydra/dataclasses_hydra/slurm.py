@@ -23,6 +23,12 @@ class SbatchConfig:
         if self.gpus_per_node < 1:
             raise ValueError(f"gpus_per_node must be ≥ 1, got {self.gpus_per_node}")
 
+
+@dataclass
+class SrunConfig:
+    hours_limit: int = field(default=1)
+
+
 @dataclass
 class SlurmConfig:
     account: str = MISSING
@@ -30,3 +36,4 @@ class SlurmConfig:
     partition: str | None = None
     constraint: str | None = None
     sbatch: SbatchConfig = field(default_factory=SbatchConfig)
+    srun: SrunConfig = field(default_factory=SrunConfig)

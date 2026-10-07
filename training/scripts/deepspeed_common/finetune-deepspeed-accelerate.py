@@ -146,6 +146,7 @@ def main(repeatid: int):
         tokenizer,
         gpu_peak_flops=cfg.peak_flops,
         seq_length=cfg.max_length,
+        trainer_callback="pytorch",
     )
     trainer = PerformanceTrackingSFTTrainer(
         cfg=config,
