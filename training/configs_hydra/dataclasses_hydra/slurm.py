@@ -26,7 +26,7 @@ class SbatchConfig:
 
 @dataclass
 class SrunConfig:
-    hours_limit: int = field(default=1)
+    hours_limit: int = field(default=4)
 
 
 @dataclass
