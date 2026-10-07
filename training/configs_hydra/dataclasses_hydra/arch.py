@@ -61,7 +61,7 @@ def get_peak_flops(cfg: GpuConfig, precision: str) -> int:
     if precision == PrecisionType.fp16:
         return cfg.theoretical_peak_fp16_tensor_tflops
     if precision == PrecisionType.bf16_fp8:
-        return cfg.theoretical_peak_fp16_tensor_tflops
+        return cfg.theoretical_peak_bf16_tensor_tflops
     if precision == PrecisionType.fp8:
         return cfg.theoretical_peak_fp8_tensor_tflops
 

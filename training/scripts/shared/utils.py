@@ -74,6 +74,8 @@ def count_parameters(model):
 def save_summary_stats_json(summary, output_file):
     output_dir = Path(output_file).parent
     output_dir.mkdir(exist_ok=True, parents=True)
+    # YAML_PATH is exported by MINERVA.job for each launched config.
+    summary = {**summary, "yaml_config_path": os.environ.get("YAML_PATH")}
     with open(os.path.join(output_file), "w") as f:
         json.dump(summary, f, indent=4)
 
@@ -234,7 +236,7 @@ def save_training_summary(
     model_name: str,
     dataset_name: str,
     framework: str = "Unknown",
-    parallelism_type: str = "Unknown",
+    parallelism_type: str | dict[str, int] = "Unknown",
     batch_size: int,
     gradient_accumulation: int,
     learning_rate: float,

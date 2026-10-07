@@ -216,20 +216,15 @@ def get_megatron_parser():
 
 
 def get_peak_gpu_flops(config: BenchmarkConfig) -> float:
+    from configs_hydra.dataclasses_hydra.arch import get_peak_flops
 
-    # FIXME: get theoretical flops
-    key = "theoretical_peak_fp32_tflops"
-    peak_gpu_tflops = float(config.arch.gpu.theoretical_peak_fp32_tflops)
-    if config.model.training.precision == "bf16":
-        key = "theoretical_peak_bf16_tensor_tflops"
-        peak_gpu_tflops = float(config.arch.gpu.theoretical_peak_bf16_tensor_tflops)
-    elif config.model.training.precision == "fp16":
-        key = "theoretical_peak_fp16_tensor_tflops"
-        peak_gpu_tflops = float(config.arch.gpu.theoretical_peak_fp16_tensor_tflops)
+    precision = config.model.training.precision
+    peak_gpu_tflops = get_peak_flops(config.arch.gpu, precision)
+    if peak_gpu_tflops is None:
+        raise ValueError(f"Unsupported precision for peak FLOPs: {precision}")
 
-    msg = f"Found {key} = {peak_gpu_tflops}"
-    logger.info(msg)
-    return peak_gpu_tflops
+    logger.info("Peak GPU throughput for %s: %s TFLOPs/s", precision, peak_gpu_tflops)
+    return float(peak_gpu_tflops)
 
 
 def construct_config(args: argparse.Namespace) -> Configuration:
@@ -325,7 +320,7 @@ def megatron_construct_config(args: argparse.Namespace) -> MegatronConfiguration
         pp_size=config.framework.megatron_parallelism.pp,
         tp_size=config.framework.megatron_parallelism.tp,
         cp_size=config.framework.megatron_parallelism.cp,
-        ep_size=config.framework.megatron_parallelism.cp,
+        ep_size=config.framework.megatron_parallelism.ep,
         sequence_parallel=config.framework.megatron_parallelism.sp,
         log_every_n_steps=args.log_every_n_steps,
         wandb_project=args.wandb_project,

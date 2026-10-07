@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 name: qwen2.5_72b
-path: ${oc.env:MODEL_QWEN25_7B_PATH}
+path: ${oc.env:MODEL_QWEN25_72B_PATH}
 # transformer dims
 total_params_billions: 72.7
 architecture_type: dense

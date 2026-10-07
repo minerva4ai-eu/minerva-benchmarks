@@ -10,6 +10,7 @@ from pathlib import Path
 
 import click
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, MachineConfig
+from configs_hydra.dataclasses_hydra.slurm import SlurmConfig
 from omegaconf import OmegaConf
 from scripts.slurm import utils as u
 
@@ -152,33 +153,7 @@ def build_srun_env():
         "PARALLELISM": cfg.framework.parallelism_name,
         "NNODES": cfg.slurm.sbatch.nodes,
         "TOKENIZERS_PARALLELISM": str(False),
-        # **(
-        #    {
-        #        "TP": str(cfg.framework.megatron_parallelism.tp),
-        #        "PP": str(cfg.framework.megatron_parallelism.pp),
-        #        "DP": str(cfg.framework.megatron_parallelism.dp),
-        #        "CP": str(cfg.framework.megatron_parallelism.cp),
-        #        "SP": str(cfg.framework.megatron_parallelism.cp),
-        #        "EP": str(cfg.framework.megatron_parallelism.cp),
-        #    }
-        #    if cfg.framework.megatron_parallelism
-        #    else {}
-        # ),
         "DATASET_PATH": cfg.dataset.path,
-        # **(
-        #    {
-        #        "DATASET_TRAIN": ",".join(cfg.dataset.train),
-        #    }
-        #    if cfg.dataset.train is not None
-        #    else {}
-        # ),
-        # **(
-        #    {
-        #        "DATASET_VALIDATION": ",".join(cfg.dataset.validation),
-        #    }
-        #    if cfg.dataset.validation is not None
-        #    else {}
-        # ),
         "ZERO_STAGE": cfg.framework.parallelism_name
         if cfg.framework.name.startswith(("deepspeed", "deepspeed-accelerate"))
         else "",
@@ -197,7 +172,7 @@ def build_srun_env():
 
 
 def build_sbatch_env(
-    machine: MachineConfig, yamls: list[str], results_dir: str
+    machine: MachineConfig, slurm: SlurmConfig, yamls: list[str], results_dir: str
 ) -> dict[str, str]:
 
     # 1. Create results directory if it doesn't exist
@@ -227,6 +202,7 @@ def build_sbatch_env(
             "MINERVA_MANIFEST_FILE": str(
                 manifest_path
             ),  # Pass path to file instead of long string
+            "SRUN_TIMELIMIT": str(slurm.srun.hours_limit),
         }
     )
 
@@ -327,7 +303,9 @@ def submit_job(
             cmd,
             capture_output=True,
             text=True,
-            env=build_sbatch_env(machine=m, yamls=cfgs_paths, results_dir=minerva_dir),
+            env=build_sbatch_env(
+                machine=m, slurm=s, yamls=cfgs_paths, results_dir=minerva_dir
+            ),
         )
         if result.returncode != 0:
             click.echo(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned -  {u.RESET}")

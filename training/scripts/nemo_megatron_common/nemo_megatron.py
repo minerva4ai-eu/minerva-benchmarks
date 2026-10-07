@@ -40,6 +40,15 @@ Source: https://docs.nvidia.com/nemo-framework/user-guide/25.11/nemo-2.0/index.h
 
 import os
 
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.shared.utils import (
+    save_error_summary,
+    save_training_summary,
+)
+from scripts.slurm.utils import load_config
+
 # Filter NCCL debug output to rank 0 only — we are using torchrun to launch distributed training
 if int(os.environ.get("RANK", 0)) != 0:
     os.environ["NCCL_DEBUG"] = "WARN"
@@ -49,6 +58,9 @@ import gc
 import json
 import logging
 import os
+import signal
+import sys
+from dataclasses import dataclass
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
@@ -59,7 +71,8 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from megatron.core.optimizer import OptimizerConfig
 from nemo import lightning as nl
 from nemo.collections import llm
-from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import AutoTokenizer
+
+# from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import AutoTokenizer
 from nemo.lightning.pytorch.optim import CosineAnnealingScheduler
 from scripts.nemo_megatron_common.utils import MegatronBenchmarkCallback
 from scripts.shared.args import (
@@ -68,29 +81,39 @@ from scripts.shared.args import (
 )
 
 # scripts.shared.data import load_and_prepare_raw_dataset
-from scripts.shared.gpu_monitor import start_gpu_monitor
-from scripts.shared.logger import RankAdapter, setup_logging
-from scripts.shared.utils import (
-    save_error_summary,
-    save_training_summary,
-)
-from scripts.slurm.utils import load_config
 from torch.profiler import (
     ProfilerActivity,
     profile,
     schedule,
     tensorboard_trace_handler,
 )
-from torch.utils.flop_counter import FlopCounterMode
-from transformers import AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer
 
 if TYPE_CHECKING:
     from scripts.shared.args import MegatronConfiguration
 
+
+@dataclass
+class Alia40BConfig(llm.LlamaConfig):
+    num_layers: int = 48
+    hidden_size: int = 8192
+    ffn_hidden_size: int = 24576
+    num_attention_heads: int = 64
+    num_query_groups: int = 8
+    vocab_size: int = 256000
+    make_vocab_size_divisible_by: int = 128
+    rotary_base: int = 10000
+    scale_factor: float = 8.0
+    old_context_len: int = 4096  # LlamaConfig default is 8192; ALIA uses 4096
+    seq_length: int = 32768
+
+
 # Add the (Model, Config) pair that matches your HF checkpoint here.
 MODEL_ARCHS = {
-    "Qwen2.5-7B-Instruct": (llm.Qwen2Model, llm.Qwen25Config7B),
-    "Qwen2.5-72B-Instruct": (llm.Qwen2Model, llm.Qwen25Config72B),
+    "alia_40b": (llm.LlamaModel, Alia40BConfig),
+    "llama3_70b": (llm.LlamaModel, llm.Llama3Config70B),
+    "qwen2.5_7b": (llm.Qwen2Model, llm.Qwen25Config7B),
+    "qwen2.5_72b": (llm.Qwen2Model, llm.Qwen25Config72B),
 }
 
 _args = get_megatron_parser().parse_args()
@@ -102,54 +125,54 @@ logger_rank = RankAdapter(logger, {})
 args = megatron_construct_config(_args)
 
 
-class FlopCounterCallback(pl.Callback):
-    def __init__(self, enabled):
-        self.enabled = enabled
-        self.flops_list = []
-        self.ctx = None
-
-    def on_train_batch_start(
-        self,
-        trainer: "pl.Trainer",
-        pl_module: "pl.LightningModule",
-        batch: Any,
-        batch_idx: int,
-    ) -> None:
-        if self.enabled:
-            self.ctx = FlopCounterMode(display=False)
-            self.ctx.__enter__()
-
-    def on_train_batch_end(
-        self,
-        trainer: "pl.Trainer",
-        pl_module: "pl.LightningModule",
-        outputs: STEP_OUTPUT,
-        batch: Any,
-        batch_idx: int,
-    ) -> None:
-        if self.enabled and self.ctx:
-            import torch
-
-            self.ctx.__exit__(None, None, None)
-            self.flops_list.append(self.ctx.get_total_flops())
-            self.ctx = None
-            torch.cuda.empty_cache()  # free unused vRAM to reduce risks of CUDA OOM
-
-    def on_train_end(self, trainer, pl_module):
-        if self.enabled and self.flops_list:
-            import numpy as np
-
-            logger.info(
-                f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs"
-            )
-
-    def median_flops_per_step(self) -> float | None:
-        """Median total FLOPs per global step, or None if the counter was disabled."""
-        if not self.enabled or not self.flops_list:
-            return None
-        import numpy as np
-
-        return float(np.median(self.flops_list))
+# class FlopCounterCallback(pl.Callback):
+#    def __init__(self, enabled):
+#        self.enabled = enabled
+#        self.flops_list = []
+#        self.ctx = None
+#
+#    def on_train_batch_start(
+#        self,
+#        trainer: "pl.Trainer",
+#        pl_module: "pl.LightningModule",
+#        batch: Any,
+#        batch_idx: int,
+#    ) -> None:
+#        if self.enabled:
+#            self.ctx = FlopCounterMode(display=False)
+#            self.ctx.__enter__()
+#
+#    def on_train_batch_end(
+#        self,
+#        trainer: "pl.Trainer",
+#        pl_module: "pl.LightningModule",
+#        outputs: STEP_OUTPUT,
+#        batch: Any,
+#        batch_idx: int,
+#    ) -> None:
+#        if self.enabled and self.ctx:
+#            import torch
+#
+#            self.ctx.__exit__(None, None, None)
+#            self.flops_list.append(self.ctx.get_total_flops())
+#            self.ctx = None
+#            torch.cuda.empty_cache()  # free unused vRAM to reduce risks of CUDA OOM
+#
+#    def on_train_end(self, trainer, pl_module):
+#        if self.enabled and self.flops_list:
+#            import numpy as np
+#
+#            logger.info(
+#                f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs"
+#            )
+#
+#    def median_flops_per_step(self) -> float | None:
+#        """Median total FLOPs per global step, or None if the counter was disabled."""
+#        if not self.enabled or not self.flops_list:
+#            return None
+#        import numpy as np
+#
+#        return float(np.median(self.flops_list))
 
 
 class TorchProfilerCallback(pl.Callback):
@@ -221,73 +244,71 @@ class LossCaptureCallback(pl.Callback):
 
 def prepare(cfg: "MegatronConfiguration") -> None:
     """One-time, single-process prep: build training.jsonl / validation.jsonl from the HF dataset."""
-    import sys
+
     from pathlib import Path
+
+    # Prepare dataset
+    from datasets import load_dataset
 
     # Convert HF checkpoint into NeMo checkpoint
     # https://github.com/NVIDIA-NeMo/NeMo/blob/v2.6.2/nemo/collections/llm/api.py#L577
     from nemo.collections.llm import import_ckpt
 
-    sys.stdout.flush()
+    logger.info(
+        f"[prepare] CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}"
+    )
+    logger.info(f"[prepare] HF_HUB_OFFLINE: {os.environ.get('HF_HUB_OFFLINE')}")
     model_path = Path(cfg.model_path)
+    # Lock/marker live beside the outputs: model_path may be read-only
+    ckpt_path = Path(cfg.nemo_ckpt_path)
+    ckpt_path.parent.mkdir(parents=True, exist_ok=True)
+
+    os.makedirs(cfg.dataset_root, exist_ok=True)
+
     logger.info(f"[prepare] model_path={cfg.model_path}")
     logger.info(f"[prepare] model_path.exists()={model_path.exists()}")
-    if os.path.exists(cfg.nemo_ckpt_path):
-        logger.info(
-            f"[prepare] Model checkpoint already exists '{cfg.nemo_ckpt_path}'. Skipping conversion..."
-        )
-    else:
-        if model_path.exists():
-            logger.info(f"[prepare] model files: {list(model_path.iterdir())[:10]}")
+    assert model_path.exists(), f"Model path does not exist: '{model_path}'"
 
-        logger.info(f"[prepare] looking up MODEL_ARCHS for '{model_path.name}'")
-        model_cls, config_cls = MODEL_ARCHS[model_path.name]
-        logger.info(f"[prepare] creating tokenizer for {model_path}")
-        tokenizer = AutoTokenizer.from_pretrained(cfg.model_path, use_fast=True)
-        logger.info("[prepare] tokenizer created, calling import_ckpt")
-        logger.info(f"[prepare]   model_cls={model_cls}")
-        logger.info(f"[prepare]   config_cls={config_cls}")
-        logger.info(f"[prepare]   source=hf://{model_path}")
-        logger.info(f"[prepare]   output_path={cfg.nemo_ckpt_path}")
+    logger.info(f"[prepare] model files: {list(model_path.iterdir())[:10]}")
+
+    # Fast path: no lock needed once the done marker exists
+    if ckpt_path.exists():
+        logger.info(f"[prepare] Checkpoint already converted '{cfg.nemo_ckpt_path}'")
+    else:
+        model_cls, config_cls = MODEL_ARCHS[cfg.model_name]
+        tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
+        logger.info(f"[prepare] import_ckpt {model_path} -> {cfg.nemo_ckpt_path}")
         import_ckpt(
             model=model_cls(config_cls(seq_length=cfg.max_length), tokenizer=tokenizer),
-            source=f"hf://{model_path}",  # local dir -> "hf:///abs/path", géré par l'importeur hf
+            source=f"hf://{model_path}",
             output_path=cfg.nemo_ckpt_path,
-            overwrite=False,
+            overwrite=False,  # discard partial output from a crashed run
         )
         logger.info(f"[prepare] Converted HF -> NeMo at {cfg.nemo_ckpt_path}")
 
-    # Prepare dataset
-    from datasets import load_dataset
+    train_file = os.path.join(cfg.dataset_root, "training.jsonl")
+    valid_file = os.path.join(cfg.dataset_root, "validation.jsonl")
 
-    train_split_name = "training"
-    valid_split_name = "validation"
-
-    train_file = os.path.join(cfg.dataset_root, f"{train_split_name}.jsonl")
-
-    if os.path.exists(train_file):
-        logger.info(
-            f"[prepare] File already exists '{train_file}'. Skipping conversion..."
-        )
+    if os.path.exists(train_file) and os.path.exists(valid_file):
+        logger.info(f"[prepare] Dataset already prepared '{cfg.dataset_root}'")
         return
+
     logger.info(f"[prepare] loading dataset from {cfg.dataset_path}")
-    os.makedirs(cfg.dataset_root, exist_ok=True)
     dataset = load_dataset(str(cfg.dataset_path))
-    logger.info(f"[prepare] dataset loaded: {list(dataset.keys())}")
 
     def dump(out_file: str, hf_split: Dataset) -> None:
-
-        with open(out_file, "w") as f:
+        tmp = out_file + ".tmp"
+        with open(tmp, "w") as f:
             f.writelines(
                 json.dumps({"messages": ex["messages"]}) + "\n" for ex in hf_split
             )
-        print(f"Wrote {out_file} ({len(hf_split)} examples)")
+        os.replace(tmp, out_file)
+        logger.info(f"Wrote {out_file} ({len(hf_split)} examples)")
 
-    # Create training.jsonl
-    dump(train_split_name, dataset["train"])
-    # Reuse train as validation for warmup/sanity if no val split, mirroring the original script.
+    dump(train_file, dataset["train"])
+    # Reuse train as validation if there is no validation split
     dump(
-        valid_split_name,
+        valid_file,
         dataset["validation"] if "validation" in dataset else dataset["train"],
     )
 
@@ -356,6 +377,9 @@ def main(repeatid: int):
     logger.info(f"CP size                  : {args.cp_size}")
     logger.info(f"EP size                  : {args.ep_size}")
     logger.info(f"Sequence parallel        : {args.sequence_parallel}")
+    logger.info(f"OUTPUT DIR               : {args.output_dir}")
+    logger.info(f"CONFIG OUTPUT DIR        : {config.experiment.output_dir}")
+    logger.info(f"_args OUTPUT DIR        : {_args.output_dir}")
 
     # 4. Data processing (file-based SFT).
     data = llm.FineTuningDataModule(
@@ -387,8 +411,18 @@ def main(repeatid: int):
     callbacks.append(benchmark_callback)
 
     # FLOPs counting
-    flop_callback = FlopCounterCallback(enabled=args.enable_flop_counter and rank == 0)
-    callbacks.append(flop_callback)
+
+    if args.enable_flop_counter:
+        flop_callback = mfu_callback_from_hf_config(
+            AutoConfig.from_pretrained(args.model_path),
+            tokenizer,
+            gpu_peak_flops=args.peak_flops,
+            seq_length=args.max_length,
+            trainer_callback="lightning",
+            global_batch_size=args.global_batch_size,
+            warmup_steps=benchmark_callback.n_warmup_steps,
+        )
+        callbacks.append(flop_callback)
 
     # Training loss capture (for the shared training summary)
     loss_callback = LossCaptureCallback()
@@ -418,7 +452,7 @@ def main(repeatid: int):
         opt_config.bf16 = True
         strategy.pipeline_dtype = torch.bfloat16
     elif args.precision == "fp16":
-        plugins.append(nl.MegatronMixedPrecision(precision="fp16_mixed"))
+        plugins.append(nl.MegatronMixedPrecision(precision="fp16-mixed"))
         opt_config.fp16 = True
         strategy.pipeline_dtype = torch.float16
     else:
@@ -433,41 +467,40 @@ def main(repeatid: int):
     # 6. Training loop
 
     # Wandb logging
-    wandb = None
-    if args.wandb_project is not None:
-        from lightning.pytorch.loggers import WandbLogger
-
-        wandb = WandbLogger(
-            project=args.wandb_project,
-            name=(
-                f"{args.model_name}"
-                f"_nodes{args.num_nodes}"
-                f"_devices{args.devices_per_node}"
-                f"_strat_MegatronStrategy"
-                f"_dp{args.dp_size}"
-                f"_pp{args.pp_size}"
-                f"_tp{args.tp_size}"
-                f"_cp{args.cp_size}"
-                f"_sp{args.sequence_parallel}"
-                f"_gbs{args.global_batch_size}"
-                f"_mbs{args.batch_size}"
-                f"_seqlen{args.max_length}"
-            ),
-        )
+    # wandb = False
+    # if args.wandb_project is not None:
+    #    from lightning.pytorch.loggers import WandbLogger
+    #    wandb = WandbLogger(
+    #        project=args.wandb_project,
+    #        name=(
+    #            f"{args.model_name}"
+    #            f"_nodes{args.num_nodes}"
+    #            f"_devices{args.devices_per_node}"
+    #            f"_strat_MegatronStrategy"
+    #            f"_dp{args.dp_size}"
+    #            f"_pp{args.pp_size}"
+    #            f"_tp{args.tp_size}"
+    #            f"_cp{args.cp_size}"
+    #            f"_sp{args.sequence_parallel}"
+    #            f"_gbs{args.global_batch_size}"
+    #            f"_mbs{args.batch_size}"
+    #            f"_seqlen{args.max_length}"
+    #        ),
+    #    )
     trainer = nl.Trainer(
         accelerator="gpu",
         strategy=strategy,
         devices=args.devices_per_node,
         num_nodes=args.num_nodes,
         plugins=plugins,
-        logger=wandb,
+        # logger=wandb,
         callbacks=callbacks,
         max_epochs=args.epochs,
         max_steps=max_steps,
         limit_val_batches=0,  # for warmup in sanity check
         num_sanity_val_steps=0,  # useless since torch.compile re-compile at each epoch
         log_every_n_steps=args.log_every_n_steps,
-        enable_checkpointing=False,
+        enable_checkpointing=args.gradient_checkpointing,
         enable_model_summary=False,
         use_distributed_sampler=False,  # MegatronStrategy uses its own (Megatron) data sampler
         # No accumulate_grad_batches / gradient_clip_val here: micro-batching is managed by
@@ -476,21 +509,22 @@ def main(repeatid: int):
     gpu_stats, stop_flag = start_gpu_monitor(
         interval_sec=5, n_gpus=args.devices_per_node
     )
+
     try:
         jobid = os.environ.get("SLURM_JOB_ID", "unknown")
         jobstepid = os.environ.get("SLURM_STEP_ID", "0")
         jobsteprocid = os.environ.get("SLURM_PROCID", "0")
         summary_file = os.path.join(
             args.output_dir,
-            f"nemo_experiments-{jobid}-step{jobstepid}-task{jobsteprocid}",
             f"repeatid-{repeatid}",
+            f"nemo_summary-{jobid}-step{jobstepid}",
         )
         os.makedirs(os.path.dirname(summary_file), exist_ok=True)
-        nemo_logger = nl.NeMoLogger(
-            log_dir=os.path.abspath(os.path.dirname(summary_file)),
-            name="MINERVA-Bench-Nemo-Megatron",
-        )
-        nemo_logger.setup(trainer, resume_if_exists=True)
+        # nemo_logger = nl.NeMoLogger(
+        #    log_dir=os.path.abspath(os.path.dirname(summary_file)),
+        #    name="MINERVA-Bench-Nemo-Megatron",
+        # )
+        # nemo_logger.setup(trainer, resume_if_exists=True)
 
         # Restore local HF weights (the model's "hf" importer converts them on the fly).
         resume = nl.AutoResume(
@@ -519,13 +553,11 @@ def main(repeatid: int):
             total_tokens_this_gpu = int(total_tokens_global / world)
 
             # FLOPs -> TFLOPs/s/GPU and MFU (only with --enable_flop_counter)
-            avg_tflops = None
-            avg_mfu = None
-            median_flops = flop_callback.median_flops_per_step()
-            if median_flops is not None and benchmark_callback.avg_step_time_sec:
-                avg_tflops = median_flops / benchmark_callback.avg_step_time_sec / 1e12
-                if args.peak_flops:
-                    avg_mfu = avg_tflops / args.peak_flops
+            avg_flops_gpu = None
+            avg_mfu_gpu = None
+            if args.enable_flop_counter:
+                avg_flops_gpu = flop_callback.get_avg_flops()
+                avg_mfu_gpu = flop_callback.get_avg_mfu()
 
             save_training_summary(
                 output_file=os.path.join(
@@ -540,42 +572,65 @@ def main(repeatid: int):
                 model_name=args.model_name,
                 dataset_name=args.dataset_name,
                 framework=config.framework.name,
-                parallelism_type=getattr(
-                    config.framework, "parallelism_name", "nemo_megatron_2506"
-                ),
+                parallelism_type={
+                    key: value
+                    for key, value in {
+                        "TP": config.framework.megatron_parallelism.tp,
+                        "PP": config.framework.megatron_parallelism.pp,
+                        "DP": config.framework.megatron_parallelism.dp,
+                        "CP": config.framework.megatron_parallelism.cp,
+                        "SP": config.framework.megatron_parallelism.sp,
+                        "EP": config.framework.megatron_parallelism.ep,
+                    }.items()
+                    if value != -1
+                },
                 batch_size=args.batch_size,
                 gradient_accumulation=grad_acc,
                 learning_rate=args.lr,
                 total_training_time_secs=benchmark_callback.training_duration or 0,
                 total_tokens_this_gpu=total_tokens_this_gpu,
                 total_tokens_global=total_tokens_global,
-                avg_gpu_flops=avg_tflops,
-                avg_gpu_mfu=avg_mfu,
+                avg_gpu_flops=avg_flops_gpu,
+                avg_gpu_mfu=avg_mfu_gpu,
+                global_steps=measured_steps,
+                steps_per_epoch=benchmark_callback.steps_per_epoch,
+                global_batch_size=args.global_batch_size,
+                avg_step_time_sec=benchmark_callback.avg_step_time_sec,
                 gpu_stats=gpu_stats,
                 training_loss=loss_callback.training_loss or 0,
                 comm_metrics=benchmark_callback.comm_metrics,
             )
             logger.info("Training summary written.")
-        except Exception:
+        except Exception as _e:
             logger.exception("Failed to save training summary.")
+            raise _e
     except Exception as e:
         logger.exception("Fine-tuning failed with error!")
         raise e
 
     finally:
         stop_flag["stop"] = True
-        del trainer
+        torch.cuda.synchronize()
+
+        del trainer, model, data, optim, scheduler, strategy, callbacks, plugins
         gc.collect()
         torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
 
 if __name__ == "__main__":
+    # scancel sends SIGTERM, which skips `finally` blocks (lock release) unless it raises.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+
     if args.prepare:
         logger.info("_________________________________")
         logger.info("Running preparation ")
         logger.info("_________________________________")
+        try:
+            prepare(args)
+        except Exception:
+            sys.exit(1)
 
-        prepare(args)
     else:
         for repeatid in range(config.experiment.repeat):
             try:
@@ -604,9 +659,9 @@ if __name__ == "__main__":
                         parallelism_type=getattr(
                             config.framework, "parallelism_name", "nemo_megatron_2506"
                         ),
-                        batch_size=config.batch_size,
-                        gradient_accumulation=config.gradient_accumulation_steps,
-                        learning_rate=config.lr,
+                        batch_size=args.batch_size,
+                        gradient_accumulation=args.gradient_accumulation_steps,
+                        learning_rate=args.lr,
                         exception_msg=str(e),
                     )
                 except Exception:

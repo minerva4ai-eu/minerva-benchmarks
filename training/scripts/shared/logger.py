@@ -28,7 +28,7 @@ def setup_logging(
     cfg: "BenchmarkConfig",
     level=logging.INFO,
 ):
-    rank = int(os.environ.get("RANK", 0))
+    rank = int(os.environ.get("RANK", "0"))
     RUNID = os.environ.get("SLURM_JOB_ID", datetime.now().strftime("%Y%m%d%H%M%S"))
     RUNJD = os.environ.get("SLURM_STEP_ID", "0")
     LOG_DIR = os.path.join(
@@ -37,6 +37,13 @@ def setup_logging(
         "training-logs",
         f"{cfg.model.name}_{cfg.framework.name}_{cfg.framework.parallelism_name}_{cfg.dataset.name}_nodes{cfg.slurm.sbatch.nodes}",
     )
+    if os.environ.get("PREPARE_ONLY"):
+        LOG_DIR = os.path.join(
+            os.environ.get("LOG_DIR", os.path.join("outputs", "logs", "pyft")),
+            RUNID,
+            "prepare-logs",
+            f"{cfg.model.name}_{cfg.framework.name}_{cfg.framework.parallelism_name}_{cfg.dataset.name}_nodes{cfg.slurm.sbatch.nodes}",
+        )
 
     # Prevent filesystem race condition: let Rank 0 create the directory
     # if rank == 0:

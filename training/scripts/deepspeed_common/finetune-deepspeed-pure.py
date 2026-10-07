@@ -19,7 +19,6 @@ from scripts.shared.flops import mfu_callback_from_hf_config
 from scripts.shared.gpu_monitor import start_gpu_monitor
 from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
-    is_main_process,
     save_error_summary,
     save_training_summary,
     setup_distributed,
@@ -120,7 +119,6 @@ def main(repeatid: int):
 
     rank, world_size, local_rank = setup_distributed()
     torch.cuda.empty_cache()
-
 
     dtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(
         cfg.precision, torch.float32
@@ -504,7 +502,7 @@ def main(repeatid: int):
             parallelism_type=config.framework.parallelism_name,
             batch_size=cfg.batch_size,
             gradient_accumulation=cfg.gradient_accumulation_steps,
-            learning_rate=args.lr,
+            learning_rate=cfg.lr,
             exception_msg=str(e),
         )
         raise e
@@ -540,7 +538,7 @@ if __name__ == "__main__":
                     framework=config.framework.name,
                     parallelism_type=config.framework.parallelism_name,
                     batch_size=config.model.training.batch_size,
-                    gradient_accumulation=config.model.training.gradient_accumulation_steps,
+                    gradient_accumulation=config.model.training.grad_accum,
                     learning_rate=config.model.training.lr,
                     exception_msg=str(e),
                 )

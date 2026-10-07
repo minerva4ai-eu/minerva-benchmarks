@@ -14,11 +14,19 @@ import csv
 import json
 import re
 import statistics
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
 from scripts.slurm.utils import load_config
+
+USE_COLOR = sys.stdout.isatty()
+
+
+def colorize(text, code):
+    return f"\033[{code}m{text}\033[0m" if USE_COLOR else text
+
 
 DISPLAY_COLUMNS = [
     "Job ID",
@@ -31,6 +39,12 @@ DISPLAY_COLUMNS = [
     "Dataset",
     "Framework",
     "TypeParallelism",
+    "Tensor Parallel (TP)",
+    "Pipeline Parallel (PP)",
+    "Data Parallel (DP)",
+    "Context Parallel (CP)",
+    "Sequence Parallel (SP)",
+    "Expert Parallel (EP)",
     "Comment",
     "Number of Nodes",
     "GPUs per Node",
@@ -41,25 +55,36 @@ DISPLAY_COLUMNS = [
     "Max Length",
     "Number of Trainable Parameters",
     "Learning Rate",
-    "Dropout",
+    # "Dropout",
+    "Avg. Training Loss",
+    "Avg. Validation Loss",
+    "Training Time per Step (sec)",
+    "Training Time per Epoch (sec)",
+    "Total Execution Time (hours)",
+    "Training Throughput (tokens/sec)",
+    "Avg. GPU FLOPs",
+    "Avg. GPU MFU",
     "Avg. Power Usage (W)",
     "Peak Power Usage (W)",
     "Avg. GPU Memory Usage (GB)",
     "Peak GPU Memory Usage (GB)",
     "Avg. GPU Utilization",
     "Peak GPU Utilization",
-    "Training Time per Step (sec)",
-    "Training Time per Epoch (sec)",
-    "Total Execution Time (hours)",
-    "Training Throughput (tokens/sec)",
-    "Avg. Comm Volume per Step (GB)",
-    "Avg. NVLink Comm Volume per Step (GB)",
-    "Avg. Network Comm Volume per Step (GB)",
-    "Total Comm Volume (GB)",
-    "Avg. Training Loss",
-    "Avg. Validation Loss",
+    # "Avg. Comm Volume per Step (GB)",
+    # "Avg. NVLink Comm Volume per Step (GB)",
+    # "Avg. Network Comm Volume per Step (GB)",
+    # "Total Comm Volume (GB)",
     "Source Directory",
 ]
+
+PARALLELISM_COLUMNS = {
+    "Tensor Parallel (TP)",
+    "Pipeline Parallel (PP)",
+    "Data Parallel (DP)",
+    "Context Parallel (CP)",
+    "Sequence Parallel (SP)",
+    "Expert Parallel (EP)",
+}
 
 JSON_TO_DISPLAY = {
     "nodes": "Number of Nodes",
@@ -80,10 +105,18 @@ JSON_TO_DISPLAY = {
     "avg_epoch_training_time_sec": "Training Time per Epoch (sec)",
     "total_execution_time_hours": "Total Execution Time (hours)",
     "training_throughput_tokens_per_sec_global": "Training Throughput (tokens/sec)",
-    "avg_comm_volume_per_step_gb": "Avg. Comm Volume per Step (GB)",
-    "avg_comm_volume_nvlink_gb_per_step": "Avg. NVLink Comm Volume per Step (GB)",
-    "avg_comm_volume_network_gb_per_step": "Avg. Network Comm Volume per Step (GB)",
-    "total_comm_volume_gb": "Total Comm Volume (GB)",
+    "avg_gpu_flops": "Avg. GPU FLOPs",
+    "avg_gpu_mfu": "Avg. GPU MFU",
+    "TP": "Tensor Parallel (TP)",
+    "PP": "Pipeline Parallel (PP)",
+    "DP": "Data Parallel (DP)",
+    "CP": "Context Parallel (CP)",
+    "SP": "Sequence Parallel (SP)",
+    "EP": "Expert Parallel (EP)",
+    # "avg_comm_volume_per_step_gb": "Avg. Comm Volume per Step (GB)",
+    # "avg_comm_volume_nvlink_gb_per_step": "Avg. NVLink Comm Volume per Step (GB)",
+    # "avg_comm_volume_network_gb_per_step": "Avg. Network Comm Volume per Step (GB)",
+    # "total_comm_volume_gb": "Total Comm Volume (GB)",
     "training_loss": "Avg. Training Loss",
     "avg_training_loss": "Avg. Training Loss",
     "validation_loss": "Avg. Validation Loss",
@@ -108,6 +141,12 @@ NON_AGGREGATED_KEYS = {
     "learning_rate",
     "precision",
     "max_length",
+    "TP",
+    "PP",
+    "DP",
+    "CP",
+    "SP",
+    "EP",
 }
 
 CONFIG_TO_DISPLAY = {
@@ -314,7 +353,6 @@ def collect_rows(job_dirs, model_type_map):
             key=numeric_step_key,
         )
         for step_dir in step_dirs:
-            print(f"step_dir {step_dir}")
             yaml_path, config_values, config_error = load_step_config(job_dir, step_dir)
             repeat_dirs = sorted(
                 path for path in step_dir.glob("repeatid-*") if path.is_dir()
@@ -348,7 +386,6 @@ def collect_rows(job_dirs, model_type_map):
                 or int(re.fullmatch(r"repeatid-(\d+)", repeat_dir.name).group(1))
                 >= expected_repeats
             )
-            print(f"repeat_items {repeat_items}")
 
             for repeat_dir, repeat_label in repeat_items:
                 summaries = sorted(repeat_dir.rglob("training_summary*.json"))
@@ -372,6 +409,20 @@ def collect_rows(job_dirs, model_type_map):
     return rows
 
 
+def display_columns_for_rows(rows):
+    has_parallelism_type_dict = any(
+        any(
+            key.startswith("parallelism_type.")
+            and key.rsplit(".", 1)[-1] in {"TP", "PP", "DP", "CP", "SP", "EP"}
+            for key in row
+        )
+        for row in rows
+    )
+    if has_parallelism_type_dict:
+        return DISPLAY_COLUMNS
+    return [column for column in DISPLAY_COLUMNS if column not in PARALLELISM_COLUMNS]
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("job_ids", nargs="+", help="Slurm job IDs to collect")
@@ -393,12 +444,17 @@ def parse_args():
 def main():
     args = parse_args()
     if not args.root.exists():
-        raise SystemExit(f"Results root not found: {args.root}")
+        raise SystemExit(colorize(f"Results root not found: {args.root}", "1;31"))
 
     job_dirs = find_job_dirs(args.root, args.job_ids)
     missing = sorted(set(args.job_ids) - {path.name for path in job_dirs})
     if missing:
-        print(f"Warning: no training results found for job IDs: {', '.join(missing)}")
+        print(
+            colorize(
+                f"Warning: no training results found for job IDs: {', '.join(missing)}",
+                "33",
+            )
+        )
 
     rows = collect_rows(job_dirs, {})
 
@@ -408,7 +464,7 @@ def main():
     # )
     # fieldnames = DISPLAY_COLUMNS + raw_columns
 
-    fieldnames = DISPLAY_COLUMNS
+    fieldnames = display_columns_for_rows(rows)
     if args.output is None:
         args.output = Path(
             f"analytics/results/training_summary_jobs_{'-'.join(set(args.job_ids))}.csv"
@@ -419,9 +475,9 @@ def main():
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Training summary CSV written to: {args.output}")
-    print(f"Job directories processed: {len(job_dirs)}")
-    print(f"Rows written: {len(rows)}")
+    print(colorize(f"Training summary CSV written to: {args.output}", "1;32"))
+    print(colorize(f"Job directories processed: {len(job_dirs)}", "36"))
+    print(colorize(f"Rows written: {len(rows)}", "36"))
 
 
 if __name__ == "__main__":

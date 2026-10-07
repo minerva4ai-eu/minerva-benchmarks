@@ -15,13 +15,8 @@ sbatch:
   error: run-%j.err                       # Not touch
   extra_args:                             # Adapt extra args according to needs
     - "--exclusive"                       # Not touch
-    - "--time=02:00:00"                   # Not touch
   logs_folder: "slurm-logs"
 
-# DEPRECATED
-#srun:                                     # Field not implemented
-#  gpus_per_node: 0
-#  cpus_per_gpu: 0
-#  nodes: 0
-#  cpus_per_task: 0
-#  tasks_per_node: 0
+
+srun:
+  hours_limit: 4
