@@ -52,6 +52,12 @@ case "$MACHINE" in
     cines-adastra-mi250 | cines-adastra-mi300)
         which python
         ;;
+
+    csc-lumi-gpu)
+        module purge
+        module load $MODULES
+        ;;
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
