@@ -1,6 +1,7 @@
+# @package _global_
 # Base configuration for benchmark experiments
 defaults:
-  - MN5
+  - /machine/MN5/MN5
   - _self_
 
 machine:

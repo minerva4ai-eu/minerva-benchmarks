@@ -149,9 +149,8 @@ training/
 │   ├── constraints/                  # Rule-based validation
 │   └── configs/
 │       ├── base.yaml                 # Root schema defaults
-│       ├── MN5.yaml, MN5-venv.yaml, MN5-singularity.yaml
-│       ├── MN5-GPP.yaml, MN5-GPP-singularity.yaml
-│       ├── Jean-Zay-H100.yaml, Jean-Zay-H100-singularity.yaml
+│       ├── machine/                  # MN5/, MN5-GPP/, Jean-Zay-H100/ (--config-name)
+│       ├── profile/                  # benchmark profiles (--profile)
 │       └── model/  framework/  dataset/  slurm/  arch/
 │
 ├── scripts/
@@ -266,8 +265,9 @@ The only available subcommand is **`run`**. `--config-name` is required.
 
 | Option | Description |
 |--------|-------------|
-| `--config-name NAME` | **Required.** Profile in `configs_hydra/configs/` (e.g. `MN5-venv`). |
+| `--config-name NAME` | **Required.** Machine config, found by file name in `configs_hydra/configs/machine/<machine>/` (e.g. `MN5-venv`). |
 | `--configs-path PATH` | Hydra config directory (default `./configs_hydra/configs`). |
+| `--profile NAME` | Optional benchmark profile from `configs_hydra/configs/profile/`, merged on top of `--config-name` (can set `selection:` of models/frameworks/datasets and `model.combinations`). The name is appended to the runs dir: `benchmark-runs-{config-name}-{profile}/`. |
 | `--runs-dir DIR` | Base output dir (default `benchmark-runs/`). The config name is appended: `benchmark-runs-{config-name}/`. |
 | `--dry-run` | Compose and validate configs and write the YAMLs, without submitting to SLURM. |
 | `--models a,b` | Restrict to these models (comma separated, no spaces). |
@@ -296,6 +296,7 @@ bash minerva-cli.sh run --dry-run --config-name MN5-venv \
 bash minerva-cli.sh run --config-name MN5-singularity
 
 # 4. Submit one job per model / per node count
+bash minerva-cli.sh run --config-name MN5-singularity --profile llama3-megatron-bf16-bf16fp8
 bash minerva-cli.sh run --config-name MN5-singularity --per-model-jobs
 bash minerva-cli.sh run --config-name MN5-singularity --per-nodes-jobs
 

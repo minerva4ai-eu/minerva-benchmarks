@@ -7,7 +7,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import construct_config
+from scripts.shared.args import construct_config, get_attn_implementation
 from scripts.shared.args import get_fsdp_parser as get_parser
 from scripts.shared.data import (
     collate_fn,
@@ -60,7 +60,7 @@ logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 logger_rank = RankAdapter(logger, {})
 
 
-def load_model(model_path, dtype):
+def load_model(model_path, dtype, attention_mechanism="default"):
     """
     dist.is_initialized() is already True by the time this runs (see setup_distributed
     above), and ACCELERATE_USE_FSDP / FSDP_CPU_RAM_EFFICIENT_LOADING are exported in the
@@ -71,7 +71,7 @@ def load_model(model_path, dtype):
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=dtype,
-        attn_implementation="flash_attention_2",
+        attn_implementation=get_attn_implementation(attention_mechanism),
         low_cpu_mem_usage=True,
     )
     return model
@@ -259,7 +259,7 @@ def main(repeatid: int):
     )
     # --- Model + FSDP ---
     logger.info(f"Loading model {model_path}...")
-    model = load_model(model_path, dtype)
+    model = load_model(model_path, dtype, args.attention_mechanism)
     logger.info(
         f"Max communication-computation overlap: {args.fsdp_max_comm_comp_overlap}"
     )

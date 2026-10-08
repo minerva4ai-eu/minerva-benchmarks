@@ -71,6 +71,16 @@ def register_MN5(cs: ConfigStore):
     cs.store(group="slurm", name="base", node=SlurmConfig)
     cs.store(group="slurm", name="MN5", node=SlurmConfig)
 
-    # dataset YAMLs
-    cs.store(group="dataset", name="alpaca", node=DatasetConfig)
-    cs.store(group="dataset", name="squadv2", node=DatasetConfig)
+    # experiment YAMLS
+    cs.store(name="MN5-singularity", node=BenchmarkConfig)
+    cs.store(name="MN5-uv-venv", node=BenchmarkConfig)
+
+    # machine configs live in configs/machine/<machine>/; the root schema is
+    # matched by group + name so composed values are typed (e.g. enums)
+    for machine, names in {
+        "MN5": ["MN5", "MN5-singularity", "MN5-venv"],
+        "MN5-GPP": ["MN5-GPP", "MN5-GPP-singularity"],
+        "Jean-Zay-H100": ["Jean-Zay-H100", "Jean-Zay-H100-singularity"],
+    }.items():
+        for name in names:
+            cs.store(group=f"machine/{machine}", name=name, node=BenchmarkConfig)

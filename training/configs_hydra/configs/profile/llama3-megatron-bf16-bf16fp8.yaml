@@ -1,0 +1,13 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile llama3-megatron-bf16-bf16fp8
+
+selection:
+  models: [llama3_70b]
+  frameworks: [megatron-nemo-2509]
+
+model:
+  combinations:
+    global_batch_sizes: [512]
+    batch_sizes: [2]
+    precisions: [bf16, bf16_fp8]

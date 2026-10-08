@@ -1,6 +1,7 @@
+# @package _global_
 # Base configuration for benchmark experiments
 defaults:
-  - base
+  - /base
   - _self_
 
 machine:

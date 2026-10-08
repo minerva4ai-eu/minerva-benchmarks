@@ -19,4 +19,4 @@ sbatch:
 
 
 srun:
-  hours_limit: 4
+  hours_limit: 6

@@ -13,6 +13,20 @@ from scripts.slurm.utils import load_config
 logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
 
 
+ATTN_IMPLEMENTATIONS = {
+    "default": "sdpa",
+    "flash_attn2": "flash_attention_2",
+    "flash_attn3": "flash_attention_3",
+}
+
+
+def get_attn_implementation(attention_mechanism: str) -> str:
+    """Maps the attention_mechanism config value to a transformers attn_implementation."""
+    return ATTN_IMPLEMENTATIONS[
+        getattr(attention_mechanism, "value", attention_mechanism)
+    ]
+
+
 @dataclass
 class Configuration:
     # MODEL
@@ -36,9 +50,10 @@ class Configuration:
     gradient_accumulation_steps: int
     epochs: int | None
     max_steps: int | None
-    precision: Literal["fp32", "fp16", "bf16"]
+    precision: Literal["fp32", "fp16", "bf16", "bf16_fp8"]
     gradient_checkpointing: int
     enable_compile: bool
+    attention_mechanism: Literal["default", "flash_attn2", "flash_attn3"]
 
     # LOGGING
     logging_steps: int
@@ -254,6 +269,11 @@ def construct_config(args: argparse.Namespace) -> Configuration:
         gradient_accumulation_steps=config.model.training.grad_accum,
         lr=config.model.training.lr,
         enable_compile=config.model.training.enable_compile,
+        attention_mechanism=getattr(
+            config.model.training.get("attention_mechanism", "default"),
+            "value",
+            config.model.training.get("attention_mechanism", "default"),
+        ),
         max_steps=config.model.training.steps,
         epochs=config.model.training.epochs,
         max_length=config.model.training.max_model_length
@@ -289,6 +309,7 @@ def construct_config(args: argparse.Namespace) -> Configuration:
     logger.info("epochs = %s", train_args.epochs)
     logger.info("max_length = %s", train_args.max_length)
     logger.info("enable_compile = %s", train_args.enable_compile)
+    logger.info("attention_mechanism = %s", train_args.attention_mechanism)
     logger.info("output_dir = %s", train_args.output_dir)
     return train_args
 

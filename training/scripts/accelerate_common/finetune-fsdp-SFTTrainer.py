@@ -4,7 +4,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import get_fsdp_parser
+from scripts.shared.args import get_fsdp_parser, get_attn_implementation
 from scripts.shared.custom_train import (
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
@@ -114,7 +114,9 @@ def main():
         # --- 1. LOAD MODEL EFFICIENTLY ON META DEVICE / LOW MEMORY ---
         model_init_kwargs = {
             "dtype": dtype,
-            "attn_implementation": "flash_attention_2",
+            "attn_implementation": get_attn_implementation(
+                getattr(args, "attention_mechanism", "default")
+            ),
             "low_cpu_mem_usage": True,
             # "device_map": "auto",
         }
