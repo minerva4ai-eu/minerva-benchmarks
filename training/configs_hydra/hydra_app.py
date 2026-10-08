@@ -1,3 +1,4 @@
+import glob
 import os
 import warnings
 from argparse import ArgumentParser
@@ -15,6 +16,7 @@ warnings.filterwarnings("ignore")
 import dotenv
 from configs_hydra.constraints import rules
 from configs_hydra.dataclasses_hydra import BenchmarkConfig, register_configs
+from configs_hydra.dataclasses_hydra.model import AttentionMechanism
 from configs_hydra.model_framework_dataset import *
 
 # sweep/generator.py
@@ -61,6 +63,62 @@ def single_gpu_config(cfg: BenchmarkConfig) -> bool:
 console = Console()
 
 
+def resolve_config_name(config_path: str, config_name: str) -> str:
+    """Resolve a machine config name (e.g. 'MN5-singularity') to its location
+    under machine/<machine>/. Names that are not machine configs are returned as is."""
+    matches = glob.glob(
+        os.path.join(
+            os.path.abspath(config_path), "machine", "*", f"{config_name}.yaml"
+        )
+    )
+    if len(matches) > 1:
+        raise ValueError(f"Config name '{config_name}' is ambiguous: {matches}")
+    if matches:
+        machine = os.path.basename(os.path.dirname(matches[0]))
+        return f"machine/{machine}/{config_name}"
+    return config_name
+
+
+def compose_with_profile(
+    config_path: str,
+    config_name: str,
+    profile: str | None,
+    overrides: list[str] | None = None,
+) -> BenchmarkConfig:
+    """Compose a machine config and merge the optional profile/<profile>.yaml on top,
+    so the profile wins over the machine and model defaults."""
+    cfg = compose(config_name, overrides=overrides or [])
+    if not profile:
+        return cfg
+    profile_file = os.path.join(
+        os.path.abspath(config_path), "profile", f"{profile}.yaml"
+    )
+    if not os.path.isfile(profile_file):
+        available = sorted(
+            os.path.splitext(f)[0]
+            for f in os.listdir(os.path.join(os.path.abspath(config_path), "profile"))
+        )
+        raise FileNotFoundError(
+            f"Profile '{profile}' not found in {os.path.dirname(profile_file)}. Available: {available}"
+        )
+    cfg.merge_with(OmegaConf.load(profile_file))
+    return cfg
+
+
+def _apply_selection(axis: str, available: list, cfg, config_name: str) -> list:
+    """Restrict an axis to the profile's `selection.<axis>`, only if it was provided."""
+    selected = cfg.get("selection", {}).get(axis)
+    if not selected:
+        return list(available)
+    unknown = [x for x in selected if x not in available]
+    if unknown:
+        raise ValueError(
+            f"Profile '{config_name}' selection.{axis} has unavailable entries {unknown}. "
+            f"Available (after any CLI filtering): {list(available)}"
+        )
+    return list(selected)
+
+
 # TODO: check job nodes
 def generate_valid_combos(
     config_path: str,
@@ -68,6 +126,7 @@ def generate_valid_combos(
     outpath: str,
     run_date: str,
     dry: bool | None = None,
+    profile: str | None = None,
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
     # logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
 
@@ -78,27 +137,32 @@ def generate_valid_combos(
     register_configs()
     GlobalHydra.instance().clear()
 
-    # # TODO: Don't write if "hydra.errors.MissingConfigException: Cannot find primary config 'MN5-uv-venv-cuda130-flash-attn'. Check that it's in your config search path."
-    os.makedirs(outpath, exist_ok=True)
-
     cfg_seen = set()
+    display_name = config_name
+    config_name = resolve_config_name(config_path, config_name)
     with initialize_config_dir(
         config_dir=os.path.abspath(config_path), version_base="1.3"
     ):
         raw_total = 0
-        for model, framework, dataset in product(
-            mfd.MODELS, mfd.FRAMEWORKS, mfd.DATASETS
-        ):
-            _init_cfg: BenchmarkConfig = compose(
-                config_name,
-            )
 
+        _init_cfg: BenchmarkConfig = compose_with_profile(
+            config_path, config_name, profile
+        )
+        models = _apply_selection("models", mfd.MODELS, _init_cfg, display_name)
+        frameworks = _apply_selection(
+            "frameworks", mfd.FRAMEWORKS, _init_cfg, display_name
+        )
+        datasets = _apply_selection("datasets", mfd.DATASETS, _init_cfg, display_name)
+
+        for model, framework, dataset in product(models, frameworks, datasets):
             assert framework in AVAILABLE_FRAMEWORKS, (
                 f"{RED}Framework {YELLOW}'{framework}'{RED} not found! Available frameworks: \n{BLUE}[{', '.join(AVAILABLE_FRAMEWORKS)}]{RESET}"
             )
 
-            cfg: BenchmarkConfig = compose(
+            cfg: BenchmarkConfig = compose_with_profile(
+                config_path,
                 config_name,
+                profile,
                 overrides=[
                     f"model={model}",
                     f"framework={framework}",
@@ -114,6 +178,7 @@ def generate_valid_combos(
                 + f"\n\t· model: {model}"
                 + f"\n\t· framework: {framework}"
                 + f"\n\t· dataset: {dataset}"
+                + (f"\n\t· profile: {profile}" if profile else "")
             )
 
             if framework not in cfg.model.frameworks_supported:
@@ -190,6 +255,7 @@ def _single_parallelism_framework(
             enable_compile,
             grad_ctk,
             seq_len,
+            attn,
         ) in product(
             cfg.model.combinations.global_batch_sizes,
             cfg.model.combinations.batch_sizes,
@@ -198,6 +264,7 @@ def _single_parallelism_framework(
             cfg.model.combinations.enable_compile,
             cfg.model.combinations.gradient_checkpointing,
             cfg.model.combinations.max_seq_lens,
+            cfg.model.combinations.attention_mechanisms,
         ):
             # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
             # to each experiment combination
@@ -208,6 +275,7 @@ def _single_parallelism_framework(
             tmp_cfg.model.training.enable_compile = enable_compile
             tmp_cfg.model.training.gradient_checkpointing = grad_ctk
             tmp_cfg.model.training.max_model_length = seq_len
+            tmp_cfg.model.training.attention_mechanism = attn
             tmp_cfg.experiment.output_dir = outpath
             # Will bee used later to take care of configuration
             # of 1 node and 1 gpu
@@ -240,6 +308,7 @@ def _single_parallelism_framework(
                     + f"-grad-ctk{grad_ctk}"
                     + f"-max-seq-len{seq_len}"
                     + f"-compile{enable_compile}"
+                    + f"-attn{AttentionMechanism(attn).value}"
                     + f"-prec{precision}"
                     + f"-steps{steps}"
                 )
@@ -260,6 +329,7 @@ def _single_parallelism_framework(
                     + f" | grad_accum:{grad_acc}"
                     + f" | max-seq-len{seq_len}"
                     + f" | compilation: {enable_compile}"
+                    + f" | attn: {AttentionMechanism(attn).value}"
                     + f" | precision:{precision}"
                     + f" | steps:{steps}"
                 )
@@ -342,13 +412,14 @@ def _multi_parallelism_framework(
 
     tmp_cfg = deepcopy(cfg)
 
-    for gbs, bs, steps, grad_ctk, seq_len, prec in product(
+    for gbs, bs, steps, grad_ctk, seq_len, prec, attn in product(
         cfg.model.combinations.global_batch_sizes,
         cfg.model.combinations.batch_sizes,
         cfg.model.combinations.steps,
         cfg.model.combinations.gradient_checkpointing,
         cfg.model.combinations.max_seq_lens,
         cfg.model.combinations.precisions,
+        cfg.model.combinations.attention_mechanisms,
     ):
         # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
         # to each experiment combination
@@ -358,6 +429,7 @@ def _multi_parallelism_framework(
         tmp_cfg.model.training.gradient_checkpointing = grad_ctk
         tmp_cfg.model.training.max_model_length = seq_len
         tmp_cfg.model.training.precision = prec
+        tmp_cfg.model.training.attention_mechanism = attn
         tmp_cfg.experiment.output_dir = outpath
 
         # Get min number of nodes to run based on model and hpc architecture
@@ -435,6 +507,7 @@ def _multi_parallelism_framework(
                     f"-prec{prec}"
                     f"-seq_len{seq_len}"
                     f"-grad_ctk{grad_ctk}"
+                    f"-attn{AttentionMechanism(attn).value}"
                 )
                 yaml_filename = (
                     f"{parallelism_comb_str}--{experiment_parameters}" + ".yaml"

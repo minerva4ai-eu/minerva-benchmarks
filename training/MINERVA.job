@@ -164,6 +164,8 @@ TRAIN_MODULE: $TRAIN_MODULE"
 
 
     TIME_LIMIT="$SRUN_TIMELIMIT:00:00"
+    echo "SRUN_TIMELIMIT=$SRUN_TIMELIMIT" 
+    echo "TIME_LIMIT=$TIME_LIMIT"
     srun \
         -N "$NNODES" \
         --ntasks-per-node=1 \

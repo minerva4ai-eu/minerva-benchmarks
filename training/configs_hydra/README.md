@@ -57,6 +57,19 @@ The root config that ties everything together. Contains:
 | `experiment` | `ExperimentConfig` | Experiment name, output dir, repeat count |
 | `slurm` | `SlurmConfig` | SLURM account, QoS, partition, sbatch/srun params |
 
+#### Profile `selection` (optional)
+
+A profile can restrict the model/framework/dataset sweep. Any axis left out is not restricted (all of `model_framework_dataset.py` is used):
+
+```yaml
+selection:
+  models: [llama3_70b]
+  frameworks: [megatron-nemo-2509]
+  datasets: [alpaca]
+```
+
+Entries must exist in `model_framework_dataset.py` (after any `--models/--frameworks/--datasets` CLI filtering), otherwise generation fails.
+
 ### `ModelConfig` (`model.py`)
 
 Defines model-specific parameters:
@@ -192,6 +205,7 @@ The generator computes the Cartesian product of these lists: `3 × 1 × 2 × 1 �
 | `steps` | `Optional[List[int]]` | Max training steps (mutually exclusive with epochs) |
 | `epochs` | `Optional[List[int]]` | Training epochs (mutually exclusive with steps) |
 | `enable_compile` | `List[bool]` | Enable PyTorch compile (`True`/`False`) |
+| `attention_mechanisms` | `List[Literal["default", "flash_attn2", "flash_attn3"]]` | Attention implementation (default: `["default"]`; `default` → SDPA, `flash_attn2` → `flash_attention_2`, `flash_attn3` → `flash_attention_3`) |
 
 **Mutual exclusivity**: `steps` and `epochs` are mutually exclusive — you cannot specify both in the same config. If both are provided, the config is skipped.
 
@@ -260,9 +274,11 @@ Machine-specific configs are organized in subdirectories named after the HPC mac
 ```
 configs/
 ├── base.yaml                    # Root config — defines defaults, machine, experiment settings
-├── MN5.yaml                     # MN5-specific root config (extends base, adds arch + slurm)
-├── MN5-singularity.yaml         # MN5 with Singularity container config (extends MN5)
-├── MN5-uv-venv.yaml             # MN5 with uv venv Python environment (extends MN5)
+├── machine/                     # Machine root configs, selected with --config-name <file name>
+│   ├── MN5/                     # MN5.yaml, MN5-singularity.yaml, MN5-venv.yaml
+│   ├── MN5-GPP/                 # MN5-GPP.yaml, MN5-GPP-singularity.yaml
+│   └── Jean-Zay-H100/           # Jean-Zay-H100.yaml, Jean-Zay-H100-singularity.yaml
+├── profile/                     # Machine-independent benchmark profiles, selected with --profile <file name>
 ├── arch/
 │   └── MN5.yaml                 # MareNostrum5 GPU specs (H100-SXM, 64GB VRAM, TFLOPs)
 ├── dataset/

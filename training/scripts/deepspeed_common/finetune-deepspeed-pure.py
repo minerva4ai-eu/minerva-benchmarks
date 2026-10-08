@@ -9,7 +9,7 @@ import deepspeed
 import psutil
 import torch
 import torch.distributed as dist
-from scripts.shared.args import construct_config, get_deepspeed_parser
+from scripts.shared.args import construct_config, get_deepspeed_parser, get_attn_implementation
 from scripts.shared.data import (
     collate_fn,
     get_train_eval_path,
@@ -57,7 +57,7 @@ def load_model(model_path, dtype, ds_config):
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         dtype=dtype,
-        attn_implementation="flash_attention_2",
+        attn_implementation=get_attn_implementation(cfg.attention_mechanism),
         low_cpu_mem_usage=True,
     )
     # with deepspeed.zero.Init(

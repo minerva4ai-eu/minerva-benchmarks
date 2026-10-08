@@ -18,7 +18,7 @@ Usage
     from mfu_callback import mfu_callback_from_hf_config
 
     cfg = AutoConfig.from_pretrained("meta-llama/Meta-Llama-3-8B")
-    callback = mfu_callback_from_hf_config(cfg, gpu_peak_flops=989e12)
+    callback = mfu_callback_from_hf_config(cfg, tokenizer, gpu_peak_flops=989, trainer_callback="pytorch")
     trainer = SFTTrainer(..., callbacks=[callback])
 
 The callback logs `mfu` (as a %) to the Trainer log dict every logging step.
@@ -70,6 +70,11 @@ def num_floating_point_operations(
     shared_expert_ffn_hidden_size: int = 0,
     # MTP (multi-token prediction)
     mtp_num_layers: int = 0,
+    # Sliding-window attention: how many layers use a local window
+    num_local_attn_layers: int = 0,
+    sliding_window: int | None = None,
+    # 3 = full fine-tuning/pre-training; ~2 when weights are frozen (e.g. LoRA)
+    fwd_bwd_factor: float = 3,
     # Batch / sequence
     batch_size: int = 1,
     seq_length: int = 2048,
@@ -108,7 +113,7 @@ def num_floating_point_operations(
         moe_ffn_hidden_size if moe_ffn_hidden_size is not None else ffn_hidden_size
     )
 
-    FWD_BWD = 3
+    FWD_BWD = fwd_bwd_factor
     FMA = 2
     ffn_exp = 3 if swiglu else 2  # SwiGLU needs gate+up (×2 width) + down
 
@@ -144,18 +149,29 @@ def num_floating_point_operations(
         * FMA
         * hidden_size
         * p
-        * (hidden_size + hidden_size * (g / num_attention_heads))
+        # Q + O projections (h each) and K + V projections (h*g/n each)
+        * (2 * hidden_size + 2 * hidden_size * (g / num_attention_heads))
         * total_layers
         * T
     )
+    # Sliding-window layers only attend to ~L*W - W^2/2 pairs instead of L^2/2
+    n_local = min(max(num_local_attn_layers, 0), total_layers)
+    local_ratio = 1.0
+    if n_local and sliding_window and sliding_window < seq_length:
+        w = sliding_window
+        local_ratio = (seq_length * w - w * w / 2) / (seq_length * seq_length / 2)
+    effective_attn_layers = (total_layers - n_local) + n_local * local_ratio
     attn_core = (
         FWD_BWD
         * FMA
         * hidden_size
         * p  # /2 causal × 2 ops cancel
-        * total_layers
+        * effective_attn_layers
         * S2
     )
+
+    # ── MoE router ────────────────────────────────────────────────────────
+    router_flops = FWD_BWD * FMA * hidden_size * (num_experts or 0) * num_moe_layers * T
 
     # ── MTP extra heads ───────────────────────────────────────────────────
     mtp_flops = (
@@ -173,6 +189,7 @@ def num_floating_point_operations(
         mlp_flops
         + moe_routed
         + moe_shared
+        + router_flops
         + attn_token_linear
         + attn_core
         + mtp_flops
@@ -210,6 +227,37 @@ class ModelFLOPConfig:
     # MTP
     mtp_num_layers: int = 0
 
+    # Sliding-window attention
+    num_local_attn_layers: int = 0
+    sliding_window: int | None = None
+
+    # 3 for full training; ~2 if weights are frozen (LoRA / PEFT)
+    fwd_bwd_factor: float = 3
+
+    def flops_per_batch(self, batch_size: int) -> float:
+        """Total FLOPs (not TFLOPs) for one global batch of `batch_size` sequences."""
+        return num_floating_point_operations(
+            num_layers=self.num_layers,
+            hidden_size=self.hidden_size,
+            ffn_hidden_size=self.ffn_hidden_size,
+            num_attention_heads=self.num_attention_heads,
+            vocab_size=self.vocab_size,
+            num_query_groups=self.num_query_groups,
+            kv_channels=self.kv_channels,
+            swiglu=self.swiglu,
+            num_experts=self.num_experts,
+            moe_ffn_hidden_size=self.moe_ffn_hidden_size,
+            moe_router_topk=self.moe_router_topk,
+            moe_layer_freq=self.moe_layer_freq,
+            shared_expert_ffn_hidden_size=self.shared_expert_ffn_hidden_size,
+            mtp_num_layers=self.mtp_num_layers,
+            num_local_attn_layers=self.num_local_attn_layers,
+            sliding_window=self.sliding_window,
+            fwd_bwd_factor=self.fwd_bwd_factor,
+            batch_size=batch_size,
+            seq_length=self.seq_length,
+        )
+
 
 # ---------------------------------------------------------------------------
 # MFUCallback
@@ -224,7 +272,7 @@ class MFUCallback(TrainerCallback):
     ----------
     model_config : ModelFLOPConfig
     gpu_peak_flops : float
-        Peak FLOP/s of ONE GPU (e.g. 989e12 for H100 BF16).
+        Peak TFLOP/s of ONE GPU (e.g. 989 for H100 BF16). Not FLOP/s.
     log_key : str
         Key written into the Trainer log dict. Default "mfu".
     """
@@ -248,28 +296,7 @@ class MFUCallback(TrainerCallback):
         self._last_logged_step: int = 0
 
     def _tflops_per_batch(self, batch_size: int) -> float:
-        c = self.cfg
-        return (
-            num_floating_point_operations(
-                num_layers=c.num_layers,
-                hidden_size=c.hidden_size,
-                ffn_hidden_size=c.ffn_hidden_size,
-                num_attention_heads=c.num_attention_heads,
-                vocab_size=c.vocab_size,
-                num_query_groups=c.num_query_groups,
-                kv_channels=c.kv_channels,
-                swiglu=c.swiglu,
-                num_experts=c.num_experts,
-                moe_ffn_hidden_size=c.moe_ffn_hidden_size,
-                moe_router_topk=c.moe_router_topk,
-                moe_layer_freq=c.moe_layer_freq,
-                shared_expert_ffn_hidden_size=c.shared_expert_ffn_hidden_size,
-                mtp_num_layers=c.mtp_num_layers,
-                batch_size=batch_size,
-                seq_length=c.seq_length,
-            )
-            / 1e12
-        )
+        return self.cfg.flops_per_batch(batch_size) / 1e12
 
     def _num_gpus(self) -> int:
         return torch.cuda.device_count() if torch.cuda.is_available() else 1
@@ -288,7 +315,7 @@ class MFUCallback(TrainerCallback):
         if elapsed <= 0:
             return
 
-        steps = max(state.global_step - self._last_logged_step, 1)
+        # elapsed covers exactly one optimizer step (since on_step_begin)
         self._last_logged_step = state.global_step
 
         world_size = max(args.world_size, 1)
@@ -297,7 +324,7 @@ class MFUCallback(TrainerCallback):
             * world_size
             * args.gradient_accumulation_steps
         )
-        total_flops = self._tflops_per_batch(global_bs) * steps
+        total_flops = self._tflops_per_batch(global_bs)
         achieved_flops = total_flops / elapsed / world_size
         mfu = achieved_flops / self.gpu_peak_flops * 100
         self.state.tflops_this_gpu.append(round(achieved_flops, 2))
@@ -339,25 +366,7 @@ class FlopCounterCallback(pl.Callback):
         self.logger = logging.getLogger("MINERVA_BENCH.scripts.shared.flops")
 
     def _flops_per_batch(self) -> float:
-        c = self.cfg
-        return num_floating_point_operations(
-            num_layers=c.num_layers,
-            hidden_size=c.hidden_size,
-            ffn_hidden_size=c.ffn_hidden_size,
-            num_attention_heads=c.num_attention_heads,
-            vocab_size=c.vocab_size,
-            num_query_groups=c.num_query_groups,
-            kv_channels=c.kv_channels,
-            swiglu=c.swiglu,
-            num_experts=c.num_experts,
-            moe_ffn_hidden_size=c.moe_ffn_hidden_size,
-            moe_router_topk=c.moe_router_topk,
-            moe_layer_freq=c.moe_layer_freq,
-            shared_expert_ffn_hidden_size=c.shared_expert_ffn_hidden_size,
-            mtp_num_layers=c.mtp_num_layers,
-            batch_size=self.global_batch_size,
-            seq_length=c.seq_length,
-        )
+        return self.cfg.flops_per_batch(self.global_batch_size)
 
     def on_train_batch_start(
         self,
@@ -468,7 +477,7 @@ class FLOPsMFUCalculator:
     ----------
     model_config : ModelFLOPConfig
     gpu_peak_flops : float
-        Peak FLOP/s of ONE GPU (e.g. 989e12 for H100 BF16).
+        Peak TFLOP/s of ONE GPU (e.g. 989 for H100 BF16). Not FLOP/s.
     log_key : str
         Key written into the Trainer log dict. Default "mfu".
     """
@@ -492,28 +501,7 @@ class FLOPsMFUCalculator:
         self._last_logged_step: int = 0
 
     def _tflops_per_batch(self, batch_size: int) -> float:
-        c = self.cfg
-        return (
-            num_floating_point_operations(
-                num_layers=c.num_layers,
-                hidden_size=c.hidden_size,
-                ffn_hidden_size=c.ffn_hidden_size,
-                num_attention_heads=c.num_attention_heads,
-                vocab_size=c.vocab_size,
-                num_query_groups=c.num_query_groups,
-                kv_channels=c.kv_channels,
-                swiglu=c.swiglu,
-                num_experts=c.num_experts,
-                moe_ffn_hidden_size=c.moe_ffn_hidden_size,
-                moe_router_topk=c.moe_router_topk,
-                moe_layer_freq=c.moe_layer_freq,
-                shared_expert_ffn_hidden_size=c.shared_expert_ffn_hidden_size,
-                mtp_num_layers=c.mtp_num_layers,
-                batch_size=batch_size,
-                seq_length=c.seq_length,
-            )
-            / 1e12
-        )
+        return self.cfg.flops_per_batch(batch_size) / 1e12
 
     def _num_gpus(self) -> int:
         return torch.cuda.device_count() if torch.cuda.is_available() else 1
@@ -534,11 +522,11 @@ class FLOPsMFUCalculator:
         if elapsed <= 0:
             return
 
-        steps = max(global_step - self._last_logged_step, 1)
+        # elapsed covers exactly one optimizer step (since on_step_begin)
         self._last_logged_step = global_step
 
         global_bs = micro_batch_size * world_size * gradient_accumulation_steps
-        total_flops = self._tflops_per_batch(global_bs) * steps
+        total_flops = self._tflops_per_batch(global_bs)
         achieved_flops = total_flops / elapsed / world_size
         mfu = achieved_flops / self.gpu_peak_flops * 100
         self.state.tflops_this_gpu.append(round(achieved_flops, 2))
@@ -646,7 +634,9 @@ def mfu_callback_from_hf_config(
     if num_heads is None:
         raise ValueError("Cannot detect num_attention_heads from config")
 
-    vocab_size = _get_tkn("vocab_size")
+    # Prefer the model config: the LM head / embedding size is what is multiplied,
+    # and it is usually larger than the tokenizer's vocab_size (padding, added tokens).
+    vocab_size = _get("vocab_size") or _get_tkn("vocab_size")
     if vocab_size is None:
         raise ValueError("Cannot detect vocab_size from config")
 
@@ -682,30 +672,83 @@ def mfu_callback_from_hf_config(
     # Sequence length
     _seq = seq_length or _get("max_position_embeddings", default=2048)
 
-    # ── Activation / SwiGLU detection ────────────────────────────────────
-    # LLaMA/Mistral/Mixtral/Qwen all use hidden_act="silu" with SwiGLU gate
-    # (gate_proj + up_proj → down_proj).  Gemma uses "gelu" without a gate.
-    # We check hidden_act AND the presence of a gate projection in the config.
-    hidden_act = str(
-        _get("hidden_act", "hidden_activation", "activation_function") or ""
-    )
-    # Models with SwiGLU (gated MLP): silu or swish + NOT gelu
-    has_swiglu_act = any(k in hidden_act.lower() for k in ("silu", "swish", "swiglu"))
-    # Some configs expose mlp_bias or gate_proj explicitly; use act as proxy
-    _swiglu = has_swiglu_act
+    # ── MLP gating (SwiGLU / GeGLU = 3 matrices; plain MLP = 2) ──────────
+    # Nearly all modern decoder families (Llama, Mistral, Qwen, Gemma, DeepSeek...)
+    # use a gated MLP regardless of activation. Only a few legacy families don't.
+    model_type = str(getattr(cfg, "model_type", "") or "").lower()
+    _NON_GATED = {
+        "gpt2", "gpt_neox", "gptj", "falcon", "phi", "opt", "bloom", "mpt",
+        "gpt_bigcode", "starcoder2", "persimmon", "stablelm_epoch",
+    }  # fmt: skip
+    _swiglu = model_type not in _NON_GATED
 
     # ── MoE fields ────────────────────────────────────────────────────────
-    # Mixtral  : num_local_experts, num_experts_per_tok, intermediate_size (per expert)
-    # Qwen2Moe : num_experts, num_experts_per_tok, moe_intermediate_size,
-    #            shared_expert_intermediate_size, shared_expert_num (=1 usually)
-
-    num_experts = _get("num_local_experts", "num_experts")  # total expert count
+    # Mixtral  : num_local_experts, num_experts_per_tok (expert width = intermediate_size)
+    # Qwen2/3Moe: num_experts, num_experts_per_tok, moe_intermediate_size,
+    #            decoder_sparse_step, mlp_only_layers, [shared_expert_intermediate_size]
+    # DeepSeek : n_routed_experts, n_shared_experts, moe_intermediate_size,
+    #            first_k_dense_replace, moe_layer_freq
+    # Llama4   : num_local_experts, intermediate_size (expert + shared expert),
+    #            intermediate_size_mlp (dense layers), interleave_moe_layer_step
+    num_experts = _get("num_local_experts", "num_experts", "n_routed_experts")
     moe_topk = _get("num_experts_per_tok", "top_k")  # routed experts per token
-    # Mixtral reuses intermediate_size for each expert's FFN width;
-    # Qwen2Moe has a separate moe_intermediate_size
-    moe_ffn = _get("moe_intermediate_size")  # Qwen2Moe only; else None
-    # If None, moe_ffn falls back to ffn_hidden_size inside num_floating_point_operations
+    moe_ffn = _get("moe_intermediate_size")  # else falls back to ffn_hidden_size
     shared_expert_ffn = _get("shared_expert_intermediate_size", default=0) or 0
+    n_shared = _get("n_shared_experts", default=0) or 0
+    if n_shared and moe_ffn:
+        shared_expert_ffn = n_shared * moe_ffn
+
+    moe_layer_pattern: int | list[int] = 1
+    if model_type.startswith("llama4") and num_experts:
+        dense_ffn = _get("intermediate_size_mlp")
+        moe_ffn = ffn_hidden_size
+        shared_expert_ffn = ffn_hidden_size  # one shared expert per MoE layer
+        if dense_ffn:
+            ffn_hidden_size = dense_ffn
+        step = _get("interleave_moe_layer_step", default=1) or 1
+        moe_layer_pattern = [1 if (i + 1) % step == 0 else 0 for i in range(num_layers)]
+    elif num_experts and hasattr(cfg, "first_k_dense_replace"):  # DeepSeek family
+        first_dense = _get("first_k_dense_replace", default=0) or 0
+        freq = _get("moe_layer_freq", default=1) or 1
+        if isinstance(freq, int):
+            moe_layer_pattern = [
+                1 if (i >= first_dense and i % freq == 0) else 0
+                for i in range(num_layers)
+            ]
+        else:
+            moe_layer_pattern = [int(x) for x in freq]
+        logger.warning(
+            "DeepSeek-style MLA attention is approximated as standard GQA attention."
+        )
+    elif num_experts and hasattr(cfg, "decoder_sparse_step"):  # Qwen2/3-MoE
+        step = _get("decoder_sparse_step", default=1) or 1
+        dense_only = set(_get("mlp_only_layers", default=[]) or [])
+        moe_layer_pattern = [
+            1 if (i not in dense_only and (i + 1) % step == 0) else 0
+            for i in range(num_layers)
+        ]
+
+    # ── Sliding-window attention ─────────────────────────────────────────
+    sliding_window = _get("sliding_window")
+    layer_types = _get("layer_types")
+    n_local = 0
+    if sliding_window:
+        if layer_types:
+            n_local = sum("sliding" in str(t) for t in layer_types)
+        elif model_type.startswith("gemma3"):
+            pattern = _get("sliding_window_pattern", default=6) or 6
+            n_local = sum(1 for i in range(num_layers) if (i + 1) % pattern != 0)
+        elif model_type == "gemma2":
+            n_local = (num_layers + 1) // 2
+        elif model_type in ("mistral", "mixtral"):
+            n_local = num_layers
+
+    # Sequence length: max_position_embeddings can be 128k+ and makes the
+    # quadratic attention term meaningless, so callers should pass seq_length.
+    if seq_length is None:
+        logger.warning(
+            "seq_length not provided; falling back to max_position_embeddings."
+        )
 
     # ── Assemble (kwargs can override anything) ───────────────────────────
     defaults = dict(
@@ -721,7 +764,10 @@ def mfu_callback_from_hf_config(
         num_experts=num_experts,
         moe_ffn_hidden_size=moe_ffn,
         moe_router_topk=moe_topk or 1,
+        moe_layer_freq=moe_layer_pattern,
         shared_expert_ffn_hidden_size=shared_expert_ffn,
+        num_local_attn_layers=n_local,
+        sliding_window=sliding_window if n_local else None,
     )
     defaults.update(kwargs)  # user overrides win
 
@@ -758,95 +804,12 @@ if __name__ == "__main__":
 
     model_configs = [
         (
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-1b-it/config.json",
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-1b-it",  # tokenizer
-        ),
-        (
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-12b-it/config.json",
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/gemma-3-12b-it",  # tokenizer
-        ),
-        (
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Mistral-7B-Instruct-v0.3/config.json",
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Mistral-7B-Instruct-v0.3",  # tokenizer
-        ),
-        (
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.1-8B-Instruct/config.json",
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.1-8B-Instruct",  # tokenizer
-        ),
-        (
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.3-70B-Instruct/config.json",
-            "/gpfs/scratch/bsc99/ai_operations/models_registry/models_registry/Llama-3.3-70B-Instruct",  # tokenizer
+            "<path to model HF>/config.json",
+            "<path to model HF>",  # tokenizer
         ),
     ]
 
-    """configs = {
-        "llama3-8b": FakeConfig(
-            num_hidden_layers=32,
-            hidden_size=4096,
-            intermediate_size=14336,
-            num_attention_heads=32,
-            num_key_value_heads=8,
-            vocab_size=128256,
-            hidden_act="silu",
-            max_position_embeddings=8192,
-        ),
-        "llama3-70b": FakeConfig(
-            num_hidden_layers=80,
-            hidden_size=8192,
-            intermediate_size=28672,
-            num_attention_heads=64,
-            num_key_value_heads=8,
-            vocab_size=128256,
-            hidden_act="silu",
-            max_position_embeddings=8192,
-        ),
-        "mistral-7b": FakeConfig(
-            num_hidden_layers=32,
-            hidden_size=4096,
-            intermediate_size=14336,
-            num_attention_heads=32,
-            num_key_value_heads=8,
-            vocab_size=32000,
-            hidden_act="silu",
-            max_position_embeddings=32768,
-        ),
-        "mixtral-8x7b": FakeConfig(
-            num_hidden_layers=32,
-            hidden_size=4096,
-            intermediate_size=14336,
-            num_attention_heads=32,
-            num_key_value_heads=8,
-            vocab_size=32000,
-            hidden_act="silu",
-            max_position_embeddings=32768,
-            num_local_experts=8,
-            num_experts_per_tok=2,
-        ),
-        "gemma3-12b": FakeConfig(
-            num_hidden_layers=48,
-            hidden_size=3840,
-            intermediate_size=15360,
-            num_attention_heads=16,
-            num_key_value_heads=8,
-            vocab_size=262208,
-            hidden_act="gelu_pytorch_tanh",
-            head_dim=256,
-            max_position_embeddings=131072,
-        ),
-        "gemma3-1b": FakeConfig(
-            num_hidden_layers=26,
-            hidden_size=1152,
-            intermediate_size=6912,
-            num_attention_heads=4,
-            num_key_value_heads=1,
-            vocab_size=262208,
-            hidden_act="gelu_pytorch_tanh",
-            head_dim=256,
-            max_position_embeddings=32768,
-        ),
-    }"""
-
-    H100 = 989e12
+    H100 = 989  # peak TFLOP/s
     print(
         f"{'Model':<18} {'layers':>6} {'hidden':>6} {'ffn':>6} {'heads':>5} "
         f"{'kv':>4} {'experts':>7} {'topk':>4} {'swiglu':>6} "
@@ -870,5 +833,5 @@ if __name__ == "__main__":
             f"{name:<18} {c.num_layers:>6} {c.hidden_size:>6} {c.ffn_hidden_size:>6} "
             f"{c.num_attention_heads:>5} {c.num_query_groups!s:>4} "
             f"{c.num_experts!s:>7} {c.moe_router_topk:>4} {c.swiglu!s:>6} "
-            f"{fl / 1e12:>16.1f}  {mfu:>20.1f}%"
+            f"{fl:>16.1f}  {mfu:>20.1f}%"
         )

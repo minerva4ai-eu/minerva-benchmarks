@@ -4,7 +4,7 @@ import os
 import time
 
 import torch
-from scripts.shared.args import construct_config, get_deepspeed_parser
+from scripts.shared.args import construct_config, get_deepspeed_parser, get_attn_implementation
 from scripts.shared.custom_train import PerformanceTrackingSFTTrainer
 from scripts.shared.data import (
     collate_fn,
@@ -89,7 +89,7 @@ def main(repeatid: int):
         output_dir=cfg.output_dir,
         model_init_kwargs={
             "dtype": dtype,
-            "attn_implementation": "flash_attention_2",
+            "attn_implementation": get_attn_implementation(cfg.attention_mechanism),
             "low_cpu_mem_usage": True,
         },
         per_device_train_batch_size=cfg.batch_size,

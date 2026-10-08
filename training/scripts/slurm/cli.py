@@ -112,6 +112,14 @@ def cli():
     ),
 )
 @click.option(
+    "--profile",
+    default=None,
+    help=(
+        "Benchmark profile from configs_hydra/configs/profile/ (e.g. 'llama3-megatron') "
+        "merged on top of --config-name. Selects models/frameworks/datasets and combinations."
+    ),
+)
+@click.option(
     "--yaml",
     "yamls",
     multiple=True,
@@ -138,6 +146,7 @@ def run(
     models,
     frameworks,
     datasets,
+    profile,
     yamls,
     nnodes,
 ):
@@ -154,7 +163,9 @@ def run(
 
     # TODO: review output structure
     _runs_dir = runs_dir
-    runs_dir = f"{_runs_dir}-{config_name}"
+    runs_dir = f"{_runs_dir}-{config_name}/{f'{profile}' if profile else 'generic-profile'}".rstrip(
+        "/"
+    )
     run_date = datetime.now().date().strftime("%d-%m-%Y")
 
     cfgs_valid: list[BenchmarkConfig] = []
@@ -274,7 +285,10 @@ def run(
             outpath=runs_dir,
             run_date=run_date,
             dry=dry_run,
+            profile=profile,
         )
+
+        os.makedirs(runs_dir, exist_ok=True)
         for cfg in cfgs_valid:
             cfgs_paths.append(
                 write_config(
@@ -300,6 +314,7 @@ def run(
             f"{u.FAILURE_HEAVY} {u.RED} No valid benchmark configurations found to run! Exiting...{u.RESET}"
         )
         return
+
     if per_model_jobs:
         per_model_cfgs: dict[str, dict[str, list[BenchmarkConfig | str]]] = {}
         for cfg, path in zip(cfgs_valid, cfgs_paths):
@@ -418,6 +433,14 @@ def results(jobids, output, root, extra_jobids):
     help="Base config name to compose (e.g., 'base-MN5').",
 )
 @click.option(
+    "--profile",
+    default=None,
+    help=(
+        "Benchmark profile from configs_hydra/configs/profile/ (e.g. 'llama3-megatron') "
+        "merged on top of --config-name. Selects models/frameworks/datasets and combinations."
+    ),
+)
+@click.option(
     "--runs-dir",
     default=RUNS_DIR,
     help="Output directory for generated configs and results (default: benchmark-runs/).",
@@ -433,7 +456,7 @@ def results(jobids, output, root, extra_jobids):
     is_flag=True,
     help="Compose configs and list the jobs without submitting them.",
 )
-def prepare(configs_path, config_name, runs_dir, models, dry_run):
+def prepare(configs_path, config_name, profile, runs_dir, models, dry_run):
     # TODO: Check desired behavior
     if config_name == DEFAULT_CONFIG_NAME:
         click.echo(
@@ -444,14 +467,16 @@ def prepare(configs_path, config_name, runs_dir, models, dry_run):
         )
         exit(1)
     """Submit one SLURM job running only the megatron-nemo-2509 preparation stage for every model/dataset."""
-    megatron_prepare(configs_path, config_name, runs_dir, models, dry_run)
+    megatron_prepare(configs_path, config_name, runs_dir, models, dry_run, profile)
 
 
-def megatron_prepare(configs_path, config_name, runs_dir, models, dry_run):
+def megatron_prepare(
+    configs_path, config_name, runs_dir, models, dry_run, profile=None
+):
     from copy import deepcopy
 
     from configs_hydra.dataclasses_hydra import register_configs
-    from hydra import compose, initialize_config_dir
+    from hydra import initialize_config_dir
     from hydra.core.global_hydra import GlobalHydra
     from omegaconf import OmegaConf
 
@@ -464,9 +489,12 @@ def megatron_prepare(configs_path, config_name, runs_dir, models, dry_run):
             )
             sys.exit(1)
 
-    runs_dir = f"{runs_dir}-{config_name}"
+    runs_dir = f"{runs_dir}-{config_name}{f'-{profile}' if profile else ''}"
     run_date = datetime.now().date().strftime("%d-%m-%Y")
 
+    from configs_hydra.hydra_app import compose_with_profile, resolve_config_name
+
+    config_name = resolve_config_name(configs_path, config_name)
     register_configs()
     GlobalHydra.instance().clear()
 
@@ -474,11 +502,13 @@ def megatron_prepare(configs_path, config_name, runs_dir, models, dry_run):
     with initialize_config_dir(
         config_dir=os.path.abspath(configs_path), version_base="1.3"
     ):
-        base = compose(config_name)
+        base = compose_with_profile(configs_path, config_name, profile)
         for model in selected or mfd.MODELS:
             for dataset in mfd.DATASETS:
-                cfg = compose(
+                cfg = compose_with_profile(
+                    configs_path,
                     config_name,
+                    profile,
                     overrides=[
                         f"model={model}",
                         f"framework={framework}",
@@ -501,6 +531,7 @@ def megatron_prepare(configs_path, config_name, runs_dir, models, dry_run):
                 tr.gradient_checkpointing = comb.gradient_checkpointing[0]
                 tr.max_model_length = comb.max_seq_lens[0]
                 tr.precision = comb.precisions[0]
+                tr.attention_mechanism = comb.attention_mechanisms[0]
                 tr.grad_accum = 1
 
                 # Preparation only needs one GPU; parallelism is irrelevant here.

@@ -38,6 +38,16 @@ class ExperimentConfig:
 
 
 @dataclass
+class SelectionConfig:
+    """Optional profile-level restriction of the model/framework/dataset sweep.
+    An axis left as None is not restricted."""
+
+    models: list[str] | None = None
+    frameworks: list[str] | None = None
+    datasets: list[str] | None = None
+
+
+@dataclass
 class BenchmarkConfig(DictConfig):
     id: str
     trainings: m.TrainArgsConfig
@@ -48,3 +58,4 @@ class BenchmarkConfig(DictConfig):
     machine: MachineConfig
     experiment: ExperimentConfig
     slurm: s.SlurmConfig
+    selection: SelectionConfig = field(default_factory=SelectionConfig)

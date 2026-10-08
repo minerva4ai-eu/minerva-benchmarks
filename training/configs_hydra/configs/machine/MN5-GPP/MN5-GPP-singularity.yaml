@@ -1,6 +1,7 @@
+# @package _global_
 # Base configuration for benchmark experiments on GPP (CPU) partition
 defaults:
-  - MN5-GPP
+  - /machine/MN5-GPP/MN5-GPP
   - _self_
 
 machine:

@@ -4,7 +4,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from scripts.shared.args import parse_args
+from scripts.shared.args import parse_args, get_attn_implementation
 from scripts.shared.custom_train import (
     PerformanceTrackingSFTTrainer,  # Must subclass SFTTrainer now
 )
@@ -118,7 +118,9 @@ def main():
             output_dir=output_dir,
             model_init_kwargs={
                 "dtype": dtype,
-                "attn_implementation": "flash_attention_2",
+                "attn_implementation": get_attn_implementation(
+                getattr(args, "attention_mechanism", "default")
+            ),
                 "low_cpu_mem_usage": True,
             },
             per_device_train_batch_size=BATCH_SIZE,
@@ -181,6 +183,7 @@ def main():
             tokenizer,
             gpu_peak_flops=peak_gpu_tflops,
             seq_length=args.max_length,
+            trainer_callback="pytorch",
         )
         # NOTE: data_collator removed — SFTTrainer handles collation via DataCollatorForLanguageModeling.
         # If you need a custom formatting function instead of dataset_text_field, pass:

@@ -1,8 +1,9 @@
+# @package _global_
 # Base configuration for benchmark experiments
 defaults:
-  - base
-  - arch: MN5-GPP
-  - slurm: MN5-GPP
+  - /base
+  - /arch: MN5-GPP
+  - /slurm: MN5-GPP
   - _self_
 
 machine:

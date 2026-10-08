@@ -598,7 +598,7 @@ def main(repeatid: int):
                 avg_step_time_sec=benchmark_callback.avg_step_time_sec,
                 gpu_stats=gpu_stats,
                 training_loss=loss_callback.training_loss or 0,
-                comm_metrics=benchmark_callback.comm_metrics,
+                # comm_metrics=benchmark_callback.comm_metrics,
             )
             logger.info("Training summary written.")
         except Exception as _e:

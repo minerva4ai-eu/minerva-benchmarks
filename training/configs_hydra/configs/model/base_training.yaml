@@ -8,6 +8,7 @@ training:
   optimizer: "adamw"
   gradient_checkpointing: True
   enable_compile: True
+  attention_mechanism: "default"   # default | flash_attn2 | flash_attn3
   epochs: null
   max_seq_len: -1
 
@@ -18,8 +19,9 @@ combinations:
   #grad_accums: [8, 16]             # Auto-inferred based on world-size and global_batch_sizes
   gradient_checkpointing: [True]    
   enable_compile: [False]
-  steps: [50]
+  steps: [10]
   epochs: 
   lr: [2e-5]                        # Has no effect, by default checkpointing is enabled for all  
   optimizer: ["adamw"]              # Has no effect, by default checkpointing is enabled for all
   max_seq_lens: [1024]
+  attention_mechanisms: ["flash_attn2"]  # any of: default, flash_attn2, flash_attn3

@@ -14,6 +14,13 @@ class ArchitectureType(str, Enum):
     SSM = "ssm"
 
 
+class AttentionMechanism(str, Enum):
+    # Member names match their values so OmegaConf resolves YAML strings by name
+    default = "default"
+    flash_attn2 = "flash_attn2"
+    flash_attn3 = "flash_attn3"
+
+
 @dataclass
 class TrainArgsConfig:
     """Holds lists — generator expands these into individual combos."""
@@ -31,6 +38,9 @@ class TrainArgsConfig:
     epochs: list[int] | None = MISSING  # field(default_factory=lambda: [1])
     enable_compile: list[bool] = MISSING
     max_seq_lens: list[int] = MISSING
+    attention_mechanisms: list[AttentionMechanism] = field(
+        default_factory=lambda: [AttentionMechanism.default]
+    )
 
     def __post_init__(self):
         bad_precisions = set(self.precisions) - VALID_PRECISIONS
@@ -44,6 +54,11 @@ class TrainArgsConfig:
             raise ValueError(
                 f"Unknown optimizer: '{self.optimizer}'. Valid: {VALID_OPTIMIZERS}"
             )
+
+        if not self.attention_mechanisms:
+            raise ValueError("attention_mechanisms must be a non-empty list")
+        for m in self.attention_mechanisms:
+            AttentionMechanism(m)  # raises ValueError on unknown values
 
         if not self.batch_sizes or any(b < 1 for b in self.batch_sizes):
             raise ValueError("batch_sizes must be non-empty list of ints ≥ 1")
@@ -81,6 +96,7 @@ class ModelTrainingComboConfig:
     epochs: int | None = None
     gradient_checkpointing: bool | None = True  # WARNING! Is not used in any benchmark
     enable_compile: bool | None = MISSING
+    attention_mechanism: AttentionMechanism = AttentionMechanism.default
 
 
 @dataclass
