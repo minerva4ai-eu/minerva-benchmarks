@@ -1,0 +1,8 @@
+# Dashboard build (build_dashboard.py, minerva_data.py)
+pandas>=2.0
+numpy>=1.24
+
+# Legacy scripts only
+dash>=2.14
+plotly>=5.18
+matplotlib>=3.7

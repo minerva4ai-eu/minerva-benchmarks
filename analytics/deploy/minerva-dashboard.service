@@ -1,0 +1,18 @@
+# systemd unit for running the dashboard without Docker.
+#   sudo cp deploy/minerva-dashboard.service /etc/systemd/system/
+#   (edit the paths and User below)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now minerva-dashboard
+#   journalctl -u minerva-dashboard -f
+[Unit]
+Description=Minerva benchmarks dashboard
+After=network.target
+
+[Service]
+User=minerva
+WorkingDirectory=/opt/minerva-benchmarks/analytics
+ExecStart=/opt/minerva-benchmarks/analytics/.venv/bin/python serve.py --host 0.0.0.0 --port 8080
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

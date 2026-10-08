@@ -1,0 +1,12 @@
+# Start:  docker compose up -d --build        Logs: docker compose logs -f
+# The data and defaults are mounted, so editing them updates the live dashboard
+# within ~30 seconds without rebuilding the image.
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data:ro
+      - ./dashboard/defaults.json:/app/dashboard/defaults.json:ro
