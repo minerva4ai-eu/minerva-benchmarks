@@ -52,42 +52,29 @@ echo "######################################"
 echo "#     Running  Torchrun-DDP train    #"
 echo "######################################"
 
-# Launch Run
-srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
-    # Start monitoring in background
-    $gpu_plots_monitor_command &
-    monitor_pid=\$!
+# Start monitoring in background
+$gpu_plots_monitor_command &
+monitor_pid=\$!
 
-    # Optional: give the monitor time to initialize
-    sleep 5
-    $train_command
-    
-    kill -SIGTERM \"\$monitor_pid\"
+# Optional: give the monitor time to initialize
+sleep 5
 
-    # Wait for the monitor to clean up and exit
-    wait \"\$monitor_pid\"
-"
+# Each repeat is a fresh process; a failed repeat does not stop the next ones
+exit_code=0
+for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
+    echo "Running repeatid: $repeatid"
+    REPEAT_ID=$repeatid $train_command || {
+        rc=$?
+        echo "repeat $repeatid failed with exit code $rc"
+        exit_code=$rc
+    }
+done
 
-# # Launch Run
-# srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL \
-#   torchrun \
-#     --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-#     --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-#     finetune-ddp.py \
-#       --minerva_dir "${CURRENT_DIR}" \
-#       --model "${MODEL_PATH}" \
-#       --data "${DATASET_PATH}" \
-#       --output_dir "${OUTPUT_DIR}" \
-#       --batch_size $BATCH_SIZE \
-#       --max_length $MAX_MODEL_LENGTH \
-#       ${EPOCHS:+--epochs "$EPOCHS"} \
-#       ${STEPS:+--max_steps "$STEPS"} \
-#       --precision $PRECISION \
-#       --lr $LR \
-#       --gradient_accumulation_steps $GRAD_ACCUM \
-#       --dataloader_num_workers 8 \
-#       --dataset $DATASET
+# Terminate the monitor
+kill -SIGTERM "$monitor_pid"
 
+# Wait for the monitor to clean up and exit
+wait "$monitor_pid"
 
 echo "DDP Job Completed."
-
+exit "$exit_code"

@@ -60,6 +60,7 @@ import logging
 import os
 import signal
 import sys
+import traceback
 from dataclasses import dataclass
 from math import ceil
 from typing import TYPE_CHECKING, Any
@@ -610,12 +611,36 @@ def main(repeatid: int):
 
     finally:
         stop_flag["stop"] = True
-        torch.cuda.synchronize()
-
         del trainer, model, data, optim, scheduler, strategy, callbacks, plugins
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
+
+
+def _terminate_all_ranks() -> None:
+    """SIGTERM the local sibling ranks and the torchrun agent.
+
+    A rank cannot signal remote ranks directly. Killing the agent makes it drop out of the
+    c10d rendezvous, so the agents on the other nodes tear down their workers too.
+    """
+    me = os.getpid()
+    agent = os.getppid()
+    targets = []
+    try:
+        with open(f"/proc/{agent}/task/{agent}/children") as f:
+            targets = [int(p) for p in f.read().split()]
+    except OSError:
+        pass
+    for pid in targets:
+        if pid != me:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+    try:
+        os.kill(agent, signal.SIGTERM)
+    except OSError:
+        pass
 
 
 if __name__ == "__main__":
@@ -632,38 +657,44 @@ if __name__ == "__main__":
             sys.exit(1)
 
     else:
-        for repeatid in range(config.experiment.repeat):
-            try:
-                logger.info("_________________________________")
-                logger.info(f"Running repeatid: {repeatid}")
-                logger.info("_________________________________")
-                main(repeatid)
-            except Exception as e:
-                logger.exception("Fine-tuning failed with error!")
+        repeatid = int(os.environ.get("REPEAT_ID", 0))
+        try:
+            logger.info("_________________________________")
+            logger.info(f"Running repeatid: {repeatid}")
+            logger.info("_________________________________")
+            main(repeatid)
+        except Exception as e:
+            logger.exception("Fine-tuning failed with error!")
 
-                rank = int(os.environ.get("RANK", 0))  # Set by torchrun
-                try:
-                    save_error_summary(
-                        output_file=os.path.join(
-                            args.output_dir,
-                            f"repeatid-{repeatid}",
-                            f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
-                            f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
-                            f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
-                            f"-deviceid{rank}.json",
-                        ),
-                        rank=rank,
-                        model_name=args.model_name,
-                        dataset_name=args.dataset_name,
-                        framework=config.framework.name,
-                        parallelism_type=getattr(
-                            config.framework, "parallelism_name", "nemo_megatron_2506"
-                        ),
-                        batch_size=args.batch_size,
-                        gradient_accumulation=args.gradient_accumulation_steps,
-                        learning_rate=args.lr,
-                        exception_msg=str(e),
-                    )
-                except Exception:
-                    logger.exception("Failed to save error summary.")
-                raise e
+            rank = int(os.environ.get("RANK", 0))  # Set by torchrun
+
+            save_error_summary(
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"repeatid-{repeatid}",
+                    f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
+                    f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
+                    f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
+                    f"-deviceid{rank}.json",
+                ),
+                rank=rank,
+                model_name=args.model_name,
+                dataset_name=args.dataset_name,
+                framework=config.framework.name,
+                parallelism_type=getattr(
+                    config.framework, "parallelism_name", "nemo_megatron_2506"
+                ),
+                batch_size=args.batch_size,
+                gradient_accumulation=args.gradient_accumulation_steps,
+                learning_rate=args.lr,
+                exception_msg=str(e),
+            )
+            # Other ranks are blocked in NCCL collectives and normal interpreter shutdown
+            # can hang on the broken CUDA/NCCL state, so flush and hard-exit to let srun
+            # tear down the step.
+            traceback.print_exc()
+            logging.shutdown()
+            sys.stderr.flush()
+            sys.stdout.flush()
+            _terminate_all_ranks()
+            os._exit(1)

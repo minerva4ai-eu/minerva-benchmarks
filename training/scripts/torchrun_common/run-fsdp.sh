@@ -72,32 +72,23 @@ echo "######################################"
 echo "#     Running  Torchrun-FSDP train    #"
 echo "######################################"
 
-# Launch Run
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
-    # Start monitoring in background
-    $singularity_prefix $singularity_prefix $gpu_plots_monitor_command &
-    monitor_pid=\$!
+# Start monitoring in background
+$gpu_plots_monitor_command &
+monitor_pid=\$!
 
-    # Optional: give the monitor time to initialize
-    sleep 5
+# Optional: give the monitor time to initialize
+sleep 5
 
-    # Run training in foreground (this blocks until done)
-    $singularity_prefix torchrun \
-      --nnodes $NNODES --nproc_per_node $NPROC_PER_NODE \
-      --rdzv_id $JOB_ID --rdzv_backend c10d --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT} \
-      $TRAIN_SCRIPT \
-        --model $MODEL_PATH \
-        --data '$DATASET_PATH' \
-        --output_dir $OUTPUT_DIR/$SLURM_JOB_ID-min-overlap \
-        --batch_size $BATCH_SIZE \
-        --max_length $MAX_MODEL_LENGTH \
-        ${EPOCHS:+--epochs "$EPOCHS"} \
-        ${STEPS:+--max_steps "$STEPS"} \
-        --precision $PRECISION \
-        --lr $LR \
-        --gradient_accumulation_steps $GRAD_ACCUM \
-        --dataloader_num_workers 8 \
-        --dataset $DATASET
+# Each repeat is a fresh process; a failed repeat does not stop the next ones
+exit_code=0
+for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
+    echo "Running repeatid: $repeatid"
+    REPEAT_ID=$repeatid $train_command || {
+        rc=$?
+        echo "repeat $repeatid failed with exit code $rc"
+        exit_code=$rc
+    }
+done
 
     $train_command
 
@@ -108,4 +99,4 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --export=ALL bash -c "
 "
 
 echo "FSDP Job Completed."
-
+exit "$exit_code"

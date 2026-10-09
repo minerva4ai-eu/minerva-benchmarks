@@ -44,16 +44,29 @@ echo "######################################"
 echo "#     Running  Accelerate-DDP train  #"
 echo "######################################"
 
-srun --ntasks="$SLURM_NNODES" --ntasks-per-node=1 --export=ALL bash -c "
-    # Start monitoring in background
-    $gpu_plots_monitor_command &
-    monitor_pid=\$!
+# Start monitoring in background
+$gpu_plots_monitor_command &
+monitor_pid=\$!
 
-kill -SIGTERM \"\$monitor_pid\"
+# Optional: give the monitor time to initialize
+sleep 5
+
+# Each repeat is a fresh process; a failed repeat does not stop the next ones
+exit_code=0
+for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
+    echo "Running repeatid: $repeatid"
+    REPEAT_ID=$repeatid $train_command || {
+        rc=$?
+        echo "repeat $repeatid failed with exit code $rc"
+        exit_code=$rc
+    }
+done
+
+kill -SIGTERM "$monitor_pid"
 
 # Wait for the monitor to clean up and exit
 wait \"\$monitor_pid\"
 
 
 echo "DDP Job Completed."
-
+exit "$exit_code"

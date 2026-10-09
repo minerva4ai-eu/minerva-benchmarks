@@ -88,8 +88,16 @@ monitor_pid=$!
 # Optional: give the monitor time to initialize
 sleep 5
 
-# Run training in foreground (this blocks until done)
-$train_command
+# Each repeat is a fresh process; a failed repeat does not stop the next ones
+exit_code=0
+for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
+    echo "Running repeatid: $repeatid"
+    REPEAT_ID=$repeatid $train_command || {
+        rc=$?
+        echo "repeat $repeatid failed with exit code $rc"
+        exit_code=$rc
+    }
+done
 
 kill -SIGTERM "$monitor_pid"
 
@@ -101,4 +109,4 @@ if [ "${SLURM_PROCID}" -eq 0 ]; then
     rm "$HOSTFILE"
 fi
 echo "Accelerate-Deepspeed Job Completed."
-
+exit "$exit_code"
