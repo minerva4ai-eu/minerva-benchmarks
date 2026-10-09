@@ -36,16 +36,10 @@ DATASETS = ["alpaca", "squadv2", "tulu-3-sft-mixture"]
 
 ################################################################]
 AVAILABLE_FRAMEWORKS = [
-    "accelerate-cuda121",
     "accelerate-cuda128",
     "accelerate-cuda130",
-    "torchrun-cuda121",
     "torchrun-cuda128",
     "torchrun-cuda130",
-    # "deepspeed-accelerate-cuda121",
-    # "deepspeed-accelerate-cuda128",
-    # "deepspeed-accelerate-cuda130",
-    "deepspeed-cuda121",
     "deepspeed-cuda128",
     "deepspeed-cuda130",
     "megatron-nemo-2509",

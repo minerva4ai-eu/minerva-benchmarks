@@ -18,40 +18,18 @@ head_dim:             128      # 4096 / 32
 
 # attention
 attention_type:       gqa
-#sliding_window:       null     # v0.1 had 4096, v0.3 removes it
-
-# positional encoding
-#rope_theta:           1000000.0   # v0.3 increased from 10000 → 1M for longer context
-#max_position_embeddings: 32768
-
-# tokenizer
-vocab_size:           32770       # v0.3 expanded from 32000 → 32770
-tokenizer_type:       sentencepiece
-
-# normalization
-#norm_type:            rms_norm
-#norm_eps:             1.0e-5
-#activation_function:  silu     # SwiGLU
 
 # GPU requirements — constraint metadata
 #min_gpus: 1
 max_gpus_scale: 16
 frameworks_supported:
-  - torchrun-cuda121
   - torchrun-cuda128
   - torchrun-cuda130
-  - accelerate-cuda121
   - accelerate-cuda128
   - accelerate-cuda130
-  - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
 parallelism_supported:
   - fsdp
   - zero2
   - zero3
-
-
-combinations:
-  global_batch_sizes: [256]
-  batch_sizes: [4]
