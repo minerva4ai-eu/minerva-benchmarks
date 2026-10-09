@@ -18,8 +18,6 @@ head_dim:             128      # 3584 / 28
 # attention
 attention_type:       gqa
 
-# tokenizer
-vocab_size:           152064
 
 # GPU requirements — constraint metadata
 max_gpus_scale: 16
@@ -32,6 +30,3 @@ megatron_parallelism_supported:
   - tp
   - pp
 
-
-combinations:
-  precisions: ["bf16", "bf16_fp8"]

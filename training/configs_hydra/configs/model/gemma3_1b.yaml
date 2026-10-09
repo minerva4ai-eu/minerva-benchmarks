@@ -15,19 +15,14 @@ num_kv_heads:         1        # MQA — all query heads share 1 KV head
 head_dim:             256      # hidden_dim / num_attention_heads = 2048 / 8
 # attention
 attention_type:       mqa      # multi query attention
-# tokenizer
-vocab_size:           256000
-tokenizer_type:       sentencepiece
+
 # GPU requirements — constraint metadata
 max_gpus_scale: 16
 frameworks_supported:
-  - torchrun-cuda121
   - torchrun-cuda128
   - torchrun-cuda130
-  - accelerate-cuda121
   - accelerate-cuda128
   - accelerate-cuda130
-  - deepspeed-cuda121
   - deepspeed-cuda128
   - deepspeed-cuda130
 parallelism_supported:

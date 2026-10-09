@@ -383,10 +383,8 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
    ffn_intermediate_dim: 8192
    num_attention_heads: 32
    num_kv_heads: 32
-   vocab_size: 32064
    head_dim: 96
-   attention_type: mha
-   tokenizer_type: tiktoken
+
    max_gpus_scale: 8
    frameworks_supported:
      - accelerate

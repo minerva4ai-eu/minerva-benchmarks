@@ -8,7 +8,7 @@ training:
   optimizer: "adamw"
   gradient_checkpointing: True
   enable_compile: False
-  attention_mechanism: "default"   # default | flash_attn2 | flash_attn3
+  attention_mechanism: "default"       # default | flash_attn2 | flash_attn3
   epochs: null
   max_seq_len: -1
 
@@ -16,12 +16,83 @@ combinations:
   global_batch_sizes: [256]
   batch_sizes: [1, 2 , 4]
   precisions: ["bf16"]
-  #grad_accums: [8, 16]             # Auto-inferred based on world-size and global_batch_sizes
+  #grad_accums: [8, 16]                 # Auto-inferred based on world-size and global_batch_sizes
   gradient_checkpointing: [True]    
   enable_compile: [False]
   steps: [10]
   epochs: 
   lr: [2e-5]                        
-  optimizer: ["adamw"]              # Has no effect
+  optimizer: ["adamw"]                   # Has no effect
   max_seq_lens: [1024]
   attention_mechanisms: ["flash_attn2"]  # any of: default, flash_attn2, flash_attn3
+
+name: <name of model should the same as .yaml filename> # MUST BE same as the filename
+path: <path is read from environment variable inside .env>
+
+# transformer dims
+total_params_billions: -1       
+architecture_type: "dense vs moe"
+num_layers: -1
+hidden_dim: -1
+ffn_intermediate_dim: -1
+num_attention_heads: -1
+num_kv_heads: -1
+
+# This field specifies the maximum number of GPUs that the model can scale to.
+# The minimum number of gpus is inferred on generation of valid combos, based
+# on the model's requirements and the available hardware.
+max_gpus_scale: -1
+
+# This field specifies the supported frameworks for the model.
+# Not all models may support all frameworks listed in AVAILABLE_FRAMEWORKS in model_framework_dataset.py
+# E.g.:
+# frameworks_supported:
+#   - torchrun-cuda128
+#   - torchrun-cuda130
+#   - accelerate-cuda128
+#   - accelerate-cuda130
+#   - deepspeed-cuda128
+#   - deepspeed-cuda130
+#   - megatron-nemo-2509
+frameworks_supported:
+
+# This field specifies the supported parallelism strategies for the model, related to frameworks accelerate, pytorch, and deepspeed.
+# It refers to Data Parallelism strategies supported by the model like, DDP,FSDP, Zero2, Zero3, etc.
+# Important: Chosen supported parallelism strategies should align with the capabilities of the underlying frameworks and hardware.
+# Check for every 'frameworks_supported' what parallelism strategies are compatible.
+# Example:
+# parallelism_supported:
+#   - fsdp
+#   - zero2
+#   - zero3
+
+parallelism_supported:
+# Megatron Model Parallelism axes to be iterated 
+# over based on configuration available nodes and gpus
+# Example:
+# megatron_parallelism_supported:
+#   - tp
+#   - pp
+#   - dp
+# For a configuration with 2 nodes and 4 gpus per node, the megatron parallelism could be set accordingly
+# so that tp*pp*dp equals the total number of available GPUs.
+# -> [(4,2,1), (2,2,2), (4,1,2), etc.]
+# Then based on applied 'configs_hydra/constraints', configuration could be filtered out accordingly.
+# Check configs_hydra/dataclasses_hydra/framework MegatronParallelism and FrameworkConfig for available values
+# and types
+
+megatron_parallelism_supported:
+# This field specifies the allowed megatron parallelism configurations.
+# if a ceratin model parralellism axis need to be limited, it can be specified here.
+# For examples if we want tp, pp, or ep to be limite to a certain range, it can be specified here.
+# Then, the final composed benchmarks .yamls will only iterate over combinations of parallelism axes that are allowed.
+# E.g:
+# megatron_parallelism_allowed:
+#   tp: [4, 8]
+#   pp: [1, 2]
+# Or:
+# megatron_parallelism_allowed:
+#   ep: [4]
+#   tp: [4]
+megatron_parallelism_allowed:
+  tp: ["${arch.node.gpus_per_node}"]   # Fix TP for all experiments to be equal to the number of GPUs per node
