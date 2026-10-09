@@ -17,7 +17,7 @@ LOGO = HERE / "dashboard" / "assets" / "minerva-logo.png"
 COLUMNS = ["system_label", "model", "framework", "dataset", "concurrency", "nodes",
            "gpus", "tp", "pp", "max_len", "extra_args", "failed", "mem_peak_gb",
            "power_w", "ttft_ms", "itl_ms", "tpot_ms", "tok_s", "req_s",
-           "j_per_tok", "tok_s_per_gpu", "latency_score", "throughput_score",
+           "j_per_tok", "j_per_tok_all", "tok_s_per_gpu", "latency_score", "throughput_score",
            "energy_score", "global_score"]
 
 
@@ -48,7 +48,9 @@ def training_payload():
             "notes": notes}
 
 
-def main():
+def build_html():
+    """Return (html, number_of_inference_runs). Touches no files, so it also works from a
+    read-only container image."""
     df, notes = load_runs()
     scores = check_scores(df)  # before rounding, so the check is exact
     if not scores["ok"]:
@@ -56,6 +58,7 @@ def main():
                      f"dashboard guide (largest deviation {scores['max_error']:.2g}). "
                      "Check inference/generateScores.py.")
     df = df[COLUMNS].round(4)
+    df[["j_per_tok", "j_per_tok_all"]] = df[["j_per_tok", "j_per_tok_all"]].round(6)  # tiny values need more digits
     payload = {
         "columns": COLUMNS,
         "data": {c: [None if v != v else v for v in df[c].tolist()] for c in COLUMNS},
@@ -71,12 +74,17 @@ def main():
     else:
         print(f"Warning: {LOGO.relative_to(HERE)} not found; building without the logo")
         logo = ""
-    out = template.replace("__LOGO__", logo).replace("__DATA__", json.dumps(payload, separators=(",", ":")))
+    html = template.replace("__LOGO__", logo).replace("__DATA__", json.dumps(payload, separators=(",", ":")))
+    return html, len(df)
+
+
+def main():
+    html, n_runs = build_html()
     target = HERE / "dashboard" / "index.html"
     tmp = target.with_suffix(".tmp")
-    tmp.write_text(out, encoding="utf-8")
-    tmp.replace(target)
-    print(f"Wrote dashboard/index.html ({len(df)} runs, {len(out) // 1024} KB)")
+    tmp.write_text(html, encoding="utf-8")
+    tmp.replace(target)  # atomic: visitors never receive a half-written page
+    print(f"Wrote dashboard/index.html ({n_runs} runs, {len(html) // 1024} KB)")
 
 
 if __name__ == "__main__":

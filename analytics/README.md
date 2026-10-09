@@ -53,6 +53,29 @@ docker compose logs -f
 dashboard updates without a rebuild. Plotly is bundled into the image, so users do not need
 internet access.
 
+
+**Singularity / Apptainer.** The image is described in
+[`deploy/minerva-dashboard.def`](deploy/minerva-dashboard.def) and `deploy/singularity.sh` wraps the
+commands (it uses `apptainer` or `singularity`, whichever is installed). From this folder:
+
+```bash
+FAKEROOT=1 deploy/singularity.sh build     # creates minerva-dashboard.sif (omit FAKEROOT=1 if you are root)
+deploy/singularity.sh start                # background instance on http://<this-host>:8080
+deploy/singularity.sh status               # instance + /healthz;  also: logs, stop
+```
+
+Singularity shares the host network, so there is no port mapping: pass another port with
+`deploy/singularity.sh start 9090` if 8080 is taken. `data/` and `defaults.json` are mounted from the
+host, so editing them updates the live dashboard within ~30 seconds without rebuilding the image.
+The image is read-only and the server builds the page in memory, so nothing is written inside it.
+Plotly is bundled in the image, so users do not need internet access. Building needs internet access
+once (base image, pip, Plotly); on a site without it, build the `.sif` elsewhere and copy it over.
+
+To keep it running across crashes and reboots, install
+[`deploy/minerva-dashboard-singularity.service`](deploy/minerva-dashboard-singularity.service)
+(edit the user, paths and the `singularity`/`apptainer` binary at the top of the file).
+
+
 **Without Docker.**
 
 ```bash
@@ -100,6 +123,7 @@ any analysis script: `from minerva_data import load_runs`.
 | `serve.py` | Always-on server with automatic rebuilds (see above). |
 | `fetch_plotly.py` | Downloads Plotly.js for offline serving. |
 | `Dockerfile`, `docker-compose.yml`, `deploy/` | Deployment with Docker or systemd. |
+| `deploy/` | Singularity image definition (`minerva-dashboard.def`), helper script (`singularity.sh`) and systemd units. |
 | `build_dashboard.py` | CSVs to `index.html`. |
 | `minerva_data.py` | Shared loader and cleaner. |
 

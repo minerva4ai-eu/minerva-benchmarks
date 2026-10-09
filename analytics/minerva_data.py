@@ -75,6 +75,7 @@ def load_runs(data_dir: Path = DATA_DIR):
     ok = ~df.failed
     df["j_per_tok"] = (df.power_w / df.tok_s).where(ok)
     df["tok_s_per_gpu"] = (df.tok_s / df.gpus).where(ok)
+    df["j_per_tok_all"] = (df.power_w * df.gpus / df.tok_s).where(ok)  # J/token for all GPUs together
     df["system_label"] = system_label(df)
     df["extra_args"] = df.extra_args.fillna("none")
     return df, notes

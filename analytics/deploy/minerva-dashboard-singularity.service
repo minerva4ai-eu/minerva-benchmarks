@@ -1,0 +1,22 @@
+# systemd unit that keeps the Singularity/Apptainer image running (restarts after crashes and reboots).
+#   sudo cp deploy/minerva-dashboard-singularity.service /etc/systemd/system/minerva-dashboard.service
+#   (edit User, the paths and the singularity/apptainer binary below)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now minerva-dashboard
+#   journalctl -u minerva-dashboard -f
+[Unit]
+Description=Minerva benchmarks dashboard (Singularity)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=minerva
+WorkingDirectory=/opt/minerva-benchmarks/analytics
+ExecStart=/usr/bin/singularity run \
+    --bind /opt/minerva-benchmarks/analytics/data:/app/data:ro \
+    --bind /opt/minerva-benchmarks/analytics/dashboard/defaults.json:/app/dashboard/defaults.json:ro \
+    /opt/minerva-benchmarks/analytics/minerva-dashboard.sif --host 0.0.0.0 --port 8080
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

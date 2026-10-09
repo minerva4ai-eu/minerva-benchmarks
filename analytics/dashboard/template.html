@@ -188,10 +188,11 @@ const METRICS={
  ttft_ms:{g:MG.l,l:'Time to first token (TTFT)',u:'ms',b:-1,d:'Time from sending a request until its first token arrives.'},
  itl_ms:{g:MG.l,l:'Inter-token latency (ITL)',u:'ms',b:-1,d:'Average time between consecutive generated tokens.'},
  tpot_ms:{g:MG.l,l:'Time per output token (TPOT)',u:'ms',b:-1,d:'Average time to generate each output token after the first one.'},
- j_per_tok:{g:MG.e,l:'Energy per token',u:'J/token',b:-1,d:'Average power (P) divided by output throughput (TPS), in joules per token. Derived by this dashboard; it is the inverse of the energy score.'},
+ j_per_tok:{g:MG.e,l:'Energy per token, per GPU',u:'J/token',b:-1,d:'Average power per GPU (P) divided by output throughput (TPS), in joules per token. Derived by this dashboard; it is the inverse of the energy score and does not depend on how many GPUs were used.'},
+ j_per_tok_all:{g:MG.e,l:'Energy per token, all GPUs',u:'J/token',b:-1,d:'Energy the whole run spends per generated token: average power per GPU × number of GPUs ÷ output throughput. Derived by this dashboard.'},
  power_w:{g:MG.e,l:'Average power',u:'W',b:-1,d:'Average power (P) reported during the run. It appears to be per GPU.'},
  mem_peak_gb:{g:MG.e,l:'Peak GPU memory',u:'GB',b:-1,d:'Highest GPU memory use reported during the run.'}};
-Object.entries({global_score:'G',latency_score:'L',throughput_score:'T',energy_score:'E',tok_s:'TPS',req_s:'RPS',ttft_ms:'TTFT',itl_ms:'ITL',tpot_ms:'TPOT',power_w:'P',j_per_tok:'J'}).forEach(([k,s])=>METRICS[k].s=s);
+Object.entries({global_score:'G',latency_score:'L',throughput_score:'T',energy_score:'E',tok_s:'TPS',req_s:'RPS',ttft_ms:'TTFT',itl_ms:'ITL',tpot_ms:'TPOT',power_w:'P',j_per_tok:'J',j_per_tok_all:'Jall'}).forEach(([k,s])=>METRICS[k].s=s);
 const SYSCOL={'Adastra MI250':'#D55E00','Adastra MI300':'#E69F00','LUMI-G':'#CC79A7','Jean Zay H100':'#0072B2','Leonardo Booster':'#56B4E9','MareNostrum 5':'#009E73'};
 const PAL=['#4C78A8','#F58518','#54A24B','#B279A2','#E45756','#72B7B2','#EECA3B','#9D755D','#BAB0AC'];
 const SYM=['circle','diamond','square','cross','triangle-up'];
@@ -234,16 +235,17 @@ const aggO=[['best','Best run'],['median','Median'],['mean','Mean']];
 const isBest=v=>v.agg==='best';
 const catD=['system_label','model','framework','dataset'];
 const TABS={
- compare:{t:'Compare',c:[['metric','Metric',metO],['x','Group by',opt(catD)],['color','Color by',opt(catD)],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest]],d:{metric:'tok_s',x:'model',color:'system_label',agg:'best',bb:'self'}},
+ compare:{t:'Compare',c:[['metric','Metric',metO],['x','Group by',opt(catD)],['color','Color by',opt(catD)],['sort','Sort bars',[['name','Alphabetical'],['best','Best value first']]],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest]],d:{metric:'tok_s',x:'model',color:'system_label',sort:'name',agg:'best',bb:'self'}},
  scale:{t:'Scaling',c:[['metric','Metric',metO],['x','Scale across',opt(['concurrency','gpus','nodes','tp','pp','max_len'])],['by','One line per',opt(catD)],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest],['log','Log scale']],d:{metric:'tok_s',x:'concurrency',by:'system_label',agg:'best',bb:'self',log:false}},
  trade:{t:'Trade-offs',c:[['x','X axis',metO],['y','Y axis',metO],['color','Color by',opt(catD)],['agg','Show',[['all','Every run'],...aggO]],['bb','Best run by',bbO,isBest],['logx','Log X'],['logy','Log Y']],d:{x:'tok_s',y:'itl_ms',color:'system_label',agg:'all',bb:'global_score',logx:false,logy:false}},
+ heat:{t:'Heatmap',c:[['metric','Metric',metO],['cols','Columns',opt(['framework','gpus','concurrency','nodes','max_len','dataset','model','system_label'])],['rows','Rows',[['sm','System and model'],['s','System'],['m','Model']]],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest],['ratio','Ratio of two columns']],d:{metric:'tok_s',cols:'framework',rows:'sm',agg:'best',bb:'self',ratio:false}},
  data:{t:'Data',c:[],d:{}}};
 const S={tab:'compare',sel:Object.fromEntries(Object.keys(DIMS).map(k=>[k,new Set()])),failed:false,show:100,sort:['tok_s',-1],ctl:{},touched:new Set()};
 let autoM=null;
 Object.keys(TABS).forEach(k=>S.ctl[k]={...TABS[k].d});
 
 // A default filter steps aside when the chart varies by that dimension, unless the user set it themselves.
-const usedDims=()=>{const c=S.ctl[S.tab];return({compare:[c.x,c.color],scale:[c.x,c.by],trade:[c.color],data:[]})[S.tab]};
+const usedDims=()=>{const c=S.ctl[S.tab];return({compare:[c.x,c.color],scale:[c.x,c.by],trade:[c.color],heat:[c.cols],data:[]})[S.tab]};
 // Some dimensions move together: scaling across nodes (or tensor/pipeline parallelism) changes the GPU count too.
 const LINK={nodes:['gpus'],tp:['gpus'],pp:['gpus'],gpus:['nodes']};
 const withLinked=u=>[...new Set([...u,...u.flatMap(k=>LINK[k]||[])])];
@@ -269,7 +271,13 @@ function mixNote(d,used,extra=''){
   const t=[...pm,m.length?`This view mixes ${m.join(', ')}. Use the filters to compare like with like.`:'',extra].filter(Boolean).join(' ');
   $('#note').textContent=t;$('#note').hidden=!t}
 
-function compare(d){const c=S.ctl.compare,M=METRICS[c.metric],xs=uniq(d,c.x),cs=uniq(d,c.color);
+// Order of the X categories: natural order, or best value first (as the old energy plot did).
+function orderX(xs,cs,d,c,M){
+  if(c.sort!=='best')return xs;
+  const best=xv=>{const v=cs.map(cv=>aggRuns(d.filter(r=>r[c.x]===xv&&r[c.color]===cv),c.metric,c.agg,c.bb)).filter(y=>y!=null);return v.length?(M.b>0?Math.max(...v):Math.min(...v)):null};
+  const sc=new Map(xs.map(x=>[x,best(x)]));
+  return [...xs].sort((a,b)=>{const x=sc.get(a),y=sc.get(b);return x==null?1:y==null?-1:M.b>0?y-x:x-y})}
+function compare(d){const c=S.ctl.compare,M=METRICS[c.metric],cs=uniq(d,c.color),xs=orderX(uniq(d,c.x),cs,d,c,M);
   const tr=cs.map(cv=>{const g=d.filter(r=>r[c.color]===cv);
     const cell=xs.map(xv=>g.filter(r=>r[c.x]===xv));
     const ys=cell.map(s=>aggRuns(s,c.metric,c.agg,c.bb));
@@ -278,7 +286,7 @@ function compare(d){const c=S.ctl.compare,M=METRICS[c.metric],xs=uniq(d,c.x),cs=
   mixNote(d,[c.x,c.color]);
   const grp=c.x===c.color?DIMS[c.x].toLowerCase():`${DIMS[c.x].toLowerCase()} and ${DIMS[c.color].toLowerCase()}`;
   info(how(c.agg,c.bb,c.metric,'bar',grp),[{k:c.metric,role:'Plotted metric'},...bestItem(c)]);
-  Plotly.newPlot('plot',tr,{...base(),barmode:c.x===c.color?'overlay':'group',xaxis:ax({type:'category'}),yaxis:ax({title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
+  Plotly.newPlot('plot',tr,{...base(),barmode:c.x===c.color?'overlay':'group',xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String)}),yaxis:ax({title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
 
 function scale(d){const c=S.ctl.scale,M=METRICS[c.metric],xs=uniq(d,c.x),ls=uniq(d,c.by);
   const tr=ls.map(lv=>{const g=d.filter(r=>r[c.by]===lv);
@@ -314,8 +322,8 @@ function trade(d){const c=S.ctl.trade,X=METRICS[c.x],Y=METRICS[c.y],fw=ALL.frame
   mixNote(d,all?[c.color,'concurrency','gpus','nodes','max_len']:[c.color,'model','dataset','framework','concurrency','gpus','nodes'],uniq(d,'framework').length>1?`Marker shape shows the framework (${fw.map((f,i)=>`${SYM[i%SYM.length]}: ${f}`).join(', ')}).`:'');
   Plotly.newPlot('plot',tr,{...base(),xaxis:ax({type:c.logx?'log':'linear',title:{text:`${X.l} (${X.u})`}}),yaxis:ax({type:c.logy?'log':'linear',title:{text:`${Y.l} (${Y.u})`}})},cfg)}
 
-const TC=[['system_label','System'],['model','Model'],['framework','Framework'],['dataset','Dataset'],['concurrency','Concurrency'],['nodes','Nodes'],['gpus','GPUs'],['tp','TP'],['pp','PP'],['max_len','Max length'],['tok_s','Tokens/s'],['req_s','Requests/s'],['ttft_ms','TTFT ms'],['itl_ms','ITL ms'],['power_w','Power W'],['latency_score','Latency score'],['throughput_score','Throughput score'],['energy_score','Energy score'],['global_score','Global score']];
-const isN=c=>!catD.includes(c);
+const TC=[['system_label','System'],['model','Model'],['framework','Framework'],['dataset','Dataset'],['concurrency','Concurrency'],['nodes','Nodes'],['gpus','GPUs'],['tp','TP'],['pp','PP'],['max_len','Max length'],['tok_s','Tokens/s'],['req_s','Requests/s'],['ttft_ms','TTFT ms'],['itl_ms','ITL ms'],['power_w','Power W'],['latency_score','Latency score'],['throughput_score','Throughput score'],['energy_score','Energy score'],['global_score','Global score'],['extra_args','Extra arguments']];
+const isN=c=>!catD.includes(c)&&c!=='extra_args';
 function table(d){$('#note').hidden=true;$('#info').hidden=true;const[k,dir]=S.sort;
   const s=[...d].sort((a,b)=>a[k]==null?1:b[k]==null?-1:(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
   $('#table').innerHTML=`<div class="tw"><table><thead><tr>${TC.map(([c,l])=>`<th class="${isN(c)?'n':''}" data-sort="${c}" aria-sort="${k===c?(dir>0?'ascending':'descending'):'none'}">${l}${k===c?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${
@@ -334,6 +342,7 @@ const MATH={
  throughput_score:`<math display="block"><mrow>${T}<mo>=</mo><mfrac><mn>2</mn><mrow><mfrac><mn>1</mn><mi>TPS</mi></mfrac><mo>+</mo><mfrac><mn>1</mn><mi>RPS</mi></mfrac></mrow></mfrac></mrow></math>`,
  energy_score:`<math display="block"><mrow>${E}<mo>=</mo><mfrac><mi>TPS</mi><mi>P</mi></mfrac></mrow></math>`,
  tok_s_per_gpu:`<math display="block"><mfrac><mi>TPS</mi><mi>N</mi></mfrac></math>`,
+ j_per_tok_all:`<math display="block"><mrow><msub><mi>J</mi><mtext>all</mtext></msub><mo>=</mo><mfrac><mrow><mi>P</mi><mo>×</mo><mi>N</mi></mrow><mi>TPS</mi></mfrac></mrow></math>`,
  j_per_tok:`<math display="block"><mrow><mi>J</mi><mo>=</mo><mfrac><mi>P</mi><mi>TPS</mi></mfrac><mo>=</mo><mfrac><mn>1</mn>${E}</mfrac></mrow></math>`};
 const SYM_SC=[['G','Global score',''],['L','Latency score','lat'],['T','Throughput score','thr'],['E','Energy score','en']];
 const SYM_ME=[['TPS','Output throughput','tokens/s'],['RPS','Request throughput','requests/s'],['P','Average power','W'],['TTFT','Time to first token','ms'],['ITL','Inter-token latency','ms'],['TPOT','Time per output token','ms'],['N','GPUs used',''],['J','Energy per token','J/token']];
@@ -387,7 +396,7 @@ function draw(){const d=filtered();syncUI(d);
   const isT=S.tab==='data';
   $('#empty').hidden=d.length>0;$('#plot').hidden=isT||!d.length;$('#table').hidden=!isT||!d.length;
   if(!d.length){$('#note').hidden=true;$('#info').hidden=true;return}
-  ({compare,scale,trade,data:table})[S.tab](d)}
+  ({compare,scale,trade,heat,data:table})[S.tab](d)}
 
 /* ===================== Training workspace ===================== */
 const TG={t:'Throughput and time',e:'Energy',m:'Memory and utilization',l:'Loss'};
@@ -430,7 +439,7 @@ const tCat=['model','parallelism','system_label','dataset','framework','precisio
 const tSw=[['self','The plotted metric'],...tBbO];
 const idealOK=v=>['gpus','nodes'].includes(v.x)&&v.metric==='tr_tok_s';
 const TTABS={
- compare:{t:'Compare',c:[['metric','Metric',tMetO],['x','Group by',tOpt([...tCat,'gpus','nodes','batch_size','accum','max_len'])],['color','Color by',tOpt([...tCat,'gpus','batch_size','max_len'])],['agg','Show',aggO],['bb','Best run by',tSw,isBest]],d:{metric:pick('tr_tok_s'),x:'model',color:'parallelism',agg:'best',bb:'self'}},
+ compare:{t:'Compare',c:[['metric','Metric',tMetO],['x','Group by',tOpt([...tCat,'gpus','nodes','batch_size','accum','max_len'])],['color','Color by',tOpt([...tCat,'gpus','batch_size','max_len'])],['sort','Sort bars',[['name','Alphabetical'],['best','Best value first']]],['agg','Show',aggO],['bb','Best run by',tSw,isBest]],d:{metric:pick('tr_tok_s'),x:'model',color:'parallelism',sort:'name',agg:'best',bb:'self'}},
  scale:{t:'Scaling',c:[['metric','Metric',tMetO],['x','Scale across',tOpt(['gpus','nodes','batch_size','accum','max_len'])],['by','One line per',tOpt(tCat)],['agg','Show',aggO],['bb','Best run by',tSw,isBest],['log','Log scale'],['ideal','Ideal scaling',null,idealOK]],d:{metric:pick('tr_tok_s'),x:'gpus',by:'model',agg:'best',bb:'self',log:false,ideal:true}},
  trade:{t:'Trade-offs',c:[['x','X axis',tMetO],['y','Y axis',tMetO],['color','Color by',tOpt(tCat)],['logx','Log X'],['logy','Log Y']],d:{x:pick('tr_tok_s'),y:pick('tr_peak_mem_gb'),color:'model',logx:true,logy:false}},
  map:{t:'Run map',c:[['metric','Metric',tMetO],['cols','Columns',tOpt(['batch_size','accum','max_len','gpus','parallelism','model'])],['agg','Show',aggO],['bb','Best run by',tSw,isBest]],d:{metric:pick('tr_tok_s'),cols:'batch_size',agg:'best',bb:'self'}},
@@ -460,7 +469,7 @@ function tNote(d,used,extra=''){
 const tBest=c=>c.agg==='best'&&!own(c.agg,c.bb,c.metric)?[{k:c.bb,role:'Picks the best run'}]:[];
 const andJ=a=>a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:a[0];
 
-function tCompare(d){const c=TS.ctl.compare,M=METRICS[c.metric],xs=uniq(d,c.x),cs=uniq(d,c.color);
+function tCompare(d){const c=TS.ctl.compare,M=METRICS[c.metric],cs=uniq(d,c.color),xs=orderX(uniq(d,c.x),cs,d,c,M);
   const tr=cs.map(cv=>{const g=d.filter(r=>r[c.color]===cv),cell=xs.map(xv=>g.filter(r=>r[c.x]===xv)),ys=cell.map(s=>aggRuns(s,c.metric,c.agg,c.bb));
     return{type:'bar',name:String(cv),x:xs.map(String),y:ys,marker:{color:tColor(c.color,cv)},customdata:ys.map((y,i)=>[fmt(y),cell[i].length]),
       hovertemplate:`<b>${esc(cv)}</b><br>%{x}<br>%{customdata[0]} ${M.u}<br>from %{customdata[1]} runs<extra></extra>`}});
@@ -520,6 +529,34 @@ function tTable(d){$('#t-note').hidden=true;$('#t-info').hidden=true;const[k,dir
 function tCsv(d){const q=v=>v==null?'':/[",\n]/.test(v)?`"${String(v).replace(/"/g,'""')}"`:v;
   const t=[TX.columns.join(','),...d.map(r=>TX.columns.map(c=>q(r[c])).join(','))].join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='minerva-training-filtered-runs.csv';a.click()}
+
+// Heatmap: rows = system and/or model, columns = any dimension, cell = metric. Replaces the old model-size/framework heatmap script.
+const HROWS={sm:['system_label','model'],s:['system_label'],m:['model']};
+const FWORDER=['vllm','sglang'];
+function heat(d){const c=S.ctl.heat,M=METRICS[c.metric],rk=HROWS[c.rows].filter(k=>k!==c.cols);
+  let cols=uniq(d,c.cols);
+  if(c.cols==='framework')cols=[...FWORDER.filter(f=>cols.includes(f)),...cols.filter(f=>!FWORDER.includes(f))];
+  const lab=r=>rk.length?rk.map(k=>r[k]).join(', '):'All runs';
+  const rl=[...new Set(d.map(lab))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const val=(l,cv)=>{const cell=d.filter(r=>lab(r)===l&&r[c.cols]===cv);return[aggRuns(cell,c.metric,c.agg,c.bb),cell.length]};
+  const ratio=c.ratio&&cols.length===2,[A,B]=cols,z=[],txt=[],cd=[],ex=[];
+  if(c.ratio&&!ratio)ex.push(`Ratio needs exactly two columns (found ${cols.length}), so the values are shown instead.`);
+  rl.forEach(l=>{
+    if(ratio){const[a,na]=val(l,A),[b,nb]=val(l,B),q=a!=null&&b!=null&&a>0&&b>0?a/b:null;
+      z.push([q==null?null:Math.log2(q)]);txt.push([q==null?'':q.toFixed(2)+'×']);cd.push([`${esc(A)}: ${fmt(a)} (${na} runs)<br>${esc(B)}: ${fmt(b)} (${nb} runs)`])}
+    else{const zr=[],tx=[],cn=[];cols.forEach(cv=>{const[v,n]=val(l,cv);zr.push(v);tx.push(v==null?'':fmt(v));cn.push(n)});z.push(zr);txt.push(tx);cd.push(cn)}});
+  const x=ratio?[`${A} ÷ ${B}`]:cols.map(String);
+  const tr={type:'heatmap',x,y:rl,z,text:txt,customdata:cd,texttemplate:'%{text}',xgap:3,ygap:3,hoverongaps:false,
+    colorscale:ratio?[[0,'#D55E00'],[.5,css('--paper')],[1,'#2557D6']]:[[0,css('--sel')],[1,'#2557D6']],
+    colorbar:{thickness:12,title:{text:ratio?'ratio':M.u}}};
+  if(ratio){const m=Math.max(.1,...z.flat().filter(v=>v!=null).map(Math.abs)),tv=[-3,-2,-1,0,1,2,3].filter(v=>Math.abs(v)<=m+1e-9);
+    Object.assign(tr,{zmin:-m,zmax:m,zmid:0,hovertemplate:`<b>%{y}</b><br>${esc(A)} ÷ ${esc(B)}: %{text}<br>%{customdata}<extra></extra>`});
+    Object.assign(tr.colorbar,{tickvals:tv,ticktext:tv.map(v=>`${2**v}×`)})}
+  else tr.hovertemplate=`<b>%{y}</b><br>${DIMS[c.cols]}: %{x}<br>%{text} ${M.u}<br>from %{customdata} runs<extra></extra>`;
+  mixNote(d,[c.cols,...rk],ex.join(' '));
+  const grp=andJ([...rk.map(dn),dn(c.cols)]);
+  info(how(c.agg,c.bb,c.metric,'cell',grp)+(ratio?` Cells show ${esc(A)} ÷ ${esc(B)}: above 1× means ${esc(A)} has the higher ${nm(c.metric)}, below 1× means ${esc(B)} has.`:' Empty cells were not measured.'),[{k:c.metric,role:'Colored and labeled'},...bestItem(c)]);
+  Plotly.newPlot('plot',[tr],{...base(),margin:{t:24,r:16,b:56,l:64},xaxis:ax({type:'category',categoryorder:'array',categoryarray:x,title:{text:ratio?'':DIMS[c.cols]}}),yaxis:ax({type:'category',categoryorder:'array',categoryarray:rl,autorange:'reversed'})},cfg)}
 
 const TSYM=[['TPS','Training throughput','tokens/s'],['P','Average power per GPU','W'],['N','GPUs used',''],['t','Execution time','h'],['η','Energy efficiency','tokens/J']];
 function tGuideHTML(){

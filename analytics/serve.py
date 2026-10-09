@@ -40,8 +40,7 @@ def signature():
 
 def rebuild():
     global page
-    build_dashboard.main()
-    html = (DASH / "index.html").read_text(encoding="utf-8")
+    html, _ = build_dashboard.build_html()
     if vendor:  # serve Plotly ourselves so browsers do not need internet access
         html = CDN.sub("/vendor/plotly.min.js", html)
     raw = html.encode("utf-8")

@@ -1,4 +1,4 @@
-# systemd unit for running the dashboard without Docker.
+# systemd unit for running the dashboard without a container.
 #   sudo cp deploy/minerva-dashboard.service /etc/systemd/system/
 #   (edit the paths and User below)
 #   sudo systemctl daemon-reload && sudo systemctl enable --now minerva-dashboard
