@@ -13,7 +13,8 @@ class RankZeroFilter(logging.Filter):
     """Optional: Restrict log records to Rank 0 in distributed setups."""
 
     def filter(self, record):
-        return int(os.environ.get("RANK", 0)) == 0
+        # Errors from any rank must reach the log file; otherwise failures on rank != 0 vanish.
+        return record.levelno >= logging.ERROR or int(os.environ.get("RANK", 0)) == 0
 
 
 class RankAdapter(logging.LoggerAdapter):

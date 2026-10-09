@@ -7,7 +7,7 @@ training:
   lr: 2e-5
   optimizer: "adamw"
   gradient_checkpointing: True
-  enable_compile: True
+  enable_compile: False
   attention_mechanism: "default"   # default | flash_attn2 | flash_attn3
   epochs: null
   max_seq_len: -1
@@ -21,7 +21,7 @@ combinations:
   enable_compile: [False]
   steps: [10]
   epochs: 
-  lr: [2e-5]                        # Has no effect, by default checkpointing is enabled for all  
-  optimizer: ["adamw"]              # Has no effect, by default checkpointing is enabled for all
+  lr: [2e-5]                        
+  optimizer: ["adamw"]              # Has no effect
   max_seq_lens: [1024]
   attention_mechanisms: ["flash_attn2"]  # any of: default, flash_attn2, flash_attn3

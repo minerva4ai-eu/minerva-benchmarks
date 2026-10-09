@@ -158,6 +158,7 @@ def build_srun_env():
         if cfg.framework.name.startswith(("deepspeed", "deepspeed-accelerate"))
         else "",
         "PYTHONPATH": pythonpath,
+        "REPEATS": str(cfg.experiment.repeat),
     }
 
     if cfg.machine.env:

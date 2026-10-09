@@ -429,7 +429,7 @@ def parse_args():
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path("benchmark-runs-MN5-singularity"),
+        default=Path("./"),
         help="Root containing machine/date/job directories",
     )
     parser.add_argument(

@@ -206,37 +206,37 @@ def main(repeatid: int):
 
 
 if __name__ == "__main__":
-    for repeatid in range(config.experiment.repeat):
+    repeatid = int(os.environ.get("REPEAT_ID", 0))
+    try:
+        logger.info("_________________________________")
+        logger.info(f"Running repeatid: {repeatid}")
+        logger.info("_________________________________")
+        main(repeatid)
+    except Exception as e:
+        logger.exception("Fine-tuning failed with error!")
         try:
-            logger.info("_________________________________")
-            logger.info(f"Running repeatid: {repeatid}")
-            logger.info("_________________________________")
-            main(repeatid)
-        except Exception as e:
-            logger.exception("Fine-tuning failed with error!")
-            try:
-                _cfg = construct_config(get_deepspeed_parser().parse_args())
-                save_error_summary(
-                    output_file=os.path.join(
-                        _cfg.output_dir,
-                        f"repeatid-{repeatid}",
-                        f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
-                        f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
-                        f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
-                        f"-deviceid{rank}.json",
-                    ),
-                    rank=rank,
-                    model_name=_cfg.model_name,
-                    dataset_name=_cfg.dataset_name,
-                    framework=config.framework.name,
-                    parallelism_type=getattr(
-                        config.framework, "parallelism_name", "deepspeed"
-                    ),
-                    batch_size=_cfg.batch_size,
-                    gradient_accumulation=_cfg.gradient_accumulation_steps,
-                    learning_rate=_cfg.lr,
-                    exception_msg=str(e),
-                )
-            except Exception:
-                logger.exception("Failed to save error summary.")
-            raise e
+            _cfg = construct_config(get_deepspeed_parser().parse_args())
+            save_error_summary(
+                output_file=os.path.join(
+                    _cfg.output_dir,
+                    f"repeatid-{repeatid}",
+                    f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
+                    f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
+                    f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
+                    f"-deviceid{rank}.json",
+                ),
+                rank=rank,
+                model_name=_cfg.model_name,
+                dataset_name=_cfg.dataset_name,
+                framework=config.framework.name,
+                parallelism_type=getattr(
+                    config.framework, "parallelism_name", "deepspeed"
+                ),
+                batch_size=_cfg.batch_size,
+                gradient_accumulation=_cfg.gradient_accumulation_steps,
+                learning_rate=_cfg.lr,
+                exception_msg=str(e),
+            )
+        except Exception:
+            logger.exception("Failed to save error summary.")
+        raise e
