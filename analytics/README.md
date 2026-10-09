@@ -1,8 +1,7 @@
 # Minerva analytics
 
 Explore the inference benchmark results in [`data/`](data/) without installing anything:
-open [`dashboard/index.html`](dashboard/index.html) in a browser, or publish the
-`dashboard/` folder with GitHub Pages.
+open [`dashboard/index.html`](dashboard/index.html) in a browser.
 
 ## Default filters
 
