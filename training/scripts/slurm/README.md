@@ -29,7 +29,8 @@ Generates valid benchmark configurations from a Hydra machine profile, saves the
 | `--dry-run` | Off | Generate and save configs without submitting. |
 | `--configs-path PATH` | `./configs_hydra/configs` | Hydra config directory. |
 | `--config-name NAME` | `base` | Profile to compose. Generated combinations require a non-`base` profile. |
-| `--profile NAME` | None | Benchmark profile from `configs_hydra/configs/profile/` (file name without `.yaml`), merged on top of `--config-name`. See [Benchmark Profiles](#benchmark-profiles). |
+| `--profile NAMES` | None | Benchmark profile(s) from `configs_hydra/configs/profile/`, merged on top of `--config-name`: a file name without `.yaml`, a comma-separated list, or a directory name (runs every profile inside it). See [Benchmark Profiles](#benchmark-profiles). |
+| `--per-profile-jobs` | Off | With multiple profiles, submit one job per profile instead of a single job with all of them. |
 | `--runs-dir PATH` | `benchmark-runs/` | Base directory for generated configs and results; `-<config-name>` and, if set, `-<profile>` are appended. |
 | `--per-model-jobs` | Off | Submit one job per model. |
 | `--per-nodes-jobs` | Off | Submit one job per node count. |
@@ -37,7 +38,7 @@ Generates valid benchmark configurations from a Hydra machine profile, saves the
 | `--frameworks NAMES` | All | Comma-separated framework-name filter. |
 | `--datasets NAMES` | All | Comma-separated dataset-name filter. |
 | `--yaml PATH` | None | Run an existing `BenchmarkConfig` YAML; may be repeated. |
-| `--nnodes COUNT` | Config maximum | Override node count, if it is not less than the maximum required by the selected configs. |
+| `--nnodes COUNT` | Config maximum | Override node count, if it is not less than the maximum required by the selected configs. Cannot be combined with multiple profiles. |
 
 Examples:
 
@@ -74,6 +75,7 @@ How `--profile` is applied:
 3. The profile's `selection.models`, `selection.frameworks` and `selection.datasets` restrict those axes, and `model.combinations` (e.g. `global_batch_sizes`, `batch_sizes`, `precisions`) overrides the combination grid. An axis the profile does not mention is left unrestricted.
 4. CLI filters (`--models`, `--frameworks`, `--datasets`) are applied first. A profile `selection` entry that is not among the remaining choices raises an error.
 5. If the profile file does not exist, the CLI fails and lists the available profiles.
+6. `--profile a,b` or `--profile <directory>` composes each profile separately (configs are written under `<runs-dir>-<config-name>/<profile>`). By default all of them go into one job (its job-level logs are under `.../<profile file names joined with '+'>`); use `--per-profile-jobs` for one job per profile. Either way, each profile has its own results folder, `<runs-dir>-<config-name>/<profile>/<machine>/<date>/<jobid>/`.
 
 Example profile:
 

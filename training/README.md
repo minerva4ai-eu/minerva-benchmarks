@@ -136,10 +136,8 @@ training/
 ├── envs/                             # Environment definitions (see envs/README.md)
 │   ├── cli/                          # CLI env (pyproject.toml, Python 3.11)
 │   └── benchmarks/                   # Training envs
-│       ├── cuda121-flash-attn/       # CUDA 12.1
 │       ├── cuda128-flash-attn/       # CUDA 12.8
 │       ├── cuda130-flash-attn/       # CUDA 13.0
-│       ├── cuda130-flash-attn3/      # CUDA 13.0 + FlashAttention 3
 │       └── nemo-2509/                # NeMo 25.09 container (Megatron)
 │
 ├── configs_hydra/                    # Hydra-based configuration system
