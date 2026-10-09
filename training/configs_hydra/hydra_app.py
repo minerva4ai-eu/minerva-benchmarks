@@ -445,6 +445,12 @@ def _multi_parallelism_framework(
                 gpus_per_node=tmp_cfg.arch.node.gpus_per_node,
                 nnodes=n,
                 axes=tmp_cfg.model.megatron_parallelism_supported,
+                allowed={
+                    k: list(v)
+                    for k, v in (
+                        tmp_cfg.model.megatron_parallelism_allowed or {}
+                    ).items()
+                },
             )
             # print(f"{parallelism_combinations[0]}")
             for c in parallelism_combinations:

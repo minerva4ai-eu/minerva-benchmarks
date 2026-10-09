@@ -173,7 +173,11 @@ def build_srun_env():
 
 
 def build_sbatch_env(
-    machine: MachineConfig, slurm: SlurmConfig, yamls: list[str], results_dir: str
+    machine: MachineConfig,
+    slurm: SlurmConfig,
+    yamls: list[str],
+    results_dir: str,
+    yamls_results_dirs: list[str] | None = None,
 ) -> dict[str, str]:
 
     # 1. Create results directory if it doesn't exist
@@ -183,8 +187,10 @@ def build_sbatch_env(
     manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
     while os.path.exists(manifest_path):
         manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
+    # Each line is "<yaml path>\t<results dir of that yaml's profile>"
+    workdirs = yamls_results_dirs or [results_dir] * len(yamls)
     with open(manifest_path, "w") as f:
-        f.write("\n".join(yamls) + "\n")
+        f.write("".join(f"{y}\t{w}\n" for y, w in zip(yamls, workdirs)))
 
     # 3. Build environment safely
     env = os.environ.copy()
@@ -238,6 +244,7 @@ def submit_job(
     runs_dir: str,
     run_date: str,
     nnodes: int,
+    cfgs_runs_dirs: list[str] | None = None,
 ) -> str:
 
     job_id = ""
@@ -262,6 +269,10 @@ def submit_job(
     logger.debug("Max nodes = %s", job_nodes)
     # Get system env configs
     minerva_dir = os.path.join(runs_dir, m.name, run_date)  # writes cfg profiles
+    # Each config's results go under the runs_dir of its own profile
+    yamls_results_dirs = [
+        os.path.join(rd, m.name, run_date) for rd in (cfgs_runs_dirs or [])
+    ] or None
     sbatch_logs_dir = f"{minerva_dir}/%j/sbatch-slurm-logs"
     logger.debug("sbatch_logs_dir = %s", sbatch_logs_dir)
 
@@ -305,7 +316,11 @@ def submit_job(
             capture_output=True,
             text=True,
             env=build_sbatch_env(
-                machine=m, slurm=s, yamls=cfgs_paths, results_dir=minerva_dir
+                machine=m,
+                slurm=s,
+                yamls=cfgs_paths,
+                results_dir=minerva_dir,
+                yamls_results_dirs=yamls_results_dirs,
             ),
         )
         if result.returncode != 0:

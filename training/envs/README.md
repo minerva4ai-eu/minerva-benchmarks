@@ -232,7 +232,7 @@ PyTorch wheels are sourced from `https://download.pytorch.org/whl/cu121` via `[[
 
 ```bash
 # Add a new dependency
-cd envs/benchmarks/cuda121-flash-attn/
+cd envs/benchmarks/cuda130-flash-attn/
 uv add <package-name>
 
 # Update all dependencies
@@ -247,13 +247,13 @@ uv lock --upgrade-package <package-name>
 After updating dependencies, rebuild the Singularity container:
 
 ```bash
-cd envs/benchmarks/cuda121-flash-attn/
+cd envs/benchmarks/cuda130-flash-attn/
 singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
 ```
 
 ---
 
-## Adding a New CUDA Version
+## Adding a New CUDA Version (or ROCM version)
 
 To add a new CUDA version (e.g., CUDA 13.3):
 
@@ -263,8 +263,8 @@ To add a new CUDA version (e.g., CUDA 13.3):
    ```
 
 2. **Update Singularity definition files:**
-   - Change `From:` line to `nvidia/cuda:12.4.x-runtime-ubuntu22.04`
-   - Update `cuda-nvcc-12-x` package name
+   - Change `From:` line to `nvidia/cuda:13.3.x-runtime-ubuntu22.04`
+   - Update `cuda-nvcc-13-x` package name
    - Update `%environment` paths if needed
 
 3. **Update pyproject.toml** if CUDA version affects dependency versions.
@@ -281,6 +281,8 @@ To add a new CUDA version (e.g., CUDA 13.3):
    ```
 
 ---
+
+A similar process should be followed to add any new environment necessary.
 
 ## Troubleshooting
 

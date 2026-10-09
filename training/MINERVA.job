@@ -110,7 +110,7 @@ VENV_PATH : $VENV_PATH"
 export -f runner_fn
 
 SRUN_LOGS="$MINERVA_WORKDIR/$SLURM_JOB_ID"
-# Read all YAML paths from the manifest into a Bash array
+# Read all manifest lines ("<yaml path>\t<results dir>") into a Bash array
 if [[ -f "$MINERVA_MANIFEST_FILE" ]]; then
     mapfile -t YAMLS < "$MINERVA_MANIFEST_FILE"
     cp "$MINERVA_MANIFEST_FILE" "$SRUN_LOGS"
@@ -120,8 +120,15 @@ else
     exit 1
 fi
 
-for YAML_PATH in "${YAMLS[@]}"; do
-    echo here
+for MANIFEST_LINE in "${YAMLS[@]}"; do
+    YAML_PATH="${MANIFEST_LINE%%$'\t'*}"
+    # Each profile has its own results folder; default to the job-level one
+    YAML_WORKDIR="$MINERVA_WORKDIR"
+    if [[ "$MANIFEST_LINE" == *$'\t'* ]]; then
+        YAML_WORKDIR="${MANIFEST_LINE#*$'\t'}"
+    fi
+    SRUN_LOGS="$YAML_WORKDIR/$SLURM_JOB_ID"
+    mkdir -p "$SRUN_LOGS/steps-slurm-logs"
     echo "$YAML_PATH"
 
     # build_srun_env() reads env var "YAML_PATH"
@@ -146,7 +153,7 @@ VENV_PATH : $VENV_PATH \
 TRAIN_SCRIPT: $TRAIN_SCRIPT \
 TRAIN_MODULE: $TRAIN_MODULE"
     
-    export LOG_DIR="$MINERVA_WORKDIR"
+    export LOG_DIR="$YAML_WORKDIR"
     if [[ ! -d $LOG_DIR ]]; then
         mkdir -p "$LOG_DIR"
     fi

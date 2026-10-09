@@ -1,0 +1,16 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile mistral7-deepspeed-flashattn2vs-flashattn3
+
+selection:
+  models: [mistral_7b]
+  frameworks: [deepspeed-cuda130-flashattn3]
+  datasets: [squadv2]
+
+model:
+  combinations:
+    global_batch_sizes: [254]
+    max_seq_lens: [4096]
+    batch_sizes: [1]
+    precisions: [bf16]
+    attention_mechanisms: [flash_attn2, flash_attn3]

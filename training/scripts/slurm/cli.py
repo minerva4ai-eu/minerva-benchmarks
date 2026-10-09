@@ -49,6 +49,151 @@ def cli():
     """MINERVA SLURM job submission CLI for LLM training and fine-tuning benchmarks."""
 
 
+def _submit_group(
+    config_name,
+    configs_path,
+    runs_dir,
+    run_date,
+    cfgs_valid,
+    cfgs_paths,
+    cfgs_runs_dirs,
+    nnodes,
+    per_model_jobs,
+    per_nodes_jobs,
+):
+    """Submit one SLURM job (or one per model/nodes when requested) for the given configs.
+
+    `runs_dir` holds the job-level logs; `cfgs_runs_dirs` gives, per config, the runs_dir
+    (one per profile) where its results are written."""
+    logger.info(
+        "Calling submit_job(cfg_name=%s, config_path=%s, runs_dir=%s,run_date=%s)",
+        config_name,
+        configs_path,
+        runs_dir,
+        run_date,
+    )
+    if not cfgs_valid:
+        click.echo(
+            f"{u.FAILURE_HEAVY} {u.RED} No valid benchmark configurations found to run! Exiting...{u.RESET}"
+        )
+        return
+
+    if per_model_jobs:
+        per_model_cfgs: dict[str, dict[str, list[BenchmarkConfig | str]]] = {}
+        for cfg, path, rd in zip(cfgs_valid, cfgs_paths, cfgs_runs_dirs):
+            if not cfg.model.name in per_model_cfgs:
+                per_model_cfgs[cfg.model.name] = {}
+                per_model_cfgs[cfg.model.name]["cfgs_valid"] = []
+                per_model_cfgs[cfg.model.name]["cfgs_paths"] = []
+                per_model_cfgs[cfg.model.name]["cfgs_runs_dirs"] = []
+
+            per_model_cfgs[cfg.model.name]["cfgs_valid"].append(cfg)
+            per_model_cfgs[cfg.model.name]["cfgs_paths"].append(path)
+            per_model_cfgs[cfg.model.name]["cfgs_runs_dirs"].append(rd)
+
+        for model, combinations in per_model_cfgs.items():
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing job for model {u.YELLOW}'{model}'{u.CYAN}... {u.RESET}"
+            )
+            jobid = submit_job(
+                runs_dir=runs_dir,
+                cfgs=combinations["cfgs_valid"],
+                cfgs_paths=combinations["cfgs_paths"],
+                run_date=run_date,
+                nnodes=nnodes,
+                cfgs_runs_dirs=combinations["cfgs_runs_dirs"],
+            )
+        return
+    if per_nodes_jobs:
+        per_nodes_cfgs: dict[int, dict[str, list[BenchmarkConfig | str]]] = {}
+        for cfg, path, rd in zip(cfgs_valid, cfgs_paths, cfgs_runs_dirs):
+            if not cfg.slurm.sbatch.nodes in per_nodes_cfgs:
+                per_nodes_cfgs[cfg.slurm.sbatch.nodes] = {}
+                per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_valid"] = []
+                per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_paths"] = []
+                per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_runs_dirs"] = []
+
+            per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_valid"].append(cfg)
+            per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_paths"].append(path)
+            per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_runs_dirs"].append(rd)
+
+        for model, combinations in per_nodes_cfgs.items():
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing job for {u.YELLOW}'{model}'{u.CYAN} nodes... {u.RESET}"
+            )
+            jobid = submit_job(
+                runs_dir=runs_dir,
+                cfgs=combinations["cfgs_valid"],
+                cfgs_paths=combinations["cfgs_paths"],
+                run_date=run_date,
+                nnodes=nnodes,
+                cfgs_runs_dirs=combinations["cfgs_runs_dirs"],
+            )
+        return
+
+    # ToDo: Add per-framework-jobs, per-nodes-jobs, etc. grouping options for job-steps optimal
+    #       resource and results organization
+
+    click.echo(f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing jobs ... {u.RESET}")
+    jobid = submit_job(
+        runs_dir=runs_dir,
+        cfgs=cfgs_valid,
+        cfgs_paths=cfgs_paths,
+        run_date=run_date,
+        nnodes=nnodes,
+        cfgs_runs_dirs=cfgs_runs_dirs,
+    )
+    for rd in dict.fromkeys(cfgs_runs_dirs):
+        click.echo(
+            f"\n\t{u.EMOJI_INFO}   Results in: "
+            f"{u.YELLOW}'{os.path.join(rd, cfgs_valid[0].machine.name, run_date, jobid)}'{u.RESET}"
+        )
+
+
+def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
+    """Expand a --profile value into the list of profile names to run.
+
+    Accepts a profile name, a comma separated list of names, or the name of a directory
+    inside profile/ (every *.yaml below it, recursively, is a profile named
+    '<dir>/<relative path without extension>'). Returns [None] when no profile is given.
+    """
+    if not profile:
+        return [None]
+    root = os.path.realpath(os.path.join(os.path.abspath(config_path), "profile"))
+    profiles: list[str | None] = []
+
+    item = profile.strip()
+    path = os.path.realpath(os.path.join(root, item))
+    if os.path.commonpath([root, path]) != root:
+        raise ValueError(f"Profile '{item}' must be inside {root}")
+    if os.path.isfile(path + ".yaml"):
+        profiles.append(item.removesuffix(".yaml"))
+    elif os.path.isdir(path):
+        found = sorted(
+            os.path.relpath(os.path.join(d, f), root)[: -len(".yaml")]
+            for d, _, files in os.walk(path)
+            for f in files
+            if f.endswith(".yaml")
+        )
+        if not found:
+            raise FileNotFoundError(f"No profiles (*.yaml) found in {path}")
+        profiles.extend(found)
+    else:
+        available = sorted(
+            str(p.relative_to(root).with_suffix(""))
+            for p in Path(root).rglob("*")
+            if p.suffix in (".yaml", ".yml")
+        )
+        avail_str = "\n\t* " + "\n\t* ".join(available)
+        raise FileNotFoundError(
+            f"Profile '{item}' not found in {root}. Available: {avail_str}"
+        )
+    profiles = list(dict.fromkeys(profiles))
+    if not profiles:
+        raise ValueError(f"No profile names found in '{profile}'")
+    return profiles
+
+
 @cli.command()
 @click.option(
     "--dry-run",
@@ -115,9 +260,16 @@ def cli():
     "--profile",
     default=None,
     help=(
-        "Benchmark profile from configs_hydra/configs/profile/ (e.g. 'llama3-megatron') "
-        "merged on top of --config-name. Selects models/frameworks/datasets and combinations."
+        "Benchmark profile(s) from configs_hydra/configs/profile/ merged on top of --config-name. "
+        "Selects models/frameworks/datasets and combinations. Accepts a profile name, a "
+        "comma separated list of names (e.g. 'a,b'), or a directory name to run all the "
+        "profiles inside it (e.g. 'precision-megatron')."
     ),
+)
+@click.option(
+    "--per-profile-jobs",
+    is_flag=True,
+    help="Submit one job per profile instead of a single job with all profiles (multiple profiles only).",
 )
 @click.option(
     "--yaml",
@@ -134,7 +286,7 @@ def cli():
     "--nnodes",
     default=None,
     type=int,
-    help="Output directory for generated configs and results (default: benchmark-runs/).",
+    help="Number of nodes of the job (cannot be used with multiple profiles).",
 )
 def run(
     dry_run,
@@ -147,6 +299,7 @@ def run(
     frameworks,
     datasets,
     profile,
+    per_profile_jobs,
     yamls,
     nnodes,
 ):
@@ -163,13 +316,13 @@ def run(
 
     # TODO: review output structure
     _runs_dir = runs_dir
-    runs_dir = f"{_runs_dir}-{config_name}/{f'{profile}' if profile else 'generic-profile'}".rstrip(
-        "/"
-    )
+    runs_dir = _runs_dir
     run_date = datetime.now().date().strftime("%d-%m-%Y")
 
     cfgs_valid: list[BenchmarkConfig] = []
     cfgs_paths: list[str] = []
+    # (runs_dir, configs, config paths) to submit
+    groups: list[tuple[str, list, list]] = []
 
     if isinstance(yamls, tuple) and len(yamls) == 1:
         yamls: list[str] = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
@@ -215,6 +368,7 @@ def run(
                 raise e
         config_name = next(iter(config_names))
         runs_dir = f"{_runs_dir}-{config_name}"
+        groups.append((runs_dir, cfgs_valid, cfgs_paths, [runs_dir] * len(cfgs_valid)))
     else:
         # TODO: Check desired behavior
         if config_name == DEFAULT_CONFIG_NAME:
@@ -225,6 +379,22 @@ def run(
                 f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Make sure to provide the correct '--config-name' pointing to a .yaml configuration profile inside {DEFAULT_CONFIGS_PATH}{u.RESET}"
             )
             exit(1)
+
+        try:
+            profiles = expand_profiles(configs_path, profile)
+        except (FileNotFoundError, ValueError) as e:
+            click.echo(f"\t{u.FAILURE_HEAVY} {u.RED}{e}{u.RESET}")
+            sys.exit(1)
+        if nnodes and (per_profile_jobs or per_nodes_jobs or per_model_jobs):
+            click.echo(
+                f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Argument '--nnodes' cannot be used with '--per-profile-jobs', '--per-nodes-jobs', or '--per-model-jobs' simultaneously.{u.RESET}"
+            )
+            sys.exit(1)
+        # if len(profiles) > 1 and nnodes and per_profile_jobs:
+        #    click.echo(
+        #        f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Argument '--nnodes' cannot be used with multiple profiles: {profiles}{u.RESET}"
+        #    )
+        #    sys.exit(1)
         # Filter benchmarks to run on provided model names
         if models:
             models = models.split(",")
@@ -279,104 +449,64 @@ def run(
                     sys.exit(1)
             mfd.DATASETS = datasets
 
-        cfgs_valid, _ = generate_valid_combos(
-            config_path=configs_path,
-            config_name=config_name,
-            outpath=runs_dir,
-            run_date=run_date,
-            dry=dry_run,
-            profile=profile,
-        )
-
-        os.makedirs(runs_dir, exist_ok=True)
-        for cfg in cfgs_valid:
-            cfgs_paths.append(
-                write_config(
-                    cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=runs_dir
+        for prof in profiles:
+            prof_runs_dir = (
+                f"{_runs_dir}-{config_name}/{prof if prof else 'no-profile'}"
+            ).rstrip("/")
+            if prof:
+                click.echo(
+                    f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Composing profile {u.YELLOW}'{prof}'{u.RESET}"
                 )
+            prof_cfgs, _ = generate_valid_combos(
+                config_path=configs_path,
+                config_name=config_name,
+                outpath=prof_runs_dir,
+                run_date=run_date,
+                dry=dry_run,
+                profile=prof,
+            )
+
+            os.makedirs(prof_runs_dir, exist_ok=True)
+            prof_paths = [
+                write_config(
+                    cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=prof_runs_dir
+                )
+                for cfg in prof_cfgs
+            ]
+            groups.append(
+                (prof_runs_dir, prof_cfgs, prof_paths, [prof_runs_dir] * len(prof_cfgs))
             )
 
         if dry_run:
-            for cfg in cfgs_valid:
-                pass
-                # click.echo(f"  {u.YELLOW}[dry]{u.RESET} {cfg.id}")
             return
 
-    logger.info(
-        "Calling submit_job(cfg_name=%s, config_path=%s, runs_dir=%s,run_date=%s)",
-        config_name,
-        configs_path,
-        runs_dir,
-        run_date,
-    )
-    if not cfgs_valid:
-        click.echo(
-            f"{u.FAILURE_HEAVY} {u.RED} No valid benchmark configurations found to run! Exiting...{u.RESET}"
+    if len(groups) > 1 and not per_profile_jobs:
+        # One job holding the configs of every profile, named after the profile files
+        job_name = "+".join(dict.fromkeys(os.path.basename(p) for p in profiles))
+        if len(job_name) > 120:
+            job_name = f"{os.path.basename(profiles[0])}+{len(profiles) - 1}-more"
+        groups = [
+            (
+                f"{_runs_dir}-{config_name}/{job_name}",
+                [cfg for _, cfgs, _, _ in groups for cfg in cfgs],
+                [path for _, _, paths, _ in groups for path in paths],
+                [rd for _, _, _, rds in groups for rd in rds],
+            )
+        ]
+
+    for group_runs_dir, group_cfgs, group_paths, group_runs_dirs in groups:
+        _submit_group(
+            config_name,
+            configs_path,
+            group_runs_dir,
+            run_date,
+            group_cfgs,
+            group_paths,
+            group_runs_dirs,
+            nnodes,
+            per_model_jobs,
+            per_nodes_jobs,
         )
-        return
-
-    if per_model_jobs:
-        per_model_cfgs: dict[str, dict[str, list[BenchmarkConfig | str]]] = {}
-        for cfg, path in zip(cfgs_valid, cfgs_paths):
-            if not cfg.model.name in per_model_cfgs:
-                per_model_cfgs[cfg.model.name] = {}
-                per_model_cfgs[cfg.model.name]["cfgs_valid"] = []
-                per_model_cfgs[cfg.model.name]["cfgs_paths"] = []
-
-            per_model_cfgs[cfg.model.name]["cfgs_valid"].append(cfg)
-            per_model_cfgs[cfg.model.name]["cfgs_paths"].append(path)
-
-        for model, combinations in per_model_cfgs.items():
-            click.echo(
-                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing job for model {u.YELLOW}'{model}'{u.CYAN}... {u.RESET}"
-            )
-            jobid = submit_job(
-                runs_dir=runs_dir,
-                cfgs=combinations["cfgs_valid"],
-                cfgs_paths=combinations["cfgs_paths"],
-                run_date=run_date,
-                nnodes=nnodes,
-            )
-        return
-    if per_nodes_jobs:
-        per_nodes_cfgs: dict[int, dict[str, list[BenchmarkConfig | str]]] = {}
-        for cfg, path in zip(cfgs_valid, cfgs_paths):
-            if not cfg.slurm.sbatch.nodes in per_nodes_cfgs:
-                per_nodes_cfgs[cfg.slurm.sbatch.nodes] = {}
-                per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_valid"] = []
-                per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_paths"] = []
-
-            per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_valid"].append(cfg)
-            per_nodes_cfgs[cfg.slurm.sbatch.nodes]["cfgs_paths"].append(path)
-
-        for model, combinations in per_nodes_cfgs.items():
-            click.echo(
-                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing job for {u.YELLOW}'{model}'{u.CYAN} nodes... {u.RESET}"
-            )
-            jobid = submit_job(
-                runs_dir=runs_dir,
-                cfgs=combinations["cfgs_valid"],
-                cfgs_paths=combinations["cfgs_paths"],
-                run_date=run_date,
-                nnodes=nnodes,
-            )
-        return
-
-    # ToDo: Add per-framework-jobs, per-nodes-jobs, etc. grouping options for job-steps optimal
-    #       resource and results organization
-
-    click.echo(f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing jobs ... {u.RESET}")
-    jobid = submit_job(
-        runs_dir=runs_dir,
-        cfgs=cfgs_valid,
-        cfgs_paths=cfgs_paths,
-        run_date=run_date,
-        nnodes=nnodes,
-    )
-    click.echo(
-        f"\n\t{u.EMOJI_INFO}   Results in: "
-        f"{u.YELLOW}'{os.path.join(runs_dir, run_date, jobid)}'{u.RESET}"
-    )
 
 
 @cli.command()

@@ -523,7 +523,15 @@ class MinNodesMemoryRule(ConstraintRule):
             total_gpus = nnodes * gpus_per_node
             # Get all possible megatron parallelismi combos based on nnodes
             combos = megatron_parallelism_combos(
-                gpus_per_node, nnodes, megatron_parallelisms
+                gpus_per_node,
+                nnodes,
+                megatron_parallelisms,
+                allowed={
+                    k: list(v)
+                    for k, v in (
+                        _cfg_get(c.model, "megatron_parallelism_allowed", None) or {}
+                    ).items()
+                },
             )
 
             best_for_this_gpu_count = None  # dict with lowest per_gpu memory
@@ -631,7 +639,7 @@ class MinNodesMemoryRule(ConstraintRule):
         FFN = m.get("ffn_intermediate_dim", 4 * H)
 
         # attention activations — GQA reduces KV side
-        n_q = m.get("num_attention_heads", 32)
+        n_q = m.num_attention_heads
         n_kv = m.get("num_kv_heads", n_q)  # = n_q for MHA, < n_q for GQA/MQA
         head_dim = H // n_q
 
@@ -707,7 +715,10 @@ def is_valid(combo: DictConfig) -> tuple[bool, list[RuleResult]]:
 
 
 def megatron_parallelism_combos(
-    gpus_per_node: int, nnodes: int, axes: list[str]
+    gpus_per_node: int,
+    nnodes: int,
+    axes: list[str],
+    allowed: dict[str, list[int]] | None = None,
 ) -> list[dict[str, int]]:
     """Return all valid parallelism combinations for given hardware and selected axes.
 
@@ -715,6 +726,8 @@ def megatron_parallelism_combos(
         gpus_per_node: Number of GPUs per node.
         nnodes: Number of nodes.
         axes: List of target parallelism axes (e.g., ["tp", "pp", "cp", "dp", "ep", "sp"]).
+        allowed: Optional {axis: [sizes]} restricting axes to the listed values. Such
+            axes must be in `axes` and skip the default range limits for that axis.
 
     Rules & Constraints:
         - `sp` is a boolean flag (sequence parallelism on/off), NOT a multiplicative
@@ -724,6 +737,12 @@ def megatron_parallelism_combos(
         - `tp <= gpus_per_node` (keep TP groups intra-node, where NVLink lives).
         - `pp <= nnodes` (if present in `axes`).
     """
+    allowed = {k: {int(x) for x in v} for k, v in (allowed or {}).items()}
+    unknown = [k for k in allowed if k not in axes or k == "sp"]
+    assert not unknown, (
+        f"megatron_parallelism_allowed axes {unknown} must be multiplicative axes "
+        f"listed in megatron_parallelism_supported {axes}"
+    )
     MAX_PP = nnodes
     MIN_TP = int(gpus_per_node / 2)
     MAX_TP = gpus_per_node
@@ -777,6 +796,9 @@ def megatron_parallelism_combos(
     # Map and validate combinations against rules
     for combo in all_tuples:
         assignment = dict(zip(multiplicative_axes, combo))
+
+        if any(assignment[k] not in v for k, v in allowed.items()):
+            continue
 
         # Enforce TP constraint (TP stays intra-node)
         tp = assignment.get("tp", 1)

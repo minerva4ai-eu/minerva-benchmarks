@@ -118,16 +118,19 @@ class ModelConfig:
     ffn_intermediate_dim: int = MISSING
     num_attention_heads: int = MISSING
     attention_type: str = MISSING
-    tokenizer_type: str = MISSING
     num_kv_heads: int = MISSING  # = num_attention_heads for MHA
-    vocab_size: int = MISSING
     head_dim: int = MISSING
+    # vocab_size: int = MISSING
+    # tokenizer_type: str = MISSING
 
     # GPU requirements — constraint metadata
     max_gpus_scale: int = MISSING
     frameworks_supported: list[str] | None = field(default_factory=list)
     parallelism_supported: list[str] | None = field(default_factory=list)
     megatron_parallelism_supported: list[str] | None = field(default_factory=list)
+    megatron_parallelism_allowed: dict[str, list[int]] | None = field(
+        default_factory=dict
+    )
 
     # MoE-specific — only required when architecture_type == "moe"
     active_params_billions: float | None = None

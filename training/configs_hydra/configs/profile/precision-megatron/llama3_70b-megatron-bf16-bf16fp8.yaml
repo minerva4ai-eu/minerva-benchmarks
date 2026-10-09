@@ -9,5 +9,5 @@ selection:
 model:
   combinations:
     global_batch_sizes: [512]
-    batch_sizes: [2]
+    batch_sizes: [1]
     precisions: [bf16, bf16_fp8]

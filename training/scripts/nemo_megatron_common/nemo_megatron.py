@@ -681,9 +681,18 @@ if __name__ == "__main__":
                 model_name=args.model_name,
                 dataset_name=args.dataset_name,
                 framework=config.framework.name,
-                parallelism_type=getattr(
-                    config.framework, "parallelism_name", "nemo_megatron_2506"
-                ),
+                parallelism_type={
+                    key: value
+                    for key, value in {
+                        "TP": config.framework.megatron_parallelism.tp,
+                        "PP": config.framework.megatron_parallelism.pp,
+                        "DP": config.framework.megatron_parallelism.dp,
+                        "CP": config.framework.megatron_parallelism.cp,
+                        "SP": config.framework.megatron_parallelism.sp,
+                        "EP": config.framework.megatron_parallelism.ep,
+                    }.items()
+                    if value != -1
+                },
                 batch_size=args.batch_size,
                 gradient_accumulation=args.gradient_accumulation_steps,
                 learning_rate=args.lr,
