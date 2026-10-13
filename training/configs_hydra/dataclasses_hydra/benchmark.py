@@ -45,7 +45,6 @@ class SelectionConfig:
 @dataclass
 class BenchmarkConfig(DictConfig):
     id: str
-    trainings: m.TrainArgsConfig
     arch: a.HPCArchitecture
     model: m.ModelConfig
     dataset: d.DatasetConfig

@@ -5,4 +5,5 @@
 selection:
   models: [gemma3_1b]
   frameworks: [accelerate-cuda130]
+  datasets: [squadv2]
 

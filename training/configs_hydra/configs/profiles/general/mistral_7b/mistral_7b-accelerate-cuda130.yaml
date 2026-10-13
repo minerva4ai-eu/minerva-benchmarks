@@ -5,4 +5,5 @@
 selection:
   models: [mistral_7b]
   frameworks: [accelerate-cuda130]
+  datasets: [squadv2]
 

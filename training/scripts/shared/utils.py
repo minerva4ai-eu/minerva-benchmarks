@@ -106,7 +106,7 @@ def save_error_summary(
 
     summary = {
         "nodes": int(os.environ.get("SLURM_NNODES", "1")),
-        "num_gpus_per_node": int(os.environ.get("GPU_NODE", "1")),
+        "num_gpus_per_node": int(os.environ.get("SLURM_GPUS_ON_NODE", "1")),
         "total_gpus": world_size,
         "model": model_name,
         "dataset": dataset_name,

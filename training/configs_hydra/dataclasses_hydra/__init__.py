@@ -17,6 +17,9 @@ OmegaConf.register_new_resolver(
     "abs_path", lambda relative_path: str(Path.cwd() / relative_path)
 )
 
+# Register a custom 'multiply_int' resolver
+OmegaConf.register_new_resolver("multiply_int", lambda x, y: int(x) * int(y))
+
 
 def register_configs():
     cs = ConfigStore.instance()

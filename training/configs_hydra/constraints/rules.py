@@ -524,7 +524,7 @@ class MinNodesMemoryRule(ConstraintRule):
         # Iterate over candidate nodes based on gpus_per_node of system
         for nnodes in self._nodes_candidates(gpus_per_node):
             total_gpus = nnodes * gpus_per_node
-            # Get all possible megatron parallelismi combos based on nnodes
+            # Get all possible megatron parallelism combos based on nnodes
             combos = megatron_parallelism_combos(
                 gpus_per_node,
                 nnodes,
@@ -740,7 +740,8 @@ def megatron_parallelism_combos(
         - `tp <= gpus_per_node` (keep TP groups intra-node, where NVLink lives).
         - `pp <= nnodes` (if present in `axes`).
     """
-    allowed = {k: {int(x) for x in v} for k, v in (allowed or {}).items()}
+    allowed = {k: set(v) for k, v in allowed.items() if v}
+
     unknown = [k for k in allowed if k not in axes or k == "sp"]
     assert not unknown, (
         f"megatron_parallelism_allowed axes {unknown} must be multiplicative axes "
