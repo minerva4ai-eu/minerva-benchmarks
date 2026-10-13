@@ -10,6 +10,8 @@ machine:
   runtime_env_mode: singularity
   modules:
   - singularity
+  singularity_binds:
+    - "${model.path}"
 
 experiment:
   env: 
