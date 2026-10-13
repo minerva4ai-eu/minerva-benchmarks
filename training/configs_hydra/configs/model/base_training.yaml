@@ -74,13 +74,15 @@ parallelism_supported:
 #   - tp
 #   - pp
 #   - dp
+#   - ep
+#   - cp
+#   - sp
 # For a configuration with 2 nodes and 4 gpus per node, the megatron parallelism could be set accordingly
 # so that tp*pp*dp equals the total number of available GPUs.
 # -> [(4,2,1), (2,2,2), (4,1,2), etc.]
 # Then based on applied 'configs_hydra/constraints', configuration could be filtered out accordingly.
 # Check configs_hydra/dataclasses_hydra/framework MegatronParallelism and FrameworkConfig for available values
 # and types
-
 megatron_parallelism_supported:
 # This field specifies the allowed megatron parallelism configurations.
 # if a ceratin model parralellism axis need to be limited, it can be specified here.
@@ -95,4 +97,9 @@ megatron_parallelism_supported:
 #   ep: [4]
 #   tp: [4]
 megatron_parallelism_allowed:
-  tp: ["${arch.node.gpus_per_node}"]   # Fix TP for all experiments to be equal to the number of GPUs per node
+  tp: []
+  pp: []
+  dp: []
+  cp: []
+  sp: []
+  ep: []

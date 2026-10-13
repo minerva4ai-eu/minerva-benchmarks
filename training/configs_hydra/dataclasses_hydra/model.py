@@ -99,6 +99,25 @@ class ModelTrainingComboConfig:
     attention_mechanism: AttentionMechanism = AttentionMechanism.default
 
 
+class MegatronParallelismConfig(str, Enum):
+    tp = "tp"
+    pp = "pp"
+    dp = "dp"
+    cp = "cp"
+    sp = "sp"
+    ep = "ep"
+
+
+@dataclass
+class MegatronParallelismAllowedConfig:
+    tp: list[int] | None = field(default_factory=list)
+    pp: list[int] | None = field(default_factory=list)
+    dp: list[int] | None = field(default_factory=list)
+    cp: list[int] | None = field(default_factory=list)
+    ep: list[int] | None = field(default_factory=list)
+    sp: list[bool] | None = field(default_factory=list)
+
+
 @dataclass
 class ModelConfig:
     # model specific train args
@@ -127,10 +146,10 @@ class ModelConfig:
     max_gpus_scale: int = MISSING
     frameworks_supported: list[str] | None = field(default_factory=list)
     parallelism_supported: list[str] | None = field(default_factory=list)
-    megatron_parallelism_supported: list[str] | None = field(default_factory=list)
-    megatron_parallelism_allowed: dict[str, list[int]] | None = field(
-        default_factory=dict
+    megatron_parallelism_supported: list[MegatronParallelismConfig] | None = field(
+        default_factory=list
     )
+    megatron_parallelism_allowed: MegatronParallelismAllowedConfig | None = None
 
     # MoE-specific — only required when architecture_type == "moe"
     active_params_billions: float | None = None

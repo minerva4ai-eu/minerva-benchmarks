@@ -29,4 +29,5 @@ megatron_parallelism_supported:
   - dp
   - tp
   - pp
-
+megatron_parallelism_allowed:
+  tp: ["${arch.node.gpus_per_node}"]

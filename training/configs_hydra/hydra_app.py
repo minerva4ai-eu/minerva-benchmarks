@@ -4,6 +4,7 @@ import warnings
 from argparse import ArgumentParser
 from copy import deepcopy
 from itertools import product
+from pathlib import Path
 
 warnings.filterwarnings(
     "ignore",
@@ -39,6 +40,7 @@ BLUE = "\033[94m"
 BOLD = "\033[1m"
 UNDERLINE = "\033[4m"
 BG_RED = "\033[41m"
+PROFILES_ROOT = "profiles"
 
 # Reset Code (turns colors back to normal)
 RESET = "\033[0m"
@@ -79,6 +81,15 @@ def resolve_config_name(config_path: str, config_name: str) -> str:
     return config_name
 
 
+def get_dir_profiles(config_path: str) -> list[str]:
+    root = os.path.realpath(os.path.join(os.path.abspath(config_path), PROFILES_ROOT))
+    return sorted(
+        str(p.relative_to(root).with_suffix(""))
+        for p in Path(root).rglob("*")
+        if p.suffix in (".yaml", ".yml")
+    )
+
+
 def compose_with_profile(
     config_path: str,
     config_name: str,
@@ -91,13 +102,10 @@ def compose_with_profile(
     if not profile:
         return cfg
     profile_file = os.path.join(
-        os.path.abspath(config_path), "profile", f"{profile}.yaml"
+        os.path.abspath(config_path), PROFILES_ROOT, f"{profile}.yaml"
     )
     if not os.path.isfile(profile_file):
-        available = sorted(
-            os.path.splitext(f)[0]
-            for f in os.listdir(os.path.join(os.path.abspath(config_path), "profile"))
-        )
+        available = get_dir_profiles(config_path)
         raise FileNotFoundError(
             f"Profile '{profile}' not found in {os.path.dirname(profile_file)}. Available: {available}"
         )
@@ -405,13 +413,13 @@ def _multi_parallelism_framework(
     Returns:
         _type_: _description_
     """
+
     for parallelism in cfg.model.megatron_parallelism_supported:
         assert parallelism in cfg.framework.megatron_parallelism.keys(), (
             f"{RED}Megatron parallelism {YELLOW}'{parallelism}'{RED} is not supported! Available choices {BLUE}{MEGATRON_PARALLELISM_AVAILABLE}"
         )
 
     tmp_cfg = deepcopy(cfg)
-
     for gbs, bs, steps, grad_ctk, seq_len, prec, attn in product(
         cfg.model.combinations.global_batch_sizes,
         cfg.model.combinations.batch_sizes,
@@ -433,6 +441,7 @@ def _multi_parallelism_framework(
         tmp_cfg.experiment.output_dir = outpath
 
         # Get min number of nodes to run based on model and hpc architecture
+        # print(f"tmp_cfg: {tmp_cfg}")
         min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
         candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
             tmp_cfg.arch.node.gpus_per_node,

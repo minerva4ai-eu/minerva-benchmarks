@@ -183,9 +183,8 @@ def main(repeatid: int):
             / (dist.get_world_size() * cfg.gradient_accumulation_steps)
         )
     )
-    ds_config["scheduler"]["params"]["warmup_num_steps"] = int(
-        cfg.warmup_ratio * (steps)
-    )
+    warmup_num_steps = int(cfg.warmup_ratio * (steps))
+    ds_config["scheduler"]["params"]["warmup_num_steps"] = warmup_num_steps if warmup_num_steps > 0 else 1
     ds_config["scheduler"]["params"]["warmup_max_lr"] = cfg.lr
     ds_config["scheduler"]["params"]["warmup_min_lr"] = (
         cfg.lr - cfg.warmup_ratio * cfg.lr

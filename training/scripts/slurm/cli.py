@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 import click
 import configs_hydra.model_framework_dataset as mfd
 import scripts.slurm.utils as u
-from configs_hydra.hydra_app import generate_valid_combos
+from configs_hydra.hydra_app import (
+    PROFILES_ROOT,
+    generate_valid_combos,
+    get_dir_profiles,
+)
 from scripts.slurm.submitter import submit_job, write_config
 
 if TYPE_CHECKING:
@@ -131,9 +135,6 @@ def _submit_group(
             )
         return
 
-    # ToDo: Add per-framework-jobs, per-nodes-jobs, etc. grouping options for job-steps optimal
-    #       resource and results organization
-
     click.echo(f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Preparing jobs ... {u.RESET}")
     jobid = submit_job(
         runs_dir=runs_dir,
@@ -153,13 +154,13 @@ def _submit_group(
 def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     """Expand a --profile value into the list of profile names to run.
 
-    Accepts a profile name, a comma separated list of names, or the name of a directory
-    inside profile/ (every *.yaml below it, recursively, is a profile named
+    Accepts a profile name or the name of a directory
+    inside PROFILES_ROOT (every *.yaml below it, recursively, is a profile named
     '<dir>/<relative path without extension>'). Returns [None] when no profile is given.
     """
     if not profile:
         return [None]
-    root = os.path.realpath(os.path.join(os.path.abspath(config_path), "profile"))
+    root = os.path.realpath(os.path.join(os.path.abspath(config_path), PROFILES_ROOT))
     profiles: list[str | None] = []
 
     item = profile.strip()
@@ -179,11 +180,12 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
             raise FileNotFoundError(f"No profiles (*.yaml) found in {path}")
         profiles.extend(found)
     else:
-        available = sorted(
-            str(p.relative_to(root).with_suffix(""))
-            for p in Path(root).rglob("*")
-            if p.suffix in (".yaml", ".yml")
-        )
+        # available = sorted(
+        #    str(p.relative_to(root).with_suffix(""))
+        #    for p in Path(root).rglob("*")
+        #    if p.suffix in (".yaml", ".yml")
+        # )
+        available = get_dir_profiles(config_path)
         avail_str = "\n\t* " + "\n\t* ".join(available)
         raise FileNotFoundError(
             f"Profile '{item}' not found in {root}. Available: {avail_str}"
@@ -260,16 +262,12 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     "--profile",
     default=None,
     help=(
-        "Benchmark profile(s) from configs_hydra/configs/profile/ merged on top of --config-name. "
-        "Selects models/frameworks/datasets and combinations. Accepts a profile name, a "
-        "comma separated list of names (e.g. 'a,b'), or a directory name to run all the "
-        "profiles inside it (e.g. 'precision-megatron')."
+        "Benchmark profile(s) from configs_hydra/configs/PROFILES_ROOT/ merged on top of provided '--config-name'. "
+        "Selects models/frameworks/datasets and training combinations. Accepts one specified profile name or "
+        "a directory name to run all the profiles inside it (e.g. 'tests').\n"
+        "In case of specifying a single profile to run, use only the name omitting the .yaml extension, just like "
+        "arguement '--config-name'."
     ),
-)
-@click.option(
-    "--per-profile-jobs",
-    is_flag=True,
-    help="Submit one job per profile instead of a single job with all profiles (multiple profiles only).",
 )
 @click.option(
     "--yaml",
@@ -299,7 +297,6 @@ def run(
     frameworks,
     datasets,
     profile,
-    per_profile_jobs,
     yamls,
     nnodes,
 ):
@@ -385,9 +382,9 @@ def run(
         except (FileNotFoundError, ValueError) as e:
             click.echo(f"\t{u.FAILURE_HEAVY} {u.RED}{e}{u.RESET}")
             sys.exit(1)
-        if nnodes and (per_profile_jobs or per_nodes_jobs or per_model_jobs):
+        if nnodes and (per_nodes_jobs or per_model_jobs):
             click.echo(
-                f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Argument '--nnodes' cannot be used with '--per-profile-jobs', '--per-nodes-jobs', or '--per-model-jobs' simultaneously.{u.RESET}"
+                f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Argument '--nnodes' cannot be used with '--per-nodes-jobs' or '--per-model-jobs' simultaneously.{u.RESET}"
             )
             sys.exit(1)
         # if len(profiles) > 1 and nnodes and per_profile_jobs:
@@ -449,10 +446,22 @@ def run(
                     sys.exit(1)
             mfd.DATASETS = datasets
 
+        _runs_dir = f"{_runs_dir}-{config_name}"
+        profile_name = ""
+        # Experiments' profile has been detected/provided
+        if len(profiles) >= 1 and profiles[0] is not None:
+            # In case of directory with profiles
+            profile_name = "/".join(profiles[0].split("/")[:-1])
+            # In case no profiles or a single .yaml profile are provided
+            # use the full
+            if len(profiles) == 0:
+                profile_name = profiles[0]
+        runs_dir = (
+            f"{_runs_dir}/{'profiles' if profile_name else 'no-profile'}/{profile_name}"
+        ).rstrip("/")
         for prof in profiles:
-            prof_runs_dir = (
-                f"{_runs_dir}-{config_name}/{prof if prof else 'no-profile'}"
-            ).rstrip("/")
+            print(f"prof: {prof}")
+
             if prof:
                 click.echo(
                     f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Composing profile {u.YELLOW}'{prof}'{u.RESET}"
@@ -460,34 +469,44 @@ def run(
             prof_cfgs, _ = generate_valid_combos(
                 config_path=configs_path,
                 config_name=config_name,
-                outpath=prof_runs_dir,
+                outpath=runs_dir,
                 run_date=run_date,
                 dry=dry_run,
                 profile=prof,
             )
 
-            os.makedirs(prof_runs_dir, exist_ok=True)
+            os.makedirs(runs_dir, exist_ok=True)
             prof_paths = [
                 write_config(
-                    cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=prof_runs_dir
+                    cfg=cfg, base_dir=str(BASE_DIR.absolute()), runs_dir=runs_dir
                 )
                 for cfg in prof_cfgs
             ]
             groups.append(
-                (prof_runs_dir, prof_cfgs, prof_paths, [prof_runs_dir] * len(prof_cfgs))
+                (runs_dir, prof_cfgs, prof_paths, [runs_dir] * len(prof_cfgs))
             )
 
         if dry_run:
             return
 
-    if len(groups) > 1 and not per_profile_jobs:
-        # One job holding the configs of every profile, named after the profile files
-        job_name = "+".join(dict.fromkeys(os.path.basename(p) for p in profiles))
-        if len(job_name) > 120:
-            job_name = f"{os.path.basename(profiles[0])}+{len(profiles) - 1}-more"
+    if len(groups) > 1:
+        click.echo(
+            f"{u.MAGENTA}>> Grouping multiple profiles into a single job: {u.BLUE}{len(groups)}{u.RESET}"
+        )
+        click.echo(
+            f"{u.MAGENTA}   With respective amount of .yaml files per group: {u.BLUE}{[len(cfgs) for _, cfgs, _, _ in groups]}{u.RESET}"
+        )
+        click.echo(
+            f"{u.MAGENTA}   Total number of experiments/Slurm steps: {u.BLUE}{sum([len(cfgs) for _, cfgs, _, _ in groups])}{u.RESET}"
+        )
+
+        click.echo(
+            f"{u.MAGENTA}   Group common runs dir: {u.YELLOW}{runs_dir}{u.RESET}"
+        )
+
         groups = [
             (
-                f"{_runs_dir}-{config_name}/{job_name}",
+                runs_dir,
                 [cfg for _, cfgs, _, _ in groups for cfg in cfgs],
                 [path for _, _, paths, _ in groups for path in paths],
                 [rd for _, _, _, rds in groups for rd in rds],
@@ -563,14 +582,6 @@ def results(jobids, output, root, extra_jobids):
     help="Base config name to compose (e.g., 'base-MN5').",
 )
 @click.option(
-    "--profile",
-    default=None,
-    help=(
-        "Benchmark profile from configs_hydra/configs/profile/ (e.g. 'llama3-megatron') "
-        "merged on top of --config-name. Selects models/frameworks/datasets and combinations."
-    ),
-)
-@click.option(
     "--runs-dir",
     default=RUNS_DIR,
     help="Output directory for generated configs and results (default: benchmark-runs/).",
@@ -586,7 +597,7 @@ def results(jobids, output, root, extra_jobids):
     is_flag=True,
     help="Compose configs and list the jobs without submitting them.",
 )
-def prepare(configs_path, config_name, profile, runs_dir, models, dry_run):
+def prepare(configs_path, config_name, runs_dir, models, dry_run):
     # TODO: Check desired behavior
     if config_name == DEFAULT_CONFIG_NAME:
         click.echo(
@@ -597,16 +608,21 @@ def prepare(configs_path, config_name, profile, runs_dir, models, dry_run):
         )
         exit(1)
     """Submit one SLURM job running only the megatron-nemo-2509 preparation stage for every model/dataset."""
-    megatron_prepare(configs_path, config_name, runs_dir, models, dry_run, profile)
+    megatron_prepare(configs_path, config_name, runs_dir, models, dry_run)
 
 
 def megatron_prepare(
-    configs_path, config_name, runs_dir, models, dry_run, profile=None
+    configs_path,
+    config_name,
+    runs_dir,
+    models,
+    dry_run,
 ):
     from copy import deepcopy
 
     from configs_hydra.dataclasses_hydra import register_configs
-    from hydra import initialize_config_dir
+    from configs_hydra.hydra_app import resolve_config_name
+    from hydra import compose, initialize_config_dir
     from hydra.core.global_hydra import GlobalHydra
     from omegaconf import OmegaConf
 
@@ -619,10 +635,8 @@ def megatron_prepare(
             )
             sys.exit(1)
 
-    runs_dir = f"{runs_dir}-{config_name}{f'-{profile}' if profile else ''}"
+    runs_dir = f"{runs_dir}-{config_name}"
     run_date = datetime.now().date().strftime("%d-%m-%Y")
-
-    from configs_hydra.hydra_app import compose_with_profile, resolve_config_name
 
     config_name = resolve_config_name(configs_path, config_name)
     register_configs()
@@ -632,13 +646,11 @@ def megatron_prepare(
     with initialize_config_dir(
         config_dir=os.path.abspath(configs_path), version_base="1.3"
     ):
-        base = compose_with_profile(configs_path, config_name, profile)
+        base = compose(config_name)
         for model in selected or mfd.MODELS:
             for dataset in mfd.DATASETS:
-                cfg = compose_with_profile(
-                    configs_path,
-                    config_name,
-                    profile,
+                cfg = compose(
+                    config_name=config_name,
                     overrides=[
                         f"model={model}",
                         f"framework={framework}",
