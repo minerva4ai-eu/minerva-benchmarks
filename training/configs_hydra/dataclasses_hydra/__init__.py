@@ -22,15 +22,13 @@ OmegaConf.register_new_resolver("multiply_int", lambda x, y: int(x) * int(y))
 
 
 def register_configs():
-    cs = ConfigStore.instance()
 
     # root schema — Hydra validates every composed config against this
-    # cs.store(name="base", node=BenchmarkConfig)
-    cs.store(name="base_MN5", node=BenchmarkConfig)
+    cs = ConfigStore.instance()
 
-    # group schemas — each YAML must conform to these
-    # model YAMLs
-    cs.store(group="trainings", name="combinations", node=TrainArgsConfig)
+    register_base(cs)
+    register_MN5(cs)
+
 
 def register_base(cs: ConfigStore):
     # arch YAMLs
@@ -70,8 +68,27 @@ def register_MN5(cs: ConfigStore):
     # arch YAMLs
     cs.store(group="arch", name="MN5", node=HPCArchitecture)
 
+    # dataset YAMLs
+    cs.store(group="dataset", name="MN5/alpaca-MN5", node=DatasetConfig)
+    cs.store(group="dataset", name="MN5/squadv2-MN5", node=DatasetConfig)
+
+    # framework YAMLs
+    cs.store(group="framework", name="MN5/accelerate-MN5", node=FrameworkConfig)
+    cs.store(group="framework", name="MN5/torchrun-MN5", node=FrameworkConfig)
+    cs.store(group="framework", name="MN5/deepspeed-MN5", node=FrameworkConfig)
+    cs.store(
+        group="framework", name="MN5/deepspeed-accelerate-MN5", node=FrameworkConfig
+    )
+
+    # model YAMLs
+
+    cs.store(group="model", name="MN5/gemma3_1b-MN5", node=ModelConfig)
+    cs.store(group="model", name="MN5/gemma3_12b-MN5", node=ModelConfig)
+    cs.store(group="model", name="MN5/mistral_7b-MN5", node=ModelConfig)
+    cs.store(group="model", name="MN5/llama3_8b-MN5", node=ModelConfig)
+    cs.store(group="model", name="MN5/llama3_70b-MN5", node=ModelConfig)
+
     # slurm YAMLS
-    cs.store(group="slurm", name="base", node=SlurmConfig)
     cs.store(group="slurm", name="MN5", node=SlurmConfig)
 
     # experiment YAMLS

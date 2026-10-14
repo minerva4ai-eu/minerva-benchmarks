@@ -300,9 +300,6 @@ class MinNodesMemoryRule(ConstraintRule):
     MEGATRON_SAFETY_MARGIN = 0.70
 
     def check(self, c: DictConfig) -> RuleResult:
-        # Skip GPU memory check for CPU runs
-        if c.arch.gpu.accelerator_type == "cpu":
-            return RuleResult(True, "min_nodes_memory", "CPU run, skipping GPU memory check")
 
         if c.framework.megatron_parallelism:
             actual_gpus = c.arch.node.gpus_per_node * c.slurm.sbatch.nodes

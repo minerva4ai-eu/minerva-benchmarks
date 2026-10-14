@@ -8,9 +8,16 @@ Training benchmarks run inside Singularity containers that contain a complete Py
 
 ```
 envs/
-├── uv/                              # Primary environment system
-│   └── cuda121-flash-attn/          # CUDA 12.1 + flash attention
-└── cli/                             # CLI environment (minerva-cli.sh)
+├── benchmarks/                    # Training benchmark 
+│   ├── cuda128-flash-attn/        # CUDA 12.8 + flash attn 
+│   └── cuda130-flash-attn/        # CUDA 13.0 + flash attn 
+│       ├── pyproject.toml
+│       ├── uv.lock
+│       └── singularity_uv-runtime.def
+└── cli/                           # CLI environment (minerva-cli.sh)
+    ├── pyproject.toml
+    ├── uv.lock
+    └── singularity-uv.def
 ```
 
 ---

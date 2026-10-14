@@ -2,7 +2,6 @@
 import os
 import subprocess as s
 import sys
-import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -48,9 +47,10 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 @click.group()
 def cli():
-    pass
+    """MINERVA SLURM job submission CLI for LLM training and fine-tuning benchmarks."""
 
 
 def _submit_group(
@@ -200,6 +200,7 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
 @click.option(
     "--dry-run",
     is_flag=True,
+    help="Generate configs and build launch folders without submitting jobs.",
 )
 @click.option(
     "--configs-path",
@@ -209,15 +210,13 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
 @click.option(
     "--config-name",
     default=DEFAULT_CONFIG_NAME,
+    help="Base config name to compose (e.g., 'base', 'base-MN5').",
+    required=True,
 )
 @click.option(
     "--runs-dir",
     default=RUNS_DIR,
-)
-@click.option(
-    "--mini-mode",
-    is_flag=True,
-    help="Enable mini mode with reduced combinations and steps for development",
+    help="Output directory for generated configs and results (default: benchmark-runs/).",
 )
 @click.option(
     "--per-model-jobs",
@@ -276,8 +275,9 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     multiple=True,
     default=None,
     help=(
-        'Run a benchmark configuration by providing the path to BenchmarkConfig file. Multiple ids may be provided by repeating the input argument, e.g. "...--yaml yaml-1 --yaml yaml-2 --yaml yaml-3 etc..."'
-        + "\nFirst run a '--dry-run' to compose YAML configuration files and then user their path to run them individually."
+        "Run a benchmark configuration by providing the path to a BenchmarkConfig YAML file. "
+        "Can be repeated for multiple configs, e.g. '--yaml path1.yaml --yaml path2.yaml. "
+        "First run a '--dry-run' to compose YAML configuration files and then use their paths to run them individually."
     ),
 )
 @click.option(
@@ -305,6 +305,7 @@ def run(
     Composes valid config combinations from Hydra configs or runs specific
     YAML files. Supports dry-run mode for config examination.
     """
+    logger.info("Running cli...")
     click.echo("\n")
     click.echo(
         f"{u.POINT_DIAMOND} {u.CYAN} Running {u.MAGENTA} MINERVA Benchmarks {u.CYAN} for LLMs training and fine-tuning {u.POINT_DIAMOND} {u.RESET}"

@@ -1,4 +1,10 @@
+defaults:
+  - base
+  - _self_
+
 name: deepspeed
+python_environment:
+singularity_container: 
 
 parallelism_name: "" # Will be filled in during composing time
 parallelism:

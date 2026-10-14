@@ -30,7 +30,6 @@ Generates valid benchmark configurations from a Hydra machine profile, saves the
 | `--configs-path PATH` | `./configs_hydra/configs` | Hydra config directory. |
 | `--config-name NAME` | `base` | Profile to compose. Generated combinations require a non-`base` profile. |
 | `--profile NAMES` | None | Benchmark profile(s) from `configs_hydra/configs/profile/`, merged on top of `--config-name`: a file name without `.yaml`, a comma-separated list, or a directory name (runs every profile inside it). See [Benchmark Profiles](#benchmark-profiles). |
-| `--per-profile-jobs` | Off | With multiple profiles, submit one job per profile instead of a single job with all of them. |
 | `--runs-dir PATH` | `benchmark-runs/` | Base directory for generated configs and results; `-<config-name>` and, if set, `-<profile>` are appended. |
 | `--per-model-jobs` | Off | Submit one job per model. |
 | `--per-nodes-jobs` | Off | Submit one job per node count. |
@@ -49,8 +48,9 @@ bash minerva-cli.sh run --config-name MN5-singularity
 # Generate configs without submitting
 bash minerva-cli.sh run --config-name MN5-singularity --dry-run
 
-# Restrict the run to a benchmark profile (models, frameworks, batch sizes, precisions)
-bash minerva-cli.sh run --config-name MN5-singularity --profile llama3-megatron-bf16-bf16fp8
+# Restrict the run to a benchmark profile (models, frameworks, batch sizes, precisions, etc.)
+# 
+bash minerva-cli.sh run --config-name MN5-singularity --profile tests
 
 # Filter generated combinations
 bash minerva-cli.sh run --config-name MN5-singularity --models mistral_7b --frameworks deepspeed

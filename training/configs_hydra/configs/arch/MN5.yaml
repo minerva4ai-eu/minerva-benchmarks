@@ -1,3 +1,7 @@
+defaults:
+  - base
+  - _self_
+
 gpu:
   name: MN5_4xH100-SXM
   accelerator_type: cuda 

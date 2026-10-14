@@ -7,7 +7,7 @@ defaults:
   - slurm: base
   - arch: base
   - _self_
-id:
+id: -100
 machine:
   name: ???                       # self given name, will be used to name benchmark results related folder
   name_pattern: ???               # Naming pattern for machine specific configs in arch/ model/ and slurm/

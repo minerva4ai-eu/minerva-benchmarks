@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from enum import Enum
 
 from configs_hydra.dataclasses_hydra import arch as a
 from configs_hydra.dataclasses_hydra import dataset as d
@@ -7,6 +7,11 @@ from configs_hydra.dataclasses_hydra import framework as f
 from configs_hydra.dataclasses_hydra import model as m
 from configs_hydra.dataclasses_hydra import slurm as s
 from omegaconf import MISSING, DictConfig
+
+
+class EnvMode(str, Enum):
+    venv = "venv"
+    singularity = "singularity"
 
 
 @dataclass

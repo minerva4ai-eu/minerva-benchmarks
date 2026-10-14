@@ -62,8 +62,7 @@ STEP_3 = f"{CYAN}➂{RESET}"
 def write_jsonl(d: list[dict], p: str):
 
     with open(p, "w", encoding="utf-8") as f:
-        for record in d:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        f.writelines(json.dumps(record, ensure_ascii=False) + "\n" for record in d)
 
 
 def read_jsonl(path: str) -> list[dict]:
@@ -116,13 +115,14 @@ def get_cfg_folder(
     )
     return cfg_path
 
+
 def get_yaml_configs_path(
     base_dir: str,
     runs_dir: str,
-    
 ) -> str:
     results_dir = os.path.join(base_dir, runs_dir)
     machine_results_base = os.path.join(results_dir, cfg.machine.name)
+
 
 def get_cfg_folder_from_launch(launch_path: str):
 

@@ -1,6 +1,3 @@
-defaults:
-  - base
-  - _self_
 name: squadv2
 path: ${oc.env:DATASET_SQUADV2_PATH,  ${abs_path:datasets/squad_v2}} 
 task: ""

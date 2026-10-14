@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
 
 from configs_hydra.dataclasses_hydra import arch as a
 from omegaconf import MISSING
@@ -153,9 +152,9 @@ class ModelConfig:
     megatron_parallelism_allowed: MegatronParallelismAllowedConfig | None = None
 
     # MoE-specific — only required when architecture_type == "moe"
-    active_params_billions: Optional[float] = None
-    num_experts: Optional[int] = None
-    top_k_experts: Optional[int] = None
+    active_params_billions: float | None = None
+    num_experts: int | None = None
+    top_k_experts: int | None = None
 
     def __post_init__(self):
         # validate + normalise — converts plain string from YAML to enum

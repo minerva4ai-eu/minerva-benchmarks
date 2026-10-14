@@ -1,7 +1,7 @@
-account: "{$os.env:SLURM_ACCOUNT}"         # Must fill in
-qos: "{$os.env:SLURM_QOS}"                 # Optional fill in
-partition: "{$os.env:SLURM_PARTITION}"     # Optional fill in
-constraint: "{$os.env:SLURM_CONSTRAINT}"   # Optional fill in
+account: ${oc.env:SLURM_ACCOUNT,no-account}   # Must fill in
+qos: ${oc.env:SLURM_QOS}                      # Optional fill in
+partition: ${oc.env:SLURM_PARTITION}          # Optional fill in
+constraint: ${oc.env:SLURM_CONSTRAINT}        # Optional fill in
 
 sbatch:
   cpus_per_gpu: 0                             # Must fill in

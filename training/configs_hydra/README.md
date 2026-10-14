@@ -19,7 +19,7 @@ The system generates **all valid training configurations** by computing the Cart
 MODELS × FRAMEWORKS × DATASETS × PARALLELISM_STRATEGIES × TRAINING_HYPERPARAMETERS
 ```
 
-For example, with 4 models, 3 frameworks, 2 datasets, and an average of 3 parallelism strategies each, the generator produces **24 base configs**. Each base config is then expanded by the training hyperparameters (batch sizes × precisions × learning rates × gradient accumulations × optimizers × gradient checkpointing options), potentially yielding **hundreds of individual benchmark jobs**.
+For example, with 5 models (`llama3_8b`, `gemma3_1b`, `gemma3_12b`, `mistral_7b`, `llama3_70b`), 3 frameworks (`accelerate`, `torchrun`, `deepspeed-accelerate`), and 2 datasets (`alpaca`, `squadv2`), the generator produces **30 base configs** (before constraint filtering). Each base config is then expanded by the training hyperparameters (batch sizes × precisions × gradient accumulations × learning rates × optimizers × gradient checkpointing × enable_compile), potentially yielding **hundreds of individual benchmark jobs**.
 
 All invalid combinations are filtered out by constraint rules before any jobs are submitted, ensuring that only feasible configurations reach the SLURM scheduler.
 
@@ -78,19 +78,19 @@ Defines model-specific parameters:
 |-------|------|-------------|
 | `name` | `str` | Model identifier (e.g., `llama3_8b`) |
 | `path` | `str` | Path to model weights |
-| `params_billions` | `float` | Total parameters in billions |
+| `total_params_billions` | `float` | Total parameters in billions |
 | `architecture_type` | `ArchitectureType` | `dense`, `moe`, or `ssm` |
 | `num_layers` | `int` | Number of transformer layers |
 | `hidden_dim` | `int` | Hidden dimension size |
 | `ffn_intermediate_dim` | `int` | FFN intermediate dimension |
 | `num_attention_heads` | `int` | Number of attention heads |
-| `num_kv_heads` | `int` | Number of KV heads (GQA) |
+| `num_kv_heads` | `int` | Number of KV heads (GQA/MQA) |
 | `vocab_size` | `int` | Vocabulary size |
 | `head_dim` | `int` | Attention head dimension |
-| `attention_type` | `str` | Attention variant (`mha`, `gqa`, etc.) |
-| `tokenizer_type` | `str` | Tokenizer type (e.g., `tiktoken`) |
+| `attention_type` | `str` | Attention variant (`mha`, `mqa`, `gqa`, etc.) |
+| `tokenizer_type` | `str` | Tokenizer type (e.g., `tiktoken`, `sentencepiece`) |
 | `max_gpus_scale` | `int` | Maximum GPUs the model can scale to |
-| `frameworks_supported` | `List[str]` | Supported frameworks (`torchrun`, `accelerate`, `deepspeed`) |
+| `frameworks_supported` | `List[str]` | Supported frameworks (`torchrun`, `accelerate`, `deepspeed`, etc.) |
 | `parallelism_supported` | `List[str]` | Supported parallelism strategies |
 | `active_params_billions` | `Optional[float]` | MoE only: active parameters |
 | `num_experts` | `Optional[int]` | MoE only: number of experts |
@@ -106,7 +106,7 @@ Defines framework-specific settings:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | `str` | Framework name (`torchrun`, `accelerate`, `deepspeed`) |
+| `name` | `str` | Framework name (`torchrun`, `accelerate`, `deepspeed`, `deepspeed-accelerate`) |
 | `parallelism_name` | `str` | Current parallelism strategy (set at composition time) |
 | `parallelism` | `Dict[str, ParallelismSpec]` | Map of parallelism strategy → GPU constraints |
 | `scripts` | `ScriptsConfig` | Paths to run script, finetune script, shared code, and files to copy |
@@ -159,9 +159,40 @@ Defines framework-specific settings:
 
 **`GpuConfig`** includes peak TFLOPs for each precision type (`fp32`, `bf16`, `fp16`, `fp8`) and a helper function `get_peak_flops(cfg, precision)`.
 
-### `TrainArgsConfig` (`benchmark.py`)
+### `TrainArgsConfig` and Training Hyperparameter Combinations
 
-Defines training hyperparameter combinations that the generator expands into individual experiments:
+Individual training defaults are defined in the `training` block of `base_training.yaml`:
+
+```yaml
+training:
+  batch_size: 1
+  grad_accum: 1
+  precision: "bf16"
+  steps: 50
+  lr: 2e-5
+  optimizer: "adamw"
+  gradient_checkpointing: False
+  enable_compile: True
+  epochs: null
+```
+
+Training hyperparameter combinations that the generator expands are defined in the `combinations` block of `base_training.yaml` (or inherited by specific model configs):
+
+```yaml
+combinations:
+  batch_sizes: [1, 4, 8]
+  precisions: ["bf16"]
+  grad_accums: [8, 16]
+  lr: [2e-5]
+  optimizer: ["adamw"]
+  gradient_checkpointing: [False]
+  steps: [50]
+  enable_compile: [False, True]
+```
+
+The generator computes the Cartesian product of these lists: `3 × 1 × 2 × 1 × 1 × 1 × 1 × 2 = 24` individual configs.
+
+**Field Descriptions:**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -249,7 +280,7 @@ configs/
 │   └── Jean-Zay-H100/           # Jean-Zay-H100.yaml, Jean-Zay-H100-singularity.yaml
 ├── profile/                     # Machine-independent benchmark profiles, selected with --profile <file name>
 ├── arch/
-│   └── MN5.yaml           # MareNostrum5 GPU specs (MI300A, VRAM, TFLOPs)
+│   └── MN5.yaml                 # MareNostrum5 GPU specs (H100-SXM, 64GB VRAM, TFLOPs)
 ├── dataset/
 │   ├── base.yaml                # Base dataset template
 │   ├── alpaca.yaml              # Alpaca instruction-tuning dataset (portable, paths resolved at composition time)
@@ -261,43 +292,47 @@ configs/
 │   ├── deepspeed-accelerate.yaml  # DeepSpeed with Accelerate integration (portable)
 │   └── torchrun.yaml            # PyTorch native (portable)
 ├── model/
-│   ├── base_training.yaml # Base model template
-│   ├── llama3_8b.yaml     # LLaMA 3 8B (dense)
-│   ├── llama3_70b.yaml    # LLaMA 3 70B (dense)
-│   ├── mistral_7b.yaml    # Mistral 7B (dense)
-│   └── *-MN5.yaml         # Machine-specific model path overrides
+│   ├── base_training.yaml       # Base model template + training hyperparameter combinations
+│   ├── llama3_8b.yaml           # LLaMA 3 8B (portable, dense architecture)
+│   ├── llama3_70b.yaml          # LLaMA 3 70B (portable, dense)
+│   ├── mistral_7b.yaml          # Mistral 7B (portable, dense)
+│   ├── gemma3_1b.yaml           # Gemma 3 1B (portable, dense)
+│   ├── gemma3_12b.yaml          # Gemma 3 12B (portable, dense)
+│   └── MN5/
+│       ├── llama3_8b.yaml       # MN5-specific path override (e.g., GPFS scratch location)
+│       ├── llama3_70b.yaml
+│       ├── mistral_7b.yaml
+│       ├── gemma3_1b.yaml
+│       └── gemma3_12b.yaml
 ├── slurm/
-│   ├── base.yaml          # Base SLURM template (empty — values filled by overrides)
-│   └── MN5.yaml           # MareNostrum5 SLURM settings (account, QoS, partition, 4 GPUs/node)
-└── trainings/
-    └── combinations.yaml  # Training hyperparameter combos (batch_sizes, precisions, LR, etc.)
+│   ├── base.yaml                # Base SLURM template (empty — values filled by overrides)
+│   └── MN5.yaml                 # MareNostrum5 SLURM settings (account, QoS, partition, 4 GPUs/node)
 ```
 
 **Naming Convention**: Portable (machine-agnostic) configs are stored at the top level of their group. Machine-specific overrides are stored in `{machine.name_pattern}/` subdirectories — currently only `model/` has machine-specific overrides.
 
 ### Config Composition
 
-Hydra resolves configs through a **defaults list** in `base.yaml`. The defaults list defines the order in which configs are merged:
+Hydra resolves configs through a **defaults list** in `base.yaml` and machine-specific root configs (e.g., `MN5.yaml`). The defaults list defines the order in which configs are merged.
+
+**In `base.yaml`:**
 
 ```yaml
 defaults:
-  - trainings: combinations    # Load training hyperparameters
   - model: base_training       # Load base model template
   - framework: base            # Load base framework template
   - dataset: base              # Load base dataset template
   - _self_                     # Merge base.yaml's own fields last
 ```
 
-The `_self_` key ensures that `base.yaml`'s own fields take precedence over any conflicting fields from the included configs. This is important for fields like `machine`, `experiment`, and `slurm` that are defined in `base.yaml` but may also be overridden by machine-specific configs.
-
-The `base-MN5.yaml` extends `base` and adds architecture/SLURM overrides:
+**In machine-specific config (e.g., `MN5.yaml`):**
 
 ```yaml
 defaults:
-  - base                       # Start with base.yaml
-  - arch: MN5                  # Override with MN5 GPU specs
-  - slurm: MN5                 # Override with MN5 SLURM settings
-  - _self_                     # Merge base-MN5.yaml's own fields last
+  - arch: MN5                  # Load MN5 GPU architecture specs
+  - slurm: MN5                 # Load MN5 SLURM settings
+  - base                       # Load base.yaml and its defaults
+  - _self_                     # Merge MN5.yaml's own fields last
 ```
 
 **At runtime**, `hydra_app.py` composes configs using Hydra's `compose()` function with machine-specific overrides:
@@ -328,7 +363,7 @@ finetune: scripts/accelerate-common/finetune-${framework.parallelism_name}.py
 # In slurm/MN5.yaml
 gres: gpu:${arch.node.gpus_per_node}
 
-# In framework/deepspeed.yaml
+# In framework configs
 scripts:
   run: scripts/deepspeed-common/run-deepspeed.sh
   finetune: scripts/deepspeed-common/finetune-deepspeed-pure.py
@@ -338,45 +373,49 @@ When composing a config, Hydra resolves all interpolations to produce a fully co
 
 ### Training Combinations Expansion
 
-The `TrainArgsConfig` defines hyperparameter lists that are expanded into individual experiments via **Cartesian product**. For example, if `combinations.yaml` specifies:
+Training hyperparameter combinations are defined in `configs/model/base_training.yaml` under the `combinations` key. The `TrainArgsConfig` defines hyperparameter lists that are expanded into individual experiments via **Cartesian product**. For example, if `base_training.yaml` specifies:
 
 ```yaml
-trainings:
-  batch_sizes: [1, 2, 4]
-  precisions: [bf16]
-  grad_accums: [1, 2]
-  lr: [1e-5, 2e-5]
-  optimizer: [adamw]
-  gradient_checkpointing: [True]
-  steps: [100]
+combinations:
+  batch_sizes: [1, 4, 8]
+  precisions: ["bf16"]
+  grad_accums: [8, 16]
+  lr: [2e-5]
+  optimizer: ["adamw"]
+  gradient_checkpointing: [False]
+  steps: [50]
+  enable_compile: [False, True]
 ```
 
-The generator produces `3 × 1 × 2 × 2 × 1 × 1 × 1 = 12` individual configs, each with a unique combination of hyperparameters.
+The generator produces `3 × 1 × 2 × 1 × 1 × 1 × 1 × 2 = 24` individual configs, each with a unique combination of hyperparameters.
 
 **Mutual exclusivity**: `steps` and `epochs` are mutually exclusive — you cannot specify both in the same config. If both are provided, the config is skipped.
 
 ### `single_gpu_also_valid` Logic
 
-Some architectures support both single-GPU and multi-node configurations. The `single_gpu_also_valid` flag in the architecture config controls whether 1-GPU configs are generated in addition to full-node configs:
+Some architectures support both single-GPU and multi-node configurations. The `single_gpu_also_valid` flag in the `machine` config (not architecture) controls whether 1-GPU configs are generated in addition to full-node configs:
 
 ```yaml
-# In arch/MN5.yaml
-node:
-  gpus_per_node: 4
-  single_gpu_also_valid: true
+# In base.yaml or MN5.yaml
+machine:
+  single_gpu_also_valid: True
 ```
 
-When `single_gpu_also_valid` is `true`, the generator produces configs for both 1 GPU and 4 GPUs (nodes × gpus_per_node). When `false`, only full-node configs are generated. This is useful for architectures where single-GPU testing is meaningful (e.g., for quick validation) but not for production-scale training.
+When `single_gpu_also_valid` is `true` AND the parallelism strategy has `min_gpus: 1` AND running on 1 node, the generator produces configs for both 1 GPU and 4 GPUs (nodes × gpus_per_node). When `false`, only full-node configs are generated. This is useful for architectures where single-GPU testing is meaningful (e.g., for quick validation) but not for production-scale training.
 
 ### Adding a New Model
 
-1. **Create the model YAML file** at `configs/model/<name>.yaml` with all required fields from `ModelConfig`. Example for a new model:
+1. **Create the portable model YAML file** at `configs/model/<name>.yaml` with all required fields from `ModelConfig`. This config should work across all HPC machines. Example for a new model:
 
    ```yaml
    # configs/model/phi3_3b.yaml
+   defaults:
+     - base_training
+     - _self_
+   
    name: phi3_3b
-   path: /path/to/phi3-3b
-   params_billions: 3.8
+   path: /path/to/phi3-3b  # Generic/default path
+   total_params_billions: 3.8
    architecture_type: dense
    num_layers: 32
    hidden_dim: 3072
@@ -399,24 +438,24 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
      - zero3
    ```
 
-2. **Register the model** in `dataclasses_hydra/__init__.py` by adding it to the `MODELS` list:
+2. **Register the model** in `dataclasses_hydra/__init__.py` by adding it to the `MODELS` list in `hydra_app.py`:
 
    ```python
-   MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "phi3_3b"]
+   MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b", "phi3_3b"]
    ```
 
 3. **(Per HPC machine) Create machine-specific overrides** at `configs/model/{machine.name_pattern}/<name>-{machine.name_pattern}.yaml` to override the model path:
 
    ```yaml
-   # configs/model/phi3_3b-MN5.yaml
-   path: /gpfs/scratch/phi3-3b-mn5
+   # configs/model/MN5/phi3_3b-MN5.yaml
+   path: /gpfs/scratch/bsc99/phi3-3b-mn5  # MN5-specific GPFS path
    ```
 
    This file is composed when the generator uses `model=MN5/phi3_3b-MN5`, allowing each HPC machine to have its own model weight paths while sharing the same portable config structure.
 
 ### Adding a New Dataset
 
-1. **Create the dataset YAML file** at `configs/dataset/<name>.yaml` with `name`, `path`, `task`, `train`, `max_seq_len`. Example:
+1. **Create the portable dataset YAML file** at `configs/dataset/<name>.yaml` with portable defaults:
 
    ```yaml
    # configs/dataset/fineweb.yaml
@@ -427,7 +466,7 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
    max_seq_len: 4096
    ```
 
-2. **Register the dataset** in `dataclasses_hydra/__init__.py` by adding it to the `DATASETS` list:
+2. **Register the dataset** in `hydra_app.py` by adding it to the `DATASETS` list:
 
    ```python
    DATASETS = ["alpaca", "squadv2", "fineweb"]
@@ -443,14 +482,19 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
 
    ```yaml
    # configs/framework/vllm.yaml
+   defaults:
+     - base
+     - _self_
+   
    name: vllm
    python_environment:
    singularity_container:
    
    parallelism_name: ""
    parallelism:
-     none: { min_gpus: 1, max_gpus: 1 }
-     tensor_parallel: { min_gpus: 2, max_gpus: 8 }
+     none: { min_gpus: 1 }
+     tensor_parallel: { min_gpus: 2 }
+   
    scripts:
      run: scripts/vllm-common/run.sh
      finetune: scripts/vllm-common/serve.py
@@ -460,7 +504,7 @@ When `single_gpu_also_valid` is `true`, the generator produces configs for both 
        - scripts/vllm-common/utils.py
    ```
 
-2. **Register the framework** in `dataclasses_hydra/__init__.py` by adding it to the `FRAMEWORKS` list:
+2. **Register the framework** in `hydra_app.py` by adding it to the `FRAMEWORKS` list:
 
    ```python
    FRAMEWORKS = ["accelerate", "torchrun", "deepspeed", "vllm"]
@@ -510,15 +554,27 @@ def generate_valid_combos(config_path, config_name, outpath):
    - For each parallelism strategy in `cfg.model.parallelism_supported`:
      - Create a deep copy of the config
      - Set `cfg.framework.parallelism_name` to the current strategy
+     - Set `cfg.framework.parallelism` to only contain the selected strategy's specs
      - Run all constraint rules against the combo
      - If all rules pass, add to valid list; otherwise, record the skip reason
 
-2. **Expand training hyperparameters**: For each valid base config:
-   - Compute the Cartesian product of all training hyperparameter lists
-   - For each combination, create a new `BenchmarkConfig` with the specific hyperparameters
-   - Each expanded config gets a unique `id` based on model, framework, dataset, parallelism, and hyperparameters
+2. **Determine GPU node counts**: For each valid parallelism combo:
+   - Calculate minimum nodes required based on memory constraints
+   - Generate candidate node counts up to the model's `max_gpus_scale`
+   - For each valid node count:
 
-3. **Save and return**: Save all valid configs as YAML files to `outpath` and return `(valid, skipped)` tuples.
+3. **Expand training hyperparameters**: For each valid node configuration:
+   - Compute the Cartesian product of all training hyperparameter lists from `cfg.model.combinations`
+   - For each combination, create a new `BenchmarkConfig` with specific hyperparameters
+   - Handle single-GPU case: if `machine.single_gpu_also_valid=True` and min parallelism is 1 GPU, also generate 1-GPU configs
+   - Each expanded config gets a unique `id` based on machine, model, framework, parallelism, dataset, nodes, and hyperparameters
+
+4. **Validate and save**: For each config:
+   - Run constraint rules (VRAM, framework support, parallelism GPU requirements)
+   - Save valid configs as YAML files to `outpath`
+   - Log skipped configs with reasons
+
+The function returns `(valid_configs, skipped_configs)` tuples.
 
 #### `expand_arch_gpu_configs(cfg)`
 
@@ -531,16 +587,26 @@ This function is called during the combo generation to determine which GPU count
 ```python
 from configs_hydra.hydra_app import generate_valid_combos
 
+# Generate configs for MN5
 valid, skipped = generate_valid_combos(
     config_path="./configs_hydra/configs",
-    config_name="base",
+    config_name="MN5",  # Use MN5 machine config
     outpath="benchmark-runs/"
 )
 
 print(f"Valid configs: {len(valid)}")
 print(f"Skipped configs: {len(skipped)}")
-for reason in skipped:
-    print(f"  Skipped: {reason}")
+for cfg, reasons in skipped:
+    print(f"  Skipped {cfg.id}:")
+    for result in reasons:
+        print(f"    - {result.rule_name}: {result.reason}")
+
+# To use a different machine, simply change config_name:
+valid, skipped = generate_valid_combos(
+    config_path="./configs_hydra/configs",
+    config_name="LUMI",  # Use LUMI machine config instead
+    outpath="benchmark-runs/"
+)
 ```
 
 ### Typical Output
@@ -678,7 +744,7 @@ MODELS × FRAMEWORKS × DATASETS
 
 ## See Also
 
-- [training_MN5/README.md](../README.md) — Root project overview
+- [training/README.md](../README.md) — Root project overview
 - [scripts/README.md](../scripts/README.md) — Training scripts and launchers
 - [scripts/slurm/README.md](../scripts/slurm/README.md) — SLURM job submission CLI
 - [envs/README.md](../envs/README.md) — Environment management

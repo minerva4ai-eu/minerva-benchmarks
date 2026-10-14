@@ -1,7 +1,3 @@
-defaults:
-  - base
-  - _self_
-
 name: alpaca
 path: ${oc.env:DATASET_ALPACA_PATH, ${abs_path:datasets/alpaca/alpaca_data_cleaned.json}} 
 task: Instruction-Finetuning

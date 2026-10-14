@@ -45,9 +45,6 @@ PROFILES_ROOT = "profiles"
 # Reset Code (turns colors back to normal)
 RESET = "\033[0m"
 
-import logging
-
-logger = logging.getLogger(__name__)
 
 console = Console()
 
@@ -191,6 +188,7 @@ def generate_valid_combos(
                 + f"\n\t· dataset: {dataset}"
                 + (f"\n\t· profile: {profile}" if profile else "")
             )
+
             if framework not in cfg.model.frameworks_supported:
                 print(
                     f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
@@ -600,7 +598,7 @@ def _print_summary(
     table.add_row("Total combos", str(total))
     table.add_row("[green]Valid[/green]", str(len(valid)))
     table.add_row("[yellow]Skipped[/yellow]", str(len(skipped)))
-    print("")
+    print()
     console.print(table)
     # ToDo: Write summary file for failed or skipped configurations
 
@@ -618,10 +616,5 @@ def get_parser():
         type=str,
         default="no-config-path-provided",
         required=True,
-    )
-    parser.add_argument(
-        "--mini-mode",
-        action="store_true",
-        help="Enable mini mode with reduced combinations and steps for development",
     )
     return parser

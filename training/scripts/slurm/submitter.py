@@ -1,5 +1,6 @@
 # benchmark/submitter.py
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -13,9 +14,8 @@ from configs_hydra.dataclasses_hydra.slurm import SlurmConfig
 from omegaconf import OmegaConf
 from scripts.slurm import utils as u
 
-import logging
-
 logger = logging.getLogger(__name__)
+
 
 def write_config(
     cfg: BenchmarkConfig,
@@ -39,7 +39,7 @@ def _build_launch_folder(
     runs_dir: Path,
     dry: bool | None = False,
     repeat_id: int | None = None,
-    run_date: str = "DD-MM-YYYY"
+    run_date: str = "DD-MM-YYYY",
 ) -> Path:
     combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
     # logger.debug("combo_path = %s", combo_path)
@@ -69,7 +69,7 @@ def _build_launch_folder(
         short_id = f"run_id-{run_id}"
         # logger.debug("run_id, short_id = %s, %s", run_id, short_id)
         run_monitor_dir = os.path.join(date_monitor_dir, short_id)
-                   
+
     if repeat_id:
         run_folder = os.path.join(combo_path, short_id)
         launch_folder = Path(run_folder, f"launch-{repeat_id}")
@@ -84,7 +84,6 @@ def _build_launch_folder(
         )
     return launch_folder
 
-def build_env(envfig: dict) -> dict:
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
 
@@ -253,7 +252,6 @@ def submit_job(
     logger.debug("runs_dir = %s", runs_dir)
     logger.debug("run_date = %s", run_date)
     logger.debug("len(cfgs) = %s", len(cfgs))
-
 
     ################################################################################
     # Get system-level configs

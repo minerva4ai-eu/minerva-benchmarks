@@ -45,6 +45,8 @@ class MegatronParallelism:
 @dataclass
 class FrameworkConfig:
     name: str = MISSING
+    python_environment: str | None = None
+    singularity_container: str | None = None
     parallelism_name: str = ""
     parallelism: dict[str, ParallelismSpec] = field(default_factory=dict)
     megatron_parallelism: MegatronParallelism | None = None

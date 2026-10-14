@@ -318,8 +318,8 @@ def main(repeatid: int):
     """Run SFT with a Megatron-Core model using Megatron strategy."""
 
     # 2. Distributed Training Setup
-    world = args.devices_per_node * args.num_nodes
-    rank = int(os.environ.get("RANK", 0))  # Set by torchrun
+    world = int(os.environ.get("WORLD_SIZE", "1"))  # Set by torchrun
+    rank = int(os.environ.get("RANK", "0"))  # Set by torchrun
 
     assert args.dp_size * args.pp_size * args.tp_size * args.cp_size == world, (
         f"4D mismatch: DP*PP*TP*CP={args.dp_size * args.pp_size * args.tp_size * args.cp_size} != world={world}"
