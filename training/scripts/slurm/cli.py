@@ -598,6 +598,7 @@ def results(jobids, output, root, extra_jobids):
     help="Compose configs and list the jobs without submitting them.",
 )
 def prepare(configs_path, config_name, runs_dir, models, dry_run):
+    """Prepare things for benchmarks to run by launching a slurm job to preprocess models/datasets"""
     # TODO: Check desired behavior
     if config_name == DEFAULT_CONFIG_NAME:
         click.echo(
