@@ -1,10 +1,24 @@
+import glob
 import os
+import warnings
 from argparse import ArgumentParser
 from copy import deepcopy
 from itertools import product
+from pathlib import Path
 
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+)
+
+
+warnings.filterwarnings("ignore")
+
+import dotenv
 from configs_hydra.constraints import rules
 from configs_hydra.dataclasses_hydra import BenchmarkConfig, register_configs
+from configs_hydra.dataclasses_hydra.model import AttentionMechanism
+from configs_hydra.model_framework_dataset import *
 
 # sweep/generator.py
 from hydra import compose, initialize_config_dir
@@ -12,6 +26,9 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
 from rich.console import Console
 from rich.table import Table
+
+# Load training/.env
+dotenv.load_dotenv()
 
 # Color Codes
 GREEN = "\033[92m"
@@ -23,33 +40,10 @@ BLUE = "\033[94m"
 BOLD = "\033[1m"
 UNDERLINE = "\033[4m"
 BG_RED = "\033[41m"
+PROFILES_ROOT = "profiles"
 
 # Reset Code (turns colors back to normal)
 RESET = "\033[0m"
-
-
-##############################################################
-# All configuration modules to be included are written below #
-# Keep as is, to have a reference of complete foncigurations #
-# to be used for all benchmarks generated.                   #
-#                                                            #
-# If needed to generate only specific or customized new      #
-# benchmarks, copy and override values.                      #
-#
-# Example:
-#
-#   MODELS = ["llama3_8b", "mistral_7b", "llama3_70b"]
-#   FRAMEWORKS = ["torchrun", "deepspeed"]
-#   DATASETS = ["alpaca", "squadv2"]
-#   ...
-#   MODELS = ["new_model_config"]
-#   FRAMEWORKS = ["torchrun", "deepspeed"]
-#   DATASETS = ["alpaca", "squadv2", "new_dataset_config"]
-MODELS = ["llama3_8b", "gemma3_1b", "gemma3_12b", "mistral_7b", "llama3_70b"]
-FRAMEWORKS = ["accelerate", "torchrun", "deepspeed-accelerate"]
-DATASETS = ["alpaca", "squadv2"]
-
-################################################################
 
 
 console = Console()
@@ -68,221 +62,529 @@ def single_gpu_config(cfg: BenchmarkConfig) -> bool:
     return False
 
 
+console = Console()
+
+
+def resolve_config_name(config_path: str, config_name: str) -> str:
+    """Resolve a machine config name (e.g. 'MN5-singularity') to its location
+    under machine/<machine>/. Names that are not machine configs are returned as is."""
+    matches = glob.glob(
+        os.path.join(
+            os.path.abspath(config_path), "machine", "*", f"{config_name}.yaml"
+        )
+    )
+    if len(matches) > 1:
+        raise ValueError(f"Config name '{config_name}' is ambiguous: {matches}")
+    if matches:
+        machine = os.path.basename(os.path.dirname(matches[0]))
+        return f"machine/{machine}/{config_name}"
+    return config_name
+
+
+def get_dir_profiles(config_path: str) -> list[str]:
+    root = os.path.realpath(os.path.join(os.path.abspath(config_path), PROFILES_ROOT))
+    return sorted(
+        str(p.relative_to(root).with_suffix(""))
+        for p in Path(root).rglob("*")
+        if p.suffix in (".yaml", ".yml")
+    )
+
+
+def compose_with_profile(
+    config_path: str,
+    config_name: str,
+    profile: str | None,
+    overrides: list[str] | None = None,
+) -> BenchmarkConfig:
+    """Compose a machine config and merge the optional profile/<profile>.yaml on top,
+    so the profile wins over the machine and model defaults."""
+    cfg = compose(config_name, overrides=overrides or [])
+    if not profile:
+        return cfg
+    profile_file = os.path.join(
+        os.path.abspath(config_path), PROFILES_ROOT, f"{profile}.yaml"
+    )
+    if not os.path.isfile(profile_file):
+        available = get_dir_profiles(config_path)
+        raise FileNotFoundError(
+            f"Profile '{profile}' not found in {os.path.dirname(profile_file)}. Available: {available}"
+        )
+    cfg.merge_with(OmegaConf.load(profile_file))
+    return cfg
+
+
+def _apply_selection(axis: str, available: list, cfg, config_name: str) -> list:
+    """Restrict an axis to the profile's `selection.<axis>`, only if it was provided."""
+    selected = cfg.get("selection", {}).get(axis)
+    if not selected:
+        return list(available)
+    unknown = [x for x in selected if x not in available]
+    if unknown:
+        raise ValueError(
+            f"Profile '{config_name}' selection.{axis} has unavailable entries {unknown}. "
+            f"Available (after any CLI filtering): {list(available)}"
+        )
+    return list(selected)
+
+
+# TODO: check job nodes
 def generate_valid_combos(
-    config_path: str, config_name: str, outpath: str
+    config_path: str,
+    config_name: str,
+    outpath: str,
+    run_date: str,
+    dry: bool | None = None,
+    profile: str | None = None,
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
+    # logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
+
+    import configs_hydra.model_framework_dataset as mfd
+
     valid, skipped = [], []
 
     register_configs()
     GlobalHydra.instance().clear()
 
-    # outpath = os.path.join(outpath, "bencharks_to_run")
-    os.makedirs(outpath, exist_ok=True)
-
     cfg_seen = set()
+    display_name = config_name
+    config_name = resolve_config_name(config_path, config_name)
     with initialize_config_dir(
         config_dir=os.path.abspath(config_path), version_base="1.3"
     ):
         raw_total = 0
-        for model, framework, dataset in product(MODELS, FRAMEWORKS, DATASETS):
-            _init_cfg: BenchmarkConfig = compose(
-                config_name,
+
+        _init_cfg: BenchmarkConfig = compose_with_profile(
+            config_path, config_name, profile
+        )
+        models = _apply_selection("models", mfd.MODELS, _init_cfg, display_name)
+        frameworks = _apply_selection(
+            "frameworks", mfd.FRAMEWORKS, _init_cfg, display_name
+        )
+        datasets = _apply_selection("datasets", mfd.DATASETS, _init_cfg, display_name)
+
+        for model, framework, dataset in product(models, frameworks, datasets):
+            assert framework in AVAILABLE_FRAMEWORKS, (
+                f"{RED}Framework {YELLOW}'{framework}'{RED} not found! Available frameworks: \n{BLUE}[{', '.join(AVAILABLE_FRAMEWORKS)}]{RESET}"
             )
-            framework_pattern = f"{framework}-{_init_cfg.machine.framework_name_pattern}"
-            cfg: BenchmarkConfig = compose(
+
+            cfg: BenchmarkConfig = compose_with_profile(
+                config_path,
                 config_name,
+                profile,
                 overrides=[
-                    f"model={_init_cfg.machine.name_pattern}/{model}-{_init_cfg.machine.name_pattern}",
-                    f"framework={framework_pattern}",
+                    f"model={model}",
+                    f"framework={framework}",
                     f"dataset={dataset}",
                     f"slurm={_init_cfg.machine.name_pattern}",
                     f"arch={_init_cfg.machine.name_pattern}",
                 ],
             )
+
+            # FIXME: Incorrect path displayed "Composed base configuration from /gpfs/home/bsc/bsc079516/minerva_backup/minerva-benchmarks/training/MN5-uv-venv-cuda130.yaml for:"
             print(
                 f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
                 + f"\n\t· model: {model}"
-                + f"\n\t· framework: {framework_pattern}"
+                + f"\n\t· framework: {framework}"
                 + f"\n\t· dataset: {dataset}"
+                + (f"\n\t· profile: {profile}" if profile else "")
             )
+
             if framework not in cfg.model.frameworks_supported:
                 print(
                     f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
                 )
                 continue
 
-            for parallelism in cfg.model.parallelism_supported:
-                tmp_cfg = deepcopy(cfg)
-
-                if parallelism not in cfg.framework.parallelism.keys():
-                    continue
-                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
-                #print(f"parallelism: \n{parallelism}")
-                parallelism_spex = cfg.framework.parallelism[parallelism]
-
-                target_parallelism = OmegaConf.create(
-                    DictConfig({parallelism: parallelism_spex})
+            if dataset not in cfg.framework.datasets_allowed:
+                print(
+                    rf"{YELLOW}Dataset '{dataset}' is not supported by framework '{framework}'! Skipping...{RESET}"
                 )
-                #print(f"target_parallelism: \n{target_parallelism}")
-                #print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
-                tmp_cfg.framework.parallelism_name = parallelism
-                tmp_cfg.framework.parallelism = target_parallelism
-                #print(f"\tCreating configuration for parallelism {parallelism}:")
-                #print(OmegaConf.to_yaml(cfg))
+                continue
 
-                # Make sure that slurm directives for 'qos'/'partition'
-                # & 'constraint' are provided accordingly
-                if (tmp_cfg.slurm.qos is not None) or (
-                    tmp_cfg.slurm.partition is not None
-                ):
-                    assert (tmp_cfg.slurm.qos is not None) and (
-                        tmp_cfg.slurm.partition is not None
-                    ), (
-                        f"{RED}Slurm arguments 'slurm.qos' and 'slurm.partition' cannot be 'None'!{RESET}"
-                        + f"\n{RED}Values received: '{tmp_cfg.slurm.qos}' & '{tmp_cfg.slurm.partition}'{RESET}"
-                    )
+            if cfg.framework.megatron_parallelism:
+                cfg_seen, valid, skipped, raw_total = _multi_parallelism_framework(
+                    cfg, outpath, cfg_seen, valid, skipped, raw_total
+                )
 
-                if tmp_cfg.slurm.constraint is not None:
-                    assert (tmp_cfg.slurm.qos is None) and (
-                        tmp_cfg.slurm.partition is None
-                    ), (
-                        f"{RED}Slurm argument 'slurm.constraint' cannot be combined with 'slurm.partition' or  'slurm.qos'!"
-                        + "\nReceived:"
-                        + f"\n\tslurm.constraint: '{tmp_cfg.slurm.constraint}'"
-                        + f"\n\tslurm.qos: '{tmp_cfg.slurm.qos}'"
-                        + f"\n\tslurm.partition: '{tmp_cfg.slurm.partition}'{RESET}"
-                    )
+            else:
+                cfg_seen, valid, skipped, raw_total = _single_parallelism_framework(
+                    cfg, outpath, cfg_seen, valid, skipped, raw_total
+                )
 
-                for (
-                    bs,
-                    grad_acc,
-                    precision,
-                    lr,
-                    optimizer,
-                    steps,
-                    enable_compile,
-                ) in product(
-                    cfg.model.combinations.batch_sizes,
-                    cfg.model.combinations.grad_accums,
-                    cfg.model.combinations.precisions,
-                    cfg.model.combinations.lr,
-                    cfg.model.combinations.optimizer,
-                    cfg.model.combinations.steps,
-                    cfg.model.combinations.enable_compile,
-                ):
-                    # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
-                    # to each experiment combination
-                    tmp_cfg.model.training.batch_size = bs
-                    tmp_cfg.model.training.grad_accum = grad_acc
-                    tmp_cfg.model.training.precision = precision
-                    tmp_cfg.model.training.lr = lr
-                    tmp_cfg.model.training.optimizer = optimizer
-                    tmp_cfg.model.training.steps = steps
-                    tmp_cfg.model.training.enable_compile = enable_compile
-                    tmp_cfg.experiment.output_dir = outpath
-                    # Will bee used later to take care of configuration
-                    # of 1 node and 1 gpu
-
-                    # Get min number of nodes to run based on model and hpc architecture
-                    min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
-                    candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
-                        tmp_cfg.arch.node.gpus_per_node,
-                        max_gpus_scale=tmp_cfg.model.max_gpus_scale,
-                    )
-                    nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
-
-                    for nodes in nodes_to_run:
-                        tmp_cfg.slurm.sbatch.nodes = nodes
-
-                        parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
-
-                        tmp_cfg.slurm.sbatch.chdir = os.path.join(
-                            tmp_cfg.experiment.output_dir, parameters_combo
-                        )
-
-                        experiment_parameters = (
-                            f"bs{bs}"
-                            + f"-grad_accum{grad_acc}"
-                            + f"-compile{enable_compile}"
-                            + f"-prec{precision}"
-                            + f"-steps{steps}"
-                        )
-
-                        # By default, if config is using 1 node,
-                        # all cfg.arch.node.gpus_per_node will ne utilized
-                        # Unless, perallelism defines min_gpus = 1
-                        if single_gpu_config(tmp_cfg):
-                            tmp_cfg.slurm.sbatch.gpus_per_node = 1
-                            tmp_cfg.slurm.sbatch.gres = "gpu:1"
-
-                        total_gpus = (
-                            tmp_cfg.slurm.sbatch.gpus_per_node
-                            * tmp_cfg.slurm.sbatch.nodes
-                        )
-                        msg = (
-                            f"\t· parallelism: {parallelism}"
-                            + f" | nodes:{nodes}"
-                            + f" | gpus:{total_gpus}"
-                            + f" | bs:{bs}"
-                            + f" | grad_accum:{grad_acc}"
-                            + f" | compilation: {enable_compile}"
-                            + f" | precision:{precision}"
-                            + f" | steps:{steps}"
-                        )
-
-                        tmp_cfg.id = (
-                            f"{tmp_cfg.machine.name}"
-                            + f"_{tmp_cfg.model.name}"
-                            + f"_{tmp_cfg.framework.name}"
-                            + f"_{tmp_cfg.framework.parallelism_name}"
-                            + f"_{tmp_cfg.dataset.name}"
-                            + f"_nodes-{nodes}"
-                            + f"_gpus-{total_gpus}"
-                            + f"--{experiment_parameters}"
-                        )
-                        yaml_filename = (
-                            f"{parallelism}--{experiment_parameters}" + ".yaml"
-                        )
-                        if tmp_cfg.id in cfg_seen:
-                            print(
-                                f"{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
-                            )
-                            continue
-                        cfg_seen.add(tmp_cfg.id)
-
-                        # MAKE SURE BEFORE DELETE
-                        # outpath_yaml = os.path.join(run_path, yaml_filename)
-                        passed, results_msg = rules.is_valid(tmp_cfg)
-                        if not passed:
-                            skipped.append([tmp_cfg, results_msg])
-                            msg += f"-> {RED}❌ Failed:{RESET}"
-                            raw_total += 1
-                            for f in results_msg:
-                                msg += (
-                                    f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
-                                )
-                            print(msg)
-                            continue
-                        msg += f" --> {GREEN}✅ Passed!{RESET}"
-                        for s in results_msg:
-                            if s.reason == "":
-                                continue
-                            # msg += (
-                            #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
-                            # )
-
-                        print(msg)
-                        raw_total += 1
-
-                        # MAKE SURE BEFORE DELETE
-                        # tmp_cfg.slurm.sbatch.chdir = run_path
-                        tmp_cfg.experiment.yaml_filename = yaml_filename
-                        # Resolve all yaml config parameter references before finish
-                        OmegaConf.resolve(tmp_cfg)
-                        valid.append(deepcopy(tmp_cfg))
-
-    _print_summary(raw_total, valid, skipped)
+        _print_summary(raw_total, valid, skipped)
     return valid, skipped
+
+
+def _single_parallelism_framework(
+    cfg: BenchmarkConfig,
+    outpath: str,
+    cfg_seen: set,
+    valid: list,
+    skipped: list,
+    raw_total: int,
+):
+    """Specific to frameworks torchrun, accelerate, deepspeed-accelerate, deepspeed
+
+    Args:
+        cfg (BenchmarkConfig): _description_
+        outpath (str): _description_
+        cfg_seen (set): _description_
+        valid (list): _description_
+        skipped (list): _description_
+        raw_total (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    for parallelism in cfg.model.parallelism_supported:
+        tmp_cfg = deepcopy(cfg)
+
+        if parallelism not in cfg.framework.parallelism.keys():
+            continue
+        # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+        # print(f"parallelism: \n{parallelism}")
+        parallelism_spex = cfg.framework.parallelism[parallelism]
+
+        target_parallelism = OmegaConf.create(
+            DictConfig({parallelism: parallelism_spex})
+        )
+        # print(f"target_parallelism: \n{target_parallelism}")
+        # print(f"cfg.framework.parallelism: \n{cfg.framework.parallelism}")
+        tmp_cfg.framework.parallelism_name = parallelism
+        tmp_cfg.framework.parallelism = target_parallelism
+        # print(f"\tCreating configuration for parallelism {parallelism}:")
+        # print(OmegaConf.to_yaml(cfg))
+
+        for (
+            gbs,
+            bs,
+            precision,
+            steps,
+            enable_compile,
+            grad_ctk,
+            seq_len,
+            attn,
+        ) in product(
+            cfg.model.combinations.global_batch_sizes,
+            cfg.model.combinations.batch_sizes,
+            cfg.model.combinations.precisions,
+            cfg.model.combinations.steps,
+            cfg.model.combinations.enable_compile,
+            cfg.model.combinations.gradient_checkpointing,
+            cfg.model.combinations.max_seq_lens,
+            cfg.model.combinations.attention_mechanisms,
+        ):
+            # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
+            # to each experiment combination
+            tmp_cfg.model.training.global_batch_size = gbs
+            tmp_cfg.model.training.batch_size = bs
+            tmp_cfg.model.training.precision = precision
+            tmp_cfg.model.training.steps = steps
+            tmp_cfg.model.training.enable_compile = enable_compile
+            tmp_cfg.model.training.gradient_checkpointing = grad_ctk
+            tmp_cfg.model.training.max_model_length = seq_len
+            tmp_cfg.model.training.attention_mechanism = attn
+            tmp_cfg.experiment.output_dir = outpath
+            # Will bee used later to take care of configuration
+            # of 1 node and 1 gpu
+
+            # Get min number of nodes to run based on model and hpc architecture
+            min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
+            candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
+                tmp_cfg.arch.node.gpus_per_node,
+                max_gpus_scale=tmp_cfg.model.max_gpus_scale,
+            )
+            nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
+
+            for nodes in nodes_to_run:
+                tmp_cfg.slurm.sbatch.nodes = nodes
+                total_gpus = (
+                    tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
+                )
+                grad_acc = int(gbs / (bs * total_gpus))
+                tmp_cfg.model.training.grad_accum = grad_acc
+
+                parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
+
+                tmp_cfg.slurm.sbatch.chdir = os.path.join(
+                    tmp_cfg.experiment.output_dir, parameters_combo
+                )
+
+                experiment_parameters = (
+                    f"gbs{gbs}-bs{bs}"
+                    + f"-grad_accum{grad_acc}"
+                    + f"-grad-ctk{grad_ctk}"
+                    + f"-max-seq-len{seq_len}"
+                    + f"-compile{enable_compile}"
+                    + f"-attn{AttentionMechanism(attn).value}"
+                    + f"-prec{precision}"
+                    + f"-steps{steps}"
+                )
+
+                # By default, if config is using 1 node,
+                # all cfg.arch.node.gpus_per_node will ne utilized
+                # Unless, perallelism defines min_gpus = 1
+                if single_gpu_config(tmp_cfg):
+                    tmp_cfg.slurm.sbatch.gpus_per_node = 1
+                    tmp_cfg.slurm.sbatch.gres = "gpu:1"
+
+                msg = (
+                    f"\t· parallelism: {parallelism}"
+                    + f" | nodes:{nodes}"
+                    + f" | gpus:{total_gpus}"
+                    + f" | gbs:{gbs}"
+                    + f" | bs:{bs}"
+                    + f" | grad_accum:{grad_acc}"
+                    + f" | max-seq-len{seq_len}"
+                    + f" | compilation: {enable_compile}"
+                    + f" | attn: {AttentionMechanism(attn).value}"
+                    + f" | precision:{precision}"
+                    + f" | steps:{steps}"
+                )
+
+                tmp_cfg.id = (
+                    f"{tmp_cfg.machine.name}"
+                    + f"_{tmp_cfg.model.name}"
+                    + f"_{tmp_cfg.framework.name}"
+                    + f"_{tmp_cfg.framework.parallelism_name}"
+                    + f"_{tmp_cfg.dataset.name}"
+                    + f"_nodes-{nodes}"
+                    + f"_gpus-{total_gpus}"
+                    + f"--{experiment_parameters}"
+                )
+                yaml_filename = f"{parallelism}--{experiment_parameters}" + ".yaml"
+                if tmp_cfg.id in cfg_seen:
+                    print(
+                        f"{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
+                    )
+                    continue
+                cfg_seen.add(tmp_cfg.id)
+
+                # MAKE SURE BEFORE DELETE
+                # outpath_yaml = os.path.join(run_path, yaml_filename)
+                passed, results_msg = rules.is_valid(tmp_cfg)
+                if not passed:
+                    skipped.append([tmp_cfg, results_msg])
+                    msg += f"-> {RED}❌ Failed:{RESET}"
+                    raw_total += 1
+                    for f in results_msg:
+                        msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                    print(msg)
+                    continue
+                msg += f" --> {GREEN}✅ Passed!{RESET}"
+                for s in results_msg:
+                    if s.reason == "":
+                        continue
+                    # msg += (
+                    #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
+                    # )
+
+                print(msg)
+                raw_total += 1
+
+                # MAKE SURE BEFORE DELETE
+                # tmp_cfg.slurm.sbatch.chdir = run_path
+                tmp_cfg.experiment.yaml_filename = yaml_filename
+                # Resolve all yaml config parameter references before finish
+                OmegaConf.resolve(tmp_cfg)
+                valid.append(deepcopy(tmp_cfg))
+
+    return cfg_seen, valid, skipped, raw_total
+
+
+def _multi_parallelism_framework(
+    cfg: BenchmarkConfig,
+    outpath: str,
+    cfg_seen: set,
+    valid: list,
+    skipped: list,
+    raw_total: int,
+):
+    """Specific to framework megatron-nemo-2509
+
+    Args:
+        cfg (BenchmarkConfig): _description_
+        outpath (str): _description_
+        cfg_seen (set): _description_
+        valid (list): _description_
+        skipped (list): _description_
+        raw_total (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    for parallelism in cfg.model.megatron_parallelism_supported:
+        assert parallelism in cfg.framework.megatron_parallelism.keys(), (
+            f"{RED}Megatron parallelism {YELLOW}'{parallelism}'{RED} is not supported! Available choices {BLUE}{MEGATRON_PARALLELISM_AVAILABLE}"
+        )
+
+    tmp_cfg = deepcopy(cfg)
+    for gbs, bs, steps, grad_ctk, seq_len, prec, attn in product(
+        cfg.model.combinations.global_batch_sizes,
+        cfg.model.combinations.batch_sizes,
+        cfg.model.combinations.steps,
+        cfg.model.combinations.gradient_checkpointing,
+        cfg.model.combinations.max_seq_lens,
+        cfg.model.combinations.precisions,
+        cfg.model.combinations.attention_mechanisms,
+    ):
+        # Replace combinations from cfg.trainings* into tmp_cfg.model.training.*
+        # to each experiment combination
+        tmp_cfg.model.training.global_batch_size = gbs
+        tmp_cfg.model.training.batch_size = bs
+        tmp_cfg.model.training.steps = steps
+        tmp_cfg.model.training.gradient_checkpointing = grad_ctk
+        tmp_cfg.model.training.max_model_length = seq_len
+        tmp_cfg.model.training.precision = prec
+        tmp_cfg.model.training.attention_mechanism = attn
+        tmp_cfg.experiment.output_dir = outpath
+
+        # Get min number of nodes to run based on model and hpc architecture
+        # print(f"tmp_cfg: {tmp_cfg}")
+        min_nodes = rules.MinNodesMemoryRule()._min_nodes_required(tmp_cfg)
+        candidate_nodes = rules.MinNodesMemoryRule()._nodes_candidates(
+            tmp_cfg.arch.node.gpus_per_node,
+            max_gpus_scale=tmp_cfg.model.max_gpus_scale,
+        )
+        nodes_to_run = [n for n in candidate_nodes if n >= min_nodes]
+
+        for n in nodes_to_run:
+            parallelism_combinations = rules.megatron_parallelism_combos(
+                gpus_per_node=tmp_cfg.arch.node.gpus_per_node,
+                nnodes=n,
+                axes=tmp_cfg.model.megatron_parallelism_supported,
+                allowed={
+                    k: list(v)
+                    for k, v in (
+                        tmp_cfg.model.megatron_parallelism_allowed or {}
+                    ).items()
+                },
+            )
+            # print(f"{parallelism_combinations[0]}")
+            for c in parallelism_combinations:
+                tmp_cfg.slurm.sbatch.nodes = c["nnodes"]
+                total_gpus = (
+                    tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
+                )
+                grad_acc = int(gbs / (bs * total_gpus))
+                tmp_cfg.model.training.grad_accum = grad_acc
+
+                parallelism_comb_str = ""
+                assert "dp" in list(c.keys()), (
+                    f"{RED} !! model.megatron_parallelism_supported must include 'dp'!! Key 'dp' was not found. "
+                )
+                _c = {
+                    "tp": c.get("tp", 1),
+                    "pp": c.get("pp", 1),
+                    "cp": c.get("cp", 1),
+                    "sp": c.get("sp", False),
+                    "ep": c.get("ep", 1),
+                    "dp": c["dp"],
+                }
+                tmp_cfg.framework.megatron_parallelism.tp = _c["tp"]
+                parallelism_comb_str += (
+                    f"tp-{tmp_cfg.framework.megatron_parallelism.tp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.pp = _c["pp"]
+                parallelism_comb_str += (
+                    f"_pp-{tmp_cfg.framework.megatron_parallelism.pp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.cp = _c["cp"]
+                parallelism_comb_str += (
+                    f"_cp-{tmp_cfg.framework.megatron_parallelism.cp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.dp = _c["dp"]
+                parallelism_comb_str += (
+                    f"_dp-{tmp_cfg.framework.megatron_parallelism.dp}"
+                )
+                tmp_cfg.framework.megatron_parallelism.ep = _c["ep"]
+                parallelism_comb_str += (
+                    f"_ep-{tmp_cfg.framework.megatron_parallelism.ep}"
+                )
+                tmp_cfg.framework.megatron_parallelism.sp = _c["sp"]
+                parallelism_comb_str += (
+                    f"_sp-{tmp_cfg.framework.megatron_parallelism.sp}"
+                )
+
+                parameters_combo = (
+                    f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/"
+                    + f"{cfg.dataset.name}/nodes-{tmp_cfg.slurm.sbatch.nodes}"
+                )
+
+                tmp_cfg.slurm.sbatch.chdir = os.path.join(
+                    tmp_cfg.experiment.output_dir, parameters_combo
+                )
+                experiment_parameters = (
+                    f"gbs{gbs}"
+                    f"-bs{bs}"
+                    f"-grad_accum{grad_acc}"
+                    f"-prec{prec}"
+                    f"-seq_len{seq_len}"
+                    f"-grad_ctk{grad_ctk}"
+                    f"-attn{AttentionMechanism(attn).value}"
+                )
+                yaml_filename = (
+                    f"{parallelism_comb_str}--{experiment_parameters}" + ".yaml"
+                )
+
+                tmp_cfg.id = (
+                    f"{tmp_cfg.machine.name}"
+                    + f"_{tmp_cfg.model.name}"
+                    + f"_{tmp_cfg.framework.name}"
+                    + f"_{parallelism_comb_str}"
+                    + f"_{tmp_cfg.dataset.name}"
+                    + f"_nodes-{tmp_cfg.slurm.sbatch.nodes}"
+                    + f"_gpus-{total_gpus}"
+                    + f"--{experiment_parameters}"
+                )
+                if tmp_cfg.id in cfg_seen:
+                    # print(
+                    #    f"{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
+                    # )
+                    continue
+                cfg_seen.add(tmp_cfg.id)
+
+                # MAKE SURE BEFORE DELETE
+                # outpath_yaml = os.path.join(run_path, yaml_filename)
+                passed, results_msg = rules.is_valid(tmp_cfg)
+                msg = (
+                    f"\t· tp:{_c['tp']}-pp:{_c['pp']}-cp:{_c['cp']}-dp:{_c['dp']}"
+                    + f" | nodes:{tmp_cfg.slurm.sbatch.nodes}"
+                    + f" | gpus:{total_gpus}"
+                    + f" | gbs:{gbs}"
+                    + f" | bs:{bs}"
+                    + f" | precision:{prec}"
+                    + f" | max-seq-len:{seq_len}"
+                    + f" | grad_accum:{grad_acc}"
+                )
+                if not passed:
+                    skipped.append([tmp_cfg, results_msg])
+                    msg += f"-> {RED}❌ Failed:{RESET}"
+                    raw_total += 1
+                    for f in results_msg:
+                        msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                    print(msg)
+                    continue
+                msg += f" --> {GREEN}✅ Passed!{RESET}"
+                for s in results_msg:
+                    if s.reason == "":
+                        continue
+                    # msg += (
+                    #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
+                    # )
+
+                print(msg)
+                raw_total += 1
+
+                # MAKE SURE BEFORE DELETE
+                # tmp_cfg.slurm.sbatch.chdir = run_path
+                tmp_cfg.experiment.yaml_filename = yaml_filename
+                # Resolve all yaml config parameter references before finish
+                OmegaConf.resolve(tmp_cfg)
+                valid.append(deepcopy(tmp_cfg))
+
+    return cfg_seen, valid, skipped, raw_total
 
 
 def _print_summary(
@@ -316,20 +618,3 @@ def get_parser():
         required=True,
     )
     return parser
-
-
-if __name__ == "__main__":
-    parser = get_parser()
-    args = parser.parse_args()
-
-    GlobalHydra.instance().clear()
-    """with initialize_config_dir(
-        config_dir=os.path.abspath(args.config_path), version_base=None
-    ):
-        cfg = compose(config_name=args.config_name)
-        my_app(cfg)"""
-    generate_valid_combos(
-        config_path=os.path.abspath(args.config_path),
-        config_name=args.config_name,
-        outpath="./benchmarks_to_run",
-    )

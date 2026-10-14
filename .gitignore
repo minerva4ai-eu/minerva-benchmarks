@@ -2,9 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.old
-*.venv
-*.sif
 
 # Folders
 inference/scripts/ray-serve/
@@ -28,10 +25,15 @@ training/benchmark-runs*
 training/configs_hydra/benchmarks_to_run/*
 training/datasets/*
 training/models/*
+training/cli-logs/*
 
 */.torchcompile_cache/*
-*/.triton-cache/*
-
+*/.torch-inductor-cache/*
+*/.triton*
+*/.cache*
 *copy
+*.deepspeed_env
 
-
+*nemo_experiments*
+*.old
+*.sif

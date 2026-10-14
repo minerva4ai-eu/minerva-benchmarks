@@ -1,11 +1,13 @@
 import json
+import logging
 import os
-from datetime import datetime
-from pathlib import Path
 from shutil import copytree, ignore_patterns
 
 import yaml
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
+from omegaconf import OmegaConf
+
+logger = logging.getLogger(__name__)
 
 # ANSI Escape Codes for Terminal Colors
 GREEN = "\033[92m"
@@ -74,6 +76,10 @@ def read_jsonl(path: str) -> list[dict]:
     return records
 
 
+def load_config(path: str) -> BenchmarkConfig:
+    return OmegaConf.load(path)
+
+
 def load_yaml(filepath):
     try:
         with open(filepath, "r") as file:
@@ -81,31 +87,41 @@ def load_yaml(filepath):
             config = yaml.safe_load(file)
             return config
     except FileNotFoundError as e:
-        print(f"{__name__}.load_yaml() | Error: The file '{filepath}' was not found.")
+        logger.exception(
+            f"{__name__}.load_yaml() | Error: The file '{filepath}' was not found."
+        )
         raise e
     except yaml.YAMLError as e:
-        print(f"{__name__}.load_yaml() | Error parsing YAML file: '{filepath}'")
+        logger.exception(
+            f"{__name__}.load_yaml() | Error parsing YAML file: '{filepath}'"
+        )
         raise e
 
 
 def get_cfg_folder(
     cfg: BenchmarkConfig,
-    base_dir: Path,
-    runs_dir: Path,
+    base_dir: str,
+    runs_dir: str,
 ):
-
-    parameters_combo = f"{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
-    results_dir = os.path.join(base_dir.absolute(), runs_dir)
+    prefix = "yaml-configs"
+    parameters_combo = f"{prefix}/{cfg.model.name}/{cfg.framework.name}/{cfg.framework.parallelism_name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    if cfg.framework.megatron_parallelism:
+        parameters_combo = f"{prefix}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{cfg.slurm.sbatch.nodes}"
+    results_dir = os.path.join(base_dir, runs_dir)
     machine_results_base = os.path.join(results_dir, cfg.machine.name)
-    date_folder = os.path.join(
-        machine_results_base,
-        datetime.now().strftime("%d-%m-%Y"),
-    )
     cfg_path = os.path.join(
-        date_folder,
+        machine_results_base,
         parameters_combo,
     )
     return cfg_path
+
+
+def get_yaml_configs_path(
+    base_dir: str,
+    runs_dir: str,
+) -> str:
+    results_dir = os.path.join(base_dir, runs_dir)
+    machine_results_base = os.path.join(results_dir, cfg.machine.name)
 
 
 def get_cfg_folder_from_launch(launch_path: str):

@@ -1,0 +1,190 @@
+#!/bin/bash
+
+#SBATCH -J minerva_train
+
+# ##############################################################################
+#                                  Overview
+
+# This job defines a launch submission setup using GNU parallel (a powerful 
+# tool for executing a command with arguments formed from combinatoric lists). 
+# In this case, the command is the worker script, which checks the arguments
+# and submits a job step.
+
+# The Slurm SBATCH parameters are intentional. For example, the flag
+# `--cpus-per-task` sets `SLURM_CPUS_PER_TASK`, which is is used in the  case 
+# of `parallelism="none"` (single GPU) to submit the part-node worker. 
+# Another important flag is `--ntasks-per-node`` so that multiple part-node 
+# steps can be executed in parallel.
+
+# This job script can be used with main.sh for a CLI submission. For MINERVA,
+# each cluster-specific configuration can be handled in a `CONFIG_NAME.job`
+# job script, defining it's own task submission (e.g. serial or parallel), 
+# file-reading, logging, and environment setup (e.g. container vs native).
+
+# ##############################################################################
+
+# ##############################################################################
+#                            Environment Setup
+# ##############################################################################
+
+
+export TORCH_LOGS="recompiles"
+
+source "scripts/shared/runtime_environment.sh"
+PYTHON=$(get_cli_python)
+echo "PYTHON: $PYTHON"
+
+echo MINERVA_WORKDIR="$MINERVA_WORKDIR"
+echo ""
+    
+py_to_module() {
+    local path="$1"
+
+    # Strip leading ./ if present
+    path="${path#./}"
+
+    # Only convert if it ends in .py
+    if [[ "$path" == *.py ]]; then
+        # Remove .py extension
+        path="${path%.py}"
+        # Replace path separators with dots
+        path="${path//\//.}"
+        echo "-m $path"
+    else
+        echo "$path"
+    fi
+}
+
+runner_fn () {
+
+    echo Starting runner: ...
+    echo Printing env...
+    echo "SRUN_SCRIPT: $SRUN_SCRIPT \
+TRAIN_SCRIPT: $TRAIN_SCRIPT \
+FRAMEWORK: $FRAMEWORK \
+PARALLELISM: $PARALLELISM \
+NNODES: $NNODES \
+EXECUTION_MODE: $EXECUTION_MODE \
+SINGULARITY_CONTAINER: $SINGULARITY_CONTAINER \
+VENV_PATH : $VENV_PATH"
+    
+    scontrol show step $SLURM_JOB_ID.$SLURM_STEP_ID
+
+    # Check Environment Variables
+    echo Config in runner function:
+    echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES" \
+    "  SLURM_TASKS_PER_NODE: $SLURM_TASKS_PER_NODE" \
+    "  SLURM_NTASKS_PER_NODE: $SLURM_NTASKS_PER_NODE" \
+    "  SLURM_STEP_NUM_NODES: $SLURM_STEP_NUM_NODES"  \
+    "  SLURM_STEP_NUM_TASKS: $SLURM_STEP_NUM_TASKS"  \
+    "  SLURM_STEP_TASKS_PER_NODE: $SLURM_STEP_TASKS_PER_NODE"\
+    "  SLURM_GPUS_ON_NODE: $SLURM_GPUS_ON_NODE" \
+    "  SLURM_CPUS_ON_NODE: $SLURM_CPUS_ON_NODE" \
+    "  SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK" \
+    "  SLURM_NODEID: $SLURM_NODEID" \
+    "  SLURM_PROCID: $SLURM_PROCID"
+
+    export TORCHINDUCTOR_CACHE_DIR="$TMPDIR/torchinductor_$USER/$SLURM_JOB_ID.$SLURM_STEP_ID"
+    export TENSORBOARD_LOGGING_DIR="$TMPDIR/tensorboard_$SLURM_JOB_ID.$SLURM_STEP_ID"
+    
+    export NCCL_DEBUG=INFO
+    export NCCL_DEBUG_SUBSYS=INIT,P2P,COLL,NET,GRAPH,TUNING,NVLS,PROXY
+    export NCCL_DEBUG_TIMESTAMP_LEVELS=WARN,INFO
+    export NCCL_DEBUG_FILE="$SRUN_LOGS/steps-slurm-logs/srun-$SLURM_JOB_ID.$SLURM_STEP_ID.nccl"
+
+    # No slurm commands inside the container (only environment variables)
+
+    export HEAD_PORT=29500
+    export HEAD_NODE=$(scontrol show hostnames ${SLURM_STEP_NODELIST} | head -n 1)
+
+    echo "HEAD_NODE=$HEAD_NODE"
+    
+    export JOB_CACHE="$SRUN_LOGS/.cache"
+    export PROFILER_OUTDIR="$SRUN_LOGS/outputs/gpus-monitor/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURMD_NODENAME"
+    
+    bash "$SRUN_SCRIPT" "$YAML_PATH" 
+
+    echo "Ending runner_fn: `date`"
+    echo -e "Finished run: \n\n"
+}
+export -f runner_fn
+
+SRUN_LOGS="$MINERVA_WORKDIR/$SLURM_JOB_ID"
+# Read all manifest lines ("<yaml path>\t<results dir>") into a Bash array
+if [[ -f "$MINERVA_MANIFEST_FILE" ]]; then
+    mapfile -t YAMLS < "$MINERVA_MANIFEST_FILE"
+    cp "$MINERVA_MANIFEST_FILE" "$SRUN_LOGS"
+    rm "$MINERVA_MANIFEST_FILE"
+else
+    echo "Error: Manifest file not found at $MINERVA_MANIFEST_FILE"
+    exit 1
+fi
+
+for MANIFEST_LINE in "${YAMLS[@]}"; do
+    YAML_PATH="${MANIFEST_LINE%%$'\t'*}"
+    # Each profile has its own results folder; default to the job-level one
+    YAML_WORKDIR="$MINERVA_WORKDIR"
+    if [[ "$MANIFEST_LINE" == *$'\t'* ]]; then
+        YAML_WORKDIR="${MANIFEST_LINE#*$'\t'}"
+    fi
+    SRUN_LOGS="$YAML_WORKDIR/$SLURM_JOB_ID"
+    mkdir -p "$SRUN_LOGS/steps-slurm-logs"
+    echo "$YAML_PATH"
+
+    # build_srun_env() reads env var "YAML_PATH"
+    export YAML_PATH
+    echo "Setting srun environment..."
+    echo "Running: $PYTHON -m scripts.slurm.submitter --build-srun-env"
+
+    export TEMP_ENV_FILE="$TMPDIR/.tmp_srun_env"
+    eval "$PYTHON -m scripts.slurm.submitter --build-srun-env"
+    source "$TEMP_ENV_FILE"
+    rm "$TEMP_ENV_FILE"
+
+    export TRAIN_MODULE=$(py_to_module "$TRAIN_SCRIPT")
+    echo "SRUN_SCRIPT: $SRUN_SCRIPT \
+TRAIN_SCRIPT: $TRAIN_SCRIPT \
+FRAMEWORK: $FRAMEWORK \
+PARALLELISM: $PARALLELISM \
+NNODES: $NNODES \
+EXECUTION_MODE: $EXECUTION_MODE \
+SINGULARITY_CONTAINER: $SINGULARITY_CONTAINER \
+VENV_PATH : $VENV_PATH \
+TRAIN_SCRIPT: $TRAIN_SCRIPT \
+TRAIN_MODULE: $TRAIN_MODULE"
+    
+    export LOG_DIR="$YAML_WORKDIR"
+    if [[ ! -d $LOG_DIR ]]; then
+        mkdir -p "$LOG_DIR"
+    fi
+
+    echo "LOG_DIR: $LOG_DIR"
+    export SRUN_LOGS
+
+    NGPUs=$SLURM_GPUS_ON_NODE
+    NCPUs=$SLURM_CPUS_ON_NODE
+    if [[ $PARALLELISM == "none" ]]; then
+        echo heree
+        NGPUs=1
+        NCPUs=$((SLURM_CPUS_PER_TASK/NGPUs))
+    fi
+
+
+    TIME_LIMIT="$SRUN_TIMELIMIT:00:00"
+    echo "SRUN_TIMELIMIT=$SRUN_TIMELIMIT" 
+    echo "TIME_LIMIT=$TIME_LIMIT"
+    srun \
+        -N "$NNODES" \
+        --ntasks-per-node=1 \
+        --label \
+        --cpus-per-task=$NCPUs \
+        --gres=gpu:"$NGPUs" \
+        --output="$SRUN_LOGS/steps-slurm-logs/srun-%J.out" \
+        --error="$SRUN_LOGS/steps-slurm-logs/srun-%J.err" \
+        --export=ALL \
+        --time="$TIME_LIMIT" \
+        bash -c "runner_fn $YAML_PATH" &
+        
+done
+
+wait

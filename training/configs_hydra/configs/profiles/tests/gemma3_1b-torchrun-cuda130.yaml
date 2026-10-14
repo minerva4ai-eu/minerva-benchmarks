@@ -1,0 +1,23 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile gemma3_1b-torchrun-cuda130
+
+selection:
+  models: [gemma3_1b]
+  frameworks: [torchrun-cuda130]
+  datasets: [alpaca]
+
+
+experiment:
+  repeat: 2
+
+model:
+  max_gpus_scale: "${multiply_int: '2', '${arch.node.gpus_per_node}'}"
+  combinations:
+    global_batch_sizes: [64]
+    batch_sizes: [1]
+    precisions: [bf16]
+    steps: [5]
+  parallelism_supported:
+    - none
+    - ddp

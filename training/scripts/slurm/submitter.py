@@ -1,44 +1,80 @@
 # benchmark/submitter.py
 import json
+import logging
 import os
 import shutil
 import subprocess
+import sys
+import uuid
 from pathlib import Path
 
-from configs_hydra.dataclasses_hydra.arch import get_peak_flops
-from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig
-from omegaconf import DictConfig, OmegaConf
+import click
+from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, MachineConfig
+from configs_hydra.dataclasses_hydra.slurm import SlurmConfig
+from omegaconf import OmegaConf
 from scripts.slurm import utils as u
 
-
-class ExecussionEnvironmentSelectionError(ValueError):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+logger = logging.getLogger(__name__)
 
 
-def build_launch_folder(
+def write_config(
+    cfg: BenchmarkConfig,
+    base_dir: str,
+    runs_dir: str,
+    dry: bool | None = False,
+) -> str:
+    cfg_dir = u.get_cfg_folder(cfg, base_dir, runs_dir)
+    logger.debug("cfg_dir = %s", cfg_dir)
+    cfg_path = os.path.join(cfg_dir, str(cfg.experiment.yaml_filename))
+    # if not dry:
+    logger.debug(f"Writing config on '{cfg_path}'")
+    os.makedirs(cfg_dir, exist_ok=True)
+    OmegaConf.save(cfg, cfg_path)
+    return cfg_path
+
+
+def _build_launch_folder(
     cfg: BenchmarkConfig,
     base_dir: Path,
     runs_dir: Path,
-    run_id: str,
     dry: bool | None = False,
     repeat_id: int | None = None,
+    run_date: str = "DD-MM-YYYY",
 ) -> Path:
     combo_path = u.get_cfg_folder(cfg, base_dir, runs_dir)
+    # logger.debug("combo_path = %s", combo_path)
     experiment_config_dir = os.path.join(combo_path, "yaml-configs")
     experiment_config_path = os.path.join(
         experiment_config_dir, cfg.experiment.yaml_filename
     )
+    if dry:
+        # OmegaConf.save(cfg, experiment_config_path)
+        return Path(experiment_config_path)
     os.makedirs(combo_path, exist_ok=True)
     os.makedirs(experiment_config_dir, exist_ok=True)
-    if dry:
-        OmegaConf.save(cfg, experiment_config_path)
-        return Path(experiment_config_path)
     launch_folder = Path("")
+
+    # TODO: check desired behavior
+    # runs_dir = f"{runs_dir}-{config_name}"
+    slurm_monitor_dir = os.path.join(runs_dir, "slurm-monitor")
+    date_monitor_dir = os.path.join(slurm_monitor_dir, run_date)
+    # os.makedirs(date_monitor_dir, exist_ok=True)
+    run_id = 1
+    short_id = f"run_id-{run_id}"
+    run_monitor_dir = os.path.join(date_monitor_dir, short_id)
+    # logger.debug("run_id, short_id = %s, %s", run_id, short_id)
+    # FIXME: traceable
+    while os.path.exists(run_monitor_dir):
+        run_id += 1
+        short_id = f"run_id-{run_id}"
+        # logger.debug("run_id, short_id = %s, %s", run_id, short_id)
+        run_monitor_dir = os.path.join(date_monitor_dir, short_id)
+
     if repeat_id:
-        run_folder = os.path.join(combo_path, run_id)
+        run_folder = os.path.join(combo_path, short_id)
         launch_folder = Path(run_folder, f"launch-{repeat_id}")
         launch_folder.mkdir(parents=True, exist_ok=True)
+        cfg.run_dir = str(launch_folder)
         if not os.path.exists(experiment_config_path):
             OmegaConf.save(cfg, experiment_config_path)
 
@@ -50,10 +86,6 @@ def build_launch_folder(
 
 
 def copy_scripts(cfg: BenchmarkConfig, dest: Path):
-    # Copy folder with shared among frameworks
-    shutil.copytree(
-        cfg.framework.scripts.shared, os.path.join(dest, "shared"), dirs_exist_ok=True
-    )
 
     shutil.copy(cfg.framework.scripts.run, dest)
     if hasattr(cfg.framework.scripts, "finetune"):
@@ -69,42 +101,35 @@ def copy_scripts(cfg: BenchmarkConfig, dest: Path):
             shutil.copy(src_path, dest)
 
 
-def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
-    m, t, f, d, s = (
-        cfg.model,
-        cfg.model.training,
-        cfg.framework,
-        cfg.dataset,
-        cfg.slurm,
-    )
-    assert isinstance(f.parallelism, DictConfig) and len(f.parallelism) == 1, (
-        f"cfg.framework is expected to be of type DictConfig, but received {type(cfg.framework)} cfg.framework"
-    )
-    assert (t.steps is not None) != (t.epochs is not None), (
-        "Must provide exactly only one of 'epochs' or 'step'! "
-    )
+def build_srun_env():
+    from omegaconf import OmegaConf
 
-    execution_mode = cfg.machine.runtime_env_mode
-    # if cfg.framework.singularity_container:
-    #    execution_mode = "singularity"
-    # elif cfg.framework.python_environment:
-    #    execution_mode = "venv"
-    # else:
-    #    raise ExecussionEnvironmentSelectionError(
-    #        "Could not establish runtime environment mode! Must provide either 'venv' or 'singularity' option"
-    #    )
+    yaml_path = os.environ["YAML_PATH"]
+    temp_env = os.environ["TEMP_ENV_FILE"]
+
+    cfg: BenchmarkConfig
+    cfg = OmegaConf.load(yaml_path)
+
+    # Absolute path to the training/ root (two levels up from this file)
+    training_root = str(Path(__file__).resolve().parents[2])
+    existing_pythonpath = os.getenv("PYTHONPATH", "")
+    pythonpath = (
+        f"{training_root}:{existing_pythonpath}"
+        if existing_pythonpath
+        else training_root
+    )
 
     env = {
-        **os.environ,
+        "MODEL_PATH": cfg.model.path,
         **(
             {"LOAD_MODULES": f"module load {' '.join(cfg.machine.modules)}"}
             if cfg.machine.modules is not None
             else {}
         ),
-        "EXECUTION_MODE": execution_mode,
+        "EXECUTION_MODE": cfg.machine.runtime_env_mode,
         **(
             {
-                "ENVIRONMENT_FINETUNING": cfg.framework.python_environment,
+                "VENV_PATH": cfg.framework.python_environment,
             }
             if cfg.framework.python_environment is not None
             else {}
@@ -112,7 +137,7 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
         **(
             {
                 "SINGULARITY_CONTAINER": cfg.framework.singularity_container,
-                "SINGULARITY_BINDS": " ".join(cfg.machine.singularity_binds)
+                "SINGULARITY_BINDS": "-B " + "-B ".join(cfg.machine.singularity_binds)
                 if cfg.machine.singularity_binds
                 else "",
                 "SINGULARITY_ARGS": " ".join(cfg.machine.singularity_args)
@@ -122,59 +147,73 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
             if cfg.framework.singularity_container is not None
             else {}
         ),
-        "NODES": str(s.sbatch.nodes),
-        "GPU_NAME": cfg.arch.gpu.name,
-        "GPUS_PER_NODE": str(s.sbatch.gpus_per_node),
-        "GPU_NODE": str(s.sbatch.nodes * s.sbatch.gpus_per_node),
-        "FRAMEWORK": f.name,
-        "DATASET": d.name,
-        "DATASET_PATH": d.path,
-        **(
-            {
-                "DATASET_TRAIN": str(cfg.dataset.train),
-            }
-            if cfg.dataset.train is not None
-            else {}
-        ),
-        **(
-            {
-                "DATASET_VALIDATION": str(cfg.dataset.validation),
-            }
-            if cfg.dataset.validation is not None
-            else {}
-        ),
-        "MODEL": m.name,
-        "MODEL_PATH": m.path,
-        "PARALLELISM": f.parallelism_name,
-        "PRECISION": t.precision,
-        "BATCH_SIZE": str(t.batch_size),
-        "GRAD_ACCUM": str(t.grad_accum),
-        "MAX_MODEL_LENGTH": str(d.max_seq_len),
-        "LR": str(t.lr),
-        "STEPS": str(t.steps) if t.steps else "-1",
-        "EPOCHS": str(t.epochs) if t.epochs else "-1",
-        "REPEAT_ID": str(run_id),
-        "MACHINE": cfg.machine.name,
-        "LAUNCH_FOLDER": launch_folder.absolute(),
-        "TRAIN_SCRIPT": os.path.join(
-            launch_folder.absolute(), f.scripts.finetune.split("/")[-1]
-        ),
-        "ZERO_STAGE": f.parallelism_name
-        if f.name in ["deepspeed", "deepspeed-accelerate"]
-        else "",
-        "GPU_PEAK_TFLOPS": str(
-            get_peak_flops(cfg.arch.gpu, cfg.model.training.precision)
-        ),
-        "ENABLE_COMPILE": str(cfg.model.training.enable_compile),
+        "SRUN_SCRIPT": cfg.framework.scripts.run,
+        "TRAIN_SCRIPT": cfg.framework.scripts.finetune,
+        "FRAMEWORK": cfg.framework.name,
+        "PARALLELISM": cfg.framework.parallelism_name,
+        "NNODES": cfg.slurm.sbatch.nodes,
         "TOKENIZERS_PARALLELISM": str(False),
+        "DATASET_PATH": cfg.dataset.path,
+        "ZERO_STAGE": cfg.framework.parallelism_name
+        if cfg.framework.name.startswith(("deepspeed", "deepspeed-accelerate"))
+        else "",
+        "PYTHONPATH": pythonpath,
+        "REPEATS": str(cfg.experiment.repeat),
     }
 
-    # Merge machine-specific environment variables
     if cfg.machine.env:
         env.update(**cfg.machine.env)
     if cfg.experiment.env:
         env.update(**cfg.experiment.env)
+    if cfg.framework.env:
+        env.update(**cfg.framework.env)
 
+    with open(temp_env, "w") as f:
+        f.writelines(f"export {var}='{value}'\n" for var, value in env.items())
+
+
+def build_sbatch_env(
+    machine: MachineConfig,
+    slurm: SlurmConfig,
+    yamls: list[str],
+    results_dir: str,
+    yamls_results_dirs: list[str] | None = None,
+) -> dict[str, str]:
+
+    # 1. Create results directory if it doesn't exist
+    os.makedirs(results_dir, exist_ok=True)
+
+    # 2. Save YAML paths to a manifest file to bypass ARG_MAX limits
+    manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
+    while os.path.exists(manifest_path):
+        manifest_path = os.path.join(results_dir, f".yamls-manifest-{uuid.uuid4()}.txt")
+    # Each line is "<yaml path>\t<results dir of that yaml's profile>"
+    workdirs = yamls_results_dirs or [results_dir] * len(yamls)
+    with open(manifest_path, "w") as f:
+        f.write("".join(f"{y}\t{w}\n" for y, w in zip(yamls, workdirs)))
+
+    # 3. Build environment safely
+    env = os.environ.copy()
+
+    env.update(
+        {
+            "MODULES": " ".join(machine.modules) if machine.modules else "",
+            "EXECUTION_MODE": str(machine.runtime_env_mode),
+            "SINGULARITY_BINDS": " ".join(machine.singularity_binds)
+            if machine.singularity_binds
+            else "",
+            "SINGULARITY_ARGS": " ".join(machine.singularity_args)
+            if machine.singularity_args
+            else "",
+            "MINERVA_WORKDIR": str(results_dir),
+            "MINERVA_MANIFEST_FILE": str(
+                manifest_path
+            ),  # Pass path to file instead of long string
+            "SRUN_TIMELIMIT": str(slurm.srun.hours_limit),
+        }
+    )
+
+    # Ensure all values are strictly string-formatted
     def _serialize(value):
         if value is None:
             return ""
@@ -182,43 +221,74 @@ def build_env(cfg: BenchmarkConfig, launch_folder: Path, run_id: int) -> dict:
             return json.dumps(list(value))
         return str(value)
 
-    # Make sure that all values are serialized/cast to string
-    for k, v in env.items():
-        env[k] = _serialize(v)
-    return env
+    return {k: _serialize(v) for k, v in env.items()}
+
+
+def get_job_nodes(cfgs: list[BenchmarkConfig], nnodes: int) -> int:
+    max_nodes = -1
+    for cfg in cfgs:
+        max_nodes = max(max_nodes, cfg.slurm.sbatch.nodes)
+    if nnodes:
+        if nnodes < max_nodes:
+            click.echo(
+                f"\n{u.FAILURE_HEAVY}{u.RED} Incorrect number of nodes requested! --nnodes={nnodes} < max_nodes={max_nodes}{u.RESET}"
+            )
+            sys.exit(2)
+        return nnodes
+    return max_nodes
 
 
 def submit_job(
-    cfg: BenchmarkConfig,
-    launch_folder: Path,
-    repeat_id: int,
-    dependency: str,
-    resubmit: bool = False,
+    cfgs: list[BenchmarkConfig],
+    cfgs_paths: list[str],
+    runs_dir: str,
+    run_date: str,
+    nnodes: int,
+    cfgs_runs_dirs: list[str] | None = None,
 ) -> str:
-    if not resubmit:
-        copy_scripts(cfg, launch_folder)
 
-    m, d, f, s, t = (
-        cfg.model,
-        cfg.dataset,
-        cfg.framework,
-        cfg.slurm,
-        cfg.model.training,
-    )
+    job_id = ""
+
+    logger.debug("runs_dir = %s", runs_dir)
+    logger.debug("run_date = %s", run_date)
+    logger.debug("len(cfgs) = %s", len(cfgs))
+
+    ################################################################################
+    # Get system-level configs
+    ################################################################################
+    # Get nodes to run job on
+    job_nodes = get_job_nodes(cfgs, nnodes=nnodes)
+
+    # Get system slurm & machine configs
+    # Sample only one of valid configurations, cause
+    # properties used downstream from objects are fixed
+    # for each profile (--config-name) and common among
+    # all combinations
+    s = cfgs[0].slurm
+    m = cfgs[0].machine
+    logger.debug("Max nodes = %s", job_nodes)
+    # Get system env configs
+    minerva_dir = os.path.join(runs_dir, m.name, run_date)  # writes cfg profiles
+    # Each config's results go under the runs_dir of its own profile
+    yamls_results_dirs = [
+        os.path.join(rd, m.name, run_date) for rd in (cfgs_runs_dirs or [])
+    ] or None
+    sbatch_logs_dir = f"{minerva_dir}/%j/sbatch-slurm-logs"
+    logger.debug("sbatch_logs_dir = %s", sbatch_logs_dir)
+
     # Build sbatch command to submit
     cmd = [
         "sbatch",
         "--parsable",
-        f"--chdir={launch_folder}",
-        f"--nodes={s.sbatch.nodes}",
-        f"--gres=gpu:{s.sbatch.gpus_per_node}",
-        f"--cpus-per-task={s.sbatch.cpus_per_gpu}",
+        f"--nodes={job_nodes}",
+        f"--gres={s.sbatch.gres}",
+        f"--cpus-per-task={s.sbatch.cpus_per_task}",
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
-        f"--output={s.sbatch.output}",
-        f"--error={s.sbatch.error}",
+        f"--output={sbatch_logs_dir}/MINERVA-JOB-%j.out",
+        f"--error={sbatch_logs_dir}/MINERVA-JOB-%j.err",
         f"--partition={s.partition}",
-        *([f"--dependency={dependency}"] if dependency else []),
     ]
+    # TODO: check desired behavior, joint condition?
     if s.qos is not None and s.account is not None:
         cmd.extend(
             [
@@ -233,34 +303,51 @@ def submit_job(
     cmd.extend(
         [
             *s.sbatch.extra_args,
-            os.path.join(launch_folder, f.scripts.run.split("/")[-1]),
+            "MINERVA.job",
         ]
     )
-    # print("\n".join(cmd))
-    job_cfg = (
-        f"{m.name}-{f.name}-{f.parallelism_name}"
-        + f"-{cfg.dataset.name}"
-        + f"-Nodes_{s.sbatch.nodes}-GPUs_{s.sbatch.gpus_per_node * s.sbatch.nodes}"
-        + f"-Prec_{t.precision}"
-        + f"-BS_{t.batch_size}"
-        + f"-GAS_{t.grad_accum}"
-        + f"-Len_{d.max_seq_len}"
-    )
+    logger.debug("os.getcwd() = %s", os.getcwd())
+
     try:
+        logger.info("cmd = %s", cmd)
+
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            env=build_env(cfg, launch_folder, repeat_id),
+            env=build_sbatch_env(
+                machine=m,
+                slurm=s,
+                yamls=cfgs_paths,
+                results_dir=minerva_dir,
+                yamls_results_dirs=yamls_results_dirs,
+            ),
         )
         if result.returncode != 0:
-            print(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned - {job_cfg} {u.RESET}")
-            print(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
+            click.echo(f"{u.RED} {u.FAILURE_HEAVY} No job_id assigned -  {u.RESET}")
+            for cfg_path in cfgs_paths:
+                click.echo(f"\t{u.POINT_BULLET} {u.RED}{cfg_path} {u.RESET}")
+            click.echo(f"\t  {u.ARROW_RIGHT}{u.YELLOW} {result} {u.RESET}")
             return "-100"
         job_id = result.stdout.strip()
     except Exception as e:
         raise e
 
-    # update_status(cfg, runs_dir, "running", job_id)
-    print(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {job_cfg} {u.RESET}")
+    click.echo(f"{u.GREEN} {u.SUCCESS_HEAVY} {job_id} - {u.RESET}")
+    for cfg_path in cfgs_paths:
+        click.echo(f"\t{u.POINT_BULLET} {u.GREEN}{cfg_path} {u.RESET}")
     return job_id
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    argsparser = ArgumentParser()
+    argsparser.add_argument("--build-srun-env", action="store_true", default=False)
+
+    args = argsparser.parse_args()
+    if args.build_srun_env:
+        try:
+            build_srun_env()
+        except Exception:
+            sys.exit(1)

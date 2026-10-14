@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from omegaconf import MISSING
 
@@ -15,7 +14,8 @@ class SbatchConfig:
     gres: str = MISSING
     output: str = MISSING
     error: str = MISSING
-    extra_args: List[str] = field(default_factory=list)
+    logs_folder: str = MISSING
+    extra_args: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.nodes < 1:
@@ -26,12 +26,7 @@ class SbatchConfig:
 
 @dataclass
 class SrunConfig:
-    gpus_per_node: int = field(default=1)
-    cpus_per_task: int = field(default=1)
-    cpus_per_gpu: int = field(default=1)
-    tasks_per_node: int = field(default=1)
-    nodes: int = field(default=1)
-    gres: str = MISSING
+    hours_limit: int = field(default=4)
 
 
 @dataclass

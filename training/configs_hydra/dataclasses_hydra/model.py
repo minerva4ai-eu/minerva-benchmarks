@@ -5,7 +5,7 @@ from configs_hydra.dataclasses_hydra import arch as a
 from omegaconf import MISSING
 
 VALID_OPTIMIZERS = {"adam", "adamw", "sgd", "adafactor"}
-VALID_PRECISIONS = set([precisiontype.value for precisiontype in a.PrecisionType])
+VALID_PRECISIONS = {precisiontype.value for precisiontype in a.PrecisionType}
 
 
 class ArchitectureType(str, Enum):
@@ -14,21 +14,33 @@ class ArchitectureType(str, Enum):
     SSM = "ssm"
 
 
+class AttentionMechanism(str, Enum):
+    # Member names match their values so OmegaConf resolves YAML strings by name
+    default = "default"
+    flash_attn2 = "flash_attn2"
+    flash_attn3 = "flash_attn3"
+
+
 @dataclass
 class TrainArgsConfig:
     """Holds lists — generator expands these into individual combos."""
 
+    global_batch_sizes: list[int]  # field(default_factory=lambda: [1, 4, 8])
     batch_sizes: list[int]  # field(default_factory=lambda: [1, 4, 8])
     precisions: list[str] = MISSING  # field(default_factory=lambda: ["bf16"])
-    grad_accums: list[int] = MISSING  # field(default_factory=lambda: [1])
-    lr: list[float] = MISSING  # field(default_factory=lambda: [1e-4])
+    grad_accums: list[int] | None = MISSING  # field(default_factory=lambda: [1])
+    lr: list[float] | None = MISSING  # field(default_factory=lambda: [1e-4])
     optimizer: list[str] = MISSING  # field(default_factory=lambda: ["adamw"])
     gradient_checkpointing: list[bool] = (
         MISSING  # field(default_factory=lambda: [True, False])
     )
     steps: list[int] | None = MISSING  # field(default_factory=lambda: [50])
     epochs: list[int] | None = MISSING  # field(default_factory=lambda: [1])
-    enable_compile: list[bool] | None = MISSING
+    enable_compile: list[bool] = MISSING
+    max_seq_lens: list[int] = MISSING
+    attention_mechanisms: list[AttentionMechanism] = field(
+        default_factory=lambda: [AttentionMechanism.default]
+    )
 
     def __post_init__(self):
         bad_precisions = set(self.precisions) - VALID_PRECISIONS
@@ -42,6 +54,11 @@ class TrainArgsConfig:
             raise ValueError(
                 f"Unknown optimizer: '{self.optimizer}'. Valid: {VALID_OPTIMIZERS}"
             )
+
+        if not self.attention_mechanisms:
+            raise ValueError("attention_mechanisms must be a non-empty list")
+        for m in self.attention_mechanisms:
+            AttentionMechanism(m)  # raises ValueError on unknown values
 
         if not self.batch_sizes or any(b < 1 for b in self.batch_sizes):
             raise ValueError("batch_sizes must be non-empty list of ints ≥ 1")
@@ -68,16 +85,37 @@ class TrainArgsConfig:
 class ModelTrainingComboConfig:
     """A single resolved training combo — what the constraint rule receives."""
 
+    global_batch_size: int = MISSING
     batch_size: int = MISSING
-    precision: str = MISSING
     grad_accum: int = MISSING
     max_model_length: int = MISSING
+    precision: str = MISSING
     lr: float = MISSING
-    optimizer: str = "adamw"
+    optimizer: str | None = "adamw"
     steps: int | None = None
     epochs: int | None = None
-    gradient_checkpointing: bool = True
-    enable_compile: bool = MISSING
+    gradient_checkpointing: bool | None = True  # WARNING! Is not used in any benchmark
+    enable_compile: bool | None = MISSING
+    attention_mechanism: AttentionMechanism = AttentionMechanism.default
+
+
+class MegatronParallelismConfig(str, Enum):
+    tp = "tp"
+    pp = "pp"
+    dp = "dp"
+    cp = "cp"
+    sp = "sp"
+    ep = "ep"
+
+
+@dataclass
+class MegatronParallelismAllowedConfig:
+    tp: list[int] | None = field(default_factory=list)
+    pp: list[int] | None = field(default_factory=list)
+    dp: list[int] | None = field(default_factory=list)
+    cp: list[int] | None = field(default_factory=list)
+    ep: list[int] | None = field(default_factory=list)
+    sp: list[bool] | None = field(default_factory=list)
 
 
 @dataclass
@@ -88,6 +126,8 @@ class ModelConfig:
 
     name: str = MISSING  # MISSING = must be provided, no default
     path: str = MISSING
+    # Cannot type check as Literal, but for now can be
+    # only "dense" or "moe". Checked only on function rules.megatron_divisors
     architecture_type: str = MISSING
 
     # architecture dims — used by memory rule
@@ -97,15 +137,19 @@ class ModelConfig:
     ffn_intermediate_dim: int = MISSING
     num_attention_heads: int = MISSING
     attention_type: str = MISSING
-    tokenizer_type: str = MISSING
     num_kv_heads: int = MISSING  # = num_attention_heads for MHA
-    vocab_size: int = MISSING
     head_dim: int = MISSING
+    # vocab_size: int = MISSING
+    # tokenizer_type: str = MISSING
 
     # GPU requirements — constraint metadata
     max_gpus_scale: int = MISSING
-    frameworks_supported: list[str] = field(default_factory=list)
-    parallelism_supported: list[str] = field(default_factory=list)
+    frameworks_supported: list[str] | None = field(default_factory=list)
+    parallelism_supported: list[str] | None = field(default_factory=list)
+    megatron_parallelism_supported: list[MegatronParallelismConfig] | None = field(
+        default_factory=list
+    )
+    megatron_parallelism_allowed: MegatronParallelismAllowedConfig | None = None
 
     # MoE-specific — only required when architecture_type == "moe"
     active_params_billions: float | None = None

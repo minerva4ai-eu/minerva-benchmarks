@@ -2,15 +2,15 @@ defaults:
   - base
   - _self_
 
-account: bsc99
-qos: acc_bench 
-partition: acc
+# Patch fix, every Machine slurm config directly overwrited the following 4 fields
+# There is a bug in configuration composition
+# TODO: Fix inheritance issue from slurm/base
+account: ${oc.env:SLURM_ACCOUNT}   # Must fill in
+qos: ${oc.env:SLURM_QOS, ''}                      # Optional fill in
+partition: ${oc.env:SLURM_PARTITION, ''}          # Optional fill in
+constraint: ${oc.env:SLURM_CONSTRAINT, ''}        # Optional fill in
 
 sbatch:
-  gpus_per_node: 4
-  cpus_per_gpu: 20
+  gpus_per_node: ${arch.node.gpus_per_node}
   cpus_per_task: 80
-  tasks_per_node: 1
-  extra_args:
-    - "--exclusive"
-    - "--time=02:00:00"
+  cpus_per_gpu: 20

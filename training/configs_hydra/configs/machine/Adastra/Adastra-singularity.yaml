@@ -1,0 +1,15 @@
+# @package _global_
+# Base configuration for benchmark experiments
+defaults:
+  - /base
+  - _self_
+
+machine:
+  name: Adastra # actual name of super computer running benchmarks
+  name_pattern: Adastra # configuration files naming convention pattern
+  runtime_env_mode: singularity
+  modules:
+  - singularity
+  singularity_binds:
+    - "${model.path}"
+

@@ -42,16 +42,22 @@ case "$MACHINE" in
         export CUDA_LAUNCH_BLOCKING=1
         ;;
 
-    idris-jeanzay-h100)
+    bsc-mn5-gpp)
+        # How to activate miniforge environment in mn5-gpp.
         module load $MODULES
         source activate $ENVIRONMENT
         export PATH=$ENVIRONMENT/bin:$PATH
         which python
         ;;
 
-    cines-adastra-mi250 | cines-adastra-mi300)
+    bsc-mn5-gpp)
+        # How to activate miniforge environment in mn5-gpp.
+        module load $MODULES
+        source activate $ENVIRONMENT
+        export PATH=$ENVIRONMENT/bin:$PATH
         which python
         ;;
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
