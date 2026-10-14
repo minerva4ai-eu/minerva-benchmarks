@@ -7,11 +7,11 @@
 #######################################################
 FRAMEWORKS=("vllm") #"vllm") # deepspeed")    # Add other frameworks if needed
 DATASETS=("sharegpt") #"sonnet")  # Add more datasets if needed
-MODELS=("Llama-3.1-8B-Instruct") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
+MODELS=("llava-hf/llava-1.5-7b-hf") #Llama-3.3-70B-Instruct") # "Llama-3.1-405B") # ("Llama-3.1-405B" "gemma-3-12b-it" "Mistral-7B-Instruct-v0.3") # Add your models here
 NUMBER_OF_NODES=(2)
 MAX_MODEL_LENGTHS=(4096) # 16384 32768) # 4096 8192 16384 32768)
 REPEATS=1                 # Number of runs per configuration
-MACHINE="bsc-mn5-acc" # or "leonardo" or "idris-jeanzay-h100"
+MACHINE="leonardo" # or "leonardo" or "idris-jeanzay-h100"
 MACHINE_TYPE="cuda" # "cuda" or "rocm"
 #######################################################
 # Set environment variables
