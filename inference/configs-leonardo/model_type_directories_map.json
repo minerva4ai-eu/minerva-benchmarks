@@ -1,5 +1,5 @@
 {
   "Text Generation": "/leonardo_work/MNRVA_bench/models",
   "Embedding": "/path/to/embedding/models",
-  "Vision": "/path/to/vision/models"
+  "Vision": "/leonardo_work/MNRVA_bench/models"
 }

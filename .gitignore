@@ -32,3 +32,6 @@ inference/benchmarks-vllm-10122025/*
 
 results/*
 inference/benchmarks/datasets/*
+training/.venv/
+training/envs/
+training/benchmark-runs/

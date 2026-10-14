@@ -1,5 +1,4 @@
 {
-  "sharegpt": "/leonardo_work/MNRVA_bench/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
   "sonnet": "/leonardo_work/MNRVA_bench/datasets/sonnet.txt",
-  "example_dataset": "/path/to/example_dataset"
+  "sharegpt": "/leonardo_work/MNRVA_bench/datasets/sharegpt4v_instruct_gpt4-vision_cap100k.json"
 }
