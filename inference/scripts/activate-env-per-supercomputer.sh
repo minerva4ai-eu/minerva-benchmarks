@@ -58,6 +58,12 @@ case "$MACHINE" in
         which python
         ;;
 
+    csc-lumi-gpu)
+        module purge
+        module load $MODULES
+        ;;
+
+
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
