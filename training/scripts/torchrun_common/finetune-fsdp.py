@@ -1,5 +1,6 @@
 import functools
 import gc
+import logging
 import math
 import os
 import time
@@ -265,7 +266,7 @@ def main(repeatid: int):
     model = wrap_fsdp(
         model,
         dtype,
-        max_comm_comp_overlap=args.max_comm_comp_overlap,
+        max_comm_comp_overlap=args.fsdp_max_comm_comp_overlap,
     )
     logger.info("Model wrapped with FSDP.")
 
@@ -370,39 +371,25 @@ def main(repeatid: int):
                             f"gpu_mem_alloc {torch.cuda.memory_allocated() / 1e9:.2f}GB",
                         )
 
-        if args.max_steps is not None and global_step >= int(args.max_steps):
-            break
+                    if args.max_steps is not None and global_step >= int(
+                        args.max_steps
+                    ):
+                        break
 
                     flopsCallback_megatronLM.on_step_begin()
                     step_loss = torch.tensor(0, dtype=torch.float, device=local_rank)
 
-    # --- Global token count + summary ---
-    tokens_tensor = torch.tensor(total_tokens_this_gpu, device=local_rank)
-    dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
-    total_tokens_global = tokens_tensor.item()
+            if args.max_steps is not None and global_step >= int(args.max_steps):
+                break
 
-    avg_mfu = (
-        sum(flopsCallback_megatronLM.state.mfu_this_gpu)
-        / len(flopsCallback_megatronLM.state.mfu_this_gpu)
-        if flopsCallback_megatronLM.state.mfu_this_gpu
-        else None
-    )
-    avg_tflops = (
-        sum(flopsCallback_megatronLM.state.tflops_this_gpu)
-        / len(flopsCallback_megatronLM.state.tflops_this_gpu)
-        if flopsCallback_megatronLM.state.tflops_this_gpu
-        else None
-    )
-    summary_log = [
-        f"* Total training time (s): {elapsed_total:.2f}",
-        f"* Tokens/sec global: {total_tokens_global / elapsed_total:.2f}",
-        f"* Avg TFLOPs/s/GPU: {avg_tflops}",
-        f"* Avg MFU: {avg_mfu}",
-    ]
+        elapsed_total = time.time() - start_time
+        stop_flag["stop"] = True
+        time.sleep(2)
 
-    for i in range(world_size):
-        print_rank(i, "=== TRAINING SUMMARY ===")
-        print_rank(i, "\n".join(summary_log))
+        # --- Global token count + summary ---
+        tokens_tensor = torch.tensor(total_tokens_this_gpu, device=local_rank)
+        dist.all_reduce(tokens_tensor, op=dist.ReduceOp.SUM)
+        total_tokens_global = tokens_tensor.item()
 
         avg_final_loss = last_step_loss
         dist.all_reduce(avg_final_loss, op=dist.ReduceOp.AVG)

@@ -90,13 +90,6 @@ for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
     }
 done
 
-    $train_command
-
-    kill -SIGTERM \"\$monitor_pid\"
-
-    # Wait for the monitor to clean up and exit
-    wait \"\$monitor_pid\"
-"
 
 echo "FSDP Job Completed."
 exit "$exit_code"

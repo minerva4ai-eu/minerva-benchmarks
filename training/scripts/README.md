@@ -1,6 +1,6 @@
 # Training Scripts
 
-This directory contains all training scripts, launchers, and utilities for LLM training and fine-tuning benchmarks. Scripts are organized by framework (Accelerate, TorchRun, DeepSpeed) with shared code that is common across all frameworks.
+This directory contains all training scripts, launchers, and utilities for LLM training and fine-tuning benchmarks. Scripts are organized by framework (Accelerate, TorchRun, DeepSpeed, NeMo/Megatron) with shared code that is common across all frameworks.
 
 ## Table of Contents
 
@@ -14,12 +14,12 @@ This directory contains all training scripts, launchers, and utilities for LLM t
   - [`datasets/` — Dataset Handlers](#datasets--dataset-handlers)
 - [Framework-Specific Scripts](#framework-specific-scripts)
   - [Accelerate (`accelerate_common/`)](#accelerate-accelerate_common)
-  - [TorchRun (`torchrun-common/`)](#torchrun-torchrun-common)
+  - [TorchRun (`torchrun_common/`)](#torchrun-torchrun_common)
   - [DeepSpeed (`deepspeed_common/`)](#deepspeed-deepspeed_common)
+  - [NeMo / Megatron (`nemo_megatron_common/`)](#nemo--megatron-nemo_megatron_common)
 - [Cross-Cutting Utilities](#cross-cutting-utilities)
-  - [`activate-env-variables-per-supercomputer.sh`](#activate-env-variables-per-supercomputersh)
-  - [`utils.sh` — Shell Utilities](#utilssh--shell-utilities)
-  - [`gpu_plots.py` — GPU Utilization Plotting](#gpu_plotspy--gpu-utilization-plotting)
+  - [`runtime_environment.sh`](#runtime_environmentsh)
+  - [`gpu_monitor.py` / `gpu_plots.py` — GPU Monitoring](#gpu_monitorpy--gpu_plotspy--gpu-monitoring)
 - [How Launchers Work](#how-launchers-work-1)
   - [Launcher Execution Flow (singularity_prefix pattern)](#launcher-execution-flow-singularity_prefix-pattern)
   - [Training Entry Point Command Signatures](#training-entry-point-command-signatures)
@@ -35,7 +35,6 @@ The scripts directory provides:
 - **Training entry points** — Python scripts that define the training loop, model loading, and data pipeline.
 - **Shared code** — Framework-agnostic utilities for data loading, logging, TFLOP computation, and dataset handling.
 - **GPU monitoring** — Scripts for collecting and visualizing GPU utilization metrics.
-- **Shell utilities** — Helper functions for environment activation, config parsing, and path resolution.
 
 ### How Launchers Work
 
@@ -43,7 +42,7 @@ All launcher scripts follow the same execution pattern:
 
 ```
 1. SLURM directives (#SBATCH)
-2. Activate environment (source activate-env-variables-per-supercomputer.sh)
+2. Activate environment (source shared/runtime_environment.sh)
 3. Setup output directory and environment variables
 4. Start GPU monitoring in background (python -m gpu_plots &)
 5. Launch training (accelerate/torchrun/deepspeed/python)
@@ -60,47 +59,50 @@ scripts/
 ├── shared/                          # Framework-agnostic code
 │   ├── custom_train.py              # CustomTrainer with MegatronFlopsCallback
 │   ├── data.py                      # Dataset loading, parsing, collate functions
+│   ├── args.py                      # Shared CLI argument parsing
+│   ├── comm_metrics.py              # Communication metrics helpers
+│   ├── flops.py                     # FLOP counting utilities
+│   ├── logger.py                    # Logging setup
+│   ├── prepare.py                   # Pre-run preparation helpers
 │   ├── utils.py                     # print_rank, count_parameters, timed decorators
-│   └── datasets/                    # Dataset handler registry
+│   ├── gpu_monitor.py               # GPU metrics collection
+│   ├── gpu_plots.py                 # GPU utilization plotting
+│   ├── runtime_environment.sh       # Machine-specific NCCL/CUDA env vars
+│   └── datasets/                    # Dataset handler registry + pretokenize.py
 │
 ├── accelerate_common/               # HuggingFace Accelerate framework
-│   ├── run-none.sh                  # Single-GPU launcher
 │   ├── run-ddp.sh                   # DDP launcher (multi-GPU)
 │   ├── run-fsdp.sh                  # FSDP launcher (multi-GPU)
-│   ├── finetune-none.py             # Single-GPU training entry point
 │   ├── finetune-ddp.py              # DDP training entry point
 │   ├── finetune-fsdp.py             # FSDP training entry point
-│   ├── gpu_monitor.py               # GPU metrics collection
-│   └── utils.py                     # Accelerate-specific utilities
+│   └── finetune-fsdp-SFTTrainer.py  # FSDP with TRL SFTTrainer
 │
-├── torchrun-common/                 # PyTorch native distributed
+├── torchrun_common/                 # PyTorch native distributed
 │   ├── run-none.sh                  # Single-GPU launcher
 │   ├── run-ddp.sh                   # DDP launcher
 │   ├── run-fsdp.sh                  # FSDP launcher
 │   ├── finetune-none.py             # Single-GPU training entry point
 │   ├── finetune-ddp.py              # DDP training entry point
 │   ├── finetune-fsdp.py             # FSDP training entry point
-│   ├── gpu_monitor.py               # GPU metrics collection
-│   └── utils.py                     # TorchRun-specific utilities
+│   └── finetune-fsdp-SFTTrainer.py  # FSDP with TRL SFTTrainer
 │
 ├── deepspeed_common/                # Microsoft DeepSpeed
 │   ├── run-deepspeed.sh             # DeepSpeed launcher (ZeRO stages)
-│   ├── finetune-deepspeed.py        # DeepSpeed training entry point
-│   ├── configs/                     # DeepSpeed JSON configuration files
-│   ├── gpu_monitor.py               # GPU metrics collection
-│   ├── metrics.py                   # DeepSpeed-specific metrics
-│   └── utils.py                     # DeepSpeed-specific utilities
+│   ├── run-deepspeed-accelerate.sh  # DeepSpeed via Accelerate launcher
+│   ├── finetune-deepspeed-pure.py   # DeepSpeed training entry point
+│   ├── finetune-deepspeed-accelerate.py  # DeepSpeed+Accelerate entry point
+│   └── configs/                     # DeepSpeed JSON configuration files
 │
-├── slurm/                           # SLURM job submission CLI
-│   ├── README.md                    # See scripts/slurm/README.md
-│   ├── cli.py
-│   ├── submitter.py
-│   ├── monitor.py
-│   └── utils.py
+├── nemo_megatron_common/            # NVIDIA NeMo / Megatron
+│   ├── run-nemo_megatron.slurm      # NeMo / Megatron launcher
+│   ├── nemo_megatron.py             # NeMo / Megatron training entry point
+│   └── utils/                       # NeMo-specific helpers (profiling, comms, dataset)
 │
-├── activate-env-variables-per-supercomputer.sh  # Machine-specific NCCL/CUDA env vars
-├── utils.sh                         # Shell utilities (JSON/YAML parsing)
-└── gpu_plots.py                     # GPU utilization plotting
+└── slurm/                           # SLURM job submission CLI
+    ├── README.md                    # See scripts/slurm/README.md
+    ├── cli.py
+    ├── submitter.py
+    └── utils.py
 ```
 
 ---
@@ -207,7 +209,6 @@ Registry of dataset handlers that load, preprocess, and format data for training
 
 | Script | Parallelism | GPUs | Command |
 |--------|-------------|------|---------|
-| `run-none.sh` | Single-GPU | 1 | `accelerate launch --num_processes 1` |
 | `run-ddp.sh` | DDP | ≥2 | `accelerate launch --num_processes <N>` |
 | `run-fsdp.sh` | FSDP | ≥2 | `accelerate launch --num_processes <N>` |
 
@@ -215,19 +216,18 @@ Registry of dataset handlers that load, preprocess, and format data for training
 
 | Script | Description |
 |--------|-------------|
-| `finetune-none.py` | Single-GPU fine-tuning |
 | `finetune-ddp.py` | DDP fine-tuning |
 | `finetune-fsdp.py` | FSDP fine-tuning |
 | `finetune-fsdp-SFTTrainer.py` | FSDP with HuggingFace TRL SFTTrainer |
 
-**Key launcher flow (run-none.sh example):**
+**Key launcher flow (run-ddp.sh example):**
 ```bash
 #!/bin/bash
 #SBATCH --job-name=ACCELERATE_DYNAMIC
 #SBATCH --time=24:00:00
 
 # 1. Activate environment
-source activate-env-per-supercomputer.sh $ENVIRONMENT_FINETUNING
+source shared/runtime_environment.sh
 
 # 2. Setup
 OUTPUT_DIR="${LAUNCH_FOLDER}/output"
@@ -240,7 +240,7 @@ monitor_pid=$!
 sleep 5
 
 # 4. Launch training
-accelerate launch --num_processes 1 --mixed_precision "$PRECISION" \
+accelerate launch --num_processes "$SLURM_GPUS_ON_NODE" --mixed_precision "$PRECISION" \
     "$TRAIN_SCRIPT" \
     --model $MODEL_PATH --data $DATASET_PATH --output_dir $OUTPUT_DIR \
     --batch_size $BATCH_SIZE --max_length $MAX_MODEL_LENGTH \
@@ -253,7 +253,7 @@ kill -SIGTERM "$monitor_pid"
 wait "$monitor_pid"
 ```
 
-### TorchRun (`torchrun-common/`)
+### TorchRun (`torchrun_common/`)
 
 PyTorch's native distributed training package provides lower-level control over DDP and FSDP.
 
@@ -272,6 +272,7 @@ PyTorch's native distributed training package provides lower-level control over 
 | `finetune-none.py` | Single-GPU training |
 | `finetune-ddp.py` | DDP training |
 | `finetune-fsdp.py` | FSDP training |
+| `finetune-fsdp-SFTTrainer.py` | FSDP with HuggingFace TRL SFTTrainer |
 
 ### DeepSpeed (`deepspeed_common/`)
 
@@ -282,19 +283,19 @@ PyTorch's native distributed training package provides lower-level control over 
 | Script | Parallelism | GPUs | Command |
 |--------|-------------|------|---------|
 | `run-deepspeed.sh` | ZeRO-1/2/3/3-Offload | ≥2 | `deepspeed --master_port <PORT> "$TRAIN_SCRIPT"` |
+| `run-deepspeed-accelerate.sh` | ZeRO via Accelerate | ≥2 | `accelerate launch "$TRAIN_SCRIPT"` |
 
 **Training entry points:**
 
 | Script | Description |
 |--------|-------------|
-| `finetune-deepspeed.py` | DeepSpeed training with config |
 | `finetune-deepspeed-pure.py` | Pure DeepSpeed training (programmatic config) |
+| `finetune-deepspeed-accelerate.py` | DeepSpeed training via Accelerate |
 
 **DeepSpeed-specific features:**
 - **ZeRO stage configuration** — ZeRO-1 (optimizer sharding), ZeRO-2 (optimizer + gradient sharding), ZeRO-3 (full parameter sharding), ZeRO-3-Offload (CPU offload).
 - **Model pre-staging** — Optional pre-staging of model weights to node-local `$TMPDIR` to avoid GPFS I/O contention (commented out by default).
 - **DeepSpeed JSON configs** — Located in `configs/`, define ZeRO stage, micro batch size, gradient accumulation, etc.
-- **Metrics collection** — `metrics.py` collects DeepSpeed-specific metrics (throughput, memory, ZeRO stats).
 
 **DeepSpeed JSON Configs (`deepspeed_common/configs/`):**
 
@@ -303,7 +304,6 @@ PyTorch's native distributed training package provides lower-level control over 
 | `zero1.json` | ZeRO-1 config (optimizer state sharding across GPUs) |
 | `zero2.json` | ZeRO-2 config (optimizer + gradient sharding) |
 | `zero3.json` | ZeRO-3 config (full parameter sharding) |
-| `accelerate_config.yaml` | Accelerate config used with DeepSpeed for FSDP+ZeRO hybrid |
 
 Each JSON file specifies:
 ```json
@@ -347,51 +347,40 @@ def get_fsdp_layer_to_wrap(model_type: str) -> List[Type]:
 
 This ensures that FSDP shards at the appropriate granularity for each model architecture, balancing memory savings with communication overhead.
 
+### NeMo / Megatron (`nemo_megatron_common/`)
+
+[NVIDIA NeMo](https://docs.nvidia.com/nemo-framework/) with Megatron-LM provides tensor/pipeline/context/data/expert parallelism for very large models.
+
+**Launcher:**
+
+| Script | Parallelism | Command |
+|--------|-------------|---------|
+| `run-nemo_megatron.slurm` | Megatron (`tp/pp/cp/dp/ep/sp`) | `python "$TRAIN_SCRIPT"` inside the NeMo container |
+
+**Training entry point:**
+
+| Script | Description |
+|--------|-------------|
+| `nemo_megatron.py` | NeMo / Megatron training (uses the `tulu-3-sft-mixture` dataset) |
+
+**`utils/` helpers:** profiling analysis (`analyze_async_pytorch_profiler.py`, `analyze_sync_pytorch_profiler.py`), communication measurements (`comm_measurements.py`, `nccl_tagger.py`), benchmark callbacks (`my_benchmark_callback.py`, `my_megatron_benchmark_callback.py`), dataset utilities (`dataset.py`), and host/CPU helpers (`hostlist.py`, `cpu_mem_usage.py`, `chrono.py`, `ac_handler.py`).
+
 ---
 
 ## Cross-Cutting Utilities
 
-### `activate-env-variables-per-supercomputer.sh`
+### `runtime_environment.sh`
 
-Sets machine-specific environment variables for NCCL, CUDA, and PyTorch. Sourced before training:
+Located in `shared/`. Sets machine-specific environment variables for NCCL, CUDA, and PyTorch. Sourced by every launcher before training:
 
 ```bash
-source activate-env-variables-per-supercomputer.sh
+source shared/runtime_environment.sh
 ```
 
-**Supported machines:**
 
-| Machine | NCCL Settings | CUDA Devices |
-|---------|---------------|--------------|
-| `bsc-mn5-acc` | IB network, `ib0-ib3`, `mlx5_0-mlx5_5`, NVLS disabled | `0,1,2,3` |
-| `leonardo` | `COMPILER=nvhpc`, `CUDA_HOME=/cineca/prod/CUDA/12.1` | — |
+### `gpu_monitor.py` / `gpu_plots.py` — GPU Monitoring
 
-**Key variables set for `bsc-mn5-acc`:**
-```bash
-export NCCL_NET=IB
-export NCCL_SOCKET_IFNAME=ib0,ib1,ib2,ib3
-export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_4,mlx5_5
-export NCCL_DEBUG=INFO
-export NCCL_NVLS_ENABLE=0
-export NCCL_IB_DISABLE=0
-export CUDA_VISIBLE_DEVICES="0,1,2,3"
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:128
-export CUDA_LAUNCH_BLOCKING=1
-```
-
-### `utils.sh` — Shell Utilities
-
-| Function | Description |
-|----------|-------------|
-| `get_dataset_path(dataset, json_file)` | Extracts dataset path from JSON config using `jq` |
-| `get_dataset_info(dataset, yaml_file)` | Extracts dataset path and handler from YAML using `yq` |
-| `get_model_type(model, json_file)` | Resolves model identifier to model type |
-| `get_model_directory(model_type, json_file)` | Resolves model type to filesystem path |
-| `get_model_parallelism_config(model, parallelism, config_file)` | Gets parallelism config for a model |
-
-### `gpu_plots.py` — GPU Utilization Plotting
-
-Collects GPU metrics and generates matplotlib/seaborn visualizations:
+Both live in `shared/`. `gpu_monitor.py` collects GPU metrics during the run; `gpu_plots.py` generates matplotlib/seaborn visualizations from them.
 
 **Metrics collected:**
 - Timestamp
@@ -420,7 +409,7 @@ All launcher scripts follow the same pattern:
 
 ```
 1. SLURM directives (#SBATCH)
-2. Activate environment (source activate-env-variables-per-supercomputer.sh)
+2. Activate environment (source shared/runtime_environment.sh)
 3. Setup output directory and environment variables
 4. Start GPU monitoring in background
 5. Launch training (accelerate/torchrun/deepspeed/python)
@@ -441,7 +430,7 @@ SINGULARITY_ARGS="--nv"  # or "--rocm" for AMD GPUs
 # The launcher script uses them:
 singularity exec $SINGULARITY_ARGS $SINGULARITY_BINDS \
     $SINGULARITY_CONTAINER \
-    bash -c "cd $LAUNCH_FOLDER && source activate-env-per-supercomputer.sh && python $TRAIN_SCRIPT ..."
+    bash -c "cd $LAUNCH_FOLDER && source shared/runtime_environment.sh && python $TRAIN_SCRIPT ..."
 ```
 
 The `singularity_prefix` pattern ensures that all training runs inside the same container environment, regardless of the framework or parallelism strategy.
@@ -492,17 +481,13 @@ python finetune-*.py \
 
 To add support for a new training framework:
 
-1. **Create framework directory:** `scripts/<framework-name>-common/`
+1. **Create framework directory:** `scripts/<framework-name>_common/`
 
 2. **Create launcher scripts:** `run-none.sh`, `run-ddp.sh`, `run-fsdp.sh` (or equivalent parallelism strategies)
 
 3. **Create training entry points:** `finetune-none.py`, `finetune-ddp.py`, `finetune-fsdp.py`
 
-4. **Create GPU monitor:** `gpu_monitor.py` (adapt from existing frameworks)
-
-5. **Create utils:** `utils.py` with framework-specific utilities
-
-6. **Register in config:** Add `configs/framework/<framework-name>.yaml` with:
+4. **Register in config:** Add `configs/framework/<framework-name>.yaml` with:
    ```yaml
    name: <framework-name>
    parallelism:
@@ -510,23 +495,20 @@ To add support for a new training framework:
      ddp: { min_gpus: 2 }
      fsdp: { min_gpus: 2 }
    scripts:
-     run: scripts/<framework-name>-common/run-${parallelism}.sh
-     finetune: scripts/<framework-name>-common/finetune-${parallelism}.py
+     run: scripts/<framework-name>_common/run-${parallelism}.sh
+     finetune: scripts/<framework-name>_common/finetune-${parallelism}.py
      shared: scripts/shared
      copy_files:
-       - scripts/<framework-name>-common/gpu_monitor.py
-       - scripts/<framework-name>-common/utils.py
-       - scripts/gpu_plots.py
        - ${scripts.run}
        - ${scripts.finetune}
    ```
 
-7. **Register in Hydra:** Add to `dataclasses_hydra/__init__.py`:
+5. **Register in Hydra:** Add to `dataclasses_hydra/__init__.py`:
    ```python
    cs.store(group="framework", name="<framework-name>", node=FrameworkConfig)
    ```
 
-8. **Add to generator:** Add `<framework-name>` to `FRAMEWORKS` list in `hydra_app.py`.
+6. **Add to generator:** Add `<framework-name>` to `FRAMEWORKS` list in `hydra_app.py`.
 
 ---
 
@@ -554,4 +536,4 @@ See [training/README.md](../README.md#using-minerva-clish) for the full CLI refe
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system
 - [scripts/slurm/README.md](slurm/README.md) — SLURM job submission CLI
 - [envs/README.md](../envs/README.md) — Environment management
-- [training/README.md](../../README.md) — Root project overview
+- [training/README.md](../README.md) — Root project overview

@@ -149,6 +149,10 @@ NON_AGGREGATED_KEYS = {
     "EP",
 }
 
+SUMMED_KEYS = {
+    "training_throughput_tokens_per_sec_global",
+}
+
 CONFIG_TO_DISPLAY = {
     "model.name": "Model",
     "model.path": "Model Path",
@@ -157,6 +161,7 @@ CONFIG_TO_DISPLAY = {
     "model.training.grad_accum": "Accumulation Gradients",
     "model.training.max_model_length": "Max Length",
     "model.training.lr": "Learning Rate",
+    "model.training.enable_compile": "Enable Compile",
     "dataset.name": "Dataset",
     "dataset.path": "Dataset Path",
     "framework.name": "Framework",
@@ -244,6 +249,8 @@ def aggregate_rank_summaries(summary_paths):
             combined[key] = values[0]
         elif short_key in PEAK_KEYS:
             combined[key] = max(values)
+        elif short_key in SUMMED_KEYS:
+            combined[key] = sum(values)
         else:
             combined[key] = statistics.mean(values)
     return combined

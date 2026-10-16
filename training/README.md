@@ -44,7 +44,7 @@ These benchmarks measure:
 | **Training Scripts** (launchers, entry points, shared code, utilities) | [scripts/README.md](scripts/README.md) |
 | **SLURM Job Submission** (CLI, job lifecycle, monitoring) | [scripts/slurm/README.md](scripts/slurm/README.md) |
 | **Environment Management** (uv venvs, Singularity containers, CUDA versions) | [envs/README.md](envs/README.md) |
-| **Datasets** (handlers, pre-tokenization) | [scripts/shared/datasets/DATASETS.md](scripts/shared/datasets/DATASETS.md) |
+| **Datasets** (download, pre-tokenization, handlers) | [datasets/README.md](datasets/README.md) |
 
 ---
 
@@ -152,7 +152,7 @@ training/
 │       └── model/  framework/  dataset/  slurm/  arch/
 │
 ├── scripts/
-│   ├── slurm/                        # CLI (cli.py), submitter, monitor, utils
+│   ├── slurm/                        # CLI (cli.py), submitter, utils
 │   ├── shared/                       # Framework-agnostic code (custom_train, data, args,
 │   │                                 #   flops, gpu_monitor, gpu_plots, comm_metrics,
 │   │                                 #   runtime_environment.sh, datasets/ handlers)
@@ -206,7 +206,7 @@ To install a single environment only: `cd envs/benchmarks/<env> && uv sync`. See
 bash install/download-datasets.sh
 ```
 
-Downloads `yahma/alpaca-cleaned` into `datasets/alpaca` and `rajpurkar/squad_v2` into `datasets/` using a temporary uv venv (requires internet access; run on a login node). `tulu-3-sft-mixture` (needed by Megatron NeMo) is not downloaded by this script; place it in `datasets/tulu-3-sft-mixture` or point `DATASET_TULU3_PATH` to it.
+Downloads `yahma/alpaca-cleaned` into `datasets/alpaca`, `rajpurkar/squad_v2` into `datasets/squad_v2`, and `allenai/tulu-3-sft-mixture` into `datasets/tulu-3-sft-mixture` using a temporary uv venv (requires internet access; run on a login node).
 
 ### 3. Create the `.env` file
 
