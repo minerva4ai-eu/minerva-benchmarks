@@ -294,12 +294,28 @@ class MFUCallback(TrainerCallback):
         self.log_key = log_key
         self._step_start_time: float | None = None
         self._last_logged_step: int = 0
+        self.total_step_flops: float = 0
 
     def _tflops_per_batch(self, batch_size: int) -> float:
         return self.cfg.flops_per_batch(batch_size) / 1e12
 
     def _num_gpus(self) -> int:
         return torch.cuda.device_count() if torch.cuda.is_available() else 1
+
+    def on_train_begin(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs,
+    ):
+        world_size = max(args.world_size, 1)
+        global_bs = (
+            args.per_device_train_batch_size
+            * world_size
+            * args.gradient_accumulation_steps
+        )
+        self.total_step_flops = self._tflops_per_batch(global_bs)
 
     def on_step_begin(self, args, state, control, **kwargs):
         self._step_start_time = time.perf_counter()
@@ -319,13 +335,7 @@ class MFUCallback(TrainerCallback):
         self._last_logged_step = state.global_step
 
         world_size = max(args.world_size, 1)
-        global_bs = (
-            args.per_device_train_batch_size
-            * world_size
-            * args.gradient_accumulation_steps
-        )
-        total_flops = self._tflops_per_batch(global_bs)
-        achieved_flops = total_flops / elapsed / world_size
+        achieved_flops = self.total_step_flops / elapsed / world_size
         mfu = achieved_flops / self.gpu_peak_flops * 100
         self.state.tflops_this_gpu.append(round(achieved_flops, 2))
         self.state.mfu_this_gpu.append(round(mfu, 2))
@@ -364,9 +374,13 @@ class FlopCounterCallback(pl.Callback):
         self._world_size = 1
         self._average_metrics: tuple[float, float] | None = None
         self.logger = logging.getLogger("MINERVA_BENCH.scripts.shared.flops")
+        self.total_step_flops: float = 0
 
-    def _flops_per_batch(self) -> float:
-        return self.cfg.flops_per_batch(self.global_batch_size)
+    def _tflops_per_batch(self) -> float:
+        return self.cfg.flops_per_batch(self.global_batch_size) / 1e12
+
+    def on_fit_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+        self.total_step_flops = self._tflops_per_batch()
 
     def on_train_batch_start(
         self,
@@ -406,15 +420,15 @@ class FlopCounterCallback(pl.Callback):
         if elapsed <= 0:
             return
 
-        flops_per_gpu = self._flops_per_batch() / self._world_size
-        tflops_per_second = flops_per_gpu / elapsed / 1e12
+        flops_per_gpu = self.total_step_flops / self._world_size
+        tflops_per_second = flops_per_gpu / elapsed
         mfu = tflops_per_second / self.gpu_peak_flops * 100
         self.flops_list.append(tflops_per_second)
         self.mfu_list.append(mfu)
 
         metrics = {
-            "FLOPs/GPU/step": flops_per_gpu,
-            "TFLOPs/sec/GPU": tflops_per_second,
+            "TFLOPs/GPU/step": flops_per_gpu,
+            "TFLOPs/step/GPU": tflops_per_second,
             "MFU (%)": mfu,
         }
         self.logger.info(
@@ -448,7 +462,7 @@ class FlopCounterCallback(pl.Callback):
             )
             if elapsed_seconds <= 0:
                 return None
-            flops_per_gpu_per_step = self._flops_per_batch() / self._world_size
+            flops_per_gpu_per_step = self.total_step_flops / self._world_size
             average_tflops = (
                 flops_per_gpu_per_step * len(measured_events) / elapsed_seconds / 1e12
             )
@@ -499,12 +513,19 @@ class FLOPsMFUCalculator:
         self.log_key = log_key
         self._step_start_time: float | None = None
         self._last_logged_step: int = 0
+        self.total_step_flops: float = 0
 
     def _tflops_per_batch(self, batch_size: int) -> float:
         return self.cfg.flops_per_batch(batch_size) / 1e12
 
     def _num_gpus(self) -> int:
         return torch.cuda.device_count() if torch.cuda.is_available() else 1
+
+    def on_train_begin(
+        self,
+        global_bs: int,
+    ):
+        self.total_step_flops = self._tflops_per_batch(global_bs)
 
     def on_step_begin(
         self,
@@ -526,8 +547,8 @@ class FLOPsMFUCalculator:
         self._last_logged_step = global_step
 
         global_bs = micro_batch_size * world_size * gradient_accumulation_steps
-        total_flops = self._tflops_per_batch(global_bs)
-        achieved_flops = total_flops / elapsed / world_size
+        self.total_step_flops = self._tflops_per_batch(global_bs)
+        achieved_flops = self.total_step_flops / elapsed / world_size
         mfu = achieved_flops / self.gpu_peak_flops * 100
         self.state.tflops_this_gpu.append(round(achieved_flops, 2))
         self.state.mfu_this_gpu.append(round(mfu, 2))

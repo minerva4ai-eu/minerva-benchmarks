@@ -1,5 +1,6 @@
 # benchmark/cli.py
 import os
+import re
 import subprocess as s
 import sys
 from datetime import datetime
@@ -349,6 +350,11 @@ def run(
 
             try:
                 _cfg = u.load_config(y)
+                if y in cfgs_paths:
+                    click.echo(
+                        f"\t{u.SKIPPED}{u.MAGENTA} !YAML path already processed! Skipping...{u.RESET}"
+                    )
+                    continue
                 cfgs_valid.append(_cfg)
                 cfgs_paths.append(y)
 
@@ -364,7 +370,54 @@ def run(
                 )
                 raise e
         config_name = next(iter(config_names))
-        runs_dir = f"{_runs_dir}-{config_name}"
+
+        start_sub = PROFILES_ROOT
+        end_sub = cfgs_valid[0].machine.name
+
+        # Check if YAML paths belong to a specific profile or no-profile runs
+        # Parent profile directory pattern in path is everything between
+        # PROFILES_ROOT and the machine name
+        pattern = re.escape(start_sub) + r"(.*?)" + re.escape(end_sub)
+        match = re.search(pattern, y)
+        profiles = set()
+        no_profile = []
+
+        _runs_dir = f"{_runs_dir}-{config_name}"
+        runs_dir = f"{_runs_dir}/no-profile"
+        for y in yamls:
+            match = re.search(pattern, y)
+            print(f"Pattern: {pattern}")
+            print(f"Match: {match is not None}")
+            print(f"match: {match.group(1)}")
+            if match:
+                # match.group(0) includes both substrings
+                # To include the first and exclude the second, include group(1) and the start_sub
+                result = start_sub + match.group(1)
+
+                profiles.add(result)
+                continue
+            no_profile.append(y)
+
+        profiles = list(profiles)
+        if len(profiles) >= 1 and profiles[0] is not None:
+            if len(profiles) > 1:
+                click.echo(
+                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles}{u.RESET}!"
+                    f"{u.RED} Make sure to provide yamls from a single profile only.{u.RESET}"
+                )
+                exit(1)
+            profile_name = profiles[0]
+            if profiles and no_profile:
+                click.echo(
+                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from both configuration profile ('{profile_name}') and no-profile runs, which is not allowed! "
+                    f"Make sure to provide yamls from a single profile or from no-profile runs only.{u.RESET}"
+                )
+                exit(1)
+            # In case of directory with profiles
+            profile_name = "/".join(profiles[0].split("/")[:-1])
+            # In case no profiles or a single .yaml profile are provided
+            # use the full
+            runs_dir = (f"{_runs_dir}/{profile_name}").rstrip("/")
         groups.append((runs_dir, cfgs_valid, cfgs_paths, [runs_dir] * len(cfgs_valid)))
     else:
         # TODO: Check desired behavior
@@ -450,11 +503,17 @@ def run(
         profile_name = ""
         # Experiments' profile has been detected/provided
         if len(profiles) >= 1 and profiles[0] is not None:
+            if len(profiles) > 1:
+                click.echo(
+                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles}{u.RESET}"
+                    f"{u.RED} Make sure to provide yamls from a single profile only.{u.RESET}"
+                )
+                exit(1)
             # In case of directory with profiles
             profile_name = "/".join(profiles[0].split("/")[:-1])
             # In case no profiles or a single .yaml profile are provided
             # use the full
-            if len(profiles) == 0:
+            if len(profiles) == 1:
                 profile_name = profiles[0]
         runs_dir = (
             f"{_runs_dir}/{'profiles' if profile_name else 'no-profile'}/{profile_name}"

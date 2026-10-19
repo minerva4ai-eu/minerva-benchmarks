@@ -15,12 +15,13 @@ model:
   combinations:
     global_batch_sizes: [64]
     batch_sizes: [1]
-    precisions: [bf16]
+    precisions: [bf16, bf16_fp8]
     steps: [5]
   megatron_parallelism_supported:
     - tp
     - pp
     - dp
   megatron_parallelism_allowed:
-    pp: [2]
+    pp: [1,2]
     tp: ["${arch.node.gpus_per_node}"]
+    dp: [1]

@@ -1,6 +1,7 @@
 from typing import Any
 
 import lightning.pytorch as pl
+import numpy as np
 import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 
@@ -132,8 +133,6 @@ class MegatronBenchmarkCallback(pl.Callback):
             self.throughput_tokens_per_sec = throughput
             step_times = self.chronometer.get_step_times(skip_steps=self.n_warmup_steps)
             if step_times:
-                import numpy as np
-
                 self.avg_step_time_sec = float(np.median(step_times))
                 self.avg_epoch_time_sec = self.avg_step_time_sec * self.steps_per_epoch
 

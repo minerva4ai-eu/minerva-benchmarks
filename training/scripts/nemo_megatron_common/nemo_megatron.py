@@ -66,6 +66,7 @@ from math import ceil
 from typing import TYPE_CHECKING, Any
 
 import lightning.pytorch as pl
+import numpy as np
 import torch
 from datasets import Dataset
 from lightning.pytorch.utilities.types import STEP_OUTPUT
@@ -88,6 +89,7 @@ from torch.profiler import (
     schedule,
     tensorboard_trace_handler,
 )
+from torch.utils.flop_counter import FlopCounterMode
 from transformers import AutoConfig, AutoTokenizer
 
 if TYPE_CHECKING:
@@ -126,54 +128,63 @@ logger_rank = RankAdapter(logger, {})
 args = megatron_construct_config(_args)
 
 
-# class FlopCounterCallback(pl.Callback):
-#    def __init__(self, enabled):
-#        self.enabled = enabled
-#        self.flops_list = []
-#        self.ctx = None
-#
-#    def on_train_batch_start(
-#        self,
-#        trainer: "pl.Trainer",
-#        pl_module: "pl.LightningModule",
-#        batch: Any,
-#        batch_idx: int,
-#    ) -> None:
-#        if self.enabled:
-#            self.ctx = FlopCounterMode(display=False)
-#            self.ctx.__enter__()
-#
-#    def on_train_batch_end(
-#        self,
-#        trainer: "pl.Trainer",
-#        pl_module: "pl.LightningModule",
-#        outputs: STEP_OUTPUT,
-#        batch: Any,
-#        batch_idx: int,
-#    ) -> None:
-#        if self.enabled and self.ctx:
-#            import torch
-#
-#            self.ctx.__exit__(None, None, None)
-#            self.flops_list.append(self.ctx.get_total_flops())
-#            self.ctx = None
-#            torch.cuda.empty_cache()  # free unused vRAM to reduce risks of CUDA OOM
-#
-#    def on_train_end(self, trainer, pl_module):
-#        if self.enabled and self.flops_list:
-#            import numpy as np
-#
-#            logger.info(
-#                f"Median FLOPs/step: {np.median(self.flops_list) / 1e12:.1f} TFLOPs"
-#            )
-#
-#    def median_flops_per_step(self) -> float | None:
-#        """Median total FLOPs per global step, or None if the counter was disabled."""
-#        if not self.enabled or not self.flops_list:
-#            return None
-#        import numpy as np
-#
-#        return float(np.median(self.flops_list))
+class FlopCounterCallback(pl.Callback):
+    def __init__(self, enabled):
+        self.enabled = enabled
+        self.tflops_list = []
+        self.ctx = None
+
+    def on_train_batch_start(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if self.enabled:
+            self.ctx = FlopCounterMode(display=False)
+            self.ctx.__enter__()
+            self.step_start = torch.cuda.Event(enable_timing=True)
+            self.step_start.record()
+
+    def on_train_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: STEP_OUTPUT,
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if self.enabled and self.ctx:
+            self.step_end = torch.cuda.Event(enable_timing=True)
+            self.step_end.record()
+            torch.cuda.synchronize()
+            step_time_ms = self.step_start.elapsed_time(self.step_end)
+            logger_rank.info(
+                f"{self.__class__.__name__} Step time: {step_time_ms:.2f} ms"
+            )
+            self.ctx.__exit__(None, None, None)
+            tflops = self.ctx.get_total_flops() / 1e12
+            self.tflops_list.append(tflops)
+
+            logger_rank.info(
+                f"{self.__class__.__name__} TFLOPs/step/GPU: {tflops:.1f} TFLOPs"
+            )
+            self.ctx = None
+            torch.cuda.empty_cache()  # free unused vRAM to reduce risks of CUDA OOM
+
+    def on_train_end(self, trainer, pl_module):
+        if self.enabled and self.tflops_list:
+            logger.info(
+                f"Median TFLOPs/step/GPU: {np.median(self.tflops_list):.1f} TFLOPs"
+            )
+
+    def median_flops_per_step(self) -> float | None:
+        """Median total FLOPs per global step, or None if the counter was disabled."""
+        if not self.enabled or not self.tflops_list:
+            return None
+
+        return float(np.median(self.tflops_list))
 
 
 class TorchProfilerCallback(pl.Callback):
@@ -424,6 +435,7 @@ def main(repeatid: int):
             warmup_steps=benchmark_callback.n_warmup_steps,
         )
         callbacks.append(flop_callback)
+        # callbacks.append(FlopCounterCallback(enabled=True))
 
     # Training loss capture (for the shared training summary)
     loss_callback = LossCaptureCallback()

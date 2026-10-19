@@ -7,7 +7,7 @@ selection:
   frameworks: [megatron-nemo-2509]
 
 model:
-  max_gpus_scale: 
+  max_gpus_scale: 64
   megatron_parallelism_supported:
     - tp
     - pp
