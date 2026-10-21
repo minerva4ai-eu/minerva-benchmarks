@@ -54,11 +54,16 @@ def register_base(cs: ConfigStore):
     cs.store(group="model", name="mistral_7b", node=ModelConfig)
     cs.store(group="model", name="llama3_8b", node=ModelConfig)
     cs.store(group="model", name="llama3_70b", node=ModelConfig)
+    cs.store(group="model", name="alia_40b", node=ModelConfig)
     cs.store(group="model", name="qwen2.5_7B_Instruct", node=ModelConfig)
+    cs.store(group="model", name="qwen2.5_72B_Instruct", node=ModelConfig)
 
     # slurm YAMLS
     cs.store(group="slurm", name="base", node=SlurmConfig)
-
+    cs.store(group="slurm", name="MN5", node=SlurmConfig)
+    cs.store(group="slurm", name="Adastra", node=SlurmConfig)
+    cs.store(group="slurm", name="Leonardo", node=SlurmConfig)
+    cs.store(group="slurm", name="Jean-Zay-H100", node=SlurmConfig)
     # experiment YAMLS
     cs.store(name="base", node=BenchmarkConfig)
 

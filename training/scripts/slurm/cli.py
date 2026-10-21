@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import click
 import configs_hydra.model_framework_dataset as mfd
+import dotenv
 import scripts.slurm.utils as u
 from configs_hydra.hydra_app import (
     PROFILES_ROOT,
@@ -26,15 +27,18 @@ if TYPE_CHECKING:
 
 import logging
 
+# Load training/.env
+dotenv.load_dotenv()
+
 RUNS_DIR = Path("benchmark-runs/")
 DEFAULT_CONFIGS_PATH = "./configs_hydra/configs"
 DEFAULT_CONFIG_NAME = "base"
 BASE_DIR = Path(".")
 TIMESTAMP = datetime.now().strftime("%Y%m%d%H%M%S")
-LOG_DIR = os.path.join("outputs", "logs", "pycli", TIMESTAMP)
-LOG_DIR = os.environ.get("LOG_DIR", LOG_DIR)
-LOG_FILE = os.path.join(LOG_DIR, "minerva.log")
-LOG_FILE = os.environ.get("LOG_FILE", LOG_FILE)
+# LOG_DIR = os.path.join("outputs", "logs", "pycli", TIMESTAMP)
+# LOG_DIR = os.environ["LOG_DIR"]
+# LOG_FILE = os.path.join(LOG_DIR, "minerva.log")
+LOG_FILE = os.environ["LOG_FILE"]
 LOG_DIR = "/".join(LOG_FILE.split("/")[:-1])
 if not os.path.isdir(LOG_DIR):
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -161,21 +165,29 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     """
     if not profile:
         return [None]
+    if len(profile.split(",")) > 1:
+        profiles = []
+        mult_profiles = profile.split(",")
+        for p in mult_profiles:
+            profiles.extend(expand_profiles(config_path, p))
+        return profiles
+
     root = os.path.realpath(os.path.join(os.path.abspath(config_path), PROFILES_ROOT))
     profiles: list[str | None] = []
 
     item = profile.strip()
     path = os.path.realpath(os.path.join(root, item))
+
     if os.path.commonpath([root, path]) != root:
         raise ValueError(f"Profile '{item}' must be inside {root}")
     if os.path.isfile(path + ".yaml"):
         profiles.append(item.removesuffix(".yaml"))
     elif os.path.isdir(path):
         found = sorted(
-            os.path.relpath(os.path.join(d, f), root)[: -len(".yaml")]
+            os.path.relpath(os.path.join(d, f), root).rstrip(".yaml").rstrip(".yml")
             for d, _, files in os.walk(path)
             for f in files
-            if f.endswith(".yaml")
+            if (f.endswith(".yaml") or f.endswith("yml"))
         )
         if not found:
             raise FileNotFoundError(f"No profiles (*.yaml) found in {path}")
@@ -195,6 +207,16 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     if not profiles:
         raise ValueError(f"No profile names found in '{profile}'")
     return profiles
+
+
+def profile_is_file(p):
+    return os.path.isfile(f"{p}.yaml") or os.path.isfile(f"{p}.yml")
+
+
+def profile_root(p):
+    if not p:
+        return p
+    return p.split("/")[0]
 
 
 @cli.command()
@@ -265,7 +287,9 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     help=(
         "Benchmark profile(s) from configs_hydra/configs/PROFILES_ROOT/ merged on top of provided '--config-name'. "
         "Selects models/frameworks/datasets and training combinations. Accepts one specified profile name or "
-        "a directory name to run all the profiles inside it (e.g. 'tests').\n"
+        "a directory name to run all the profiles inside it (e.g. 'tests'). "
+        "Multiple profiles can be provided comma-separated, e.g. '--profile prof1,prof2' or "
+        "'--profile dir1,dir2' to run all profiles inside each directory.\n"
         "In case of specifying a single profile to run, use only the name omitting the .yaml extension, just like "
         "arguement '--config-name'."
     ),
@@ -277,7 +301,8 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     default=None,
     help=(
         "Run a benchmark configuration by providing the path to a BenchmarkConfig YAML file. "
-        "Can be repeated for multiple configs, e.g. '--yaml path1.yaml --yaml path2.yaml. "
+        "Can be repeated for multiple configs, e.g. '--yaml path1.yaml --yaml path2.yaml', "
+        "or provided comma-separated in a single value, e.g. '--yaml path1.yaml,path2.yaml'. "
         "First run a '--dry-run' to compose YAML configuration files and then use their paths to run them individually."
     ),
 )
@@ -286,6 +311,15 @@ def expand_profiles(config_path: str, profile: str | None) -> list[str | None]:
     default=None,
     type=int,
     help="Number of nodes of the job (cannot be used with multiple profiles).",
+)
+@click.option(
+    "--verbose",
+    is_flag=True,
+    help=(
+        "Verbose mode: prints extra progress messages (profile/triple counters, "
+        "written YAML paths, per-group submission progress) and suppresses "
+        "constraint-rule details (per-rule failure reasons and the Sweep Summary table)."
+    ),
 )
 def run(
     dry_run,
@@ -300,6 +334,7 @@ def run(
     profile,
     yamls,
     nnodes,
+    verbose,
 ):
     """Generate benchmark configurations and submit SLURM job with steps.
 
@@ -324,6 +359,8 @@ def run(
 
     if isinstance(yamls, tuple) and len(yamls) == 1:
         yamls: list[str] = [y.strip() for y in yamls[0].split("--yaml") if y != ""]
+    # Also accept comma-separated paths within a single --yaml value
+    yamls = [y.strip() for part in yamls for y in part.split(",") if y.strip()]
     if yamls:
         if dry_run:
             logger.error(
@@ -371,6 +408,11 @@ def run(
                 raise e
         config_name = next(iter(config_names))
 
+        if verbose:
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Loaded {u.BLUE}{len(cfgs_valid)}{u.CYAN} YAML config(s) for submission{u.RESET}"
+            )
+
         start_sub = PROFILES_ROOT
         end_sub = cfgs_valid[0].machine.name
 
@@ -386,9 +428,6 @@ def run(
         runs_dir = f"{_runs_dir}/no-profile"
         for y in yamls:
             match = re.search(pattern, y)
-            print(f"Pattern: {pattern}")
-            print(f"Match: {match is not None}")
-            print(f"match: {match.group(1)}")
             if match:
                 # match.group(0) includes both substrings
                 # To include the first and exclude the second, include group(1) and the start_sub
@@ -401,9 +440,13 @@ def run(
         profiles = list(profiles)
         if len(profiles) >= 1 and profiles[0] is not None:
             if len(profiles) > 1:
+                profiles_print = [
+                    p.replace(PROFILES_ROOT, "").removeprefix("/").removesuffix("/")
+                    for p in profiles
+                ]
                 click.echo(
-                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles}{u.RESET}!"
-                    f"{u.RED} Make sure to provide yamls from a single profile only.{u.RESET}"
+                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles_print}{u.RESET}!"
+                    f"{u.RED}\n Make sure to provide yamls from a single profile only.{u.RESET}"
                 )
                 exit(1)
             profile_name = profiles[0]
@@ -432,9 +475,32 @@ def run(
 
         try:
             profiles = expand_profiles(configs_path, profile)
+            print(profiles)
         except (FileNotFoundError, ValueError) as e:
             click.echo(f"\t{u.FAILURE_HEAVY} {u.RED}{e}{u.RESET}")
             sys.exit(1)
+
+        if verbose:
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Resolved {u.BLUE}{len(profiles)}{u.CYAN} profile(s) to compose: {u.RESET}"
+            )
+            for p in profiles:
+                click.echo(
+                    f"\t{u.POINT_BULLET}{u.YELLOW} {p if p else '(no profile)'}{u.RESET}"
+                )
+
+        # parent_profiles = ["/".join(p.split("/")[:-1]) for p in profiles if p]
+        profile_roots = [profile_root(p) for p in profiles if p]
+        if len(set(profile_roots)) > 1:
+            # common_root = os.path.commonprefix(parent_profiles)
+            # if not common_root:
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.RED} Multiple profile roots detected: {u.YELLOW}{', '.join(set(profile_roots))}{u.RESET}"
+            )
+            click.echo(
+                f"{u.RED} Running profiles different roots is not allowed!{u.RESET}"
+            )
+            exit(1)
         if nnodes and (per_nodes_jobs or per_model_jobs):
             click.echo(
                 f"\t{u.FAILURE_HEAVY} {u.RED}!ERROR! Argument '--nnodes' cannot be used with '--per-nodes-jobs' or '--per-model-jobs' simultaneously.{u.RESET}"
@@ -503,28 +569,46 @@ def run(
         profile_name = ""
         # Experiments' profile has been detected/provided
         if len(profiles) >= 1 and profiles[0] is not None:
-            if len(profiles) > 1:
-                click.echo(
-                    f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles}{u.RESET}"
-                    f"{u.RED} Make sure to provide yamls from a single profile only.{u.RESET}"
-                )
-                exit(1)
+            # if len(profiles) > 1:
+            #    click.echo(
+            #        f"{u.FAILURE_HEAVY}{u.RED} Detected yamls from multiple profiles, which is not allowed: {u.CYAN}{profiles}{u.RESET}"
+            #        f"{u.RED} Make sure to provide yamls from a single profile only.{u.RESET}"
+            #    )
+            #    exit(1)
             # In case of directory with profiles
-            profile_name = "/".join(profiles[0].split("/")[:-1])
+
+            # Taking care of the case where
+            _profiles = [
+                "/".join(p.split("/")[:-1]) if profile_is_file(p) else p
+                for p in profiles
+            ]
+            profile_name = os.path.commonpath(
+                _profiles,
+            )
             # In case no profiles or a single .yaml profile are provided
             # use the full
             if len(profiles) == 1:
                 profile_name = profiles[0]
+                if os.path.isfile(f"{profile_name}.yaml") or os.path.isfile(
+                    f"{profile_name}.yaml"
+                ):
+                    profile_name = "/".join(profiles[0].split("/")[:-1])
+            profile_name = profile_root(profile_name)
+            print(profile_name)
         runs_dir = (
             f"{_runs_dir}/{'profiles' if profile_name else 'no-profile'}/{profile_name}"
         ).rstrip("/")
-        for prof in profiles:
-            print(f"prof: {prof}")
-
+        for prof_idx, prof in enumerate(profiles, start=1):
             if prof:
-                click.echo(
-                    f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Composing profile {u.YELLOW}'{prof}'{u.RESET}"
-                )
+                if verbose:
+                    click.echo(
+                        f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Composing profile {u.YELLOW}'{prof}' "
+                        f"({u.BLUE}{prof_idx}/{len(profiles)}{u.CYAN}){u.RESET}"
+                    )
+                else:
+                    click.echo(
+                        f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Composing profile {u.YELLOW}'{prof}'{u.RESET}"
+                    )
             prof_cfgs, _ = generate_valid_combos(
                 config_path=configs_path,
                 config_name=config_name,
@@ -532,6 +616,7 @@ def run(
                 run_date=run_date,
                 dry=dry_run,
                 profile=prof,
+                verbose=verbose,
             )
 
             os.makedirs(runs_dir, exist_ok=True)
@@ -541,6 +626,12 @@ def run(
                 )
                 for cfg in prof_cfgs
             ]
+            if verbose:
+                click.echo(
+                    f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Wrote {u.BLUE}{len(prof_paths)}{u.CYAN} config YAML(s) for profile {u.YELLOW}'{prof if prof else '(no profile)'}'{u.RESET}"
+                )
+                for p in prof_paths:
+                    click.echo(f"\t{u.POINT_BULLET}{u.YELLOW} {p}{u.RESET}")
             groups.append(
                 (runs_dir, prof_cfgs, prof_paths, [runs_dir] * len(prof_cfgs))
             )
@@ -572,7 +663,18 @@ def run(
             )
         ]
 
-    for group_runs_dir, group_cfgs, group_paths, group_runs_dirs in groups:
+    for group_idx, (
+        group_runs_dir,
+        group_cfgs,
+        group_paths,
+        group_runs_dirs,
+    ) in enumerate(groups, start=1):
+        if verbose:
+            click.echo(
+                f"\n{u.ARROW_SUB_ITEM}{u.CYAN} Submitting job for group "
+                f"{u.BLUE}{group_idx}/{len(groups)}{u.CYAN} with "
+                f"{u.BLUE}{len(group_cfgs)}{u.CYAN} config(s) -> runs dir: {u.YELLOW}{group_runs_dir}{u.RESET}"
+            )
         _submit_group(
             config_name,
             configs_path,
