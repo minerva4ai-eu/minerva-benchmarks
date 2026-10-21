@@ -74,7 +74,7 @@ echo "######################################"
 
 # Start monitoring in background
 $gpu_plots_monitor_command &
-monitor_pid=\$!
+monitor_pid=$!
 
 # Optional: give the monitor time to initialize
 sleep 5
@@ -89,6 +89,12 @@ for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
         exit_code=$rc
     }
 done
+
+
+# Terminate the monitor
+kill -SIGTERM "$monitor_pid"
+# Wait for the monitor to clean up and exit
+wait "$monitor_pid"
 
 
 echo "FSDP Job Completed."

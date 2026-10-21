@@ -99,9 +99,8 @@ for (( repeatid=0; repeatid<${REPEATS:-1}; repeatid++ )); do
     }
 done
 
-kill -SIGTERM "$monitor_pid"
-
 # Wait for the monitor to clean up and exit
+kill -SIGTERM "$monitor_pid"
 wait "$monitor_pid"
 
 if [ "${SLURM_PROCID}" -eq 0 ]; then
