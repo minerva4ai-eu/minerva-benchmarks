@@ -23,9 +23,6 @@ frameworks_supported:
   - torchrun-cuda130
   - accelerate-cuda128
   - accelerate-cuda130
-  - deepspeed-cuda128
-  - deepspeed-cuda130
 parallelism_supported:
   - none
   - ddp
-  - fsdp

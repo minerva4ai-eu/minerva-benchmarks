@@ -286,19 +286,15 @@ def submit_job(
         f"--tasks-per-node={s.sbatch.tasks_per_node}",
         f"--output={sbatch_logs_dir}/MINERVA-JOB-%j.out",
         f"--error={sbatch_logs_dir}/MINERVA-JOB-%j.err",
-        f"--partition={s.partition}",
     ]
-    # TODO: check desired behavior, joint condition?
-    if s.qos is not None and s.account is not None:
-        cmd.extend(
-            [
-                f"--account={s.account}",
-                f"--qos={s.qos}",
-            ]
-        )
-
-    if s.constraint is not None:
-        cmd.extend([f"--constraint={s.constraint}"])
+    if s.partition:
+        cmd.append(f"--partition={s.partition}")
+    if s.account:
+        cmd.append(f"--account={s.account}")
+    if s.qos:
+        cmd.append(f"--qos={s.qos}")
+    if s.constraint:
+        cmd.append(f"--constraint={s.constraint}")
 
     cmd.extend(
         [

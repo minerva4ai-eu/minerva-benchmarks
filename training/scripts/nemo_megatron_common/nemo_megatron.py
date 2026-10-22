@@ -38,26 +38,11 @@ Build the dataset before training:
 Source: https://docs.nvidia.com/nemo-framework/user-guide/25.11/nemo-2.0/index.html
 """
 
-import os
-
-from scripts.shared.flops import mfu_callback_from_hf_config
-from scripts.shared.gpu_monitor import start_gpu_monitor
-from scripts.shared.logger import RankAdapter, setup_logging
-from scripts.shared.utils import (
-    save_error_summary,
-    save_training_summary,
-)
-from scripts.slurm.utils import load_config
-
-# Filter NCCL debug output to rank 0 only — we are using torchrun to launch distributed training
-if int(os.environ.get("RANK", 0)) != 0:
-    os.environ["NCCL_DEBUG"] = "WARN"
-    os.environ.pop("NCCL_DEBUG_FILE", None)
-
 import gc
 import json
 import logging
 import os
+import shutil
 import signal
 import sys
 import traceback
@@ -81,6 +66,14 @@ from scripts.shared.args import (
     get_megatron_parser,
     megatron_construct_config,
 )
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.shared.utils import (
+    save_error_summary,
+    save_training_summary,
+)
+from scripts.slurm.utils import load_config
 
 # scripts.shared.data import load_and_prepare_raw_dataset
 from torch.profiler import (
@@ -91,6 +84,11 @@ from torch.profiler import (
 )
 from torch.utils.flop_counter import FlopCounterMode
 from transformers import AutoConfig, AutoTokenizer
+
+# Filter NCCL debug output to rank 0 only — we are using torchrun to launch distributed training
+if int(os.environ.get("RANK", 0)) != 0:
+    os.environ["NCCL_DEBUG"] = "WARN"
+    os.environ.pop("NCCL_DEBUG_FILE", None)
 
 if TYPE_CHECKING:
     from scripts.shared.args import MegatronConfiguration
@@ -506,19 +504,32 @@ def main(repeatid: int):
         devices=args.devices_per_node,
         num_nodes=args.num_nodes,
         plugins=plugins,
+        logger=False,
+        log_every_n_steps=args.log_every_n_steps,
         # logger=wandb,
         callbacks=callbacks,
         max_epochs=args.epochs,
         max_steps=max_steps,
         limit_val_batches=0,  # for warmup in sanity check
         num_sanity_val_steps=0,  # useless since torch.compile re-compile at each epoch
-        log_every_n_steps=args.log_every_n_steps,
-        enable_checkpointing=args.gradient_checkpointing,
+        enable_checkpointing=False,
         enable_model_summary=False,
         use_distributed_sampler=False,  # MegatronStrategy uses its own (Megatron) data sampler
         # No accumulate_grad_batches / gradient_clip_val here: micro-batching is managed by
         # Megatron's microbatch calculator, and grad clipping by OptimizerConfig.clip_grad (TP-safe).
     )
+
+    # This will write logs to /path/to/your/custom_folder/my_custom_name/...
+    # exp_manager(
+    #    trainer,
+    #    {
+    #        "exp_dir": os.path.abspath(
+    #            os.path.join(args.output_dir, f"repeatid-{repeatid}")
+    #        ),
+    #        # "explicit_log_dir": os.path.join(args.output_dir, f"repeatid-{repeatid}"),
+    #        "name": f"repeatid-{repeatid}",
+    #    },
+    # )
     gpu_stats, stop_flag = start_gpu_monitor(
         interval_sec=5, n_gpus=args.devices_per_node
     )
@@ -532,12 +543,12 @@ def main(repeatid: int):
             f"repeatid-{repeatid}",
             f"nemo_summary-{jobid}-step{jobstepid}",
         )
-        os.makedirs(os.path.dirname(summary_file), exist_ok=True)
-        # nemo_logger = nl.NeMoLogger(
-        #    log_dir=os.path.abspath(os.path.dirname(summary_file)),
-        #    name="MINERVA-Bench-Nemo-Megatron",
-        # )
-        # nemo_logger.setup(trainer, resume_if_exists=True)
+        os.makedirs(os.path.abspath(os.path.dirname(summary_file)), exist_ok=True)
+        nemo_logger = nl.NeMoLogger(
+            log_dir=os.path.abspath(os.path.dirname(summary_file)),
+            name="MINERVA-Bench-Nemo-Megatron",
+        )
+        nemo_logger.setup(trainer, resume_if_exists=True)
 
         # Restore local HF weights (the model's "hf" importer converts them on the fly).
         resume = nl.AutoResume(
@@ -718,4 +729,6 @@ if __name__ == "__main__":
             sys.stderr.flush()
             sys.stdout.flush()
             _terminate_all_ranks()
+            if os.path.exists("nemo_experiments"):
+                shutil.rmtree("nemo_experiments")
             os._exit(1)

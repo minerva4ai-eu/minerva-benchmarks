@@ -36,8 +36,9 @@ Generates valid benchmark configurations from a Hydra machine profile, saves the
 | `--models NAMES` | All | Comma-separated model-name filter. |
 | `--frameworks NAMES` | All | Comma-separated framework-name filter. |
 | `--datasets NAMES` | All | Comma-separated dataset-name filter. |
-| `--yaml PATH` | None | Run an existing `BenchmarkConfig` YAML; may be repeated. |
+| `--yaml PATH` | None | Run an existing `BenchmarkConfig` YAML; may be repeated and/or comma-separated in a single value (e.g. `--yaml path1.yaml,path2.yaml`). |
 | `--nnodes COUNT` | Config maximum | Override node count, if it is not less than the maximum required by the selected configs. Cannot be combined with multiple profiles. |
+| `--verbose` | Off | Print extra progress messages (profile/triple counters, written YAML paths, per-group submission progress) and suppress constraint-rule details (per-rule failure reasons and the Sweep Summary table). |
 
 Examples:
 
@@ -55,8 +56,9 @@ bash minerva-cli.sh run --config-name MN5-singularity --profile tests
 # Filter generated combinations
 bash minerva-cli.sh run --config-name MN5-singularity --models mistral_7b --frameworks deepspeed
 
-# Submit existing generated YAML configs
+# Submit existing generated YAML configs (repeated flag or comma-separated)
 bash minerva-cli.sh run --yaml benchmark-runs-MN5-singularity/path/to/config1.yaml --yaml benchmark-runs-MN5-singularity/path/to/config2.yaml
+bash minerva-cli.sh run --yaml benchmark-runs-MN5-singularity/path/to/config1.yaml,benchmark-runs-MN5-singularity/path/to/config2.yaml
 ```
 
 `--yaml` cannot be combined with `--dry-run`. The machine config (`--config-name`) is inferred from the YAML path in this mode.

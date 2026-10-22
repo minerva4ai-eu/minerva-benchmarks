@@ -14,7 +14,6 @@ warnings.filterwarnings(
 
 warnings.filterwarnings("ignore")
 
-import dotenv
 from configs_hydra.constraints import rules
 from configs_hydra.dataclasses_hydra import BenchmarkConfig, register_configs
 from configs_hydra.dataclasses_hydra.model import AttentionMechanism
@@ -28,7 +27,7 @@ from rich.console import Console
 from rich.table import Table
 
 # Load training/.env
-dotenv.load_dotenv()
+# dotenv.load_dotenv()
 
 # Color Codes
 GREEN = "\033[92m"
@@ -127,7 +126,10 @@ def _apply_selection(axis: str, available: list, cfg, config_name: str) -> list:
     return list(selected)
 
 
-# TODO: check job nodes
+PRINT_INDENT = "\t"
+PRINT_INDENT2 = "\t\t"
+
+
 def generate_valid_combos(
     config_path: str,
     config_name: str,
@@ -135,9 +137,9 @@ def generate_valid_combos(
     run_date: str,
     dry: bool | None = None,
     profile: str | None = None,
+    verbose: bool = False,
 ) -> tuple[list[BenchmarkConfig], list[rules.RuleResult]]:
     # logger.debug("config_name = %s", config_name) # MN5-uv-venv-cuda130
-
     import configs_hydra.model_framework_dataset as mfd
 
     valid, skipped = [], []
@@ -162,7 +164,14 @@ def generate_valid_combos(
         )
         datasets = _apply_selection("datasets", mfd.DATASETS, _init_cfg, display_name)
 
+        total_triples = len(models) * len(frameworks) * len(datasets)
+        triple_idx = 0
         for model, framework, dataset in product(models, frameworks, datasets):
+            triple_idx += 1
+            print(
+                f"{PRINT_INDENT}{BLUE}[{triple_idx}/{total_triples}] Composing model/framework/dataset: "
+                f"{model} / {framework} / {dataset}{RESET}"
+            )
             assert framework in AVAILABLE_FRAMEWORKS, (
                 f"{RED}Framework {YELLOW}'{framework}'{RED} not found! Available frameworks: \n{BLUE}[{', '.join(AVAILABLE_FRAMEWORKS)}]{RESET}"
             )
@@ -181,37 +190,44 @@ def generate_valid_combos(
             )
 
             # FIXME: Incorrect path displayed "Composed base configuration from /gpfs/home/bsc/bsc079516/minerva_backup/minerva-benchmarks/training/MN5-uv-venv-cuda130.yaml for:"
-            print(
-                f"Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
-                + f"\n\t· model: {model}"
-                + f"\n\t· framework: {framework}"
-                + f"\n\t· dataset: {dataset}"
-                + (f"\n\t· profile: {profile}" if profile else "")
-            )
+            if verbose:
+                print(
+                    f"{PRINT_INDENT}>> Composed base configuration from {os.path.abspath(f'{config_name}.yaml')} for:"
+                    + f"\n{PRINT_INDENT2}· model: {model}"
+                    + f"\n{PRINT_INDENT2}· framework: {framework}"
+                    + f"\n{PRINT_INDENT2}· dataset: {dataset}"
+                    + (f"\n{PRINT_INDENT2}· profile: {profile}" if profile else "")
+                )
 
             if framework not in cfg.model.frameworks_supported:
                 print(
-                    f"{YELLOW}\tFramework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
+                    f"{YELLOW}{PRINT_INDENT}Framework '{framework}' is not supported by model '{model}'! Skipping...{RESET}"
                 )
                 continue
 
             if dataset not in cfg.framework.datasets_allowed:
                 print(
-                    rf"{YELLOW}Dataset '{dataset}' is not supported by framework '{framework}'! Skipping...{RESET}"
+                    rf"{YELLOW}{PRINT_INDENT}Dataset '{dataset}' is not supported by framework '{framework}'! Skipping...{RESET}"
                 )
                 continue
 
             if cfg.framework.megatron_parallelism:
                 cfg_seen, valid, skipped, raw_total = _multi_parallelism_framework(
-                    cfg, outpath, cfg_seen, valid, skipped, raw_total
+                    cfg, outpath, cfg_seen, valid, skipped, raw_total, verbose=verbose
                 )
 
             else:
                 cfg_seen, valid, skipped, raw_total = _single_parallelism_framework(
-                    cfg, outpath, cfg_seen, valid, skipped, raw_total
+                    cfg, outpath, cfg_seen, valid, skipped, raw_total, verbose=verbose
                 )
 
-        _print_summary(raw_total, valid, skipped)
+        if verbose:
+            print(
+                f"\n{PRINT_INDENT}{BLUE}Sweep finished: {raw_total} combos evaluated, "
+                f"{len(valid)} valid, {len(skipped)} skipped (rule details hidden in verbose mode).{RESET}"
+            )
+        else:
+            _print_summary(raw_total, valid, skipped)
     return valid, skipped
 
 
@@ -222,6 +238,7 @@ def _single_parallelism_framework(
     valid: list,
     skipped: list,
     raw_total: int,
+    verbose: bool = False,
 ):
     """Specific to frameworks torchrun, accelerate, deepspeed-accelerate, deepspeed
 
@@ -306,10 +323,6 @@ def _single_parallelism_framework(
 
                 parameters_combo = f"{cfg.machine.name}/{cfg.model.name}/{cfg.framework.name}/{cfg.dataset.name}/nodes-{nodes}"
 
-                tmp_cfg.slurm.sbatch.chdir = os.path.join(
-                    tmp_cfg.experiment.output_dir, parameters_combo
-                )
-
                 experiment_parameters = (
                     f"gbs{gbs}-bs{bs}"
                     + f"-grad_accum{grad_acc}"
@@ -355,7 +368,7 @@ def _single_parallelism_framework(
                 yaml_filename = f"{parallelism}--{experiment_parameters}" + ".yaml"
                 if tmp_cfg.id in cfg_seen:
                     print(
-                        f"{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
+                        f"{PRINT_INDENT}{YELLOW}Config id '{tmp_cfg.id} has been seen already, skipping duplicate...'{RESET}"
                     )
                     continue
                 cfg_seen.add(tmp_cfg.id)
@@ -365,11 +378,12 @@ def _single_parallelism_framework(
                 passed, results_msg = rules.is_valid(tmp_cfg)
                 if not passed:
                     skipped.append([tmp_cfg, results_msg])
-                    msg += f"-> {RED}❌ Failed:{RESET}"
                     raw_total += 1
-                    for f in results_msg:
-                        msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
-                    print(msg)
+                    if verbose:
+                        msg += f"{PRINT_INDENT}-> {RED}❌ Failed:{RESET}"
+                        for f in results_msg:
+                            msg += f"\n{PRINT_INDENT2}{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                        print(msg)
                     continue
                 msg += f" --> {GREEN}✅ Passed!{RESET}"
                 for s in results_msg:
@@ -379,11 +393,11 @@ def _single_parallelism_framework(
                     #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
                     # )
 
-                print(msg)
+                if verbose:
+                    print(msg)
                 raw_total += 1
 
                 # MAKE SURE BEFORE DELETE
-                # tmp_cfg.slurm.sbatch.chdir = run_path
                 tmp_cfg.experiment.yaml_filename = yaml_filename
                 # Resolve all yaml config parameter references before finish
                 OmegaConf.resolve(tmp_cfg)
@@ -399,6 +413,7 @@ def _multi_parallelism_framework(
     valid: list,
     skipped: list,
     raw_total: int,
+    verbose: bool = False,
 ):
     """Specific to framework megatron-nemo-2509
 
@@ -512,9 +527,6 @@ def _multi_parallelism_framework(
                     + f"{cfg.dataset.name}/nodes-{tmp_cfg.slurm.sbatch.nodes}"
                 )
 
-                tmp_cfg.slurm.sbatch.chdir = os.path.join(
-                    tmp_cfg.experiment.output_dir, parameters_combo
-                )
                 experiment_parameters = (
                     f"gbs{gbs}"
                     f"-bs{bs}"
@@ -560,11 +572,12 @@ def _multi_parallelism_framework(
                 )
                 if not passed:
                     skipped.append([tmp_cfg, results_msg])
-                    msg += f"-> {RED}❌ Failed:{RESET}"
                     raw_total += 1
-                    for f in results_msg:
-                        msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
-                    print(msg)
+                    if verbose:
+                        msg += f"-> {RED}❌ Failed:{RESET}"
+                        for f in results_msg:
+                            msg += f"\n\t{YELLOW}  {f.rule_name} --> {f.reason}{RESET}"
+                        print(msg)
                     continue
                 msg += f" --> {GREEN}✅ Passed!{RESET}"
                 for s in results_msg:
@@ -573,12 +586,11 @@ def _multi_parallelism_framework(
                     # msg += (
                     #    f"\n\t{YELLOW}  {s.rule_name} --> {s.reason}{RESET}"
                     # )
-
-                print(msg)
+                if verbose:
+                    print(msg)
                 raw_total += 1
 
                 # MAKE SURE BEFORE DELETE
-                # tmp_cfg.slurm.sbatch.chdir = run_path
                 tmp_cfg.experiment.yaml_filename = yaml_filename
                 # Resolve all yaml config parameter references before finish
                 OmegaConf.resolve(tmp_cfg)

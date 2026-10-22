@@ -10,7 +10,7 @@ LOG_DIR="cli-logs/$(date '+%Y-%m-%d')"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/$(date '+%H:%M:%S').log"
 
-export LOG_FILE
+export LOG_FILE LOG_DIR
 export PYTHONUNBUFFERED=1
 
 # Use 'script' if available (forces TTY → full colors on terminal, strips ANSI for log file).

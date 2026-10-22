@@ -19,7 +19,7 @@ combinations:
   #grad_accums: [8, 16]                 # Auto-inferred based on world-size and global_batch_sizes
   gradient_checkpointing: [True]    
   enable_compile: [False]
-  steps: [10]
+  steps: [30]
   epochs: 
   lr: [2e-5]                        
   optimizer: ["adamw"]                   # Has no effect
