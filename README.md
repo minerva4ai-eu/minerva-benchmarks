@@ -1,101 +1,76 @@
-# 🧠 Minerva Benchmarks
+# MINERVA Benchmarks
 
-Minerva Benchmarks is a collection of **reproducible performance benchmarks** for large language models on EuroHPC systems.
+Reproducible AI performance benchmarks on European supercomputers, developed by the MINERVA Support Team.
 
-The repository covers two independent benchmark suites:
+## About MINERVA
 
-- **Inference Benchmarks**: Serving, throughput, latency, and GPU utilization.
-- **Training & Fine-Tuning Benchmarks**: DDP/FSDP/ZeRO/Megatron scaling, throughput, TFLOPs, memory, GPU utilization, and time-to-train.
+[MINERVA](https://minerva4ai.eu) (European Support Centre for Scalable AI Research and Deployment) is a centralised, EuroHPC JU-supported initiative designed to accelerate large-scale artificial intelligence research across Europe. 
 
-Benchmarks are configured per supercomputer.
+Led by a consortium of major supercomputing centres, research institutions and companies, MINERVA aims to promote the use of European HPC infrastructure for researchers and startups. To this end, we develop open-source tools and workflows to make it easier for users to get started on HPC systems. We also provide technical support: assistance, consulting, workshops and embedded engineering. This includes guidance on accessing EuroHPC or national computing resources, training and fine-tuning models, and optimising complex AI workloads (e.g. scaling code from a single GPU to multiple nodes).
 
----
+Consortium members: BSC, CEA, CINECA, CINES, IDRIS, Forschungszentrum Jülich, UNIMORE, Tübingen AI Centre, Domyn and AMD Silo AI.
 
-## 📁 Repository Structure
+## Why benchmark supercomputers?
 
-```text
-minerva-benchmarks/
-├── analytics/       # Analytics, dashboards, and data visualization
-│   ├── data/        # Benchmark result CSVs
-├── inference/       # Inference & serving benchmarks
-│   ├── benchmarks/  # Benchmark scripts (serving, latency, throughput, etc.)
-│   ├── configs-*/   # Per-supercomputer configurations
-│   ├── envs-sing-imgs/  # Singularity image definitions
-│   ├── envs-yaml/       # Conda/YAML environment specs
-│   ├── scripts/       # Per-framework scripts (vLLM, SGLang, DeepSpeed-MII)
-│   ├── run_*.sh       # Benchmark runner scripts
-│   └── README.md
-├── training/        # Training & fine-tuning benchmarks
-│   ├── configs_hydra/     # Hydra-based configuration system (machines, models, frameworks, datasets)
-│   ├── envs/              # Training environments (uv venvs, Singularity/NeMo containers)
-│   ├── install/           # Setup scripts (environments, containers, datasets)
-│   ├── scripts/           # Per-framework training scripts, SLURM submitter, shared code
-│   ├── analytics/         # Result aggregation into summary CSVs
-│   ├── minerva-cli.sh     # CLI entry point (compose, validate, submit)
-│   ├── MINERVA.job        # SLURM job script (one srun step per config)
-│   └── README.md
-└── README.md
-```
+European supercomputers differ in GPU vendors and generations, memory, interconnects and software stacks, and the same model can perform very differently across systems, frameworks and parallelism strategies. The benchmarks assess:
 
----
+- how each supercomputer performs on the same inference and training workloads;
+- which inference engines and training frameworks perform best on each system;
+- which parallelism strategies and configurations suit each model size;
+- how performance scales from a single GPU to multiple nodes;
+- how much energy each system and configuration consumes for the same workload;
+- how well AI frameworks are supported on NVIDIA (CUDA) and AMD (ROCm) GPUs.
 
-## 🚀 Getting Started
+Results are updated as new frameworks, models and hardware are released, and published openly so that they can be reproduced and extended. The benchmarks characterise workloads and systems without endorsing any hardware vendor.
 
-### Inference Benchmarks
+## Getting started
 
-See: [inference/README.md](inference/README.md)
+The repository is divided into three parts: `inference` benchmark, `training` benchmark and `analytics`, which contains the results and interactive dashboards.
 
-Covers:
+Benchmarks are organised per system (e.g. MareNostrum 5, Leonardo, Jean Zay, Adastra). Each system has its own configuration, environment definitions, and scripts.
 
-* vLLM, DeepSpeed-MII, SGLang
-* Serving, latency, throughput, and prefix caching benchmarks
-* GPU monitoring and utilization tracking
-* Result aggregation and scoring
+Environments are pinned for NVIDIA (CUDA) and AMD (ROCm) GPUs, and each system has its own configuration, so results can be reproduced or the suites adapted to another supercomputer, cluster or cloud.
 
-### Training & Fine-Tuning Benchmarks
+### Benchmark LLM inference
 
-See: [training/README.md](training/README.md)
+Serve models on a supercomputer and measure their performance under load.
 
-Covers:
+- **Frameworks:** vLLM, SGLang, DeepSpeed-MII
+- **Models:** Mistral 7B Instruct v0.3, Llama 3.1 8B Instruct, Gemma 3 12B IT, ALIA 40B Instruct, Llama 3.3 70B Instruct, Llama 3.1 405B (base and Instruct)
+- **Datasets:** ShareGPT, Sonnet
+- **Metrics:** latency (TTFT, ITL, TPOT), throughput (tokens/s, requests/s), GPU memory, power and energy efficiency (tokens per watt)
+- **Documentation:** [inference/README.md](inference/README.md)
 
-* HuggingFace Accelerate (DDP/FSDP)
-* PyTorch TorchRun (single-GPU/DDP/FSDP)
-* Microsoft DeepSpeed (ZeRO-1/2/3, ZeRO-3-Offload)
-* NVIDIA NeMo / Megatron (TP/PP/CP/DP/EP/SP)
-* Models: gemma3_1b, mistral_7b, llama3_8b, llama3_70b, alia_40b, qwen2.5_7b, qwen2.5_72b
-* Datasets: alpaca, squadv2, tulu-3-sft-mixture
-* Hydra-based configuration, `minerva-cli.sh` submission, venv or Singularity runtimes
-* Result aggregation (`analytics.generateSummaryTable_jobs`)
+### Benchmark training and fine-tuning
 
-### Analytics
+Fine-tune models on a supercomputer and compare parallelism strategies.
 
-See: [analytics/README.md](analytics/README.md) (when available)
+- **Frameworks:** PyTorch, Hugging Face Accelerate, DeepSpeed, NVIDIA NeMo/Megatron
+- **Models:** Gemma 3 1B, Mistral 7B, Llama 3 8B, Qwen2.5 7B, ALIA 40B, Llama 3 70B, Qwen2.5 72B
+- **Datasets:** Alpaca, SQuAD v2, Tülu 3 SFT mixture
+- **Metrics:** training time (per step, per epoch and total), throughput (tokens/s, TFLOP/s per GPU, model FLOPs utilisation), GPU memory, power and utilisation, training and validation loss
+- **Documentation:** [training/README.md](training/README.md)
 
-Covers:
+### Comparison analytics
 
-* Interactive Plotly dashboards
-* Energy consumption plots
-* Performance plots
-* Cross-system benchmark comparison data
+Explore published results across systems.
 
----
+- **Tools:** interactive dashboard, energy and performance plots
+- **Data:** inference results for the models and datasets above (will be completed)
+- **Documentation:** [analytics/README.md](analytics/README.md) (coming soon)
 
-## 🖥️ Supported Systems
+## Upcoming work
 
-Benchmarks are organized per system (e.g. MareNostrum5, Leonardo, Jean Zay, Adastra). Training profiles currently exist for MareNostrum 5 (ACC and GPP) and Jean Zay H100.
-Each system has its own configuration, environment definitions, and scripts.
+- **Training results:** publish the results of the training and fine-tuning benchmarks across the supported systems, alongside the inference results.
+- **Vision models, multimodal models and downstream tasks:** extend the benchmarks beyond text generation to vision and multimodal models, and to downstream tasks.
+- **Mixture-of-Experts models:** add MoE models to measure the performance of sparse architectures and expert parallelism.
 
----
+## Contributing and support
 
-## 📄 License
+Contact [support@minerva4ai.eu](mailto:support@minerva4ai.eu) for contributions or questions.
 
-This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.en.html).
+Request free MINERVA support for your AI project on our [support page](https://minerva4ai.eu/support/).
 
----
+## License
 
-## 💬 Support
-
-For questions or contributions, contact:
-**[support@minerva4ai.eu](mailto:support@minerva4ai.eu)**
-
----
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
