@@ -223,7 +223,7 @@ def get_megatron_parser():
 
     # Logging / Checkpointing arguments
     parser.add_argument(
-        "--log-every-n-steps", type=int, default=10, help="Logging frequency."
+        "--log-every-n-steps", type=int, default=1000, help="Logging frequency."
     )
     parser.add_argument("--wandb-project", help="Wandb project name.")
 

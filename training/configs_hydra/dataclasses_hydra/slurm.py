@@ -25,7 +25,7 @@ class SbatchConfig:
 
 @dataclass
 class SrunConfig:
-    hours_limit: int = field(default=4)
+    hours_limit: int = MISSING
 
 
 @dataclass

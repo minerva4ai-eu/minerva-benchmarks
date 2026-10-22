@@ -442,45 +442,51 @@ class FlopCounterCallback(pl.Callback):
             trainer.logger.log_metrics(metrics, step=self._step_number)
 
     def on_train_end(self, trainer, pl_module):
-        averages = self._get_average_metrics()
-        if averages is not None:
-            self.logger.info(
-                "Average FLOPs/sec/GPU excluding %d warmup steps: %.1f TFLOPs/sec, MFU: %.2f%%",
-                self.warmup_steps,
-                averages[0],
-                averages[1],
-            )
+        self.logger.info(
+            "Average FLOPs/sec/GPU excluding %d warmup steps: %.1f TFLOPs/sec, MFU: %.2f%%",
+            self.warmup_steps,
+            self.get_avg_flops(),
+            self.get_avg_mfu(),
+        )
 
-    def _get_average_metrics(self) -> tuple[float, float] | None:
-        measured_events = self._step_time_events[self.warmup_steps :]
-        if not self.enabled or not measured_events:
-            return None
-        if self._average_metrics is None:
-            torch.cuda.synchronize()
-            elapsed_seconds = sum(
-                start.elapsed_time(end) / 1000 for start, end in measured_events
-            )
-            if elapsed_seconds <= 0:
-                return None
-            flops_per_gpu_per_step = self.total_step_flops / self._world_size
-            average_tflops = (
-                flops_per_gpu_per_step * len(measured_events) / elapsed_seconds / 1e12
-            )
-            self._average_metrics = (
-                average_tflops,
-                average_tflops / self.gpu_peak_flops * 100,
-            )
-        return self._average_metrics
+    # def _get_average_metrics(self) -> tuple[float, float] | None:
+    #    measured_events = self._step_time_events[self.warmup_steps :]
+    #    if not self.enabled or not measured_events:
+    #        return None
+    #    if self._average_metrics is None:
+    #        torch.cuda.synchronize()
+    #        elapsed_seconds = sum(
+    #            start.elapsed_time(end) / 1000 for start, end in measured_events
+    #        )
+    #        if elapsed_seconds <= 0:
+    #            return None
+    #        flops_per_gpu_per_step = self.total_step_flops / self._world_size
+    #        average_tflops = (
+    #            flops_per_gpu_per_step * len(measured_events) / elapsed_seconds /
+    #        )
+    #        self._average_metrics = (
+    #            average_tflops,
+    #            average_tflops / self.gpu_peak_flops * 100,
+    #        )
+    #    return self._average_metrics
 
     def get_avg_flops(self) -> float | None:
         """Return average TFLOPs/s per GPU, excluding configured warmup steps."""
-        averages = self._get_average_metrics()
-        return averages[0] if averages is not None else None
+        if self.flops_list:
+            average_tflops = sum(self.flops_list[self.warmup_steps :]) / len(
+                self.flops_list[self.warmup_steps :]
+            )
+            return average_tflops
+        return None
 
     def get_avg_mfu(self) -> float | None:
         """Return average MFU, excluding configured warmup steps."""
-        averages = self._get_average_metrics()
-        return averages[1] if averages is not None else None
+        if self.mfu_list:
+            average_mfu = sum(self.mfu_list[self.warmup_steps :]) / len(
+                self.mfu_list[self.warmup_steps :]
+            )
+            return average_mfu
+        return None
 
 
 class FLOPsMFUCalculator:

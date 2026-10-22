@@ -26,6 +26,7 @@ training/configs_hydra/benchmarks_to_run/*
 training/datasets/*
 training/models/*
 training/cli-logs/*
+training/.env
 
 */.torchcompile_cache/*
 */.torch-inductor-cache/*
@@ -33,7 +34,20 @@ training/cli-logs/*
 */.cache*
 *copy
 *.deepspeed_env
-
 *nemo_experiments*
 *.old
 *.sif
+
+
+
+# TEMP
+TRAINING-TODOS*
+.vscode
+training/analytics/results
+training/analytics/results.py
+nemo_top_le*
+nemo_list*
+training/envs
+*copy*
+training/configs_hydra/configs/profiles/tests-enable-compile
+training/configs_hydra/configs/profiles/tests-fp16
