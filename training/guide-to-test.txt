@@ -82,34 +82,33 @@ Step 1 — ALWAYS dry-run first (compose + validate, no submission):
 Step 2 — submit:
     bash minerva-cli.sh run \
         --config-name Jean-Zay-H100-singularity \
-        --profile tests/gemma3_1b-torchrun-cuda130
+        --profile tests
 
-Examples per machine:
+Examples per machine (Can also run individual .yaml profiles):
     # Jean Zay
-    bash minerva-cli.sh run --config-name Jean-Zay-H100-singularity --profile tests/mistral_7b-deepspeed-cuda130
+    bash minerva-cli.sh run --config-name Jean-Zay-H100-singularity --profile tests/mistral_7b-deepspeed-cuda130,tests/qwen2.5-megatron-nemo-2509
 
     # Leonardo
     bash minerva-cli.sh run --config-name Leonardo-singularity --profile tests/mistral_7b-torchrun-cuda130
 
-    # Adastra (venv runtime; use ROCm-compatible frameworks only)
-    bash minerva-cli.sh run --config-name Adastra-venv --profile tests/gemma3_1b-torchrun-cuda130
+    # Adastra
+    bash minerva-cli.sh run --config-name Adastra-singularity --profile tests/gemma3_1b-torchrun-cuda130
 
-Track jobs:  squeue -u $USER
-Cancel:      scancel <jobid>
+Track job steps: sacct -j <jobid> --format=JobID,JobName%24,State,Elapsed,Timelimit
+
 
 --------------------------------------------------------------------------------
 6. CHECK RESULTS
 --------------------------------------------------------------------------------
 Runs land in:
-    benchmark-runs-<config-name>-tests-<profile>/<machine>/<date>/<jobid>/
-        sbatch-slurm-logs/MINERVA-JOB-<jobid>.out|.err
-        .../run_id-N/launch-R/        (logs, metrics, GPU profiler output)
+    benchmark-runs-<config-name>/tests/<profile>/<machine>/<date>/<jobid>/
+    - output/
+    - sbatch-logs/
+    - srun-logs/
+    - training-logs
 
 Aggregate to CSV:
-    source envs/cli/.venv/bin/activate
-    python -m analytics.generateSummaryTable_jobs <JOB_ID> \
-        --root benchmark-runs-<config-name>-tests-<profile>/<machine> \
-        --output results/tests-summary.csv
+    bash minerva-cli.sh results --jobids <jobid> -> will produce a .csv with all training results in training/analytics/results folder
 
 CLI logs: cli-logs/<date>/<time>.log
 ================================================================================
