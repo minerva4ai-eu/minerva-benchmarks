@@ -116,11 +116,8 @@ case "$MACHINE" in
 
         # GPU visibility
         export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
-
-    bsc-mn5-gpp)
-        export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
         ;;
-
+		
     *)
         echo "Unknown machine: $MACHINE"
         exit 1
