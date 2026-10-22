@@ -102,6 +102,20 @@ case "$MACHINE" in
     bsc-mn5-gpp)
         export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
         ;;
+    
+    csc-lumi-gpu)
+        export NCCL_SOCKET_IFNAME=hsn
+        export NCCL_NET_GDR_LEVEL=3
+        export BINDINGS_SINGULARITY="/var/spool/slurmd,/pfs,/scratch,/projappl,/project,/flash,/appl,/boot"
+        export ADDITIONAL_SINGULARITY_ARGS="--no-home --nv"
+
+        export TMPDIR="$FLASH/tmp"
+        export VLLM_RPC_BASE_PATH="$FLASH/tmp/.cache"
+        export VLLM_CACHE_ROOT="$FLASH/tmp/.vllm/cache"
+        export XDG_CACHE_HOME="$FLASH/tmp/.xdg/cache"
+
+        # GPU visibility
+        export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
 
     bsc-mn5-gpp)
         export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
