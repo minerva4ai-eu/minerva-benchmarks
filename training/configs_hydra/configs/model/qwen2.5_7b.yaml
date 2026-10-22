@@ -1,0 +1,33 @@
+defaults:
+  - base_training
+  - _self_
+
+name: qwen2.5_7b
+path: ${oc.env:MODEL_QWEN25_7B_PATH}
+
+# transformer dims
+total_params_billions: 7.61
+architecture_type: dense
+num_layers:           28
+hidden_dim:           3584
+ffn_intermediate_dim: 18944
+num_attention_heads:  28
+num_kv_heads:         4        # GQA
+head_dim:             128      # 3584 / 28
+
+# attention
+attention_type:       gqa
+
+
+# GPU requirements — constraint metadata
+max_gpus_scale: 16
+
+
+frameworks_supported:
+  - megatron-nemo-2509
+megatron_parallelism_supported:
+  - dp
+  - tp
+  - pp
+megatron_parallelism_allowed:
+  tp: ["${arch.node.gpus_per_node}"]

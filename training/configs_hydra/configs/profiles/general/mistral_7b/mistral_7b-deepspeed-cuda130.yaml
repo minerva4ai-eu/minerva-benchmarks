@@ -1,0 +1,9 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile mistral_7b-torchrun-cuda130
+
+selection:
+  models: [mistral_7b]
+  frameworks: [torchrun-cuda130]
+  datasets: [squadv2]
+

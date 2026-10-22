@@ -1,0 +1,21 @@
+account: ${oc.env:SLURM_ACCOUNT,no-account}   # Must fill in
+qos: ${oc.env:SLURM_QOS}                      # Optional fill in
+partition: ${oc.env:SLURM_PARTITION}          # Optional fill in
+constraint: ${oc.env:SLURM_CONSTRAINT}        # Optional fill in
+
+sbatch:
+  cpus_per_gpu: 0                             # Must fill in
+  cpus_per_task: 0                            # Must fill in
+  gpus_per_node: ${arch.node.gpus_per_node}   # Not touch, will be filled in during composing
+  chdir: ??                                   # Not touch, will be filled in during composing
+  nodes: 0                                    # Not touch, will be filled in during composing
+  gres: gpu:${arch.node.gpus_per_node}        # Not touch, will be filled in during composing
+  tasks_per_node: 1                           # Not touch
+  output: run-%j.out                          # Not touch
+  error: run-%j.err                           # Not touch
+  logs_folder: "slurm-logs"
+  extra_args:                                 # Adapt extra args according to needs
+    - "--exclusive"                           # Not touch
+
+srun:
+  hours_limit: 6

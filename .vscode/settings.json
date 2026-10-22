@@ -1,0 +1,19 @@
+{
+
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        },
+
+    },
+    "python.terminal.activateEnvironment": false,
+    "ruff.enable": true,
+    "ruff.lint.enable": true,
+    
+    "ruff.importStrategy": "useBundled",
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+}

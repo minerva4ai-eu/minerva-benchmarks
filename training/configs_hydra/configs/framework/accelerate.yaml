@@ -1,0 +1,19 @@
+defaults:
+  - base
+  - _self_
+
+name: accelerate
+python_environment: 
+singularity_container: 
+
+parallelism_name: "" # Will be filled in during composing time
+parallelism:
+  ddp: { min_gpus: 2 }
+  fsdp: { min_gpus: 2 }
+
+scripts:
+  run: scripts/accelerate_common/run-${framework.parallelism_name}.sh
+  finetune: scripts/accelerate_common/finetune-${framework.parallelism_name}.py
+datasets_allowed:
+  - alpaca
+  - squadv2

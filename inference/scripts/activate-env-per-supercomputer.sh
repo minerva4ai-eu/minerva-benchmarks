@@ -50,14 +50,6 @@ case "$MACHINE" in
         which python
         ;;
 
-    bsc-mn5-gpp)
-        # How to activate miniforge environment in mn5-gpp.
-        module load $MODULES
-        source activate $ENVIRONMENT
-        export PATH=$ENVIRONMENT/bin:$PATH
-        which python
-        ;;
-
     csc-lumi-gpu)
         module purge
         module load $MODULES

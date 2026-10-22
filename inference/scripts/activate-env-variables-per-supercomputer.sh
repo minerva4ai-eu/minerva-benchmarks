@@ -102,10 +102,6 @@ case "$MACHINE" in
     bsc-mn5-gpp)
         export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
         ;;
-
-    bsc-mn5-gpp)
-        export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
-        ;;
     
     csc-lumi-gpu)
         export NCCL_SOCKET_IFNAME=hsn
@@ -120,6 +116,9 @@ case "$MACHINE" in
 
         # GPU visibility
         export HIP_VISIBLE_DEVICES=$(seq -s, 0 $((GPU_NODE - 1)))
+
+    bsc-mn5-gpp)
+        export BINDINGS_SINGULARITY="/gpfs:/gpfs,$CUR_DIR/tmp:/tmp,$CUR_DIR/tmp:/home/bsc"
         ;;
 
     *)

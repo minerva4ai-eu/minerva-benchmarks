@@ -1,0 +1,38 @@
+# Base configuration for benchmark experiments
+# Must be imported, as per the MN5.yaml example
+defaults:
+  - model: base_training
+  - framework: base
+  - dataset: template
+  - slurm: base
+  - arch: base
+  - _self_
+id: -100
+machine:
+  name: ???                       # self given name, will be used to name benchmark results related folder
+  name_pattern: ???               # Naming pattern for machine specific configs in arch/ model/ and slurm/
+                                  # Is set here deliberately, as convention choice by the benchmarks' author
+                                  # example: MN5 -> model/MN5/gemma_1b-{name_pattern}.yaml == model/MN5/gemma_1b-MN5.yaml
+                                  #          MN5 -> arch/{name_pattern}.yaml == arch/MN5.yaml
+                                  #          MN5 -> slurm/{name_pattern}.yaml == slurm/MN5.yaml
+  modules:                        # list of modules to load, necesary to run training
+    # - module1 
+    # - module2
+  runtime_env_mode: ${oc.env:RUNTIME_ENV_MODE}           # Must provide either "venv" or "singularity"
+  singularity_binds:              # singularity binds to apply on runtime
+    # - "/path/host:/path/container"
+    # - "/another/path/host:/another/path/container"
+  singularity_args:               # extra singularity arguments to apply on runtine
+    # - "-x xxxxx"
+    # - "-y yyyyy"
+  single_gpu_also_valid: True     # include single GPUs experiments, where it applies
+  env:                            # Machine specific environment variables - similar format to experiment.env
+
+experiment:
+  name: "benchmark_run"           # Do not change here, only in inherited configuration
+  # output_dir: "results/"          # DEPRECATED(?), overwritten by RUNS_DIR global variable in 'hydra_app.py'
+  repeat: 2                       # Do not change, default value for all benchmarks across computers
+  yaml_filename:                  # Do not fill in, value filled during compose runtime
+  env:                            # DO NOT TUCH. UNIVERSAL ENV VARS FOR BENCHMARKS
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True,max_split_size_mb:128"
+    PYTHON_UNBUFFERED: 1

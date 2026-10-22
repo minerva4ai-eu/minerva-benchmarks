@@ -1,0 +1,22 @@
+defaults:
+  - base
+  - _self_
+
+name: deepspeed
+python_environment:
+singularity_container: 
+
+parallelism_name: "" # Will be filled in during composing time
+parallelism:
+  zero1: { min_gpus: 2 }
+  zero2: { min_gpus: 2 }
+  zero3: { min_gpus: 2 }
+  zero3-offload: { min_gpus: 2 }
+
+scripts:
+  run: scripts/deepspeed_common/run-deepspeed.sh
+  finetune: scripts/deepspeed_common/finetune-deepspeed-pure.py
+
+datasets_allowed:
+  - alpaca
+  - squadv2
