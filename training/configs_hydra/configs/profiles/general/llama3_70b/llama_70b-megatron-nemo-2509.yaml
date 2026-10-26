@@ -5,7 +5,7 @@
 selection:
   models: [llama3_70b]
   frameworks: [megatron-nemo-2509]
-  datasets: [squadv2]
+  datasets: [tulu-3-sft-mixture]
 
 model:
   megatron_parallelism_supported:

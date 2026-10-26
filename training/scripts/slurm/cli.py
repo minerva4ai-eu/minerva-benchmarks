@@ -475,7 +475,6 @@ def run(
 
         try:
             profiles = expand_profiles(configs_path, profile)
-            print(profiles)
         except (FileNotFoundError, ValueError) as e:
             click.echo(f"\t{u.FAILURE_HEAVY} {u.RED}{e}{u.RESET}")
             sys.exit(1)
@@ -594,7 +593,6 @@ def run(
                 ):
                     profile_name = "/".join(profiles[0].split("/")[:-1])
             profile_name = profile_root(profile_name)
-            print(profile_name)
         runs_dir = (
             f"{_runs_dir}/{'profiles' if profile_name else 'no-profile'}/{profile_name}"
         ).rstrip("/")

@@ -452,7 +452,7 @@ class PerformanceTrackingSFTTrainer(SFTTrainer):
             "num_gpus_per_node": int(os.environ.get("SLURM_GPUS_ON_NODE", "1")),
             "total_gpus": world_size,
             "model": self.cfg.model.name,
-            "dataset": self.cfg.dataset.path,
+            "dataset": self.cfg.dataset.name,
             "framework": self.cfg.framework.name,
             "parallelism_type": self.cfg.framework.parallelism_name,
             "batch_size": self.args.per_device_train_batch_size,
