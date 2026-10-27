@@ -283,11 +283,49 @@ module load miniforge
 source activate ${ENVIRONMENT_VLLM}
 
 # Run the generation of the Table.
-python generateSummaryTable.py
+python generateSummaryTable.py --machine "$MACHINE"
 
 # Run the generation of the Metrics scores.
-python generateScores.py
+python generateScores.py --machine "$MACHINE"
 ```
+
+Run these commands from `inference/`. Both tools accept the same `--machine`
+identifiers:
+
+- `leonardo`
+- `bsc-mn5-acc`, `bsc-mn5-gpp`
+- `cines-adastra-mi250`, `cines-adastra-mi300`
+- `idris-jeanzay-h100`
+- `csc-lumi-gpu`
+
+For example, use `--machine leonardo` for both commands to process Leonardo
+results, even on another host. The selected `.env-<machine>` file overrides
+previously exported values that it defines, and model mappings are read from
+`configs-<machine>/model_type_map.json`. Both files must exist; the Adastra MI250
+configuration currently needs a `model_type_map.json` before these tools can run.
+
+Without `--machine`, the tools use these detection rules:
+
+| Cluster | Signal | Result |
+| --- | --- | --- |
+| Leonardo | Hostname contains `leonardo` | `leonardo` |
+| Jean Zay H100 | Hostname contains `jean-zay` | `idris-jeanzay-h100` |
+| LUMI | Hostname is `lumi`, or starts with `lumi.` or `lumi-` | `csc-lumi-gpu` |
+| Adastra | Hostname contains `adastra` | Error requesting explicit MI250/MI300 selection |
+| MN5 | `BSC_MACHINE=mn5` | Error requesting explicit ACC/GPP selection |
+
+The LUMI hostname rule covers the login names documented in the
+[LUMI access guide](https://docs.lumi-supercomputer.eu/firststeps/loggingin/).
+Adastra login names are documented in the
+[CINES access guide](https://dci.dci-gitlab.cines.fr/webextranet/user_support/).
+These hostnames do not necessarily identify compute nodes. Unrecognized hosts
+require `--machine` as well. No additional partition probes or interactive prompts
+are used: ambiguous detection exits with an error listing the explicit choices.
+Detection selects a benchmark configuration, not the partition of past runs;
+use `--machine` when processing results from another configuration.
+
+Training summaries are unaffected: they use machine and partition metadata saved
+with each run, rather than detecting the collector's host.
 
 This will output a consolidated report from the files in `results/`.
 In MN5:
