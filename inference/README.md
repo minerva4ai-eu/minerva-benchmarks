@@ -303,6 +303,12 @@ results, even on another host. The selected `.env-<machine>` file overrides
 previously exported values that it defines, and model mappings are read from
 `configs-<machine>/model_type_map.json`. Both files must exist; the Adastra MI250
 configuration currently needs a `model_type_map.json` before these tools can run.
+Both tools require nonempty `SUPCOMPUTER_NAME` and `PARTITION_NAME` in the
+selected environment file. Summary generation additionally requires
+`GPUS_PER_NODE` and `BENCHMARK_FILE`. Missing metadata is an error even if the
+shell already exports a value for that key. External path variables such as
+`SCRATCH` remain available for environment-file interpolation. MN5 GPP currently
+needs `GPUS_PER_NODE` added to its environment file before generating summaries.
 
 Without `--machine`, the tools use these detection rules:
 

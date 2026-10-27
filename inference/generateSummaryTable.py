@@ -7,7 +7,10 @@ import re
 from machine_environment import load_machine_environment
 
 BASE_DIR =  os.getcwd() # Adjust if needed
-MACHINE = load_machine_environment(BASE_DIR)
+MACHINE = load_machine_environment(
+    BASE_DIR,
+    required_keys=("SUPCOMPUTER_NAME", "PARTITION_NAME", "GPUS_PER_NODE", "BENCHMARK_FILE"),
+)
 BASE_DIR_RESULTS = os.path.join(BASE_DIR, "results")
 SUPCOMPUTER_NAME = os.getenv("SUPCOMPUTER_NAME", "Add to .env file")
 GPUS_PER_NODE = os.getenv("GPUS_PER_NODE", "Add to .env file")

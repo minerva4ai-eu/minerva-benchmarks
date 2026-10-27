@@ -5,7 +5,7 @@ import os
 import socket
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 
 MACHINES = (
@@ -43,7 +43,10 @@ def detect_machine():
     )
 
 
-def load_machine_environment(base_dir):
+def load_machine_environment(
+    base_dir, argv=None, *, required_keys=("SUPCOMPUTER_NAME", "PARTITION_NAME")
+):
+    """Load selected metadata; argv=None reads the process arguments."""
     parser = argparse.ArgumentParser(
         description="Process inference results for a supercomputer configuration."
     )
@@ -52,7 +55,7 @@ def load_machine_environment(base_dir):
         choices=MACHINES,
         help="Configuration to use; otherwise try automatic host detection.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     try:
         machine = args.machine or detect_machine()
     except ValueError as error:
@@ -65,7 +68,13 @@ def load_machine_environment(base_dir):
         if not path.is_file():
             parser.error(f"Missing configuration file for {machine}: {path}")
 
-    # The selected file must not inherit metadata from a previously sourced machine.
+    values = dotenv_values(env_file)
+    missing = [key for key in required_keys if not (values.get(key) or "").strip()]
+    if missing:
+        parser.error(
+            f"Missing required metadata in {env_file}: {', '.join(missing)}"
+        )
+
     load_dotenv(env_file, override=True)
     os.environ["MACHINE"] = machine
     return machine
