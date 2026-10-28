@@ -1,0 +1,26 @@
+{
+  "filters": {
+    "dataset": [
+      "sharegpt"
+    ],
+    "framework": [
+      "vllm"
+    ],
+    "gpus": [
+      4
+    ],
+    "max_len": [
+      4096
+    ],
+    "concurrency": [
+      250
+    ]
+  },
+  "scaling": {
+    "model": "Llama-3.1-8B-Instruct"
+  },
+  "training": {
+    "filters": {},
+    "banner": "Preview built from example data (MareNostrum 5 ACC). It will be replaced when the final training results are available."
+  }
+}

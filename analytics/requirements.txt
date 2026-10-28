@@ -1,0 +1,3 @@
+# Dashboard build and server (build_dashboard.py, serve.py, minerva_data.py)
+pandas>=2.0
+numpy>=1.24

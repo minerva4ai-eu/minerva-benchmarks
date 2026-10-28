@@ -1,0 +1,61 @@
+# Singularity / Apptainer image for the Minerva benchmarks dashboard.
+# Build from the analytics/ folder:
+#     singularity build minerva-dashboard.sif deploy/minerva-dashboard.def     (root)
+#     singularity build --fakeroot minerva-dashboard.sif deploy/minerva-dashboard.def
+# or simply:  deploy/singularity.sh build
+#
+# Needs internet access at build time (base image, pip, Plotly). On a site without access to
+# Docker Hub, build the .sif elsewhere and copy it, or switch the two lines below to a
+# local base image (for example "Bootstrap: library" / "From: ubuntu:24.04" plus python3-pip).
+Bootstrap: docker
+From: python:3.12-slim
+
+%setup
+    mkdir -p ${SINGULARITY_ROOTFS}/app/dashboard
+
+%files
+    minerva_data.py /app/minerva_data.py
+    build_dashboard.py /app/build_dashboard.py
+    serve.py /app/serve.py
+    fetch_plotly.py /app/fetch_plotly.py
+    dashboard/template.html /app/dashboard/template.html
+    dashboard/defaults.json /app/dashboard/defaults.json
+    dashboard/assets /app/dashboard/assets
+    data /app/data
+
+%post
+    pip install --no-cache-dir pandas numpy
+    cd /app
+    # Bundle Plotly so the dashboard also works on networks without internet access.
+    python fetch_plotly.py || echo "Plotly not bundled: browsers will load it from the CDN"
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PYTHONDONTWRITEBYTECODE=1
+    export LC_ALL=C.UTF-8
+
+%runscript
+    cd /app
+    exec python serve.py "$@"
+
+%startscript
+    cd /app
+    exec python serve.py "$@"
+
+%test
+    cd /app
+    python -c "import build_dashboard as b; html, n = b.build_html(); assert n > 0 and len(html) > 100000; print('dashboard builds,', n, 'inference runs')"
+
+%labels
+    Project Minerva benchmarks dashboard
+
+%help
+    Serves the Minerva benchmarks dashboard on port 8080 (host network; no port mapping needed).
+    The image is read-only: the page is built in memory, so nothing is written inside it.
+
+    Mount the data so it can be updated without rebuilding the image:
+        singularity run \
+          --bind /path/to/analytics/data:/app/data:ro \
+          --bind /path/to/analytics/dashboard/defaults.json:/app/dashboard/defaults.json:ro \
+          minerva-dashboard.sif --host 0.0.0.0 --port 8080
+    Changed CSVs or defaults are picked up within ~30 seconds.
