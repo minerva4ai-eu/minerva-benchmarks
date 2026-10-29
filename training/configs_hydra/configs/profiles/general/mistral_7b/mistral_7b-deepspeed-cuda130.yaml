@@ -4,6 +4,6 @@
 
 selection:
   models: [mistral_7b]
-  frameworks: [torchrun-cuda130]
+  frameworks: [deepspeed-cuda130]
   datasets: [squadv2]
 
