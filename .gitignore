@@ -41,13 +41,4 @@ training/.env
 
 
 # TEMP
-TRAINING-TODOS*
-.vscode
-training/analytics/results
-training/analytics/results.py
-nemo_top_le*
-nemo_list*
-training/envs
-*copy*
-training/configs_hydra/configs/profiles/tests-enable-compile
-training/configs_hydra/configs/profiles/tests-fp16
+#training/analytics/results
