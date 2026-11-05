@@ -1,0 +1,11 @@
+defaults:
+  - /slurm: base
+  - _self_
+
+sbatch:
+  gpus_per_node: ${arch.node.gpus_per_node}
+  cpus_per_gpu: 24
+  cpus_per_task: 96
+  extra_args:
+    - "--hint=nomultithread"
+    - "--exclusive"

@@ -1,0 +1,15 @@
+# @package _global_
+# Base configuration for benchmark experiments
+defaults:
+  - /machine/MN5/MN5
+  - _self_
+
+machine:
+  runtime_env_mode: singularity
+  modules:
+  - singularity
+  singularity_args:
+    - "--nv"
+    - "--network=host"
+  singularity_binds:
+    - "${model.path}"

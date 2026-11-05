@@ -1,5 +1,9 @@
 #!/bin/bash
 
+get_cli_python() {
+    echo "envs/cli/.venv/bin/python"
+}
+
 training_detect_execution_mode() {
     case "${EXECUTION_MODE:-auto}" in
         singularity|SINGULARITY)
@@ -44,8 +48,8 @@ training_build_runtime_prefix() {
             if [[ -n "${SINGULARITY_BINDS:-}" ]]; then
                 runtime_prefix+=" ${SINGULARITY_BINDS}"
             fi
-            runtime_prefix+=" --home ${LAUNCH_FOLDER:-$PWD} ${SINGULARITY_CONTAINER}"
-            echo "$runtime_prefix"
+            runtime_prefix+=" ${SINGULARITY_CONTAINER}"
+            echo "$runtime_prefix "
             ;;
         venv|host)
             echo ""
@@ -63,16 +67,16 @@ training_activate_runtime_environment() {
 
     case "$execution_mode" in
         venv)
-            if [[ -z "${ENVIRONMENT_FINETUNING:-}" ]]; then
-                echo "Virtualenv execution requested but ENVIRONMENT_FINETUNING is empty." >&2
+            if [[ -z "${VENV_PATH:-}" ]]; then
+                echo "Virtualenv execution requested but 'VENV_PATH' is empty." >&2
                 return 1
             fi
-            if [[ ! -f "${ENVIRONMENT_FINETUNING}/bin/activate" ]]; then
-                echo "Virtualenv activation script not found: ${ENVIRONMENT_FINETUNING}/bin/activate" >&2
+            if [[ ! -f "${VENV_PATH}/bin/activate" ]]; then
+                echo "Virtualenv activation script not found: ${VENV_PATH}/bin/activate" >&2
                 return 1
             fi
             # shellcheck disable=SC1090
-            source "${ENVIRONMENT_FINETUNING}/bin/activate"
+            source "${VENV_PATH}/bin/activate"
             ;;
         singularity|host)
             ;;

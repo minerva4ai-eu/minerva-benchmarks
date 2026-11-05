@@ -1,0 +1,18 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile llama_70b-deepspeed-cuda130
+
+selection:
+  models: [llama3_70b]
+  frameworks: [deepspeed-cuda130]
+  datasets: [squadv2]
+
+model:
+  combinations:
+    batch_sizes: [2, 4]
+  megatron_parallelism_supported:
+    - tp
+    - pp
+    - dp
+  megatron_parallelism_allowed:
+    tp: ["${arch.node.gpus_per_node}"]

@@ -1,0 +1,9 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile gemma3_1b-accelerate-cuda130
+
+selection:
+  models: [gemma3_1b]
+  frameworks: [accelerate-cuda130]
+  datasets: [squadv2]
+

@@ -1,0 +1,7 @@
+defaults:
+  - base
+  - _self_
+
+sbatch:
+  gpus_per_node: ${arch.node.gpus_per_node}
+  cpus_per_task: <must fill in> 

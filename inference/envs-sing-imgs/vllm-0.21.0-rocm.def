@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: vllm/vllm-openai-rocm:v0.21.0
+
+%labels
+    Description "vLLM 0.21.0 for ADASTRA MI300A"
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+%post
+    apt-get update && apt-get install -y --no-install-recommends \
+        git curl
+    pip install --upgrade pip
+    pip install datasets
+
+%runscript
+    exec python3 -m vllm.entrypoints.openai.api_server "$@"
+
+%help
+    vLLM 0.21.0 ROCm — source: docker://vllm/vllm-openai-rocm:v0.21.0
+    
+      singularity exec --rocm --writable-tmpfs \
+        -B /sys -B /dev -B /proc -B /lus -B <input> \
+        vllm-0.21.0-rocm.sif python3 ...

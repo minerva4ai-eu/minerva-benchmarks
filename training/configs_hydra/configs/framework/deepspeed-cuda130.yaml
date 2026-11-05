@@ -2,5 +2,6 @@ defaults:
   - deepspeed
   - _self_
 
+name: deepspeed-cuda130
 python_environment: ${abs_path:envs/benchmarks/cuda130-flash-attn/.venv}
 singularity_container: ${abs_path:envs/benchmarks/cuda130-flash-attn/singularity_uv-runtime.sif}

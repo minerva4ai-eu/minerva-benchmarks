@@ -1,56 +1,14 @@
 # Environment Management
 
-This directory contains Python environment definitions for building Singularity containers used in MINERVA training benchmarks. Environments are managed using [uv](https://github.com/astral-sh/uv), a fast Python package and project manager, and packaged into Singularity containers for execution on HPC clusters.
+This directory contains Python environment definitions for building Singularity containers used in training benchmarks. Environments are managed using [uv](https://github.com/astral-sh/uv), a fast Python package and project manager, and packaged into Singularity containers for execution on HPC clusters.
 
-## Philosophy
+## Overview
 
-The MINERVA project operates across two distinct computing contexts:
-
-1. **Local development** — where researchers iterate quickly on code, test dependencies, and debug issues
-2. **HPC execution** — where reproducible, isolated environments run on shared cluster resources (MareNostrum5, etc.)
-
-These contexts have different requirements. Local development needs speed and flexibility. HPC execution needs reproducibility, isolation, and compatibility with cluster infrastructure. This directory provides tools to bridge both worlds.
-
-## Table of Contents
-
-- [Philosophy](#philosophy)
-- [Overview](#overview)
-- [Environment Types](#environment-types)
-  - [benchmarks/ — Training Benchmark Environment](#benchmarks--training-benchmark-environment)
-  - [cli/ — Command-Line Interface Environment](#cli--command-line-interface-environment)
-- [Build Choices](#build-choices)
-  - [Why `uv`?](#why-uv)
-  - [Why Singularity?](#why-singularity)
-  - [The Two Approaches](#the-two-approaches)
-- [Quick Start](#quick-start)
-  - [Automated Installation (Recommended)](#automated-installation-recommended)
-  - [Local Development](#local-development)
-  - [Build Singularity Container](#build-singularity-container)
-- [Using the Environments](#using-the-environments)
-  - [Running Benchmarks](#running-benchmarks)
-  - [Direct Singularity Execution](#direct-singularity-execution)
-  - [GPU Access](#gpu-access)
-- [Directory Structure](#directory-structure)
-  - [benchmarks/cuda121-flash-attn/](#benchmarkscuda121-flash-attn)
-  - [cli/](#cli)
-- [Key Dependencies](#key-dependencies)
-  - [Benchmarks Environment](#benchmarks-environment)
-  - [CLI Environment](#cli-environment)
-- [Dependency Management](#dependency-management)
-  - [Updating Dependencies](#updating-dependencies)
-  - [Rebuilding Containers](#rebuilding-containers)
-- [Adding a New CUDA Version](#adding-a-new-cuda-version)
-- [Troubleshooting](#troubleshooting)
-- [See Also](#see-also)
-
----
-
-## Philosophy
+Training benchmarks run inside Singularity containers that contain a complete Python environment with all dependencies. The containers are built from definition files (`.def`) using `pyproject.toml` and `uv.lock` for reproducible dependency resolution.
 
 ```
 envs/
 ├── benchmarks/                    # Training benchmark 
-│   ├── cuda121-flash-attn/        # CUDA 12.1 + flash attn
 │   ├── cuda128-flash-attn/        # CUDA 12.8 + flash attn 
 │   └── cuda130-flash-attn/        # CUDA 13.0 + flash attn 
 │       ├── pyproject.toml
@@ -66,102 +24,74 @@ envs/
 
 ## Environment Types
 
-### `benchmarks/` — Training Benchmark Environment
+### `uv/` — Primary Training Environments
 
-The primary environment for running training benchmarks. It includes a full deep learning stack with PyTorch, transformers, DeepSpeed, and flash attention support. This environment is designed for GPU-accelerated training workloads on HPC clusters.
+The main environment system for training benchmarks. Each subdirectory targets a specific CUDA version with flash attention support.
 
-**Key features:**
-- PyTorch 2.5.1 with CUDA 12.1 support
-- Flash attention 2.8.3 (requires compilation)
-- DeepSpeed 0.15.4 for distributed training
-- Hugging Face transformers 4.57.0
-- Additional tools: accelerate, peft, trl, torchtune, lightning, etc.
+#### Directory Structure
 
-**Runtime image** (`singularity_uv-runtime.def`): Optimized for benchmark execution. Includes CUDA toolkit, NCCL, and InfiniBand support for multi-GPU communication.
+```
+uv/
+└── cuda121-flash-attn/              # CUDA 12.1 environment
+    ├── pyproject.toml               # Python dependencies
+    ├── uv.lock                      # Locked dependency versions
+    ├── singularity_uv-devel.def     # Singularity definition (development)
+    ├── singularity_uv-runtime.def   # Singularity definition (runtime)
+    ├── singularity_uv.sif           # Built container (development)
+    └── .venv/                       # Virtual environment (local, not committed)
+```
 
-### `cli/` — Command-Line Interface Environment
+#### CUDA 12.1
 
-A minimal environment for the `minerva-cli.sh` tool. This environment provides the Click-based CLI for benchmark submission and management. It does not include CUDA libraries or GPU dependencies.
+| Version | Base Image | Use Case |
+|---------|------------|----------|
+| `cuda121-flash-attn/` | `nvidia/cuda:12.1.1-runtime-ubuntu22.04` | CUDA 12.1 environment for training benchmarks |
 
-**Key features:**
-- Click 8.4+ for CLI argument parsing
-- Hydra 1.3+ for configuration management
-- Rich 15+ for terminal output formatting
-- Data visualization: matplotlib, seaborn, pandas
-- Utilities: psutil, tqdm, pyyaml, python-dotenv
+#### Container Features
 
----
+The environment includes:
 
-## Build Choices
+- **Python 3.11** — Installed via uv from source
+- **uv package manager** — For dependency resolution and installation
+- **CUDA toolkit** — `cuda-nvcc-12.1` for compilation
+- **NCCL libraries** — `libnccl2`, `libnccl-dev` for multi-GPU communication
+- **Build tools** — `build-essential`, `python3-dev`, `git`, `curl`
+- **Flash attention** — Included via `pyproject.toml` dependencies
+- **Training stack** — PyTorch, transformers, accelerate, trl, deepspeed, etc.
 
-### Why `uv`?
+#### Singularity Definition Files
 
-`uv` is used as the primary Python package manager because it:
-- Is significantly faster than pip for dependency resolution and installation
-- Provides reproducible builds via `uv.lock`
-- Supports modern Python project standards (`pyproject.toml`)
-- Handles multiple Python versions and virtual environments efficiently
+Two definition files are provided per CUDA version:
 
-### Why Singularity?
+**`singularity_uv-runtime.def`** — Production runtime container (optimized for benchmark execution).
 
-Singularity (Apptainer) is used for HPC containerization because it:
-- Integrates seamlessly with SLURM and other HPC job schedulers
-- Provides process-level isolation without requiring root privileges
-- Preserves host system compatibility (GPU drivers, network interfaces, etc.)
-- Creates portable, self-contained images (`.sif` files)
+**`singularity_uv-devel.def`** — Development container (includes dev dependencies for debugging).
 
-### The Two Approaches
+### `cli/` — CLI Environment
 
-There are **two ways** to build and use these environments:
+A separate environment for the `minerva-cli.sh` tool. Uses the same structure as `uv/`:
 
-#### 1. Local Development with `uv` (Python venv)
+```
+cli/
+├── pyproject.toml         # CLI dependencies (click, prompt_toolkit, etc.)
+├── uv.lock                # Locked dependencies
+└── singularity-uv.def    # Singularity definition file
 
-Creates a Python virtual environment on your local machine using `uv` for dependency management.
+```
 
-**When to use:**
-- Developing or modifying dependencies
-- Testing new package versions
-- Debugging issues before building containers
-- Quick iteration without container overhead
-
-**Pros:**
-- Fast setup and teardown
-- Direct access to your local Python interpreter
-- Easy to debug with standard Python tools
-
-**Cons:**
-- Environment may differ from HPC cluster
-- No system-level isolation
-- Requires matching CUDA/toolchain versions locally
-
-#### 2. Singularity Container Build
-
-Builds a Singularity container image that bundles the Python environment with all system dependencies into a portable `.sif` file.
-
-**When to use:**
-- Running benchmarks on HPC clusters
-- Ensuring reproducible environments across different machines
-- Isolating dependencies from the host system
-- Submitting jobs via SLURM
-
-**Pros:**
-- Exact reproducibility across environments
-- System-level isolation
-- Includes all system dependencies (CUDA, NCCL, etc.)
-- Portable — can be shared and reused
-
-**Cons:**
-- Slower build times (30–60 minutes for benchmarks)
-- Larger disk footprint
-- Less flexible for quick changes
+This environment is used by `minerva-cli.sh` to provide the Click-based CLI for benchmark submission.
 
 ---
 
-## Quick Start
+## Building Containers
 
-### Automated Installation (Recommended)
+### Prerequisites
 
-The `install/` directory provides scripts to install all environments and build all containers in one step:
+- Singularity/Apptainer installed on the build machine
+- Docker/Podman available (Singularity builds from Docker images)
+- Internet access for downloading base images and packages
+
+### Build Commands
 
 ```bash
 # From the training/ directory
@@ -176,76 +106,18 @@ bash build-all-singularity.sh
 
 Both scripts can be run from either `training/` or `training/install/`.
 
-### Local Development
-
-```bash
-# Benchmarks environment
-cd envs/benchmarks/cuda121-flash-attn
-uv venv
-source .venv/bin/activate
-uv sync --locked
-
-# CLI environment
-cd envs/cli
-uv venv
-source .venv/bin/activate
-uv sync --locked
-```
-
-### Build Singularity Container
-
-```bash
-# Benchmarks environment
-cd envs/benchmarks/cuda121-flash-attn
-singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
-
-# CLI environment
-cd envs/cli
-singularity build singularity-uv.sif singularity-uv.def
-```
-
----
-
-## Using the Environments
-
-### Running Benchmarks
-
-The `minerva-cli.sh` wrapper automatically runs commands inside the Singularity container:
-
-```bash
-bash minerva-cli.sh run --config-name base-MN5
-```
-
-### Direct Singularity Execution
-
-```bash
-# Execute a Python script inside the container
-singularity exec --nv envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif python script.py
-
-# Start an interactive shell
-singularity shell --nv envs/benchmarks/cuda121-flash-attn/singularity_uv-runtime.sif
-```
-
-### GPU Access
-
-The `--nv` flag enables NVIDIA GPU access inside the container:
-
-```bash
-singularity exec --nv ...  # Enables CUDA, cuDNN, NCCL
-```
 
 ---
 
 ## Directory Structure
 
-### `benchmarks/cuda121-flash-attn/`
+### `benchmarks/cuda130-flash-attn/`
 
 ```
-cuda121-flash-attn/
+cuda130-flash-attn/
 ├── pyproject.toml               # Python dependencies (PyTorch, transformers, DeepSpeed, etc.)
 ├── uv.lock                      # Locked dependency versions
-├── singularity_uv-runtime.def   # Singularity definition (runtime image)
-└── singularity_uv-devel.def     # Singularity definition (development image)
+└── ingularity_uv-runtime.def   # Singularity definition (runtime image)
 ```
 
 ### `cli/`
@@ -254,7 +126,6 @@ cuda121-flash-attn/
 cli/
 ├── pyproject.toml         # CLI dependencies (click, hydra, rich, etc.)
 ├── uv.lock                # Locked dependencies
-└── singularity-uv.def     # Singularity definition file
 ```
 
 ---
@@ -287,11 +158,45 @@ PyTorch wheels are sourced from `https://download.pytorch.org/whl/cu121` via `[[
 
 ## Dependency Management
 
+### `pyproject.toml`
+
+Defines project dependencies:
+
+```toml
+[project]
+name = "minerva-training-benchmarks"
+version = "1.0.0"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.1.0",
+    "transformers>=4.38.0",
+    "accelerate>=0.25.0",
+    "trl>=0.7.0",
+    "deepspeed>=0.14.0",
+    "flash-attn>=2.5.0",
+    "peft>=0.8.0",
+    "datasets>=2.16.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "pandas>=2.1.0",
+    "omegaconf>=2.3.0",
+    "hydra-core>=1.3.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+    "prompt-toolkit>=3.0.0",
+]
+```
+
+### `uv.lock`
+
+Locked dependency tree generated by `uv lock`. Ensures reproducible builds across environments.
+
 ### Updating Dependencies
 
 ```bash
 # Add a new dependency
-cd envs/benchmarks/cuda121-flash-attn/
+cd envs/benchmarks/cuda130-flash-attn/
 uv add <package-name>
 
 # Update all dependencies
@@ -299,38 +204,37 @@ uv lock --upgrade
 
 # Update a specific package
 uv lock --upgrade-package <package-name>
-```
 
 ### Rebuilding Containers
 
 After updating dependencies, rebuild the Singularity container:
 
 ```bash
-cd envs/benchmarks/cuda121-flash-attn/
+cd envs/benchmarks/cuda130-flash-attn/
 singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
 ```
 
 ---
 
-## Adding a New CUDA Version
+## Adding a New CUDA Version (or ROCM version)
 
-To add a new CUDA version (e.g., CUDA 12.4):
+To add a new CUDA version (e.g., CUDA 13.3):
 
 1. **Copy existing directory:**
    ```bash
-   cp -r envs/benchmarks/cuda121-flash-attn envs/benchmarks/cuda124-flash-attn
+   cp -r envs/benchmarks/cuda130-flash-attn envs/benchmarks/cuda130-flash-attn
    ```
 
 2. **Update Singularity definition files:**
-   - Change `From:` line to `nvidia/cuda:12.4.x-runtime-ubuntu22.04`
-   - Update `cuda-nvcc-12-x` package name
+   - Change `From:` line to `nvidia/cuda:13.3.x-runtime-ubuntu22.04`
+   - Update `cuda-nvcc-13-x` package name
    - Update `%environment` paths if needed
 
 3. **Update pyproject.toml** if CUDA version affects dependency versions.
 
 4. **Rebuild lock file:**
    ```bash
-   cd envs/benchmarks/cuda124-flash-attn/
+   cd envs/uv/cuda124-flash-attn/
    uv lock
    ```
 
@@ -339,7 +243,25 @@ To add a new CUDA version (e.g., CUDA 12.4):
    singularity build singularity_uv-runtime.sif singularity_uv-runtime.def
    ```
 
+6. **Update references** in config files (e.g., `configs_hydra/configs/base-MN5.yaml` → `singularity_container` path).
+
 ---
+
+## Container Path Configuration
+
+The Singularity container path is configured in:
+
+- **`minerva-cli.sh`**: `CLI_CONTAINER_PATH` variable
+- **`configs_hydra/configs/base-MN5.yaml`**: `machine.singularity_container` field
+
+```yaml
+machine:
+  singularity_container: /path/to/singularity_uv-runtime.sif
+```
+
+---
+
+A similar process should be followed to add any new environment necessary.
 
 ## Troubleshooting
 
@@ -365,9 +287,7 @@ Run `uv lock --upgrade` to resolve conflicts. Check that `pyproject.toml` depend
 
 - [install/install-all-envs.sh](../install/install-all-envs.sh) — Install all Python environments with `uv`
 - [install/build-all-singularity.sh](../install/build-all-singularity.sh) — Build all Singularity containers
-- [envs/benchmarks/how-to-build.md](benchmarks/how-to-build.md) — Detailed build instructions for training environment
-- [envs/cli/how-to-build.md](cli/how-to-build.md) — Detailed build instructions for CLI environment
 - [configs_hydra/README.md](../configs_hydra/README.md) — Configuration system (references container path)
 - [scripts/README.md](../scripts/README.md) — Training scripts (run inside containers)
 - [scripts/slurm/README.md](../scripts/slurm/README.md) — SLURM submission (uses containers)
-- [training_MN5/README.md](../../README.md) — Root project overview
+- [training/README.md](../../README.md) — Root project overview

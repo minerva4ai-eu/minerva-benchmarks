@@ -1,0 +1,734 @@
+#!/usr/bin/python3
+"""SFT training script using a Megatron-Core native model + nl.MegatronStrategy (DDP+TP+PP+CP).
+
+Why NeMo (PyTorch Lightning + MegatronStrategy) rather than Megatron-Bridge:
+    Both back ends run on Megatron-Core; they differ in who owns the training loop.
+    In Megatron-Bridge examples, a plain config object drives the loop.
+    NeMo instead runs the loop through the PyTorch Lightning Trainer, whose callback
+    hooks (on_train_batch_start/end, on_train_start/end) host our instrumentation:
+    the FLOP counter, the Torch profiler and the throughput MegatronBenchmarkCallback are
+    plain pl.Callback objects plugged into those hooks.
+
+IMPORTANT: MegatronStrategy runs the full forward-backward over all micro-batches
+    + the optimizer step inside a single training_step. So batch hooks fire once per GLOBAL
+    step (reason in global steps, incl. warmup counts), and the fine-grained hooks
+    (on_before/after_backward) never fire.
+
+To Megatron-Bridge: https://github.com/NVIDIA-NeMo/Megatron-Bridge/blob/main/examples/conversion/hf_to_megatron_generate_text.py
+
+Differences vs the AutoModel/FSDP2 script:
+    * Model: HFAutoModelForCausalLM -> a NeMo model (llm.LlamaModel, llm.Qwen2Model, ...).
+        The architecture must match your HF checkpoint. Local HF weights are loaded via nl.AutoResume
+        (the model's "hf" importer converts them on the fly), not by the model constructor.
+    * Strategy: nl.FSDP2Strategy -> nl.MegatronStrategy (DDP + TP/PP/CP).
+    * Optimizer: pytorch_adam_with_cosine_annealing -> nl.MegatronOptimizerModule + scheduler.
+        Gradient clipping is set on OptimizerConfig.clip_grad.
+    * Precision: Trainer(precision=...) -> plugins=nl.MegatronMixedPrecision(...).
+    * Data: HFDatasetDataModule + custom collate -> llm.FineTuningDataModule (JSONL input/output).
+        A one-time HF->JSONL prep step is included.
+
+Build the dataset before training:
+    python nemo_megatron.py \
+        --prepare \
+        --dataset-path $WORK/LLM-FT-IDRIS-Benchmark/dataset/tulu-3-sft-mixture \
+        --dataset-root ./sft_megatron_data \
+        --model-path $DSDIR/HuggingFace_Models/Qwen/Qwen2.5-7B-Instruct \
+        --nemo-ckpt-path ./nemo_ckpt
+
+Source: https://docs.nvidia.com/nemo-framework/user-guide/25.11/nemo-2.0/index.html
+"""
+
+import gc
+import json
+import logging
+import os
+import shutil
+import signal
+import sys
+import traceback
+from dataclasses import dataclass
+from math import ceil
+from typing import TYPE_CHECKING, Any
+
+import lightning.pytorch as pl
+import numpy as np
+import torch
+from datasets import Dataset
+from lightning.pytorch.utilities.types import STEP_OUTPUT
+from megatron.core.optimizer import OptimizerConfig
+from nemo import lightning as nl
+from nemo.collections import llm
+
+# from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import AutoTokenizer
+from nemo.lightning.pytorch.optim import CosineAnnealingScheduler
+from scripts.nemo_megatron_common.utils import MegatronBenchmarkCallback
+from scripts.shared.args import (
+    get_megatron_parser,
+    megatron_construct_config,
+)
+from scripts.shared.flops import mfu_callback_from_hf_config
+from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.logger import RankAdapter, setup_logging
+from scripts.shared.utils import (
+    save_error_summary,
+    save_training_summary,
+)
+from scripts.slurm.utils import load_config
+
+# scripts.shared.data import load_and_prepare_raw_dataset
+from torch.profiler import (
+    ProfilerActivity,
+    profile,
+    schedule,
+    tensorboard_trace_handler,
+)
+from torch.utils.flop_counter import FlopCounterMode
+from transformers import AutoConfig, AutoTokenizer
+
+# Filter NCCL debug output to rank 0 only — we are using torchrun to launch distributed training
+if int(os.environ.get("RANK", 0)) != 0:
+    os.environ["NCCL_DEBUG"] = "WARN"
+    os.environ.pop("NCCL_DEBUG_FILE", None)
+
+if TYPE_CHECKING:
+    from scripts.shared.args import MegatronConfiguration
+
+
+@dataclass
+class Alia40BConfig(llm.LlamaConfig):
+    num_layers: int = 48
+    hidden_size: int = 8192
+    ffn_hidden_size: int = 24576
+    num_attention_heads: int = 64
+    num_query_groups: int = 8
+    vocab_size: int = 256000
+    make_vocab_size_divisible_by: int = 128
+    rotary_base: int = 10000
+    scale_factor: float = 8.0
+    old_context_len: int = 4096  # LlamaConfig default is 8192; ALIA uses 4096
+    seq_length: int = 32768
+
+
+# Add the (Model, Config) pair that matches your HF checkpoint here.
+MODEL_ARCHS = {
+    "alia_40b": (llm.LlamaModel, Alia40BConfig),
+    "llama3_70b": (llm.LlamaModel, llm.Llama3Config70B),
+    "qwen2.5_7b": (llm.Qwen2Model, llm.Qwen25Config7B),
+    "qwen2.5_72b": (llm.Qwen2Model, llm.Qwen25Config72B),
+}
+
+_args = get_megatron_parser().parse_args()
+config = load_config(_args.yaml_file)
+setup_logging(level=logging.INFO, cfg=config)
+logger = logging.getLogger(f"MINERVA_BENCH.{__name__}")
+logger_rank = RankAdapter(logger, {})
+
+args = megatron_construct_config(_args)
+
+
+class FlopCounterCallback(pl.Callback):
+    def __init__(self, enabled):
+        self.enabled = enabled
+        self.tflops_list = []
+        self.ctx = None
+
+    def on_train_batch_start(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if self.enabled:
+            self.ctx = FlopCounterMode(display=False)
+            self.ctx.__enter__()
+            self.step_start = torch.cuda.Event(enable_timing=True)
+            self.step_start.record()
+
+    def on_train_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: STEP_OUTPUT,
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        if self.enabled and self.ctx:
+            self.step_end = torch.cuda.Event(enable_timing=True)
+            self.step_end.record()
+            torch.cuda.synchronize()
+            step_time_ms = self.step_start.elapsed_time(self.step_end)
+            logger_rank.info(
+                f"{self.__class__.__name__} Step time: {step_time_ms:.2f} ms"
+            )
+            self.ctx.__exit__(None, None, None)
+            tflops = self.ctx.get_total_flops() / 1e12
+            self.tflops_list.append(tflops)
+
+            logger_rank.info(
+                f"{self.__class__.__name__} TFLOPs/step/GPU: {tflops:.1f} TFLOPs"
+            )
+            self.ctx = None
+            torch.cuda.empty_cache()  # free unused vRAM to reduce risks of CUDA OOM
+
+    def on_train_end(self, trainer, pl_module):
+        if self.enabled and self.tflops_list:
+            logger.info(
+                f"Median TFLOPs/step/GPU: {np.median(self.tflops_list):.1f} TFLOPs"
+            )
+
+    def median_flops_per_step(self) -> float | None:
+        """Median total FLOPs per global step, or None if the counter was disabled."""
+        if not self.enabled or not self.tflops_list:
+            return None
+
+        return float(np.median(self.tflops_list))
+
+
+class TorchProfilerCallback(pl.Callback):
+    """PyTorch Profiler as a Lightning Callback."""
+
+    def __init__(self, rank: int):
+        if rank == 0:
+            self.profiler = profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                schedule=schedule(wait=16, warmup=1, active=8, repeat=1),
+                on_trace_ready=tensorboard_trace_handler("./profile/"),
+                profile_memory=True,
+                record_shapes=True,
+            )
+        else:
+            self.profiler = profile(activities=[])
+
+    def on_train_start(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
+        self.profiler.start()
+
+    def on_train_batch_end(
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: STEP_OUTPUT,
+        batch: Any,
+        batch_idx: int,
+    ) -> None:
+        self.profiler.step()
+
+    def on_train_end(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
+        self.profiler.stop()
+
+
+class LossCaptureCallback(pl.Callback):
+    """Capture the last logged training loss from the Lightning trainer.
+
+    NeMo logs the reduced (cross-rank averaged) loss per step; the exact key
+    varies by version, so we try a fallback chain.
+    """
+
+    LOSS_KEYS = ("reduced_train_loss", "loss", "train_loss")
+
+    def __init__(self) -> None:
+        self.training_loss: float | None = None
+
+    def on_train_end(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
+        metrics = getattr(trainer, "callback_metrics", {}) or {}
+        for key in self.LOSS_KEYS:
+            value = metrics.get(key)
+            if value is None:
+                continue
+            try:
+                self.training_loss = float(value)
+                return
+            except (TypeError, ValueError):
+                try:
+                    self.training_loss = float(value.item())
+                    return
+                except (AttributeError, TypeError, ValueError):
+                    continue
+
+
+def prepare(cfg: "MegatronConfiguration") -> None:
+    """One-time, single-process prep: build training.jsonl / validation.jsonl from the HF dataset."""
+
+    from pathlib import Path
+
+    # Prepare dataset
+    from datasets import load_dataset
+
+    # Convert HF checkpoint into NeMo checkpoint
+    # https://github.com/NVIDIA-NeMo/NeMo/blob/v2.6.2/nemo/collections/llm/api.py#L577
+    from nemo.collections.llm import import_ckpt
+
+    logger.info(
+        f"[prepare] CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES')}"
+    )
+    logger.info(f"[prepare] HF_HUB_OFFLINE: {os.environ.get('HF_HUB_OFFLINE')}")
+    model_path = Path(cfg.model_path)
+    # Lock/marker live beside the outputs: model_path may be read-only
+    ckpt_path = Path(cfg.nemo_ckpt_path)
+    ckpt_path.parent.mkdir(parents=True, exist_ok=True)
+
+    os.makedirs(cfg.dataset_root, exist_ok=True)
+
+    logger.info(f"[prepare] model_path={cfg.model_path}")
+    logger.info(f"[prepare] model_path.exists()={model_path.exists()}")
+    assert model_path.exists(), f"Model path does not exist: '{model_path}'"
+
+    logger.info(f"[prepare] model files: {list(model_path.iterdir())[:10]}")
+
+    # Fast path: no lock needed once the done marker exists
+    if ckpt_path.exists():
+        logger.info(f"[prepare] Checkpoint already converted '{cfg.nemo_ckpt_path}'")
+    else:
+        model_cls, config_cls = MODEL_ARCHS[cfg.model_name]
+        tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
+        logger.info(f"[prepare] import_ckpt {model_path} -> {cfg.nemo_ckpt_path}")
+        import_ckpt(
+            model=model_cls(config_cls(seq_length=cfg.max_length), tokenizer=tokenizer),
+            source=f"hf://{model_path}",
+            output_path=cfg.nemo_ckpt_path,
+            overwrite=False,  # discard partial output from a crashed run
+        )
+        logger.info(f"[prepare] Converted HF -> NeMo at {cfg.nemo_ckpt_path}")
+
+    train_file = os.path.join(cfg.dataset_root, "training.jsonl")
+    valid_file = os.path.join(cfg.dataset_root, "validation.jsonl")
+
+    if os.path.exists(train_file) and os.path.exists(valid_file):
+        logger.info(f"[prepare] Dataset already prepared '{cfg.dataset_root}'")
+        return
+
+    logger.info(f"[prepare] loading dataset from {cfg.dataset_path}")
+    dataset = load_dataset(str(cfg.dataset_path))
+
+    def dump(out_file: str, hf_split: Dataset) -> None:
+        tmp = out_file + ".tmp"
+        with open(tmp, "w") as f:
+            f.writelines(
+                json.dumps({"messages": ex["messages"]}) + "\n" for ex in hf_split
+            )
+        os.replace(tmp, out_file)
+        logger.info(f"Wrote {out_file} ({len(hf_split)} examples)")
+
+    dump(train_file, dataset["train"])
+    # Reuse train as validation if there is no validation split
+    dump(
+        valid_file,
+        dataset["validation"] if "validation" in dataset else dataset["train"],
+    )
+
+
+def main(repeatid: int):
+    """Run SFT with a Megatron-Core model using Megatron strategy."""
+
+    # 2. Distributed Training Setup
+    world = int(os.environ.get("WORLD_SIZE", "1"))  # Set by torchrun
+    rank = int(os.environ.get("RANK", "0"))  # Set by torchrun
+
+    assert args.dp_size * args.pp_size * args.tp_size * args.cp_size == world, (
+        f"4D mismatch: DP*PP*TP*CP={args.dp_size * args.pp_size * args.tp_size * args.cp_size} != world={world}"
+    )
+
+    n_train = sum(1 for _ in open(args.dataset_root.joinpath("training.jsonl")))
+    epochs = args.epochs if args.epochs else 1
+    total_steps = (
+        args.max_steps
+        if args.max_steps
+        else epochs * ceil(n_train / args.global_batch_size)
+    )
+    max_steps = args.test_nsteps if args.test else total_steps
+    lr_warmup_steps = int(args.warmup_ratio * total_steps)
+
+    # NOTE: with MegatronStrategy you do not pass accumulate_grad_batches to the Trainer
+    # Micro-batching to reach the global batch size is handled internally
+    # We compute it ourselves for throughput math.
+    grad_acc = args.global_batch_size // (args.batch_size * args.dp_size)
+
+    logger.info(f"World size                : {world}")
+    logger.info(f"Global batch size         : {args.global_batch_size}")
+    logger.info(f"Gradient accumulation     : {grad_acc}")
+    logger.info(f"Micro batch size (per GPU): {args.batch_size}")
+    logger.info(f"Sequence length           : {args.max_length}")
+    logger.info(f"Activation checkpointing  : {args.gradient_checkpointing}")
+    logger.info(f"FP8 training              : {args.fp8}")
+
+    # 3. Model (Megatron-Core native). Weights are restored later via AutoResume.
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    model_cls, config_cls = MODEL_ARCHS[args.model_name]
+    model_config = config_cls(seq_length=args.max_length)
+    # With CP>1 the sequence is split across ranks, so one rank's slice may contain
+    # zero answer tokens. The default loss averages per rank, which then divides by
+    # that local zero -> NaN. This flag instead sums the loss and divides by the total
+    # token count over the whole CP group, so no rank divides by its own zero.
+    model_config.calculate_per_token_loss = True
+    if args.gradient_checkpointing:
+        model_config.recompute_granularity = "full"
+        model_config.recompute_method = "uniform"
+        model_config.recompute_num_layers = 1
+    model = model_cls(model_config, tokenizer=tokenizer)
+
+    # Distributed training strategy
+    strategy = nl.MegatronStrategy(
+        tensor_model_parallel_size=args.tp_size,
+        pipeline_model_parallel_size=args.pp_size,
+        context_parallel_size=args.cp_size,
+        sequence_parallel=args.sequence_parallel,
+        # pipeline_dtype=torch.bfloat16,
+    )
+
+    logger.info(f"DP size                  : {args.dp_size}")
+    logger.info(f"PP size                  : {args.pp_size}")
+    logger.info(f"TP size                  : {args.tp_size}")
+    logger.info(f"CP size                  : {args.cp_size}")
+    logger.info(f"EP size                  : {args.ep_size}")
+    logger.info(f"Sequence parallel        : {args.sequence_parallel}")
+    logger.info(f"OUTPUT DIR               : {args.output_dir}")
+    logger.info(f"CONFIG OUTPUT DIR        : {config.experiment.output_dir}")
+    logger.info(f"_args OUTPUT DIR        : {_args.output_dir}")
+
+    # 4. Data processing (file-based SFT).
+    data = llm.FineTuningDataModule(
+        dataset_root=args.dataset_root,
+        seq_length=args.max_length,
+        tokenizer=tokenizer,
+        micro_batch_size=args.batch_size,
+        global_batch_size=args.global_batch_size,
+        num_workers=args.dataloader_num_workers,
+        dataset_kwargs={
+            "chat": True,
+            "use_hf_tokenizer_chat_template": True,
+        },
+    )  # https://github.com/NVIDIA-NeMo/NeMo/blob/v2.6.2/nemo/collections/llm/gpt/data/fine_tuning.py#L35
+
+    # 5. Training preparation
+
+    callbacks = []
+    plugins = []
+    # Benchmark logging
+    benchmark_callback = MegatronBenchmarkCallback(
+        rank,
+        max_steps,  # total number of weight updates
+        args.global_batch_size,  # number of samples per weight update
+        args.max_length,  # number of tokens per sample
+        ceil(n_train / args.global_batch_size),  # number of steps per epoch
+        1,  # 1 warmup step
+    )
+    callbacks.append(benchmark_callback)
+
+    # FLOPs counting
+
+    if args.enable_flop_counter:
+        flop_callback = mfu_callback_from_hf_config(
+            AutoConfig.from_pretrained(args.model_path),
+            tokenizer,
+            gpu_peak_flops=args.peak_flops,
+            seq_length=args.max_length,
+            trainer_callback="lightning",
+            global_batch_size=args.global_batch_size,
+            warmup_steps=benchmark_callback.n_warmup_steps,
+        )
+        callbacks.append(flop_callback)
+        # callbacks.append(FlopCounterCallback(enabled=True))
+
+    # Training loss capture (for the shared training summary)
+    loss_callback = LossCaptureCallback()
+    callbacks.append(loss_callback)
+
+    # Pytorch Profiler
+    if args.pytorch_profiler:
+        callbacks.append(TorchProfilerCallback(rank))
+
+    opt_config = OptimizerConfig(
+        optimizer="adam",
+        lr=args.lr,
+        weight_decay=args.weight_decay,
+        clip_grad=0.0,
+        use_distributed_optimizer=True,
+    )
+    if args.precision == "bf16_fp8":
+        plugins.append(
+            nl.MegatronMixedPrecision(
+                precision="bf16-mixed", fp8="hybrid" if args.fp8 else None
+            )
+        )
+        opt_config.bf16 = True
+        strategy.pipeline_dtype = torch.bfloat16
+    elif args.precision == "bf16":
+        plugins.append(nl.MegatronMixedPrecision(precision="bf16-mixed"))
+        opt_config.bf16 = True
+        strategy.pipeline_dtype = torch.bfloat16
+    elif args.precision == "fp16":
+        plugins.append(nl.MegatronMixedPrecision(precision="fp16-mixed"))
+        opt_config.fp16 = True
+        strategy.pipeline_dtype = torch.float16
+    else:
+        raise ValueError(f"Unsupported Megatron precision: {args.precision}")
+    scheduler = CosineAnnealingScheduler(
+        max_steps=max_steps,
+        warmup_steps=lr_warmup_steps,
+        min_lr=args.min_lr,
+    )
+    optim = nl.MegatronOptimizerModule(config=opt_config, lr_scheduler=scheduler)
+
+    # 6. Training loop
+
+    # Wandb logging
+    # wandb = False
+    # if args.wandb_project is not None:
+    #    from lightning.pytorch.loggers import WandbLogger
+    #    wandb = WandbLogger(
+    #        project=args.wandb_project,
+    #        name=(
+    #            f"{args.model_name}"
+    #            f"_nodes{args.num_nodes}"
+    #            f"_devices{args.devices_per_node}"
+    #            f"_strat_MegatronStrategy"
+    #            f"_dp{args.dp_size}"
+    #            f"_pp{args.pp_size}"
+    #            f"_tp{args.tp_size}"
+    #            f"_cp{args.cp_size}"
+    #            f"_sp{args.sequence_parallel}"
+    #            f"_gbs{args.global_batch_size}"
+    #            f"_mbs{args.batch_size}"
+    #            f"_seqlen{args.max_length}"
+    #        ),
+    #    )
+    trainer = nl.Trainer(
+        accelerator="gpu",
+        strategy=strategy,
+        devices=args.devices_per_node,
+        num_nodes=args.num_nodes,
+        plugins=plugins,
+        logger=False,
+        log_every_n_steps=args.log_every_n_steps,
+        # logger=wandb,
+        callbacks=callbacks,
+        max_epochs=args.epochs,
+        max_steps=max_steps,
+        limit_val_batches=0,  # for warmup in sanity check
+        num_sanity_val_steps=0,  # useless since torch.compile re-compile at each epoch
+        enable_checkpointing=False,
+        enable_model_summary=False,
+        use_distributed_sampler=False,  # MegatronStrategy uses its own (Megatron) data sampler
+        # No accumulate_grad_batches / gradient_clip_val here: micro-batching is managed by
+        # Megatron's microbatch calculator, and grad clipping by OptimizerConfig.clip_grad (TP-safe).
+    )
+
+    # This will write logs to /path/to/your/custom_folder/my_custom_name/...
+    # exp_manager(
+    #    trainer,
+    #    {
+    #        "exp_dir": os.path.abspath(
+    #            os.path.join(args.output_dir, f"repeatid-{repeatid}")
+    #        ),
+    #        # "explicit_log_dir": os.path.join(args.output_dir, f"repeatid-{repeatid}"),
+    #        "name": f"repeatid-{repeatid}",
+    #    },
+    # )
+    gpu_stats, stop_flag = start_gpu_monitor(
+        interval_sec=5, n_gpus=args.devices_per_node
+    )
+
+    try:
+        jobid = os.environ.get("SLURM_JOB_ID", "unknown")
+        jobstepid = os.environ.get("SLURM_STEP_ID", "0")
+        jobsteprocid = os.environ.get("SLURM_PROCID", "0")
+        summary_file = os.path.join(
+            args.output_dir,
+            f"repeatid-{repeatid}",
+            f"nemo_summary-{jobid}-step{jobstepid}",
+        )
+        os.makedirs(os.path.abspath(os.path.dirname(summary_file)), exist_ok=True)
+        nemo_logger = nl.NeMoLogger(
+            log_dir=os.path.abspath(os.path.dirname(summary_file)),
+            name="MINERVA-Bench-Nemo-Megatron",
+        )
+        nemo_logger.setup(trainer, resume_if_exists=True)
+
+        # Restore local HF weights (the model's "hf" importer converts them on the fly).
+        resume = nl.AutoResume(
+            restore_config=nl.RestoreConfig(path=str(args.nemo_ckpt_path))
+        )
+
+        # The loss (masked cross-entropy) lives in the model, not here.
+        llm.finetune(
+            model=model,
+            data=data,
+            trainer=trainer,
+            optim=optim,
+            resume=resume,
+            peft=None,
+        )
+
+        try:
+            stop_flag["stop"] = True
+
+            # MegatronStrategy owns the dataloader/sampler, so token counts are
+            # computed analytically (matches the callback's throughput formula).
+            measured_steps = max_steps - benchmark_callback.n_warmup_steps
+            total_tokens_global = int(
+                measured_steps * args.global_batch_size * args.max_length
+            )
+            total_tokens_this_gpu = int(total_tokens_global / world)
+
+            # FLOPs -> TFLOPs/s/GPU and MFU (only with --enable_flop_counter)
+            avg_flops_gpu = None
+            avg_mfu_gpu = None
+            if args.enable_flop_counter:
+                avg_flops_gpu = flop_callback.get_avg_flops()
+                avg_mfu_gpu = flop_callback.get_avg_mfu()
+
+            save_training_summary(
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"repeatid-{repeatid}",
+                    f"training_summary_job{jobid}"
+                    f"-step{jobstepid}"
+                    f"-nodeid{jobsteprocid}"
+                    f"-deviceid{rank}.json",
+                ),
+                rank=rank,
+                model_name=args.model_name,
+                dataset_name=args.dataset_name,
+                framework=config.framework.name,
+                parallelism_type={
+                    key: value
+                    for key, value in {
+                        "TP": config.framework.megatron_parallelism.tp,
+                        "PP": config.framework.megatron_parallelism.pp,
+                        "DP": config.framework.megatron_parallelism.dp,
+                        "CP": config.framework.megatron_parallelism.cp,
+                        "SP": config.framework.megatron_parallelism.sp,
+                        "EP": config.framework.megatron_parallelism.ep,
+                    }.items()
+                    if value != -1
+                },
+                batch_size=args.batch_size,
+                gradient_accumulation=grad_acc,
+                learning_rate=args.lr,
+                total_training_time_secs=benchmark_callback.training_duration or 0,
+                total_tokens_this_gpu=total_tokens_this_gpu,
+                total_tokens_global=total_tokens_global,
+                avg_gpu_flops=avg_flops_gpu,
+                avg_gpu_mfu=avg_mfu_gpu,
+                global_steps=measured_steps,
+                steps_per_epoch=benchmark_callback.steps_per_epoch,
+                global_batch_size=args.global_batch_size,
+                avg_step_time_sec=benchmark_callback.avg_step_time_sec,
+                gpu_stats=gpu_stats,
+                training_loss=loss_callback.training_loss or 0,
+                # comm_metrics=benchmark_callback.comm_metrics,
+            )
+            logger.info("Training summary written.")
+        except Exception as _e:
+            logger.exception("Failed to save training summary.")
+            raise _e
+    except Exception as e:
+        logger.exception("Fine-tuning failed with error!")
+        raise e
+
+    finally:
+        stop_flag["stop"] = True
+        del trainer, model, data, optim, scheduler, strategy, callbacks, plugins
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+
+
+def _terminate_all_ranks() -> None:
+    """SIGTERM the local sibling ranks and the torchrun agent.
+
+    A rank cannot signal remote ranks directly. Killing the agent makes it drop out of the
+    c10d rendezvous, so the agents on the other nodes tear down their workers too.
+    """
+    me = os.getpid()
+    agent = os.getppid()
+    targets = []
+    try:
+        with open(f"/proc/{agent}/task/{agent}/children") as f:
+            targets = [int(p) for p in f.read().split()]
+    except OSError:
+        pass
+    for pid in targets:
+        if pid != me:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+    try:
+        os.kill(agent, signal.SIGTERM)
+    except OSError:
+        pass
+
+
+if __name__ == "__main__":
+    # scancel sends SIGTERM, which skips `finally` blocks (lock release) unless it raises.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+
+    if args.prepare:
+        logger.info("_________________________________")
+        logger.info("Running preparation ")
+        logger.info("_________________________________")
+        try:
+            prepare(args)
+        except Exception:
+            sys.exit(1)
+
+    else:
+        repeatid = int(os.environ.get("REPEAT_ID", 0))
+        try:
+            logger.info("_________________________________")
+            logger.info(f"Running repeatid: {repeatid}")
+            logger.info("_________________________________")
+            main(repeatid)
+        except Exception as e:
+            logger.exception("Fine-tuning failed with error!")
+
+            rank = int(os.environ.get("RANK", 0))  # Set by torchrun
+
+            save_error_summary(
+                output_file=os.path.join(
+                    args.output_dir,
+                    f"repeatid-{repeatid}",
+                    f"training_summary_job{os.environ.get('SLURM_JOB_ID', 'unknown')}"
+                    f"-step{os.environ.get('SLURM_STEP_ID', '0')}"
+                    f"-nodeid{os.environ.get('SLURM_PROCID', '0')}"
+                    f"-deviceid{rank}.json",
+                ),
+                rank=rank,
+                model_name=args.model_name,
+                dataset_name=args.dataset_name,
+                framework=config.framework.name,
+                parallelism_type={
+                    key: value
+                    for key, value in {
+                        "TP": config.framework.megatron_parallelism.tp,
+                        "PP": config.framework.megatron_parallelism.pp,
+                        "DP": config.framework.megatron_parallelism.dp,
+                        "CP": config.framework.megatron_parallelism.cp,
+                        "SP": config.framework.megatron_parallelism.sp,
+                        "EP": config.framework.megatron_parallelism.ep,
+                    }.items()
+                    if value != -1
+                },
+                batch_size=args.batch_size,
+                gradient_accumulation=args.gradient_accumulation_steps,
+                learning_rate=args.lr,
+                exception_msg=str(e),
+            )
+            # Other ranks are blocked in NCCL collectives and normal interpreter shutdown
+            # can hang on the broken CUDA/NCCL state, so flush and hard-exit to let srun
+            # tear down the step.
+            traceback.print_exc()
+            logging.shutdown()
+            sys.stderr.flush()
+            sys.stdout.flush()
+            _terminate_all_ranks()
+            if os.path.exists("nemo_experiments"):
+                shutil.rmtree("nemo_experiments")
+            os._exit(1)

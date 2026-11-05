@@ -2,10 +2,6 @@ defaults:
   - base
   - _self_
 
-account: bsc99
-qos: gp_bench 
-partition: gpp
-
 sbatch:
   gpus_per_node: 0
   cpus_per_task: 112

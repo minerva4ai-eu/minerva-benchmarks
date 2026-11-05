@@ -1,0 +1,114 @@
+================================================================================
+GUIDE TO RUN PROFILE TESTS
+Machines: Adastra (CINES), Leonardo (CINECA), Jean Zay (IDRIS)
+================================================================================
+
+All commands run from the training/ directory.
+
+--------------------------------------------------------------------------------
+0. PREREQUISITES
+--------------------------------------------------------------------------------
+- SLURM cluster access with GPU allocation
+- uv in PATH  (https://github.com/astral-sh/uv)
+- singularity/apptainer (only for the singularity runtime)
+- Model weights downloaded locally (HF format)
+
+--------------------------------------------------------------------------------
+1. INSTALL ENVIRONMENTS
+--------------------------------------------------------------------------------
+    cd training
+    bash install/install-all-envs.sh          # CLI venv + benchmark venvs (uv sync)
+    bash install/build-all-singularity.sh     # only if using the singularity runtime
+
+--------------------------------------------------------------------------------
+2. DOWNLOAD DATASETS
+--------------------------------------------------------------------------------
+    bash install/download-datasets.sh         # alpaca + squad_v2 into datasets/
+
+Note: tulu-3-sft-mixture (needed by the megatron-nemo-2509 test profile) is NOT
+downloaded by the script. Place it in datasets/tulu-3-sft-mixture or set
+DATASET_TULU3_PATH in .env.
+
+--------------------------------------------------------------------------------
+3. CONFIGURE .env
+--------------------------------------------------------------------------------
+    cp .env-template .env
+
+Edit .env and fill in:
+
+    SLURM_ACCOUNT=<your account on the machine>     # REQUIRED
+    SLURM_QOS= / SLURM_PARTITION= / SLURM_CONSTRAINT=   # optional, machine-specific
+
+    MODEL_GEMMA3_1B_PATH=/path/to/gemma-3-1b        # for gemma3_1b test profiles
+    MODEL_MISTRAL_7B_PATH=/path/to/mistral-7b       # for mistral_7b test profiles
+    MODEL_QWEN25_7B_PATH=/path/to/qwen2.5-7b        # for megatron test profile
+
+--------------------------------------------------------------------------------
+4. MACHINE CONFIG NAMES
+--------------------------------------------------------------------------------
+| Machine  | Hardware        | --config-name                          |
+|----------|-----------------|----------------------------------------|
+| Adastra  | AMD MI250/MI300 | Adastra-venv, Adastra-singularity      |
+| Leonardo | 4x A100         | Leonardo-venv, Leonardo-singularity    |
+| Jean Zay | 4x H100 (80GB)  | Jean-Zay-H100-venv, Jean-Zay-H100-singularity |
+
+Machine-specific notes:
+- Adastra: ROCm/AMD. arch/Adastra.yaml and slurm/Adastra.yaml still contain
+  "<must fill in>" placeholders (gpu specs, cpus_per_task) — fill them before
+  running. CUDA-based frameworks (cuda130) will NOT work here.
+- Leonardo: arch/Leonardo.yaml and slurm/Leonardo.yaml also have placeholders
+  to fill (gpu specs, cpus_per_task).
+- Jean Zay: fully configured (4x H100, cpus_per_task=96, --exclusive).
+  Loads the singularity module; sets NCCL_MNNVL_ENABLE=1, NCCL_NET_GDR_LEVEL=SYS.
+
+--------------------------------------------------------------------------------
+5. RUN PROFILE TESTS
+--------------------------------------------------------------------------------
+Available test profiles (configs_hydra/configs/profiles/tests/):
+    gemma3_1b-torchrun-cuda130        (none, ddp)
+    gemma3_1b-accelerate-cuda130      (ddp)
+    mistral_7b-torchrun-cuda130       (fsdp, zero2, zero3)
+    mistral_7b-accelerate-cuda130     (fsdp, zero2, zero3)
+    mistral_7b-deepspeed-cuda130      (fsdp, zero2, zero3)
+    qwen2.5-megatron-nemo-2509        (tp, pp, dp — needs tulu-3-sft-mixture)
+
+Each test profile: 5 steps, global_batch 64, bf16, 2 repeats, up to 2 nodes.
+
+Step 1 — ALWAYS dry-run first (compose + validate, no submission):
+    bash minerva-cli.sh run --dry-run \
+        --config-name Jean-Zay-H100-singularity \
+        --profile tests/gemma3_1b-torchrun-cuda130
+
+Step 2 — submit:
+    bash minerva-cli.sh run \
+        --config-name Jean-Zay-H100-singularity \
+        --profile tests
+
+Examples per machine (Can also run individual .yaml profiles):
+    # Jean Zay
+    bash minerva-cli.sh run --config-name Jean-Zay-H100-singularity --profile tests/mistral_7b-deepspeed-cuda130,tests/qwen2.5-megatron-nemo-2509
+
+    # Leonardo
+    bash minerva-cli.sh run --config-name Leonardo-singularity --profile tests/mistral_7b-torchrun-cuda130
+
+    # Adastra
+    bash minerva-cli.sh run --config-name Adastra-singularity --profile tests/gemma3_1b-torchrun-cuda130
+
+Track job steps: sacct -j <jobid> --format=JobID,JobName%24,State,Elapsed,Timelimit
+
+
+--------------------------------------------------------------------------------
+6. CHECK RESULTS
+--------------------------------------------------------------------------------
+Runs land in:
+    benchmark-runs-<config-name>/tests/<profile>/<machine>/<date>/<jobid>/
+    - output/
+    - sbatch-logs/
+    - srun-logs/
+    - training-logs
+
+Aggregate to CSV:
+    bash minerva-cli.sh results --jobids <jobid> -> will produce a .csv with all training results in training/analytics/results folder
+
+CLI logs: cli-logs/<date>/<time>.log
+================================================================================

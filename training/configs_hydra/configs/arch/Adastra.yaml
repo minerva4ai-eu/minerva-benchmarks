@@ -1,0 +1,27 @@
+defaults:
+  - base
+  - _self_
+
+gpu:
+  name: <must fill value>
+  accelerator_type: rocm 
+  vram_gb: <must fill value>
+  theoretical_peak_fp64_tflops: <must fill value>
+  theoretical_peak_fp64_tensor_tflops: <must fill value>
+  theoretical_peak_fp32_tflops: <must fill value>
+  theoretical_peak_tf32_tensor_tflops: <must fill value>
+  theoretical_peak_fp16_tensor_tflops: <must fill value>
+  theoretical_peak_bf16_tensor_tflops: <must fill value>
+  theoretical_peak_fp8_tensor_tflops: <must fill value>
+  theoretical_peak_int8_tensor_tops: <must fill value>
+
+comm:
+  internode_comm: <must fill value>
+  internode_comm_bandwidth_GBs: <must fill value>
+  intranode_comm: <must fill value>
+  intranode_comm_bandwidth_GBs: <must fill value>
+
+node:
+  gpus_per_node: <must fill value>
+
+

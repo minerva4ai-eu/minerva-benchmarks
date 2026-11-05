@@ -44,4 +44,9 @@ download_folder="$datasets_path"
 echo -e "${YELLOW}>>${GREEN} Downloading dataset '$dataset' in folder '$download_folder'...${RESET}"
 hf download $dataset --repo-type dataset --local-dir "$download_folder"
 
+dataset="allenai/tulu-3-sft-mixture"
+download_folder="$datasets_path"
+echo -e "${YELLOW}>>${GREEN} Downloading dataset '$dataset' in folder '$download_folder'...${RESET}"
+hf download $dataset --repo-type dataset --local-dir "$download_folder"
+
 rm -rf $temp_env

@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: lmsysorg/sglang:v0.5.6.post1-rocm700-mi30x
+
+%labels
+    Description "SGLang 0.5.6.post1 for ADASTRA MI300A"
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+%post
+    apt-get update && apt-get install -y --no-install-recommends \
+        git curl
+    pip install --upgrade pip
+    pip install datasets
+
+%runscript
+    exec python3 -m sglang.launch_server "$@"
+
+%help
+    SGLang 0.5.6.post1 ROCm — source: docker://lmsysorg/sglang:v0.5.6.post1-rocm700-mi30x
+
+      singularity exec --rocm --writable-tmpfs \
+        -B /sys -B /dev -B /proc -B /lus -B <input> \
+        sglang-0.5.6.post1-mi30x.sif python3 -m sglang.launch_server ...

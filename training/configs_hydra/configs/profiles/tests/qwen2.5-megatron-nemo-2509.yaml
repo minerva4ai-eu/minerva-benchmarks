@@ -1,0 +1,27 @@
+# @package _global_
+# Machine-independent benchmark profile, merged on top of --config-name at runtime:
+#   bash minerva-cli.sh run --config-name MN5-singularity --profile tests/qwen2.5-megatron-nemo-2509
+
+selection:
+  models: [qwen2.5_7b]
+  frameworks: [megatron-nemo-2509]
+  datasets: [tulu-3-sft-mixture]
+
+experiment:
+  repeat: 2
+
+model:
+  max_gpus_scale: "${multiply_int: '2', '${arch.node.gpus_per_node}'}"
+  combinations:
+    global_batch_sizes: [64]
+    batch_sizes: [1]
+    precisions: [bf16, bf16_fp8]
+    steps: [5]
+  megatron_parallelism_supported:
+    - tp
+    - pp
+    - dp
+  megatron_parallelism_allowed:
+    pp: [1,2]
+    tp: ["${arch.node.gpus_per_node}"]
+    dp: [1]

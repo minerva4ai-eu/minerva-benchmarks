@@ -2,5 +2,6 @@ defaults:
   - accelerate
   - _self_
 
+name: accelerate-cuda128
 python_environment: ${abs_path:envs/benchmarks/cuda128-flash-attn/.venv}
 singularity_container: ${abs_path:envs/benchmarks/cuda128-flash-attn/singularity_uv-runtime.sif}
