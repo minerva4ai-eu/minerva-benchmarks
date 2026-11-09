@@ -106,6 +106,17 @@ bash build-all-singularity.sh
 
 Both scripts can be run from either `training/` or `training/install/`.
 
+`build-all-singularity.sh` uses `apptainer` if available, otherwise `singularity`; set `CONTAINER_CMD` to choose the binary. Its arguments are passed to `build` (e.g. `--fakeroot`). Building `%post` sections as a normal user needs root, fakeroot or user namespaces: if no node allows it, build on another machine and copy the `.sif` into `envs/benchmarks/<env>/`.
+
+On Leonardo, SingularityPRO cannot build without fakeroot; Apptainer (not on PATH) can, on `lrd_all_serial` only (login nodes have no user namespaces, compute nodes no internet). Use node-local tmp and limit mksquashfs memory:
+
+```bash
+srun -A <account> -p lrd_all_serial -c 4 --mem=30G -t 01:00:00 --pty \
+  env CONTAINER_CMD=/leonardo/prod/opt/tools/foldspace/1.0/apptainer-1.5.3-3.el8/bin/apptainer \
+      APPTAINER_TMPDIR=/scratch_local \
+  bash build-all-singularity.sh --mksquashfs-args "-mem 4G"
+```
+
 
 ---
 

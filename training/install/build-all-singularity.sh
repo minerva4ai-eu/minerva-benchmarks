@@ -18,14 +18,18 @@ if [ "$(basename $PWD)" == "install" ];then
     folder_bench="../$folder_bench"
 fi
 
-# if singularity 
-if ! command -v singularity &> /dev/null && ! command -v apptainer &> /dev/null; then
-    echo -e "$RED>> Error: 'singularity' or 'apptainer' command could not be found! Make sure that either is available before executing $SCRIPT_NAME!!$RESET" >&2
-    exit 2
-elif command -v singularity &> /dev/null; then
-    CONTAINER_CMD="singularity"
-else
-    CONTAINER_CMD="apptainer"
+# CONTAINER_CMD overrides the choice (e.g. a binary not on PATH). Otherwise prefer apptainer:
+# it can build without root through user namespaces, singularity usually needs root or fakeroot.
+# Arguments to this script are passed to '<cmd> build' (e.g. --fakeroot, --mksquashfs-args "-mem 4G").
+if [ -z "${CONTAINER_CMD:-}" ]; then
+    if command -v apptainer &> /dev/null; then
+        CONTAINER_CMD="apptainer"
+    elif command -v singularity &> /dev/null; then
+        CONTAINER_CMD="singularity"
+    else
+        echo -e "$RED>> Error: 'singularity' or 'apptainer' command could not be found! Make sure that either is available (or set CONTAINER_CMD) before executing $SCRIPT_NAME!!$RESET" >&2
+        exit 2
+    fi
 fi
 
 echo -e "${GREEN}>> Using '$CONTAINER_CMD' as the container runtime.${RESET}"
@@ -70,7 +74,7 @@ for dir in "$folder_bench"/*/; do
         echo ""
         continue
     fi
-    cd "$dir" && $CONTAINER_CMD build "$def_name.sif" "$def_file"
+    cd "$dir" && "$CONTAINER_CMD" build "$@" "$def_name.sif" "$def_file"
     cd "$base_dir"
     echo ""
 done
