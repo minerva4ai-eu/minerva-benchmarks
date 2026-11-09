@@ -1,5 +1,5 @@
 defaults:
-  - name: deepspeed
+  - deepspeed
   - _self_
 
 name: deepspeed-cuda128

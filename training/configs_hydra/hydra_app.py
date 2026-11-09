@@ -172,8 +172,8 @@ def generate_valid_combos(
                 f"{PRINT_INDENT}{BLUE}[{triple_idx}/{total_triples}] Composing model/framework/dataset: "
                 f"{model} / {framework} / {dataset}{RESET}"
             )
-            assert framework in AVAILABLE_FRAMEWORKS, (
-                f"{RED}Framework {YELLOW}'{framework}'{RED} not found! Available frameworks: \n{BLUE}[{', '.join(AVAILABLE_FRAMEWORKS)}]{RESET}"
+            assert framework in mfd.FRAMEWORKS, (
+                f"{RED}Framework {YELLOW}'{framework}'{RED} not found! Available frameworks: \n{BLUE}[{', '.join(mfd.FRAMEWORKS)}]{RESET}"
             )
 
             cfg: BenchmarkConfig = compose_with_profile(

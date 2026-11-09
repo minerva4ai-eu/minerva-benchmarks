@@ -44,7 +44,7 @@ num_kv_heads: -1
 max_gpus_scale: -1
 
 # This field specifies the supported frameworks for the model.
-# Not all models may support all frameworks listed in AVAILABLE_FRAMEWORKS in model_framework_dataset.py
+# Not all models may support all frameworks listed in FRAMEWORKS in model_framework_dataset.py
 # E.g.:
 # frameworks_supported:
 #   - torchrun-cuda128

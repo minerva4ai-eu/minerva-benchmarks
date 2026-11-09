@@ -1,2 +1,2 @@
 Bootstrap: docker
-From: nvidia/nemo:25.09
+From: nvcr.io/nvidia/nemo:25.09
