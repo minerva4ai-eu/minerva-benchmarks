@@ -3,3 +3,4 @@ dashboard/index.html
 dashboard/vendor
 deploy
 *.md
+*.sif

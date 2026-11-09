@@ -23,13 +23,17 @@ COLUMNS = ["system_label", "model", "framework", "dataset", "concurrency", "node
 
 TRAIN_EXPORT = {  # CSV-side name -> name used by the dashboard
     "system_label": "system_label", "model": "model", "dataset": "dataset", "framework": "framework",
-    "parallelism": "parallelism", "precision": "precision", "nodes": "nodes", "gpus": "gpus",
-    "batch_size": "batch_size", "accum": "accum", "max_len": "max_len", "comment": "comment",
-    "failed": "failed", "params_m": "params_m", "tok_s": "tr_tok_s", "tok_s_gpu": "tr_tok_s_gpu",
-    "epoch_s": "tr_epoch_s", "hours": "tr_hours", "step_s": "tr_step_s", "power_w": "tr_power_w",
-    "peak_power_w": "tr_peak_power_w", "kwh": "tr_kwh", "tok_per_j": "tr_tok_per_j",
-    "mem_gb": "tr_mem_gb", "peak_mem_gb": "tr_peak_mem_gb", "util": "tr_util",
-    "peak_util": "tr_peak_util", "loss": "tr_loss", "val_loss": "tr_val_loss"}
+    "parallel_family": "family", "parallelism": "parallelism", "parallel_config": "parallel_config",
+    "tp": "tp", "pp": "pp", "dp": "dp", "cp": "cp", "ep": "ep", "sp": "sp",
+    "precision": "precision", "nodes": "nodes", "gpus": "gpus", "batch_size": "batch_size", "accum": "accum",
+    "max_len": "max_len", "repeat": "repeat", "comment": "comment", "failure": "failure", "failed": "failed",
+    "synthetic": "synthetic", "global_batch": "global_batch", "params_b": "params_b", "source": "source",
+    "tok_s": "tr_tok_s", "tok_s_gpu": "tr_tok_s_gpu", "tflops": "tr_tflops", "mfu": "tr_mfu",
+    "tflops_total": "tr_tflops_total", "util": "tr_util", "peak_util": "tr_peak_util",
+    "epoch_s": "tr_epoch_s", "hours": "tr_hours", "step_s": "tr_step_s",
+    "power_w": "tr_power_w", "peak_power_w": "tr_peak_power_w", "kwh": "tr_kwh", "tok_per_j": "tr_tok_per_j",
+    "gflops_w": "tr_gflops_w", "mem_gb": "tr_mem_gb", "peak_mem_gb": "tr_peak_mem_gb",
+    "loss": "tr_loss", "val_loss": "tr_val_loss"}
 
 
 def training_payload():

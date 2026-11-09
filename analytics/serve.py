@@ -27,7 +27,7 @@ import build_dashboard
 HERE = Path(__file__).resolve().parent
 DASH = HERE / "dashboard"
 VENDOR_FILE = DASH / "vendor" / "plotly.min.js"
-WATCHED = [HERE / "data", HERE / "data" / "training", DASH / "template.html", DASH / "defaults.json", DASH / "assets" / "minerva-logo.png"]
+WATCHED = [HERE / "data" / "inference", HERE / "data" / "training", DASH / "template.html", DASH / "defaults.json", DASH / "assets" / "minerva-logo.png"]
 CDN = re.compile(r"https://cdn\.jsdelivr\.net/npm/plotly\.js-dist-min@[\d.]+/plotly\.min\.js")
 log = logging.getLogger("minerva")
 page, vendor = {}, {}
