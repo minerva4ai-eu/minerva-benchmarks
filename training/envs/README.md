@@ -273,6 +273,20 @@ Ensure `uv sync --locked` completed successfully during build. Check `%post` sec
 
 Verify `--nv` flag is passed to `singularity exec/run`. Ensure NVIDIA drivers are installed on the host.
 
+### Driver too old for CUDA 13 (`found version 12020`)
+
+The cuda130 environments need a host driver >= 580. On older drivers (e.g. Leonardo Booster, 535 = CUDA 12.2) torch fails with `The NVIDIA driver on your system is too old`. NVIDIA's CUDA forward-compatibility libraries (`cuda-compat-13-0`) let CUDA 13 run on older drivers on datacenter GPUs (A100, H100, ...):
+
+- **Singularity**: the cuda130 image installs `cuda-compat-13-0`. At start-up `%environment` reads the host driver version and, only if it is older than 580, puts `/usr/local/cuda-13.0/compat` first in `LD_LIBRARY_PATH`. Nothing to configure.
+- **venv**: install the libraries once and put them on `LD_LIBRARY_PATH` through the machine config (see `machine/Leonardo/Leonardo-venv-cuda13-compat.yaml`):
+  ```bash
+  mkdir -p envs/cuda-compat-13-0 && cd envs/cuda-compat-13-0
+  curl -O https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-compat-13-0-580.196.07-1.el8.x86_64.rpm
+  rpm2cpio cuda-compat-*.rpm | cpio -idm && mv usr/local/cuda-13.0/compat/* . && rm -rf usr *.rpm
+  ```
+
+Use the compat libraries only with drivers older than the compat package (580): with a newer driver they must not be loaded.
+
 ### NCCL errors
 
 Check `activate-env-variables-per-supercomputer.sh` for correct NCCL settings for your machine. Verify InfiniBand interfaces are accessible.
