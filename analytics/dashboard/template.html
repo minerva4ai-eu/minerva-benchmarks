@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minerva inference benchmarks</title>
+<link id="fav" rel="icon" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+:root{--paper:#F4F6F9;--panel:#fff;--ink:#172033;--mute:#566074;--rule:#D6DCE5;--sel:#E6ECF8;--focus:#2557D6;--c-lat:#7B61C9;--c-thr:#247F8C;--c-en:#D9A01E;--t-lat:#6A4FBA;--t-thr:#1F7380;--t-en:#A87400;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1520;--panel:#171F2E;--ink:#E7ECF4;--mute:#9AA6BA;--rule:#2A3549;--sel:#22304A;--focus:#7FA2FF;--t-lat:#A892EA;--t-thr:#5CBAC8;--t-en:#EDB93C}}
+:root[data-theme="dark"]{--paper:#0F1520;--panel:#171F2E;--ink:#E7ECF4;--mute:#9AA6BA;--rule:#2A3549;--sel:#22304A;--focus:#7FA2FF;--t-lat:#A892EA;--t-thr:#5CBAC8;--t-en:#EDB93C}
+html{background:var(--paper);scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.app{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow:auto;padding:20px 18px;border-right:1px solid var(--rule);background:var(--panel)}
+.side-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;font-weight:700}
+.acts{display:flex;gap:12px;font-weight:400;font-size:13px}
+.hint{margin:0;color:var(--mute);font-size:13px}
+.paused .opts{opacity:.4}#groups,#t-groups{margin:14px 0}
+details{border-top:1px solid var(--rule)}
+summary{cursor:pointer;display:flex;justify-content:space-between;padding:9px 0;font-weight:600}
+.st{color:var(--mute);font-weight:400;font-size:13px}
+.opts{display:grid;gap:1px;padding:0 0 10px}
+.opts label,.chk{display:flex;gap:8px;align-items:center;padding:3px 4px;border-radius:4px;cursor:pointer;font-size:14px}
+.opts label:hover{background:var(--sel)}
+fieldset.mrows{border:1px solid var(--rule);border-radius:6px;margin:0;padding:2px 8px 4px;display:flex;flex-wrap:wrap;gap:2px 10px;min-width:0;max-width:520px}.mrows legend{font-size:12px;color:var(--mute);padding:0 4px}.mrows label{display:flex;gap:5px;align-items:center;font-size:14px;cursor:pointer}.mrows label.off{opacity:.45;cursor:not-allowed}
+section.nbk{margin-top:28px;max-width:1100px}.nb-bar{display:flex;gap:10px;align-items:center;margin:10px 0}.nb-bar .ghost,.nb-bar select{padding:5px 10px}section .nb-status{color:var(--mute);font-size:13px}
+.nb-cell{margin:0 0 14px}.nb-row{display:flex;gap:8px;align-items:flex-start}.nb-code{flex:1;min-width:0;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:8px 10px;resize:vertical;tab-size:4;white-space:pre;overflow:auto}
+.nb-btns{display:flex;flex-direction:column;gap:6px}.nb-btns .ghost{padding:5px 10px}.nb-out{margin:6px 0 0;font-size:13px;overflow-x:auto}.nb-out pre{margin:0;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}.nb-out.err,.nb-out pre.err{color:#D55E00}.nb-out img{max-width:100%;background:#fff;border-radius:6px}
+.nb-html{max-height:420px;overflow:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}.nb-html table{border-collapse:collapse;width:100%}.nb-html th,.nb-html td{padding:4px 10px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}.nb-html th{position:sticky;top:0;background:var(--panel);font-weight:600}.nb-html tbody th{text-align:left;position:static}
+main{padding:28px 32px 40px;min-width:0}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
+.lede{margin:0;color:var(--mute);max-width:62ch}
+.brand{display:flex;align-items:center;gap:20px;margin-bottom:18px}
+.logo{height:112px;width:auto;flex:none}#chips,#t-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip,.ghost,select{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--rule);border-radius:6px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip i,td i{width:10px;height:10px;border-radius:50%;display:inline-block}
+td i{margin-right:8px}
+.chip small{color:var(--mute)}
+.chip[aria-pressed=true]{border-color:var(--ink);background:var(--sel)}
+.chip.dim,.chip.none{opacity:.45}
+.chip.none{border-style:dashed}
+.ghost{padding:7px 12px;cursor:pointer}
+.link{border:0;background:none;color:var(--focus);font:inherit;cursor:pointer;padding:0}
+.status{display:flex;align-items:center;gap:12px;margin:14px 0 6px;color:var(--mute);font-size:13px}#ftoggle,#t-ftoggle{display:none}#tabs,#t-tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin-top:10px;overflow-x:auto}#tabs button,#t-tabs button{padding:10px 16px;border:0;border-bottom:3px solid transparent;background:none;font:inherit;font-weight:600;color:var(--mute);cursor:pointer}#tabs button[aria-selected=true],#t-tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}#ctl,#t-ctl{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end;padding:16px 0 8px}#ctl label,#t-ctl label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);font-weight:500}#ctl .chk,#t-ctl .chk{flex-direction:row;padding:0 0 8px;color:var(--ink)}
+select{padding:7px 10px;min-width:150px}#info,#t-info{display:grid;gap:10px;margin:6px 0 10px}
+.how{padding:8px 12px;border-left:3px solid var(--focus);background:var(--panel);border-radius:0 6px 6px 0;font-size:13px;max-width:95ch}
+.how p{margin:2px 0 0;color:var(--mute)}
+.dcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.dc{border:1px solid var(--rule);border-left:4px solid var(--a);border-radius:6px;background:var(--panel);padding:10px 12px;min-width:0}
+.dc-role{font-size:12px;color:var(--mute)}
+.dc h4{margin:1px 0 6px;font-size:15px;display:flex;align-items:center;gap:8px}
+.dc p{margin:8px 0 0;font-size:13px;color:var(--mute)}
+.dc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.dc-fx{margin:8px 0 0;padding:4px 10px;background:var(--paper);border-radius:6px;overflow-x:auto}
+.dc-fx math{display:block;font-size:1.25em}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:22px;padding:0 6px;border:1px solid currentColor;border-radius:5px;font:italic 600 13px "STIX Two Math","Latin Modern Math","Cambria Math",serif}
+.un{padding:1px 8px;border-radius:999px;background:var(--sel);font-size:12px}#guide,#t-guide{margin-top:24px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);padding:0 14px}#guide summary,#t-guide summary{padding:12px 0}#guide[open],#t-guide[open]{padding-bottom:18px}
+.gi{margin:0 0 4px;color:var(--mute);max-width:80ch}
+.gh{margin:24px 0 8px;font-size:15px}
+.syms{display:flex;flex-wrap:wrap;gap:8px}
+.sym{display:inline-flex;gap:8px;align-items:baseline;padding:4px 10px;border:1px solid var(--rule);border-radius:6px;font-size:13px}
+.sym b{font:600 15px "STIX Two Math","Latin Modern Math","Cambria Math",serif}
+.sym span{color:var(--mute)}
+math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math",math}
+.fx{padding:12px 16px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);overflow-x:auto}
+.fx math{font-size:1.35em;display:block;text-align:left}
+.c-lat{color:var(--t-lat)}.c-thr{color:var(--t-thr)}.c-en{color:var(--t-en)}
+.bars{display:grid;gap:8px;margin-top:14px}
+.bar-row{display:grid;grid-template-columns:minmax(110px,200px) 1fr;gap:12px;align-items:center;font-size:13px}
+.bar{display:flex;height:30px;border-radius:6px;overflow:hidden}
+.bar i{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:600;font-size:12px;color:#fff;min-width:0;overflow:hidden}
+.bar .lat{background:var(--c-lat)}.bar .thr{background:var(--c-thr)}.bar .en{background:var(--c-en);color:#1B1400}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.warn{margin:0 0 12px;padding:8px 12px;border-left:3px solid #D55E00;background:var(--sel);font-size:13px}
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.mc{border:1px solid var(--rule);border-top:3px solid var(--c);border-radius:6px;padding:12px 14px;background:var(--panel)}
+.mc header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mc h4{margin:0;font-size:15px}
+.mc math{display:block;font-size:1.3em;margin:12px 0 10px;overflow-x:auto}
+.mc p{margin:6px 0;font-size:13px}
+.mc .stat{color:var(--mute)}
+.mc .stat b{color:var(--ink)}
+.dir{flex:none;padding:1px 8px;border:1px solid var(--rule);border-radius:999px;font-size:12px;color:var(--mute);white-space:nowrap}
+.mtab{width:100%;border-collapse:collapse;font-size:13px}
+.mtab th,.mtab td{padding:8px 10px;text-align:left;white-space:normal;vertical-align:top;border-bottom:1px solid var(--rule);cursor:default}
+.mtab tr.grp th{padding-top:16px;font-size:13px;color:var(--ink);border-bottom:2px solid var(--rule)}
+.mtab td{color:var(--mute)}
+.mtab td .dc-fx{margin-top:6px;color:var(--ink)}
+.mtab .u{display:block;font-weight:400;color:var(--mute)}#note,#t-note{margin:4px 0 8px;padding:8px 12px;border-left:3px solid #E69F00;background:var(--sel);font-size:13px}#plot,#t-plot{height:max(440px,calc(100vh - 380px))}
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th{cursor:pointer;font-weight:600;background:var(--panel)}
+th.n,td.n{text-align:right}
+.more{display:flex;gap:12px;align-items:center;margin-top:12px;color:var(--mute);font-size:13px}#empty,#t-empty{padding:56px 0;text-align:center;color:var(--mute)}
+footer{margin-top:28px;color:var(--mute);font-size:13px;max-width:80ch}
+footer p{margin:4px 0}
+@media(max-width:900px){#views{padding:12px 16px 0}.logo{height:84px}.brand{gap:14px}.app{grid-template-columns:1fr}aside{position:static;height:auto;display:none;border-right:0;border-bottom:1px solid var(--rule)}aside.open{display:block}#ftoggle,#t-ftoggle{display:inline-block}main{padding:20px 16px 32px}#plot,#t-plot{height:460px}}
+[hidden]{display:none!important}
+#views{display:flex;gap:6px;padding:12px 32px 0}
+#views button{padding:7px 18px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);font:inherit;font-weight:600;color:var(--mute);cursor:pointer}
+#views button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.banner{margin:0 0 12px;padding:8px 12px;border-left:3px solid #E69F00;background:var(--sel);font-size:13px;max-width:95ch}
+.app.solo{grid-template-columns:minmax(0,1fr)}
+.fixed{margin:0 0 10px;font-size:13px;color:var(--mute)}
+#t-presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+#t-presets .chip{padding:4px 10px;font-size:13px;border-radius:6px}
+.presets-h{margin:0 0 6px}
+td.x{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+#t-empty code{padding:1px 5px;border-radius:4px;background:var(--sel)}
+</style>
+</head>
+<body>
+<nav id="views" aria-label="Benchmark type"><button data-view="inf" aria-pressed="true">Inference</button><button data-view="tr" aria-pressed="false">Training</button></nav>
+<div class="app" id="inf">
+<aside id="side">
+  <div class="side-head"><span>Filters</span><span class="acts"><button class="link" id="reset">Reset to defaults</button><button class="link" id="clear">Clear all</button></span></div>
+  <p class="hint">Starts with a like-for-like setup. Change any filter, or choose Clear all to see every run.</p>
+  <div id="groups"></div>
+  <label class="chk"><input type="checkbox" id="failed"> Include failed runs <span class="st" id="nfail"></span></label>
+</aside>
+<main>
+  <header>
+    <div class="brand">
+      <img class="logo" src="__LOGO__" alt="Minerva" width="143" height="240">
+      <div>
+        <h1>Minerva inference benchmarks</h1>
+        <p class="lede">LLM serving results from EuroHPC systems. Choose systems, narrow with the filters, then pick a view.</p>
+      </div>
+    </div>
+    <div id="chips" role="group" aria-label="Systems"></div>
+    <div class="status"><button class="ghost" id="ftoggle">Filters</button><span id="count" aria-live="polite"></span></div>
+  </header>
+  <div id="tabs" role="tablist"></div>
+  <div id="ctl"></div>
+  <div id="info" hidden></div>
+  <p id="note" hidden></p>
+  <div id="plot"></div>
+  <div id="table" hidden></div>
+  <section class="nbk" data-nbk="inf" hidden>
+    <h3 class="gh">Python notebook</h3>
+    <p class="gi">Analyze the runs with Python (pandas and matplotlib) without leaving the page. <code>df</code> holds the runs the filters currently show, <code>all_runs</code> holds every run including failed ones, and the last expression of a cell is displayed. Press Shift+Enter to run a cell. Python runs inside your browser, so no data leaves it; it is downloaded the first time you run a cell and needs an internet connection.</p>
+    <div class="nb-bar"><button class="ghost nb-add">+ Code cell</button><select class="nb-ex" aria-label="Add an example cell"></select><span class="nb-status" role="status"></span></div>
+    <div class="nb-cells"></div>
+  </section>
+  <div id="empty" hidden><p>No runs match these filters.</p><button class="ghost" id="reset2">Reset to defaults</button></div>
+  <details id="guide"><summary>Metric definitions and score formulas</summary><div id="gbody"></div></details>
+  <footer id="foot"></footer>
+</main>
+</div>
+<div class="app" id="tr" hidden>
+<aside id="t-side">
+  <div class="side-head"><span>Filters</span><span class="acts"><button class="link" id="t-reset">Reset to defaults</button><button class="link" id="t-clear">Clear all</button></span></div>
+  <div id="t-presets-wrap"><p class="st presets-h">Compare like with like</p><div id="t-presets"></div></div>
+  <div id="t-groups"></div>
+  <label class="chk"><input type="checkbox" id="t-failed"> Include failed runs <span class="st" id="t-nfail"></span></label>
+</aside>
+<main>
+  <header>
+    <div class="brand">
+      <img class="logo" id="t-logo" alt="Minerva" width="143" height="240">
+      <div>
+        <h1>Minerva training benchmarks</h1>
+        <p class="lede">Fine-tuning runs on EuroHPC systems. See how throughput, time, energy and memory change with model, parallelism, batch size and GPU count.</p>
+      </div>
+    </div>
+    <p class="banner" id="t-banner" hidden></p>
+    <p class="fixed" id="t-fixed" hidden></p>
+    <div id="t-chips" role="group" aria-label="Systems"></div>
+    <div class="status"><button class="ghost" id="t-ftoggle">Filters</button><span id="t-count" aria-live="polite"></span></div>
+  </header>
+  <div id="t-tabs" role="tablist"></div>
+  <div id="t-ctl"></div>
+  <div id="t-info" hidden></div>
+  <p id="t-note" hidden></p>
+  <div id="t-plot"></div>
+  <div id="t-table" hidden></div>
+  <section class="nbk" data-nbk="tr" hidden>
+    <h3 class="gh">Python notebook</h3>
+    <p class="gi">Analyze the runs with Python (pandas and matplotlib) without leaving the page. <code>df</code> holds the runs the filters currently show, <code>all_runs</code> holds every run including failed ones, and the last expression of a cell is displayed. Press Shift+Enter to run a cell. Python runs inside your browser, so no data leaves it; it is downloaded the first time you run a cell and needs an internet connection.</p>
+    <div class="nb-bar"><button class="ghost nb-add">+ Code cell</button><select class="nb-ex" aria-label="Add an example cell"></select><span class="nb-status" role="status"></span></div>
+    <div class="nb-cells"></div>
+  </section>
+  <div id="t-empty" hidden></div>
+  <details id="t-guide"><summary>Metric definitions</summary><div id="t-gbody"></div></details>
+  <footer id="t-foot"></footer>
+</main>
+</div>
+<script type="application/json" id="payload">__DATA__</script>
+<script>
+const $=s=>document.querySelector(s);
+const P=JSON.parse($('#payload').textContent);{const D=P.defaults||{};P.scaling=D.scaling||{};P.trainCfg=D.training||{};P.defaults=D.filters||Object.fromEntries(Object.entries(D).filter(([k])=>!['scaling','training'].includes(k)))}
+const rows=Array.from({length:P.data.model.length},(_,i)=>Object.fromEntries(P.columns.map(c=>[c,P.data[c][i]])));
+const DIMS={system_label:'System',model:'Model',framework:'Framework',dataset:'Dataset',concurrency:'Concurrent requests',gpus:'GPUs',nodes:'Nodes',tp:'Tensor parallel',pp:'Pipeline parallel',max_len:'Max model length',extra_args:'Extra arguments'};
+const GROUPS=['model','framework','dataset','concurrency','gpus','nodes','tp','pp','max_len','extra_args'];
+const MG={s:'Minerva scores',t:'Throughput',l:'Latency',e:'Energy and memory'};
+const METRICS={
+ global_score:{g:MG.s,l:'Minerva global score',u:'score',b:1,d:'Weighted sum of the latency (L), throughput (T) and energy (E) scores.'},
+ latency_score:{g:MG.s,l:'Latency score',u:'score',b:1,d:'Inverse of the total latency: higher when TTFT, ITL and TPOT (all in ms) are shorter. Halving the total latency doubles the score.'},
+ throughput_score:{g:MG.s,l:'Throughput score',u:'score',b:1,d:'Harmonic mean of output throughput (TPS) and request throughput (RPS). It is pulled toward the smaller value, so it usually ends up close to 2 × RPS.'},
+ energy_score:{g:MG.s,l:'Energy score',u:'tokens/s per W',b:1,d:'Output throughput divided by average power: tokens generated per second for each watt.'},
+ tok_s:{g:MG.t,l:'Output throughput',u:'tokens/s',b:1,d:'Generated tokens per second (TPS), summed over all concurrent requests.'},
+ req_s:{g:MG.t,l:'Request throughput',u:'requests/s',b:1,d:'Completed requests per second (RPS).'},
+ tok_s_per_gpu:{g:MG.t,l:'Throughput per GPU',u:'tokens/s per GPU',b:1,d:'Output throughput (TPS) divided by the number of GPUs used, N. Derived by this dashboard.'},
+ ttft_ms:{g:MG.l,l:'Time to first token (TTFT)',u:'ms',b:-1,d:'Time from sending a request until its first token arrives.'},
+ itl_ms:{g:MG.l,l:'Inter-token latency (ITL)',u:'ms',b:-1,d:'Average time between consecutive generated tokens.'},
+ tpot_ms:{g:MG.l,l:'Time per output token (TPOT)',u:'ms',b:-1,d:'Average time to generate each output token after the first one.'},
+ j_per_tok:{g:MG.e,l:'Energy per token, per GPU',u:'J/token',b:-1,d:'Average power per GPU (P) divided by output throughput (TPS), in joules per token. Derived by this dashboard; it is the inverse of the energy score and does not depend on how many GPUs were used.'},
+ j_per_tok_all:{g:MG.e,l:'Energy per token, all GPUs',u:'J/token',b:-1,d:'Energy the whole run spends per generated token: average power per GPU × number of GPUs ÷ output throughput. Derived by this dashboard.'},
+ power_w:{g:MG.e,l:'Average power',u:'W',b:-1,d:'Average power (P) reported during the run. It appears to be per GPU.'},
+ mem_peak_gb:{g:MG.e,l:'Peak GPU memory',u:'GB',b:-1,d:'Highest GPU memory use reported during the run.'}};
+Object.entries({global_score:'G',latency_score:'L',throughput_score:'T',energy_score:'E',tok_s:'TPS',req_s:'RPS',ttft_ms:'TTFT',itl_ms:'ITL',tpot_ms:'TPOT',power_w:'P',j_per_tok:'J',j_per_tok_all:'Jall'}).forEach(([k,s])=>METRICS[k].s=s);
+const SYSCOL={'Adastra MI250':'#D55E00','Adastra MI300':'#E69F00','LUMI-G':'#CC79A7','Jean Zay H100':'#0072B2','Leonardo Booster':'#56B4E9','MareNostrum 5':'#009E73'};
+const PAL=['#4C78A8','#F58518','#54A24B','#B279A2','#E45756','#72B7B2','#EECA3B','#9D755D','#BAB0AC'];
+const SYM=['circle','diamond','square','cross','triangle-up'];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=v=>v==null?'n/a':Number.isInteger(v)?v.toLocaleString('en'):Math.abs(v)>=100?Math.round(v).toLocaleString('en'):v.toPrecision(3);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const uniq=(d,k)=>[...new Set(d.map(r=>r[k]))].sort((a,b)=>typeof a==='number'&&typeof b==='number'?a-b:typeof a==='number'?-1:typeof b==='number'?1:String(a).localeCompare(b));
+const ALL=Object.fromEntries(Object.keys(DIMS).map(k=>[k,uniq(rows,k)]));
+const colorOf=(d,v)=>d==='system_label'?(SYSCOL[v]||'#777'):PAL[ALL[d].indexOf(v)%PAL.length];
+const nFailed=rows.filter(r=>r.failed).length;
+function aggRuns(rs,key,mode,bb){
+  if(mode==='best'){const cm=!bb||bb==='self'?key:bb,dir=METRICS[cm].b,c=rs.filter(r=>r[cm]!=null);
+    if(!c.length)return null;
+    return c.reduce((a,r)=>(dir>0?r[cm]>a[cm]:r[cm]<a[cm])?r:a)[key]}
+  const v=rs.map(r=>r[key]).filter(x=>x!=null);if(!v.length)return null;
+  if(mode==='mean')return v.reduce((a,c)=>a+c)/v.length;
+  v.sort((a,c)=>a-c);const h=v.length>>1;return v.length%2?v[h]:(v[h-1]+v[h])/2}
+const nm=k=>{const s=METRICS[k].l.replace(/ \(.*\)/,'');return s.startsWith('Minerva')?s:s[0].toLowerCase()+s.slice(1)};
+const win=k=>METRICS[k].b>0?'highest':'lowest';
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const own=(mode,bb,k)=>mode==='best'&&(!bb||bb==='self'||bb===k);
+function how(mode,bb,key,noun,group){
+  const head=mode!=='best'?`Each ${noun} shows the ${mode} ${nm(key)} across the runs in its group.`
+    :own(mode,bb,key)?`Each ${noun} shows the ${win(key)} ${nm(key)} found among the runs in its group.`
+    :`Each ${noun} shows the ${nm(key)} of the single run with the ${win(bb)} ${nm(bb)} in its group.`;
+  return `${head} A group is the runs that share the same ${group}.`}
+const ytitle=(mode,bb,k)=>{const M=METRICS[k];return mode!=='best'?`${cap(mode)} ${nm(k)} (${M.u})`:own(mode,bb,k)?`${cap(win(k))} ${nm(k)} (${M.u})`:`${M.l} (${M.u}), run with ${win(bb)} ${nm(bb)}`};
+const ACC={global_score:'var(--ink)',latency_score:'var(--c-lat)',throughput_score:'var(--c-thr)',energy_score:'var(--c-en)'};
+const BADGE={latency_score:'lat',throughput_score:'thr',energy_score:'en'};
+function card(k,role){const M=METRICS[k];
+  return `<article class="dc" style="--a:${ACC[k]||'var(--mute)'}"><span class="dc-role">${esc(role)}</span><h4>${esc(M.l)}${M.s?` <span class="badge ${BADGE[k]?'c-'+BADGE[k]:''}">${M.s}</span>`:''}</h4><div class="dc-chips"><span class="un">${esc(M.u)}</span>${dirChip(M)}</div>${MATH[k]?`<div class="dc-fx">${MATH[k]}</div>`:''}<p>${esc(M.d)}</p></article>`}
+function info(text,items,sel='#info'){const m=new Map();items.forEach(({k,role})=>m.set(k,[...(m.get(k)||[]),role]));
+  $(sel).innerHTML=`<div class="how"><b>How to read this chart</b><p>${text}</p></div><div class="dcs">${[...m].map(([k,r])=>card(k,r.join(' and '))).join('')}</div>`;$(sel).hidden=false}
+const bestItem=c=>c.agg==='best'&&!own(c.agg,c.bb,c.metric)?[{k:c.bb,role:'Picks the best run'}]:[];
+
+const opt=ks=>ks.map(k=>[k,DIMS[k]]);
+const metO=Object.entries(METRICS).map(([k,m])=>[k,`${m.l} (${m.u})`,m.g]);
+const bbO=Object.entries(METRICS).map(([k,m])=>[k,`${m.l} (${win(k)} wins)`,m.g]);
+const aggO=[['best','Best run'],['median','Median'],['mean','Mean']];
+const isBest=v=>v.agg==='best';
+const catD=['system_label','model','framework','dataset'];
+const TABS={
+ compare:{t:'Compare',c:[['metric','Metric',metO],['x','Group by',opt(catD)],['color','Color by',opt(catD)],['sort','Sort bars',[['name','Alphabetical'],['best','Best value first']]],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest]],d:{metric:'tok_s',x:'model',color:'system_label',sort:'name',agg:'best',bb:'self'}},
+ scale:{t:'Scaling',c:[['metric','Metric',metO],['x','Scale across',opt(['concurrency','gpus','nodes','tp','pp','max_len'])],['by','One line per',opt(catD)],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest],['log','Log scale']],d:{metric:'tok_s',x:'concurrency',by:'system_label',agg:'best',bb:'self',log:false}},
+ trade:{t:'Trade-offs',c:[['x','X axis',metO],['y','Y axis',metO],['color','Color by',opt(catD)],['agg','Show',[['all','Every run'],...aggO]],['bb','Best run by',bbO,isBest],['logx','Log X'],['logy','Log Y']],d:{x:'tok_s',y:'itl_ms',color:'system_label',agg:'all',bb:'global_score',logx:false,logy:false}},
+ heat:{t:'Heatmap',c:[['metric','Metric',metO],['cluster','Cluster',[]],['cols','Columns',opt(['framework','gpus','concurrency','nodes','max_len','dataset','model','system_label'])],['rows','Rows'],['agg','Show',aggO],['bb','Best run by',[['self','The plotted metric'],...bbO],isBest],['ratio','Ratio of two columns']],d:{metric:'tok_s',cols:'framework',rows:['system_label','model'],agg:'best',bb:'self',ratio:false}},
+ data:{t:'Data',c:[],d:{}}};
+const S={tab:'compare',sel:Object.fromEntries(Object.keys(DIMS).map(k=>[k,new Set()])),failed:false,show:100,sort:['tok_s',-1],ctl:{},touched:new Set()};
+let autoM=null;
+Object.keys(TABS).forEach(k=>S.ctl[k]={...TABS[k].d});
+
+// A default filter steps aside when the chart varies by that dimension, unless the user set it themselves.
+const usedDims=()=>{const c=S.ctl[S.tab];return({compare:[c.x,c.color],scale:[c.x,c.by],trade:[c.color],heat:[c.cols],data:[]})[S.tab]};
+// Some dimensions move together: scaling across nodes (or tensor/pipeline parallelism) changes the GPU count too.
+const LINK={nodes:['gpus'],tp:['gpus'],pp:['gpus'],gpus:['nodes']};
+const withLinked=u=>[...new Set([...u,...u.flatMap(k=>LINK[k]||[])])];
+const lifted=()=>withLinked(usedDims()).filter(k=>P.defaults[k]&&!S.touched.has(k)&&S.sel[k].size);
+const filtered=skip=>{const L=lifted();return rows.filter(r=>(S.failed||!r.failed)&&Object.entries(S.sel).every(([k,s])=>k===skip||!s.size||L.includes(k)||s.has(String(r[k]))))};
+// Scaling lines only make sense for one model, so entering Scaling selects the configured model unless the user chose one.
+function enterTab(t){if(autoM&&!S.touched.has('model'))S.sel.model.delete(autoM);autoM=null;S.tab=t;
+  const m=P.scaling.model;if(t==='scale'&&m&&ALL.model.includes(m)&&!S.touched.has('model')&&!S.sel.model.size){S.sel.model.add(m);autoM=m}}
+function applyDefaults(){Object.values(S.sel).forEach(s=>s.clear());S.touched.clear();autoM=null;S.failed=false;S.show=100;
+  Object.entries(P.defaults).forEach(([k,v])=>v.forEach(x=>{if(S.sel[k]&&ALL[k].includes(x))S.sel[k].add(String(x))}));enterTab(S.tab)}
+function clearAll(){Object.values(S.sel).forEach(s=>s.clear());Object.keys(P.defaults).forEach(k=>S.touched.add(k));S.touched.add('model');autoM=null;S.failed=false;S.show=100}
+const base=()=>({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{family:'Public Sans,system-ui,sans-serif',color:css('--ink'),size:13},margin:{t:64,r:16,b:56,l:64},legend:{orientation:'h',y:1.02,yanchor:'bottom'},hoverlabel:{font:{family:'Public Sans,system-ui,sans-serif'}}});
+const ax=o=>({gridcolor:css('--rule'),zerolinecolor:css('--rule'),linecolor:css('--rule'),automargin:true,...o});
+const cfg={responsive:true,displaylogo:false,modeBarButtonsToRemove:['lasso2d','select2d']};
+const MIXN={model:'models',dataset:'datasets',framework:'frameworks',concurrency:'concurrent request levels',gpus:'GPU counts',nodes:'node counts',max_len:'max model lengths'};
+const dn=k=>k==='gpus'?'GPUs':DIMS[k].toLowerCase();
+function mixNote(d,used,extra=''){
+  const U=withLinked(used);
+  const m=Object.keys(MIXN).filter(k=>!U.includes(k)&&uniq(d,k).length>1).map(k=>`${uniq(d,k).length} ${MIXN[k]}`);
+  const U0=usedDims(),Ls=lifted(),direct=Ls.filter(k=>U0.includes(k)),pm=[];
+  if(direct.length){const n=direct.map(dn).join(' and ');pm.push(`Default ${n} filter${direct.length>1?'s':''} paused because this chart varies by ${n}.`)}
+  Ls.filter(k=>!U0.includes(k)).forEach(k=>pm.push(`Default ${dn(k)} filter also paused because it changes together with ${dn(U0.find(u=>(LINK[u]||[]).includes(k)))}.`));
+  const t=[...pm,m.length?`This view mixes ${m.join(', ')}. Use the filters to compare like with like.`:'',extra].filter(Boolean).join(' ');
+  $('#note').textContent=t;$('#note').hidden=!t}
+
+// Order of the X categories: natural order, or best value first (as the old energy plot did).
+function orderX(xs,cs,d,c,M){
+  if(c.sort!=='best')return xs;
+  const best=xv=>{const v=cs.map(cv=>aggRuns(d.filter(r=>r[c.x]===xv&&r[c.color]===cv),c.metric,c.agg,c.bb)).filter(y=>y!=null);return v.length?(M.b>0?Math.max(...v):Math.min(...v)):null};
+  const sc=new Map(xs.map(x=>[x,best(x)]));
+  return [...xs].sort((a,b)=>{const x=sc.get(a),y=sc.get(b);return x==null?1:y==null?-1:M.b>0?y-x:x-y})}
+function compare(d){const c=S.ctl.compare,M=METRICS[c.metric],cs=uniq(d,c.color),xs=orderX(uniq(d,c.x),cs,d,c,M);
+  const tr=cs.map(cv=>{const g=d.filter(r=>r[c.color]===cv);
+    const cell=xs.map(xv=>g.filter(r=>r[c.x]===xv));
+    const ys=cell.map(s=>aggRuns(s,c.metric,c.agg,c.bb));
+    return{type:'bar',name:String(cv),x:xs.map(String),y:ys,marker:{color:colorOf(c.color,cv)},customdata:ys.map((y,i)=>[fmt(y),cell[i].length]),
+      hovertemplate:`<b>${esc(cv)}</b><br>%{x}<br>%{customdata[0]} ${M.u}<br>from %{customdata[1]} runs<extra></extra>`}});
+  mixNote(d,[c.x,c.color]);
+  const grp=c.x===c.color?DIMS[c.x].toLowerCase():`${DIMS[c.x].toLowerCase()} and ${DIMS[c.color].toLowerCase()}`;
+  info(how(c.agg,c.bb,c.metric,'bar',grp),[{k:c.metric,role:'Plotted metric'},...bestItem(c)]);
+  Plotly.newPlot('plot',tr,{...base(),barmode:c.x===c.color?'overlay':'group',xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String)}),yaxis:ax({title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
+
+function scale(d){const c=S.ctl.scale,M=METRICS[c.metric],xs=uniq(d,c.x),ls=uniq(d,c.by);
+  const tr=ls.map(lv=>{const g=d.filter(r=>r[c.by]===lv);
+    const pts=xs.map(xv=>{const s=g.filter(r=>r[c.x]===xv);return[aggRuns(s,c.metric,c.agg,c.bb),s.length]});
+    return{type:'scatter',mode:'lines+markers',name:String(lv),x:xs.map(String),y:pts.map(p=>p[0]),connectgaps:true,
+      line:{color:colorOf(c.by,lv),width:2.5},marker:{size:8},customdata:pts.map(p=>[fmt(p[0]),p[1]]),
+      hovertemplate:`<b>${esc(lv)}</b><br>${DIMS[c.x]}: %{x}<br>%{customdata[0]} ${M.u}<br>from %{customdata[1]} runs<extra></extra>`}});
+  const ex=[];
+  if(autoM&&!S.touched.has('model'))ex.push(`Scaling starts with ${autoM} because lines that mix models are not comparable. Change it in the Model filter.`);
+  if(xs.length<2)ex.push(`Only one value of ${dn(c.x)} matches the filters, so no lines can be drawn. Add more values in that filter.`);
+  mixNote(d,[c.by,c.x],ex.join(' '));
+  const grp=`${DIMS[c.x].toLowerCase()} and ${DIMS[c.by].toLowerCase()}`;
+  info(how(c.agg,c.bb,c.metric,'point',grp),[{k:c.metric,role:'Plotted metric'},...bestItem(c)]);
+  Plotly.newPlot('plot',tr,{...base(),xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String),title:{text:DIMS[c.x]}}),
+    yaxis:ax({type:c.log?'log':'linear',title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
+
+const GK=['system_label','model','framework','dataset','concurrency','gpus'];
+function trade(d){const c=S.ctl.trade,X=METRICS[c.x],Y=METRICS[c.y],fw=ALL.framework,all=c.agg==='all';
+  const ok=d.filter(r=>r[c.x]!=null&&r[c.y]!=null);let pts;
+  if(all)pts=ok.map(r=>({r,x:r[c.x],y:r[c.y],n:1}));
+  else{const G={};ok.forEach(r=>(G[GK.map(k=>r[k]).join('|')]??=[]).push(r));
+    pts=Object.values(G).map(g=>({r:g[0],x:aggRuns(g,c.x,c.agg,c.bb),y:aggRuns(g,c.y,c.agg,c.bb),n:g.length})).filter(p=>p.x!=null&&p.y!=null)}
+  const tr=uniq(pts.map(p=>p.r),c.color).map(cv=>{const g=pts.filter(p=>p.r[c.color]===cv);
+    return{type:'scatter',mode:'markers',name:String(cv),x:g.map(p=>p.x),y:g.map(p=>p.y),
+      marker:{color:colorOf(c.color,cv),size:9,opacity:.85,symbol:g.map(p=>SYM[fw.indexOf(p.r.framework)%SYM.length]),line:{width:.5,color:css('--panel')}},
+      text:g.map(p=>{const r=p.r;return `<b>${esc(r.system_label)}</b><br>${esc(r.model)}, ${esc(r.framework)}, ${esc(r.dataset)}<br>${r.concurrency} requests, ${r.gpus} GPUs`+(all?` on ${r.nodes} nodes<br>TP ${r.tp}, PP ${r.pp}, max length ${fmt(r.max_len)}`:`<br>${p.n} run${p.n>1?'s':''} in this group`)}),
+      hovertemplate:`%{text}<br>${X.l}: %{x:,.4g} ${X.u}<br>${Y.l}: %{y:,.4g} ${Y.u}<extra></extra>`}});
+  const GKN='system, model, framework, dataset, concurrency and GPU count';
+  info(all?'Each point is one run.':c.agg==='best'
+    ?`Each point is a group of runs sharing the same ${GKN}. It shows the single run in the group with the ${win(c.bb)} ${nm(c.bb)}, and both axes come from that run.`
+    :`Each point is a group of runs sharing the same ${GKN}. Both axes show the ${c.agg} across the group.`,
+    [{k:c.x,role:'X axis'},{k:c.y,role:'Y axis'},...(c.agg==='best'?[{k:c.bb,role:'Picks the best run'}]:[])]);
+  mixNote(d,all?[c.color,'concurrency','gpus','nodes','max_len']:[c.color,'model','dataset','framework','concurrency','gpus','nodes'],uniq(d,'framework').length>1?`Marker shape shows the framework (${fw.map((f,i)=>`${SYM[i%SYM.length]}: ${f}`).join(', ')}).`:'');
+  Plotly.newPlot('plot',tr,{...base(),xaxis:ax({type:c.logx?'log':'linear',title:{text:`${X.l} (${X.u})`}}),yaxis:ax({type:c.logy?'log':'linear',title:{text:`${Y.l} (${Y.u})`}})},cfg)}
+
+const TC=[['system_label','System'],['model','Model'],['framework','Framework'],['dataset','Dataset'],['concurrency','Concurrency'],['nodes','Nodes'],['gpus','GPUs'],['tp','TP'],['pp','PP'],['max_len','Max length'],['tok_s','Tokens/s'],['req_s','Requests/s'],['ttft_ms','TTFT ms'],['itl_ms','ITL ms'],['power_w','Power W'],['latency_score','Latency score'],['throughput_score','Throughput score'],['energy_score','Energy score'],['global_score','Global score'],['extra_args','Extra arguments']];
+const isN=c=>!catD.includes(c)&&c!=='extra_args';
+function table(d){$('#note').hidden=true;$('#info').hidden=true;const[k,dir]=S.sort;
+  const s=[...d].sort((a,b)=>a[k]==null?1:b[k]==null?-1:(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
+  $('#table').innerHTML=`<div class="tw"><table><thead><tr>${TC.map(([c,l])=>`<th class="${isN(c)?'n':''}" data-sort="${c}" aria-sort="${k===c?(dir>0?'ascending':'descending'):'none'}">${l}${k===c?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${
+    s.slice(0,S.show).map(r=>`<tr>${TC.map(([c])=>`<td class="${isN(c)?'n':''}">${c==='system_label'?`<i style="background:${colorOf(c,r[c])}"></i>`:''}${isN(c)?fmt(r[c]):esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="more"><span>Showing ${Math.min(S.show,s.length).toLocaleString('en')} of ${s.length.toLocaleString('en')} runs</span>${S.show<s.length?'<button class="ghost" id="more">Show 200 more</button>':''}<button class="ghost" id="csv">Download filtered CSV</button></div>`}
+function csv(d){const q=v=>v==null?'':/[",\n]/.test(v)?`"${String(v).replace(/"/g,'""')}"`:v;
+  const t=[P.columns.join(','),...d.map(r=>P.columns.map(c=>q(r[c])).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='minerva-filtered-runs.csv';a.click()}
+
+const SCw=(P.scores&&P.scores.weights)||{latency:.34,throughput:.34,energy:.32};
+const mi=(s,c)=>`<mi${c?` class="c-${c}"`:''}>${s}</mi>`;
+const [G,L,T,E]=[mi('G'),mi('L','lat'),mi('T','thr'),mi('E','en')];
+const MATH={
+ global_score:`<math display="block"><mrow>${G}<mo>=</mo><mn>${SCw.latency}</mn><mo>×</mo>${L}<mo>+</mo><mn>${SCw.throughput}</mn><mo>×</mo>${T}<mo>+</mo><mn>${SCw.energy}</mn><mo>×</mo>${E}</mrow></math>`,
+ latency_score:`<math display="block"><mrow>${L}<mo>=</mo><mfrac><mn>10,000</mn><mrow><mi>TTFT</mi><mo>+</mo><mi>ITL</mi><mo>+</mo><mi>TPOT</mi></mrow></mfrac></mrow></math>`,
+ throughput_score:`<math display="block"><mrow>${T}<mo>=</mo><mfrac><mn>2</mn><mrow><mfrac><mn>1</mn><mi>TPS</mi></mfrac><mo>+</mo><mfrac><mn>1</mn><mi>RPS</mi></mfrac></mrow></mfrac></mrow></math>`,
+ energy_score:`<math display="block"><mrow>${E}<mo>=</mo><mfrac><mi>TPS</mi><mi>P</mi></mfrac></mrow></math>`,
+ tok_s_per_gpu:`<math display="block"><mfrac><mi>TPS</mi><mi>N</mi></mfrac></math>`,
+ j_per_tok_all:`<math display="block"><mrow><msub><mi>J</mi><mtext>all</mtext></msub><mo>=</mo><mfrac><mrow><mi>P</mi><mo>×</mo><mi>N</mi></mrow><mi>TPS</mi></mfrac></mrow></math>`,
+ j_per_tok:`<math display="block"><mrow><mi>J</mi><mo>=</mo><mfrac><mi>P</mi><mi>TPS</mi></mfrac><mo>=</mo><mfrac><mn>1</mn>${E}</mfrac></mrow></math>`};
+const SYM_SC=[['G','Global score',''],['L','Latency score','lat'],['T','Throughput score','thr'],['E','Energy score','en']];
+const SYM_ME=[['TPS','Output throughput','tokens/s'],['RPS','Request throughput','requests/s'],['P','Average power','W'],['TTFT','Time to first token','ms'],['ITL','Inter-token latency','ms'],['TPOT','Time per output token','ms'],['N','GPUs used',''],['J','Energy per token','J/token']];
+const COMP=[
+ {k:'latency_score',c:'lat',n:'Latency score',s:'L',w:SCw.latency,t:'Rewards short waits. The three latency times are added and inverted, so halving the total latency doubles the score.'},
+ {k:'throughput_score',c:'thr',n:'Throughput score',s:'T',w:SCw.throughput,t:'Rewards serving many tokens and many requests per second. The harmonic mean is pulled toward the smaller value, so it usually ends up close to 2 × RPS.'},
+ {k:'energy_score',c:'en',n:'Energy score',s:'E',w:SCw.energy,t:'Tokens generated per second for each watt of power. Higher means more output for the same power.'}];
+const median=v=>{const h=v.length>>1;return v.length%2?v[h]:(v[h-1]+v[h])/2};
+const dirChip=m=>`<span class="dir">${m.b>0?'↑ Higher is better':'↓ Lower is better'}</span>`;
+function guideHTML(){
+  const pct=x=>Math.round(x*100)+'%';
+  const bar=f=>`<div class="bar">${COMP.map(c=>`<i class="${c.c}" style="flex:${f(c)}">${pct(f(c))}</i>`).join('')}</div>`;
+  const stat=k=>{const v=rows.filter(r=>!r.failed&&r[k]!=null).map(r=>r[k]).sort((a,b)=>a-b);return v.length?`Across all runs: median <b>${fmt(median(v))}</b>, from <b>${fmt(v[0])}</b> to <b>${fmt(v[v.length-1])}</b> ${METRICS[k].u==='score'?'':METRICS[k].u}`:''};
+  const warn=P.scores&&P.scores.ok===false?`<p class="warn">The scores in the data do not match these formulas exactly (largest deviation ${P.scores.max_error.toPrecision(2)}). Check inference/generateScores.py.</p>`:'';
+  const rowsT=Object.values(MG).slice(1).map(g=>`<tr class="grp"><th colspan="3">${g}</th></tr>`+Object.entries(METRICS).filter(([k,m])=>m.g===g).map(([k,m])=>`<tr><th scope="row">${esc(m.l)}${m.s?` <span class="badge">${m.s}</span>`:''}<span class="u">${m.u}</span></th><td>${esc(m.d)}${MATH[k]?`<div class="dc-fx">${MATH[k]}</div>`:''}</td><td>${dirChip(m)}</td></tr>`).join('')).join('');
+  return `${warn}<p class="gi">The Minerva scores are computed by inference/generateScores.py. Three component scores are combined into one global score, G.</p>
+  <h3 class="gh">Global score (G)</h3>
+  <div class="fx">${MATH.global_score}</div>
+  <div class="bars"><div class="bar-row"><span>Weight of each score in G</span>${bar(c=>c.w)}</div></div>
+  <div class="legend">${COMP.map(c=>`<span><i style="background:var(--c-${c.c})"></i>${c.n} (${c.s})</span>`).join('')}</div>
+  <h3 class="gh">The three component scores</h3>
+  <div class="mcards">${COMP.map(c=>`<article class="mc" style="--c:var(--c-${c.c})"><header><h4>${c.n} <span class="badge c-${c.c}">${c.s}</span></h4>${dirChip(METRICS[c.k])}</header>${MATH[c.k]}<p>${c.t}</p><p class="stat">${stat(c.k)}</p></article>`).join('')}</div>
+  <h3 class="gh">Symbols</h3>
+  <div class="syms">${SYM_SC.map(([s,n,c])=>`<span class="sym"><b${c?` class="c-${c}"`:''}>${s}</b><span>${n}</span></span>`).join('')}</div>
+  <div class="syms" style="margin-top:8px">${SYM_ME.map(([s,n,u])=>`<span class="sym"><b>${s}</b><span>${n}${u?', '+u:''}</span></span>`).join('')}</div>
+  <h3 class="gh">All other metrics</h3>
+  <div class="tw"><table class="mtab"><tbody>${rowsT}</tbody></table></div>`}
+function buildUI(){
+  $('#groups').innerHTML=GROUPS.map((k,i)=>`<details data-g="${k}"${i<3||P.defaults[k]?' open':''}><summary>${DIMS[k]}<span class="st" data-st="${k}"></span></summary><div class="opts">${ALL[k].map(v=>`<label><input type="checkbox" data-d="${k}" data-v="${esc(v)}"> ${esc(v)}</label>`).join('')}</div></details>`).join('');
+  $('#chips').innerHTML=ALL.system_label.map(v=>`<button class="chip" data-s="${esc(v)}" aria-pressed="false"><i style="background:${colorOf('system_label',v)}"></i>${esc(v)} <small>${rows.filter(r=>r.system_label===v&&!r.failed).length}</small></button>`).join('');
+  $('#tabs').innerHTML=Object.entries(TABS).map(([k,t])=>`<button role="tab" data-t="${k}">${t.t}</button>`).join('');
+  $('#gbody').innerHTML=guideHTML();
+  $('#nfail').textContent=`(${nFailed})`;
+  $('#foot').innerHTML=[...P.notes,`Data built ${P.built} from analytics/data. Energy metrics use the reported average power, so compare them across systems with care.`].map(n=>`<p>${esc(n)}</p>`).join('')}
+function syncUI(d){
+  const L=lifted();
+  Object.entries(S.sel).forEach(([k,s])=>{const el=document.querySelector(`[data-st="${k}"]`);if(el)el.textContent=L.includes(k)?'paused':s.size?`${s.size} selected${P.defaults[k]&&!S.touched.has(k)?' (default)':k==='model'&&autoM&&!S.touched.has(k)?' (scaling default)':''}`:'All'});
+  document.querySelectorAll('details[data-g]').forEach(el=>el.classList.toggle('paused',L.includes(el.dataset.g)));
+  document.querySelectorAll('input[data-d]').forEach(i=>i.checked=S.sel[i.dataset.d].has(i.dataset.v));
+  const cnt={};filtered('system_label').forEach(r=>cnt[r.system_label]=(cnt[r.system_label]||0)+1);
+  document.querySelectorAll('#chips .chip').forEach(b=>{const on=S.sel.system_label.has(b.dataset.s),n=cnt[b.dataset.s]||0;b.setAttribute('aria-pressed',on);b.classList.toggle('dim',S.sel.system_label.size>0&&!on);b.classList.toggle('none',!n);b.title=n?'':'No runs match the current filters';b.querySelector('small').textContent=n});
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===S.tab));
+  $('#failed').checked=S.failed;const hc=document.querySelector('#ctl [data-hc]');if(hc&&hc.value!==iClusterVal())ctlUI();
+  const total=rows.length-(S.failed?0:nFailed);$('#count').textContent=`${d.length.toLocaleString('en')} of ${total.toLocaleString('en')} runs shown${Object.keys(P.defaults).length&&!S.touched.size?' (default filters)':''}`}
+const optHTML=(o,val)=>{let h='',g=null;o.forEach(([a,b,gr])=>{gr=gr||null;if(gr!==g){if(g)h+='</optgroup>';if(gr)h+=`<optgroup label="${esc(gr)}">`;g=gr}
+  h+=`<option value="${esc(a)}"${val===a?' selected':''}${METRICS[a]?` title="${esc(METRICS[a].d)}"`:''}>${esc(b)}</option>`});return h+(g?'</optgroup>':'')};
+const iClusterVal=()=>{const s=S.sel.system_label;return lifted().includes('system_label')?'':s.size===1?[...s][0]:s.size>1?'__many':''};
+const iClusterSelect=()=>{const v=iClusterVal();return `<label>Cluster<select data-hc="1"><option value=""${v===''?' selected':''}>All clusters</option>${ALL.system_label.map(c=>`<option value="${esc(c)}"${v===c?' selected':''}>${esc(c)}</option>`).join('')}${v==='__many'?'<option value="__many" selected disabled>Several selected</option>':''}</select></label>`};
+const hrowsPicker=(v,cols)=>`<fieldset class="mrows"><legend>Rows</legend>${HR.map(([k,l])=>`<label${k===cols?' class="off" title="Already used as the columns"':''}><input type="checkbox" data-hr="${k}"${v.includes(k)&&k!==cols?' checked':''}${k===cols?' disabled':''}> ${l}</label>`).join('')}</fieldset>`;
+function ctlUI(){const T=TABS[S.tab],v=S.ctl[S.tab];
+  $('#ctl').innerHTML=T.c.filter(([k,l,o,w])=>!w||w(v)).map(([k,l,o])=>k==='cluster'?iClusterSelect():k==='rows'&&S.tab==='heat'?hrowsPicker(v.rows,v.cols):o?`<label>${l}<select data-k="${k}">${optHTML(o,v[k])}</select></label>`:`<label class="chk"><input type="checkbox" data-k="${k}"${v[k]?' checked':''}> ${l}</label>`).join('');
+  $('#info').hidden=S.tab==='data'}
+function draw(){const d=filtered();syncUI(d);
+  const isT=S.tab==='data';nbShow('inf',isT);$('#plot').style.height='';
+  $('#empty').hidden=d.length>0;$('#plot').hidden=isT||!d.length;$('#table').hidden=!isT||!d.length;
+  if(!d.length){$('#note').hidden=true;$('#info').hidden=true;return}
+  ({compare,scale,trade,heat,data:table})[S.tab](d)}
+
+// Heatmap: rows = system and/or model, columns = any dimension, cell = metric. Replaces the old model-size/framework heatmap script.
+const HR=[['system_label','System'],['model','Model'],['framework','Framework'],['dataset','Dataset'],['gpus','GPUs'],['nodes','Nodes'],['concurrency','Concurrency'],['tp','Tensor parallel'],['pp','Pipeline parallel'],['max_len','Max length']];
+const IHLAB={gpus:r=>`${r.gpus} GPU${r.gpus>1?'s':''}`,nodes:r=>`${r.nodes} node${r.nodes>1?'s':''}`,concurrency:r=>`${r.concurrency} requests`,tp:r=>`TP${r.tp}`,pp:r=>`PP${r.pp}`,max_len:r=>`length ${r.max_len}`};
+const FWORDER=['vllm','sglang'];
+function heat(d){const c=S.ctl.heat,M=METRICS[c.metric],rk=c.rows.filter(k=>k!==c.cols);
+  let cols=uniq(d,c.cols);
+  if(c.cols==='framework')cols=[...FWORDER.filter(f=>cols.includes(f)),...cols.filter(f=>!FWORDER.includes(f))];
+  const systems=uniq(d,'system_label');
+  // With several systems (and neither the columns nor the rows already split by system) every system gets its own block of columns.
+  const split=systems.length>1&&c.cols!=='system_label'&&!rk.includes('system_label');
+  const lab=r=>rk.length?rk.map(k=>IHLAB[k]?IHLAB[k](r):r[k]).join(', '):'All runs';
+  const rl=[...new Set(d.map(lab))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const val=(l,cv,sy)=>{const cell=d.filter(r=>lab(r)===l&&r[c.cols]===cv&&(sy==null||r.system_label===sy));return[aggRuns(cell,c.metric,c.agg,c.bb),cell.length]};
+  const ratio=c.ratio&&cols.length===2,[A,B]=cols,z=[],txt=[],cd=[],ex=[];
+  if(c.ratio&&!ratio)ex.push(`Ratio needs exactly two columns (found ${cols.length}), so the values are shown instead.`);
+  const xc=ratio?(split?systems.map(sy=>({k:sy,t:sy,sy})):[{k:'r',t:`${A} ÷ ${B}`,sy:null}])
+    :split?systems.flatMap(sy=>cols.filter(cv=>d.some(r=>r.system_label===sy&&r[c.cols]===cv)).map(cv=>({k:sy+'␟'+cv,t:String(cv),cv,sy})))
+    :cols.map(cv=>({k:String(cv),t:String(cv),cv,sy:null}));
+  rl.forEach(l=>{
+    if(ratio){const zr=[],tx=[],cn=[];
+      xc.forEach(x=>{const[a,na]=val(l,A,x.sy),[b,nb]=val(l,B,x.sy),q=a!=null&&b!=null&&a>0&&b>0?a/b:null;
+        zr.push(q==null?null:Math.log2(q));tx.push(q==null?'':q.toFixed(2)+'×');
+        cn.push(`<b>${esc(l)}</b><br>${x.sy!=null?esc(x.sy)+'<br>':''}${esc(A)} ÷ ${esc(B)}: ${q==null?'':q.toFixed(2)+'×'}<br>${esc(A)}: ${fmt(a)} (${na} runs)<br>${esc(B)}: ${fmt(b)} (${nb} runs)`)});
+      z.push(zr);txt.push(tx);cd.push(cn)}
+    else{const zr=[],tx=[],cn=[];
+      xc.forEach(x=>{const[v,n]=val(l,x.cv,x.sy);zr.push(v);tx.push(v==null?'':fmt(v));
+        cn.push(`<b>${esc(l)}</b><br>${x.sy!=null?esc(x.sy)+'<br>':''}${DIMS[c.cols]}: ${esc(x.t)}<br>${fmt(v)} ${M.u}<br>from ${n} runs`)});
+      z.push(zr);txt.push(tx);cd.push(cn)}});
+  const x=xc.map(o=>o.k);
+  const tr={type:'heatmap',x,y:rl,z,text:txt,customdata:cd,texttemplate:'%{text}',xgap:3,ygap:3,hoverongaps:false,hovertemplate:'%{customdata}<extra></extra>',
+    colorscale:ratio?[[0,'#D55E00'],[.5,css('--paper')],[1,'#2557D6']]:[[0,css('--sel')],[1,'#2557D6']],
+    colorbar:{thickness:12,title:{text:ratio?'ratio':M.u}}};
+  if(ratio){const m=Math.max(.1,...z.flat().filter(v=>v!=null).map(Math.abs)),tv=[-3,-2,-1,0,1,2,3].filter(v=>Math.abs(v)<=m+1e-9);
+    Object.assign(tr,{zmin:-m,zmax:m,zmid:0});
+    Object.assign(tr.colorbar,{tickvals:tv,ticktext:tv.map(v=>`${2**v}×`)})}
+  mixNote(d,[c.cols,...rk,...(split?['system_label']:[])],[...ex,split?'Each system has its own block of columns, separated by a gap.':''].filter(Boolean).join(' '));
+  const grp=andJ([...rk.map(dn),...(split?['system']:[]),...(ratio&&!split?[]:[dn(c.cols)])]);
+  info(how(c.agg,c.bb,c.metric,'cell',grp)+(ratio?` Cells show ${esc(A)} ÷ ${esc(B)}${split?' within each system':''}: above 1× means ${esc(A)} has the higher ${nm(c.metric)}, below 1× means ${esc(B)} has.`:' Empty cells were not measured.'),[{k:c.metric,role:'Colored and labeled'},...bestItem(c)]);
+  // System names sit under the column labels, with a gap between systems.
+  const ann=[],shp=[],sub=split&&!ratio;
+  if(sub){let a=0;systems.forEach(sy=>{const n=xc.filter(o=>o.sy===sy).length;if(!n)return;
+    ann.push({xref:'x',yref:'paper',x:a+(n-1)/2,y:0,yanchor:'top',yshift:-30,showarrow:false,text:`<b>${esc(sy)}</b>`});
+    if(a>0)shp.push({type:'line',xref:'x',yref:'paper',x0:a-.5,x1:a-.5,y0:0,y1:1,layer:'above',line:{color:css('--paper'),width:12}});
+    a+=n})}
+  $('#plot').style.height=Math.max(440,rl.length*24+(sub?190:140))+'px';
+  Plotly.newPlot('plot',[tr],{...base(),margin:{t:24,r:16,b:sub?84:56,l:64},annotations:ann,shapes:shp,
+    xaxis:ax({type:'category',categoryorder:'array',categoryarray:x,tickmode:'array',tickvals:x,ticktext:xc.map(o=>o.t),title:{text:ratio?(split?`${A} ÷ ${B}`:''):sub?`${DIMS[c.cols]}, within each system`:DIMS[c.cols],standoff:sub?34:15}}),
+    yaxis:ax({type:'category',categoryorder:'array',categoryarray:rl,autorange:'reversed'})},cfg)}
+
+/* ===================== Training workspace ===================== */
+const TG={t:'Throughput and time',c:'Compute and utilization',e:'Energy',m:'Memory',l:'Loss'};
+const tm=(g,l,u,b,d,s)=>({dom:'train',g,l,u,b,d,s});
+Object.assign(METRICS,{
+ tr_tok_s:tm(TG.t,'Training throughput','tokens/s',1,'Tokens processed per second across all GPUs, as reported by the benchmark.','TPS'),
+ tr_tok_s_gpu:tm(TG.t,'Throughput per GPU','tokens/s per GPU',1,'Training throughput (TPS) divided by the number of GPUs used, N. Derived by this dashboard. A flat line when scaling out means the GPUs are used as efficiently as one.'),
+ tr_epoch_s:tm(TG.t,'Time per epoch','s',-1,'Wall-clock time of one pass over the training data.'),
+ tr_hours:tm(TG.t,'Total execution time','h',-1,'Wall-clock time of the whole run, as reported. It covers all epochs, so runs with different numbers of epochs are not comparable.','t'),
+ tr_step_s:tm(TG.t,'Time per step','s',-1,'Wall-clock time of one optimizer step.'),
+ tr_tflops:tm(TG.c,'Achieved compute per GPU','TFLOP/s per GPU',1,'Average compute each GPU achieved, in TFLOP/s, as reported by the benchmark. It equals the MFU times the GPU peak, so it is comparable across models.','F'),
+ tr_mfu:tm(TG.c,'Model FLOPs utilization (MFU)','%',1,'Achieved FLOP/s as a percentage of the GPU peak, as reported. It shows how much of the hardware the training uses, so it can be compared across models and clusters.','MFU'),
+ tr_tflops_total:tm(TG.c,'Total compute','TFLOP/s',1,'Achieved compute per GPU times the number of GPUs. Derived by this dashboard.'),
+ tr_util:tm(TG.c,'Average GPU utilization','%',1,'Average share of time the GPU was busy. A busy GPU is not necessarily an efficient one: compare it with the MFU.'),
+ tr_peak_util:tm(TG.c,'Peak GPU utilization','%',1,'Highest GPU utilization seen during the run.'),
+ tr_power_w:tm(TG.e,'Average power','W per GPU',-1,'Average power reported during the run. The values look like a per-GPU average.','P'),
+ tr_peak_power_w:tm(TG.e,'Peak power','W per GPU',-1,'Highest power reported during the run.'),
+ tr_kwh:tm(TG.e,'Energy to train','kWh',-1,'Estimated energy of the whole run: average power per GPU × number of GPUs × execution time. Derived by this dashboard.'),
+ tr_tok_per_j:tm(TG.e,'Energy efficiency','tokens/J',1,'Tokens processed per joule: training throughput ÷ (average power per GPU × number of GPUs). Derived by this dashboard.','η'),
+ tr_gflops_w:tm(TG.e,'Compute per watt','GFLOP/s per W',1,'Achieved compute per GPU divided by average power per GPU. Derived by this dashboard; unlike tokens per joule it compares energy efficiency across models and GPU types.'),
+ tr_mem_gb:tm(TG.m,'Average GPU memory','GB',-1,'Average GPU memory in use during the run.'),
+ tr_peak_mem_gb:tm(TG.m,'Peak GPU memory','GB',-1,'Highest GPU memory in use during the run. Values near the device capacity leave no headroom for a larger batch or longer sequences.'),
+ tr_loss:tm(TG.l,'Training loss','loss',-1,'Average training loss over the run. Only comparable between runs of the same model and data.'),
+ tr_val_loss:tm(TG.l,'Validation loss','loss',-1,'Average loss on held-out data. Only comparable between runs of the same model and data.')});
+Object.assign(MATH,{
+ tr_tok_s_gpu:MATH.tok_s_per_gpu,
+ tr_mfu:`<math display="block"><mrow><mi>MFU</mi><mo>=</mo><mfrac><mi>F</mi><msub><mi>F</mi><mtext>peak</mtext></msub></mfrac><mo>×</mo><mn>100</mn></mrow></math>`,
+ tr_tflops_total:`<math display="block"><mrow><mi>F</mi><mo>×</mo><mi>N</mi></mrow></math>`,
+ tr_kwh:`<math display="block"><mrow><mi>Energy</mi><mo>=</mo><mfrac><mrow><mi>P</mi><mo>×</mo><mi>N</mi><mo>×</mo><mi>t</mi></mrow><mn>1000</mn></mfrac></mrow></math>`,
+ tr_tok_per_j:`<math display="block"><mrow><mi>η</mi><mo>=</mo><mfrac><mi>TPS</mi><mrow><mi>P</mi><mo>×</mo><mi>N</mi></mrow></mfrac></mrow></math>`,
+ tr_gflops_w:`<math display="block"><mrow><mfrac><mrow><mn>1000</mn><mo>×</mo><mi>F</mi></mrow><mi>P</mi></mfrac></mrow></math>`});
+
+const TDIMS={system_label:'Cluster',cluster_framework:'Cluster and framework',model:'Model',dataset:'Dataset',framework:'Framework',family:'Parallelism family',parallelism:'Parallelism type',parallel_config:'Parallelism (TP/PP/DP)',tp:'Tensor parallel (TP)',pp:'Pipeline parallel (PP)',dp:'Data parallel (DP)',cp:'Context parallel (CP)',ep:'Expert parallel (EP)',sp:'Sequence parallel (SP)',nodes:'Nodes',gpus:'GPUs',batch_size:'Batch size',accum:'Gradient accumulation',global_batch:'Global batch (samples per step)',max_len:'Max length',precision:'Precision'};
+const TGROUPS=['model','dataset','framework','family','parallelism','parallel_config','tp','pp','dp','cp','ep','sp','gpus','nodes','batch_size','accum','global_batch','max_len','precision'];
+const TOPEN=['model','framework','family','gpus'];
+const TDERIVED={cluster_framework:['system_label','framework'],parallel_config:['parallelism','family','tp','pp','dp','cp','ep','sp','accum']};
+const TX=P.training&&P.training.data?P.training:null;
+const trows=TX?Array.from({length:TX.data.model.length},(_,i)=>{const r=Object.fromEntries(TX.columns.map(c=>[c,TX.data[c][i]]));r.cluster_framework=`${r.system_label}, ${r.framework}`;return r}):[];
+const TALL=Object.fromEntries(Object.keys(TDIMS).map(k=>[k,uniq(trows,k)]));
+const TMK=Object.keys(METRICS).filter(k=>METRICS[k].dom==='train'&&trows.some(r=>r[k]!=null));
+const TPRESETS=P.trainCfg.presets&&P.trainCfg.presets.length?P.trainCfg.presets:[{name:'Default',filters:P.trainCfg.filters||{}}];
+let TDEF={...TPRESETS[0].filters};
+const tColor=(d,v)=>d==='system_label'?(SYSCOL[String(v).replace(/ \(synthetic\)$/,'')]||'#777'):PAL[TALL[d].indexOf(v)%PAL.length];
+const pick=k=>TMK.includes(k)?k:TMK[0];
+const tMetO=TMK.map(k=>[k,`${METRICS[k].l} (${METRICS[k].u})`,METRICS[k].g]);
+const tBbO=TMK.map(k=>[k,`${METRICS[k].l} (${win(k)} wins)`,METRICS[k].g]);
+const tOpt=ks=>ks.map(k=>[k,TDIMS[k]]);
+const tCat=['system_label','cluster_framework','model','framework','family','parallelism','parallel_config','dataset'];
+const tSw=[['self','The plotted metric'],...tBbO];
+const andJ=a=>a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:a[0];
+const idealOK=v=>['gpus','nodes'].includes(v.x)&&v.metric==='tr_tok_s';
+const THR=[['model','Model'],['framework','Framework'],['parallel_config','Parallelism'],['gpus','GPUs'],['nodes','Nodes'],['batch_size','Batch'],['accum','Accumulation'],['dataset','Dataset'],['system_label','Cluster']];
+const TTABS={
+ compare:{t:'Compare',c:[['metric','Metric',tMetO],['x','Group by',tOpt([...tCat,'gpus','nodes','batch_size','accum'])],['color','Color by',tOpt([...tCat,'gpus','batch_size'])],['sort','Sort bars',[['name','Alphabetical'],['best','Best value first']]],['agg','Show',aggO],['bb','Best run by',tSw,isBest]],d:{metric:pick('tr_tflops'),x:'framework',color:'system_label',sort:'name',agg:'best',bb:'self'}},
+ scale:{t:'Scaling',c:[['metric','Metric',tMetO],['x','Scale across',tOpt(['gpus','nodes','batch_size','accum'])],['by','One line per',tOpt(tCat)],['agg','Show',aggO],['bb','Best run by',tSw,isBest],['log','Log scale'],['ideal','Ideal linear scaling',null,idealOK]],d:{metric:pick('tr_tok_s'),x:'gpus',by:'cluster_framework',agg:'best',bb:'self',log:false,ideal:true}},
+ dist:{t:'Distribution',c:[['metric','Metric',tMetO],['x','Group by',tOpt(tCat)],['color','Color by',tOpt(tCat)],['log','Log scale']],d:{metric:pick('tr_mfu'),x:'framework',color:'system_label',log:false}},
+ trade:{t:'Trade-offs',c:[['x','X axis',tMetO],['y','Y axis',tMetO],['color','Color by',tOpt(tCat)],['logx','Log X'],['logy','Log Y']],d:{x:pick('tr_util'),y:pick('tr_mfu'),color:'system_label',logx:false,logy:false}},
+ map:{t:'Heatmap',c:[['metric','Metric',tMetO],['cluster','Cluster',[]],['cols','Columns',tOpt(['gpus','nodes','system_label','framework','family','parallelism','parallel_config','batch_size','accum','model','dataset'])],['rows','Rows'],['agg','Show',aggO],['bb','Best run by',tSw,isBest],['ratio','Ratio of two columns']],d:{metric:pick('tr_tflops'),cols:'gpus',rows:['model','framework','parallel_config','gpus'],agg:'best',bb:'self',ratio:false}},
+ data:{t:'Data',c:[],d:{}}};
+const TS={tab:'compare',sel:Object.fromEntries(Object.keys(TDIMS).map(k=>[k,new Set()])),failed:false,show:100,sort:['tr_tok_s',-1],ctl:{},touched:new Set(),preset:0};
+Object.keys(TTABS).forEach(k=>TS.ctl[k]={...TTABS[k].d});
+let tAuto=null;
+
+const TLINK={nodes:['gpus','accum'],gpus:['nodes','accum']};   // accumulation follows the GPU count (constant global batch)
+const tUsed=()=>{const c=TS.ctl[TS.tab]||{};return({compare:[c.x,c.color],scale:[c.x,c.by],dist:[c.x,c.color],trade:[c.color],map:[c.cols,...(c.rows||[])],data:[]})[TS.tab]||[]};
+const tWith=u=>[...new Set([...u,...u.flatMap(k=>[...(TLINK[k]||[]),...(TDERIVED[k]||[])])])];
+const tLifted=()=>tWith(tUsed()).filter(k=>TDEF[k]&&!TS.touched.has(k)&&TS.sel[k]&&TS.sel[k].size);
+const tFiltered=skip=>{const L=tLifted();return trows.filter(r=>(TS.failed||TS.tab==='map'||!r.failed)&&Object.entries(TS.sel).every(([k,s])=>k===skip||!s.size||L.includes(k)||s.has(String(r[k]))))};
+// Scaling lines mix nothing useful across models, so entering Scaling selects the configured model unless the user chose one.
+function tEnter(tab){if(tAuto&&!TS.touched.has('model'))TS.sel.model.delete(tAuto);tAuto=null;TS.tab=tab;
+  const m=(P.trainCfg.scaling||{}).model;if(tab==='scale'&&m&&TALL.model.includes(m)&&!TS.touched.has('model')&&!TS.sel.model.size){TS.sel.model.add(m);tAuto=m}}
+function tApply(i=0,go=false){const pr=TPRESETS[i]||TPRESETS[0];TS.preset=TPRESETS.indexOf(pr);
+  if(pr.compare)Object.assign(TS.ctl.compare,pr.compare);if(go)TS.tab='compare';
+  TDEF=Object.fromEntries(Object.entries(pr.filters||{}).map(([k,v])=>[k,[...v]]));
+  Object.values(TS.sel).forEach(s=>s.clear());TS.touched.clear();tAuto=null;TS.failed=false;TS.show=100;
+  Object.entries(TDEF).forEach(([k,v])=>v.forEach(x=>{if(TS.sel[k]&&TALL[k].includes(x))TS.sel[k].add(String(x))}));tEnter(TS.tab)}
+function tClear(){TS.preset=-1;Object.values(TS.sel).forEach(s=>s.clear());Object.keys(TDEF).forEach(k=>TS.touched.add(k));TS.touched.add('model');tAuto=null;TS.failed=false;TS.show=100}
+
+const TMIX={system_label:'clusters',model:'models',dataset:'datasets',framework:'frameworks',parallel_config:'parallelism strategies',gpus:'GPU counts',batch_size:'batch sizes',accum:'accumulation settings',max_len:'max lengths',precision:'precisions'};
+const tdn=k=>k==='gpus'?'GPUs':k==='parallel_config'?'parallelism':TDIMS[k].toLowerCase();
+function tNote(d,used,extra=''){
+  const U=tWith(used);
+  const m=Object.keys(TMIX).filter(k=>!U.includes(k)&&uniq(d,k).length>1&&!(k==='accum'&&uniq(d,'gpus').length>1)).map(k=>`${uniq(d,k).length} ${TMIX[k]}`);
+  const Ls=tLifted(),u0=tUsed(),direct=Ls.filter(k=>u0.includes(k)),pm=[];
+  if(direct.length){const n=direct.map(tdn).join(' and ');pm.push(`Default ${n} filter${direct.length>1?'s':''} paused because this chart varies by ${n}.`)}
+  Ls.filter(k=>!u0.includes(k)).forEach(k=>{const par=u0.find(u=>(TLINK[u]||[]).includes(k)||(TDERIVED[u]||[]).includes(k));
+    if(par)pm.push(`Default ${tdn(k)} filter also paused because it ${(TDERIVED[par]||[]).includes(k)?'is part of':'changes together with'} ${tdn(par)}.`)});
+  const t=[...pm,m.length?`This view mixes ${m.join(', ')}. Use the filters to compare like with like.`:'',extra].filter(Boolean).join(' ');
+  $('#t-note').textContent=t;$('#t-note').hidden=!t}
+const tBest=c=>c.agg==='best'&&!own(c.agg,c.bb,c.metric)?[{k:c.bb,role:'Picks the best run'}]:[];
+
+function tCompare(d){const c=TS.ctl.compare,M=METRICS[c.metric],cs=uniq(d,c.color),xs=orderX(uniq(d,c.x),cs,d,c,M);
+  const tr=cs.map(cv=>{const g=d.filter(r=>r[c.color]===cv),cell=xs.map(xv=>g.filter(r=>r[c.x]===xv)),ys=cell.map(s=>aggRuns(s,c.metric,c.agg,c.bb));
+    return{type:'bar',name:String(cv),x:xs.map(String),y:ys,marker:{color:tColor(c.color,cv)},customdata:ys.map((y,i)=>[fmt(y),cell[i].length]),
+      hovertemplate:`<b>${esc(cv)}</b><br>%{x}<br>%{customdata[0]} ${M.u}<br>from %{customdata[1]} runs<extra></extra>`}});
+  tNote(d,[c.x,c.color]);
+  info(how(c.agg,c.bb,c.metric,'bar',c.x===c.color?tdn(c.x):andJ([tdn(c.x),tdn(c.color)])),[{k:c.metric,role:'Plotted metric'},...tBest(c)],'#t-info');
+  Plotly.newPlot('t-plot',tr,{...base(),barmode:c.x===c.color?'overlay':'group',xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String),title:{text:TDIMS[c.x]}}),yaxis:ax({title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
+
+function tScale(d){const c=TS.ctl.scale,M=METRICS[c.metric],xs=uniq(d,c.x),ls=uniq(d,c.by),okI=idealOK(c),ideal=c.ideal&&okI,tr=[];let note='';
+  ls.forEach(lv=>{const g=d.filter(r=>r[c.by]===lv),col=tColor(c.by,lv);
+    const pts=xs.map(xv=>{const s=g.filter(r=>r[c.x]===xv);return[aggRuns(s,c.metric,c.agg,c.bb),s.length]});
+    const i0=pts.findIndex(p=>p[0]!=null),multi=pts.filter(p=>p[0]!=null).length>1;
+    const x0=i0>=0?Number(xs[i0]):1,y0=i0>=0?pts[i0][0]:1;
+    tr.push({type:'scatter',mode:'lines+markers',name:String(lv),legendgroup:String(lv),x:xs.map(String),y:pts.map(p=>p[0]),connectgaps:true,line:{color:col,width:2.5},marker:{size:8},
+      customdata:pts.map(p=>[fmt(p[0]),p[1]]),
+      hovertemplate:`<b>${esc(lv)}</b><br>${TDIMS[c.x]}: %{x}<br>%{customdata[0]} ${M.u}<br>from %{customdata[1]} runs<extra></extra>`});
+    if(ideal&&i0>=0&&multi)tr.push({type:'scatter',mode:'lines',name:`${lv} (ideal)`,legendgroup:String(lv),showlegend:false,x:xs.map(String),y:xs.map(x=>Number(x)>=x0?y0*Number(x)/x0:null),line:{color:col,width:1.5,dash:'dot'},hoverinfo:'skip'})});
+  const ex=[];if(xs.length<2)ex.push(`Only one value of ${tdn(c.x)} matches the filters, so no lines can be drawn. Add more values in that filter.`);
+  if(autoM2())ex.unshift(`Scaling starts with ${tAuto} because lines that mix models are not comparable. Change it in the Model filter.`);
+  tNote(d,[c.by,c.x],ex.join(' '));
+  info(how(c.agg,c.bb,c.metric,'point',andJ([tdn(c.x),tdn(c.by)]))+(ideal?` Dotted lines show ideal linear scaling from each line's first point.`:''),[{k:c.metric,role:'Plotted metric'},...tBest(c)],'#t-info');
+  Plotly.newPlot('t-plot',tr,{...base(),xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String),title:{text:TDIMS[c.x]}}),yaxis:ax({type:c.log?'log':'linear',title:{text:ytitle(c.agg,c.bb,c.metric)}})},cfg)}
+const autoM2=()=>tAuto&&!TS.touched.has('model');
+
+const tHex=h=>h.length===7?h:'#777777';
+function tDist(d){const c=TS.ctl.dist,M=METRICS[c.metric],xs=uniq(d,c.x),cs=uniq(d,c.color);
+  const tr=cs.map(cv=>{const g=d.filter(r=>r[c.color]===cv&&r[c.metric]!=null),col=tColor(c.color,cv);
+    return{type:'box',name:String(cv),x:g.map(r=>String(r[c.x])),y:g.map(r=>r[c.metric]),boxpoints:'all',jitter:.5,pointpos:0,marker:{color:col,size:4,opacity:.65},line:{color:col,width:1.5},fillcolor:tHex(col)+'33',
+      text:g.map(tTip),hovertemplate:`%{text}<br>${M.l}: %{y:,.4g} ${M.u}<extra></extra>`}});
+  tNote(d,[c.x,c.color]);
+  info('Each box summarises the runs in one group: the line is the median, the box covers the middle half and every dot is one run. A group is the runs that share the same '+andJ([tdn(c.x),tdn(c.color)])+'.',[{k:c.metric,role:'Plotted metric'}],'#t-info');
+  Plotly.newPlot('t-plot',tr,{...base(),boxmode:'group',xaxis:ax({type:'category',categoryorder:'array',categoryarray:xs.map(String),title:{text:TDIMS[c.x]}}),yaxis:ax({type:c.log?'log':'linear',title:{text:`${M.l} (${M.u})`}})},cfg)}
+
+const tTip=r=>`<b>${esc(r.model)}</b><br>${esc(r.system_label)}, ${esc(r.framework)}<br>${esc(r.parallel_config)}<br>${r.gpus} GPUs on ${r.nodes} nodes<br>batch ${r.batch_size}, accumulation ${r.accum}`;
+function tTrade(d){const c=TS.ctl.trade,X=METRICS[c.x],Y=METRICS[c.y],fam=TALL.family,ok=d.filter(r=>r[c.x]!=null&&r[c.y]!=null);
+  const tr=uniq(ok,c.color).map(cv=>{const g=ok.filter(r=>r[c.color]===cv);
+    return{type:'scatter',mode:'markers',name:String(cv),x:g.map(r=>r[c.x]),y:g.map(r=>r[c.y]),
+      marker:{color:tColor(c.color,cv),size:10,opacity:.8,symbol:g.map(r=>SYM[fam.indexOf(r.family)%SYM.length]),line:{width:.5,color:css('--panel')}},
+      text:g.map(tTip),hovertemplate:`%{text}<br>${X.l}: %{x:,.4g} ${X.u}<br>${Y.l}: %{y:,.4g} ${Y.u}<extra></extra>`}});
+  tNote(d,[c.color,'gpus','batch_size','accum'],fam.length>1?`Marker shape shows the parallelism family (${fam.map((p,i)=>`${SYM[i%SYM.length]}: ${p}`).join(', ')}).`:'');
+  info('Each point is one run.',[{k:c.x,role:'X axis'},{k:c.y,role:'Y axis'}],'#t-info');
+  Plotly.newPlot('t-plot',tr,{...base(),xaxis:ax({type:c.logx?'log':'linear',title:{text:`${X.l} (${X.u})`}}),yaxis:ax({type:c.logy?'log':'linear',title:{text:`${Y.l} (${Y.u})`}})},cfg)}
+
+const HLAB={gpus:r=>`${r.gpus} GPU${r.gpus>1?'s':''}`,nodes:r=>`${r.nodes} node${r.nodes>1?'s':''}`,batch_size:r=>`batch ${r.batch_size}`,accum:r=>`accum ${r.accum}`};
+function tMap(d){const c=TS.ctl.map,M=METRICS[c.metric],rk=c.rows.filter(k=>k!==c.cols);
+  const cols=uniq(d,c.cols),clusters=uniq(d,'system_label');
+  // With several clusters (and neither the columns nor the rows already split by cluster) every cluster gets its own block of columns.
+  const split=clusters.length>1&&c.cols!=='system_label'&&!rk.includes('system_label');
+  const lab=r=>rk.map(k=>HLAB[k]?HLAB[k](r):r[k]).join(', ')||'All runs';
+  const rl=[...new Set(d.map(lab))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const val=(l,cv,cl)=>{const m=r=>lab(r)===l&&r[c.cols]===cv&&(cl==null||r.system_label===cl),good=d.filter(r=>m(r)&&!r.failed),bad=d.filter(r=>m(r)&&r.failed);return{v:good.length?aggRuns(good,c.metric,c.agg,c.bb):null,n:good.length,bad}};
+  const ratio=c.ratio&&cols.length===2,[A,B]=cols,z=[],txt=[],cd=[],fz=[],fc=[],ex=[];
+  if(c.ratio&&!ratio)ex.push(`Ratio needs exactly two columns (found ${cols.length}), so the values are shown instead.`);
+  // Columns: one per cluster for a ratio, otherwise one per (cluster, column value) that has runs; key is unique, label is what the tick shows.
+  const xc=ratio?(split?clusters.map(cl=>({k:cl,t:cl,cl})):[{k:'r',t:`${A} ÷ ${B}`,cl:null}])
+    :split?clusters.flatMap(cl=>cols.filter(cv=>d.some(r=>r.system_label===cl&&r[c.cols]===cv)).map(cv=>({k:cl+'␟'+cv,t:String(cv),cv,cl})))
+    :cols.map(cv=>({k:String(cv),t:String(cv),cv,cl:null}));
+  const pre=x=>x.cl!=null?`${esc(x.cl)}, `:'';
+  rl.forEach(l=>{
+    if(ratio){const zr=[],tx=[],cn=[];
+      xc.forEach(x=>{const a=val(l,A,x.cl),b=val(l,B,x.cl),q=a.v!=null&&b.v!=null&&a.v>0&&b.v>0?a.v/b.v:null;
+        zr.push(q==null?null:Math.log2(q));tx.push(q==null?'':q.toFixed(2)+'×');
+        cn.push(`<b>${esc(l)}</b><br>${x.cl!=null?esc(x.cl)+'<br>':''}${esc(A)} ÷ ${esc(B)}: ${q==null?'':q.toFixed(2)+'×'}<br>${esc(A)}: ${fmt(a.v)} (${a.n} runs)<br>${esc(B)}: ${fmt(b.v)} (${b.n} runs)`)});
+      z.push(zr);txt.push(tx);cd.push(cn)}
+    else{const zr=[],tx=[],cn=[],fr=[],fm=[];
+      xc.forEach(x=>{const k=val(l,x.cv,x.cl),why=k.bad.length?`${k.bad.length} failed (${esc([...new Set(k.bad.map(r=>r.failure))].join(', '))})`:'',
+          head=`<b>${esc(l)}</b><br>${x.cl!=null?esc(x.cl)+'<br>':''}${TDIMS[c.cols]}: ${esc(x.t)}<br>`;
+        zr.push(k.v);tx.push(k.v==null?'':fmt(k.v)+(k.bad.length?' ⚠':''));
+        cn.push(head+(k.n?`${fmt(k.v)} ${M.u}<br>from ${k.n} runs`+(why?'<br>'+why:''):''));
+        fr.push(!k.n&&k.bad.length?1:null);fm.push(head+why)});
+      z.push(zr);txt.push(tx);cd.push(cn);fz.push(fr);fc.push(fm)}});
+  const x=xc.map(o=>o.k),hov='%{customdata}<extra></extra>';
+  const tr=[{type:'heatmap',x,y:rl,z,text:txt,customdata:cd,texttemplate:'%{text}',xgap:3,ygap:3,hoverongaps:false,hovertemplate:hov,
+    colorscale:ratio?[[0,'#D55E00'],[.5,css('--paper')],[1,'#2557D6']]:[[0,css('--sel')],[1,'#2557D6']],colorbar:{thickness:12,title:{text:ratio?'ratio':M.u}}}];
+  if(ratio){const m=Math.max(.1,...z.flat().filter(v=>v!=null).map(Math.abs)),tv=[-3,-2,-1,0,1,2,3].filter(v=>Math.abs(v)<=m+1e-9);
+    Object.assign(tr[0],{zmin:-m,zmax:m,zmid:0});
+    Object.assign(tr[0].colorbar,{tickvals:tv,ticktext:tv.map(v=>`${2**v}×`)})}
+  else tr.push({type:'heatmap',x,y:rl,z:fz,text:fz.map(r=>r.map(v=>v?'✕ failed':'')),customdata:fc,texttemplate:'%{text}',xgap:3,ygap:3,hoverongaps:false,showscale:false,colorscale:[[0,'#D55E00'],[1,'#D55E00']],hovertemplate:hov});
+  const oneDs=rl.every(l=>new Set(d.filter(r=>lab(r)===l).map(r=>r.dataset)).size===1);
+  tNote(d,[c.cols,...rk,...(split?['system_label']:[]),...(oneDs?['dataset']:[])],[...ex,split?'Each cluster has its own block of columns, separated by a gap.':'',ratio?'':'Orange cells failed in every run (for example out of memory), ⚠ marks cells where some runs failed, and empty cells were not run.'].filter(Boolean).join(' '));
+  info(how(c.agg,c.bb,c.metric,'cell',andJ([...rk.map(tdn),...(split?['cluster']:[]),...(ratio&&!split?[]:[tdn(c.cols)])]))+(ratio?` Cells show ${esc(A)} ÷ ${esc(B)}${split?' within each cluster':''}: above 1× means ${esc(A)} has the higher ${nm(c.metric)}, below 1× means ${esc(B)} has.`:''),[{k:c.metric,role:'Colored and labeled'},...tBest(c)],'#t-info');
+  // Cluster names sit under the column labels, with a gap between clusters.
+  const ann=[],shp=[];
+  if(split&&!ratio){let a=0;clusters.forEach(cl=>{const n=xc.filter(o=>o.cl===cl).length;if(!n)return;
+    ann.push({xref:'x',yref:'paper',x:a+(n-1)/2,y:0,yanchor:'top',yshift:-30,showarrow:false,text:`<b>${esc(cl)}</b>`});
+    if(a>0)shp.push({type:'line',xref:'x',yref:'paper',x0:a-.5,x1:a-.5,y0:0,y1:1,layer:'above',line:{color:css('--paper'),width:12}});
+    a+=n})}
+  const sub=split&&!ratio;
+  $('#t-plot').style.height=Math.max(440,rl.length*24+(sub?190:140))+'px';
+  Plotly.newPlot('t-plot',tr,{...base(),margin:{t:24,r:16,b:sub?84:56,l:64},annotations:ann,shapes:shp,
+    xaxis:ax({type:'category',categoryorder:'array',categoryarray:x,tickmode:'array',tickvals:x,ticktext:xc.map(o=>o.t),title:{text:ratio?(split?`${A} ÷ ${B}`:''):sub?`${TDIMS[c.cols]}, within each cluster`:TDIMS[c.cols],standoff:sub?34:15}}),
+    yaxis:ax({type:'category',categoryorder:'array',categoryarray:rl,autorange:'reversed'})},cfg)}
+
+const TTEXT=['system_label','model','dataset','framework','parallel_config','failure','comment','source'];
+const TLONG=['comment','source'];
+const TTC=[['system_label','Cluster'],['model','Model'],['dataset','Dataset'],['framework','Framework'],['parallel_config','Parallelism (TP/PP/DP)'],['nodes','Nodes'],['gpus','GPUs'],['batch_size','Batch'],['accum','Accum.'],['repeat','Repeat'],['tr_tok_s','Tokens/s'],['tr_tflops','TFLOP/s per GPU'],['tr_mfu','MFU %'],['tr_util','GPU util. %'],['tr_epoch_s','Epoch s'],['tr_hours','Hours'],['tr_power_w','Power W'],['tr_kwh','kWh'],['tr_peak_mem_gb','Peak GB'],['tr_loss','Train loss'],['failure','Failure'],['comment','Comment'],['source','Source directory']];
+function tTable(d){$('#t-note').hidden=true;$('#t-info').hidden=true;const[k,dir]=TS.sort;
+  const s=[...d].sort((a,b)=>a[k]==null?1:b[k]==null?-1:(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
+  $('#t-table').innerHTML=`<div class="tw"><table><thead><tr>${TTC.map(([c,l])=>`<th class="${TTEXT.includes(c)?'':'n'}" data-tsort="${c}" aria-sort="${k===c?(dir>0?'ascending':'descending'):'none'}">${l}${k===c?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${
+    s.slice(0,TS.show).map(r=>`<tr>${TTC.map(([c])=>{const v=r[c];
+      if(TLONG.includes(c))return `<td class="x" title="${esc(v??'')}">${esc(v??'')}</td>`;
+      return `<td class="${TTEXT.includes(c)?'':'n'}">${c==='system_label'?`<i style="background:${tColor(c,v)}"></i>`:''}${TTEXT.includes(c)?esc(v??''):fmt(v)}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="more"><span>Showing ${Math.min(TS.show,s.length).toLocaleString('en')} of ${s.length.toLocaleString('en')} runs</span>${TS.show<s.length?'<button class="ghost" id="t-more">Show 200 more</button>':''}<button class="ghost" id="t-csv">Download filtered CSV</button></div>`}
+function tCsv(d){const q=v=>v==null?'':/[",\n]/.test(v)?`"${String(v).replace(/"/g,'""')}"`:v;
+  const t=[TX.columns.join(','),...d.map(r=>TX.columns.map(c=>q(r[c])).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='minerva-training-filtered-runs.csv';a.click()}
+
+// ---- Python notebook in the Data tab: Pyodide (Python in the browser), loaded on first Run. df = runs shown by the filters, all_runs = every run.
+const NB_PY=`
+import sys, io, ast, json, base64, traceback
+import pandas as pd
+_G = {"pd": pd, "__name__": "__main__", "all_runs": None}
+def set_all(j):
+    _G["all_runs"] = pd.DataFrame(json.loads(j))
+def _html(v):
+    if isinstance(v, pd.Series):
+        v = v.to_frame()
+    if isinstance(v, pd.DataFrame):
+        return v.to_html(max_rows=200, max_cols=40, border=0, na_rep="")
+    return None
+def run_cell(src, rows):
+    _G["df"] = pd.DataFrame(json.loads(rows))
+    res = {"text": "", "html": [], "imgs": [], "err": ""}
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    try:
+        if "matplotlib" in src or "plt." in src:
+            import matplotlib
+            matplotlib.use("agg")
+        tree = ast.parse(src)
+        last = None
+        if tree.body and isinstance(tree.body[-1], ast.Expr):
+            last = ast.Expression(tree.body.pop().value)
+        exec(compile(tree, "<cell>", "exec"), _G)
+        if last is not None:
+            v = eval(compile(last, "<cell>", "eval"), _G)
+            if v is not None:
+                h = _html(v)
+                if h:
+                    res["html"].append(h)
+                else:
+                    print(repr(v))
+        if "matplotlib.pyplot" in sys.modules:
+            import matplotlib.pyplot as plt
+            for n in plt.get_fignums():
+                b = io.BytesIO()
+                plt.figure(n).savefig(b, format="png", dpi=110, bbox_inches="tight")
+                res["imgs"].append(base64.b64encode(b.getvalue()).decode())
+            plt.close("all")
+    except Exception:
+        res["err"] = traceback.format_exc(limit=-3)
+    finally:
+        sys.stdout = old
+    res["text"] = buf.getvalue()
+    return json.dumps(res)
+`;
+const NB_EX_TR=[
+['What varies between the runs?',`# number of distinct values per setting in the runs you filtered
+df[["system_label","model","framework","parallel_config","gpus","nodes","batch_size","accum","dataset"]].nunique()`],
+['Summary of the filtered runs',`print(len(df), "runs,", df.system_label.nunique(), "clusters")
+df[["tr_tok_s","tr_tflops","tr_mfu","tr_util"]].describe().round(1)`],
+['Top 15 runs by throughput',`df.sort_values("tr_tok_s", ascending=False)[["system_label","model","framework","parallel_config","gpus","tr_tok_s","tr_tflops","tr_mfu"]].head(15)`],
+['Cluster x framework table',`df.groupby(["system_label","framework"]).agg(runs=("tr_tok_s","size"), best_tok_s=("tr_tok_s","max"), median_tflops=("tr_tflops","median"), median_mfu=("tr_mfu","median")).round(1)`],
+['Scaling plot (matplotlib)',`import matplotlib.pyplot as plt
+best = df.groupby(["system_label","framework","gpus"], as_index=False)["tr_tok_s"].max()
+for (c, f), g in best.groupby(["system_label","framework"]):
+    plt.plot(g.gpus, g.tr_tok_s, marker="o", label=c + ", " + f)
+plt.xscale("log", base=2); plt.xlabel("GPUs"); plt.ylabel("tokens/s")
+plt.grid(alpha=.3); plt.legend(fontsize=7)`],
+['Failed runs by cause',`f = all_runs[all_runs.failed.astype(bool)]
+f.groupby(["system_label","failure"]).size()`]];
+const NB_EX_INF=[
+['What varies between the runs?',`# number of distinct values per setting in the runs you filtered
+df[["system_label","model","framework","dataset","concurrency","gpus","nodes","tp","pp","max_len"]].nunique()`],
+['Summary of the filtered runs',`print(len(df), "runs,", df.system_label.nunique(), "systems")
+df[["tok_s","ttft_ms","itl_ms","j_per_tok","global_score"]].describe().round(2)`],
+['Top 15 runs by global score',`df.sort_values("global_score", ascending=False)[["system_label","model","framework","gpus","concurrency","tok_s","itl_ms","global_score"]].head(15)`],
+['System x framework table',`df.groupby(["system_label","framework"]).agg(runs=("tok_s","size"), best_tok_s=("tok_s","max"), median_itl_ms=("itl_ms","median"), median_score=("global_score","median")).round(1)`],
+['Scaling plot (matplotlib)',`import matplotlib.pyplot as plt
+best = df.groupby(["system_label","concurrency"], as_index=False)["tok_s"].max()
+for s, g in best.groupby("system_label"):
+    plt.plot(g.concurrency, g.tok_s, marker="o", label=s)
+plt.xscale("log"); plt.xlabel("Concurrent requests"); plt.ylabel("tokens/s")
+plt.grid(alpha=.3); plt.legend(fontsize=7)`],
+['Failed runs',`f = all_runs[all_runs.failed.astype(bool)]
+f.groupby(["system_label","model","framework"]).size()`]];
+const NBK={tr:{rows:()=>tFiltered(),all:()=>trows,ex:NB_EX_TR},inf:{rows:()=>filtered(),all:()=>rows,ex:NB_EX_INF}};
+const NB={loading:null,py:null,allKey:null};
+const nbRoot=k=>document.querySelector(`.nbk[data-nbk="${k}"]`);
+const nbSt=(root,t)=>{const e=root&&root.querySelector('.nb-status');if(e)e.textContent=t||''};
+function nbLoad(root){if(NB.loading)return NB.loading;
+  NB.loading=(async()=>{nbSt(root,'Loading Python the first time (10 to 20 s)…');
+    if(!window.loadPyodide)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';s.onload=ok;s.onerror=()=>no(new Error('Could not download Python (Pyodide). It needs an internet connection the first time.'));document.head.appendChild(s)});
+    const py=await loadPyodide();await py.loadPackage('pandas');py.runPython(NB_PY);
+    NB.py=py;nbSt(root,'');return py})().catch(e=>{NB.loading=null;nbSt(root,'');throw e});
+  return NB.loading}
+function nbCell(root,code=''){const w=document.createElement('div');w.className='nb-cell';
+  w.innerHTML=`<div class="nb-row"><textarea class="nb-code" rows="3" spellcheck="false" aria-label="Python code"></textarea><div class="nb-btns"><button class="ghost" data-nb="run" title="Run (Shift+Enter)">▶ Run</button><button class="ghost" data-nb="del" title="Remove this cell" aria-label="Remove cell">✕</button></div></div><div class="nb-out" aria-live="polite"></div>`;
+  const ta=w.querySelector('textarea');ta.value=code;const fit=()=>{ta.rows=Math.max(3,ta.value.split('\n').length)};fit();ta.addEventListener('input',fit);
+  root.querySelector('.nb-cells').appendChild(w);return w}
+async function nbRun(w){const root=w.closest('.nbk'),key=root.dataset.nbk,cfg=NBK[key],out=w.querySelector('.nb-out'),b=w.querySelector('[data-nb=run]'),code=w.querySelector('textarea').value;
+  b.disabled=true;out.className='nb-out';out.textContent='Running…';
+  try{const py=await nbLoad(root);out.textContent='Running…';await py.loadPackagesFromImports(code);
+    if(NB.allKey!==key){py.globals.set('_all',JSON.stringify(cfg.all()));py.runPython('set_all(_all)');NB.allKey=key}
+    py.globals.set('_src',code);py.globals.set('_rows',JSON.stringify(cfg.rows()));
+    const r=JSON.parse(py.runPython('run_cell(_src,_rows)'));out.textContent='';
+    if(r.text){const p=document.createElement('pre');p.textContent=r.text;out.appendChild(p)}
+    r.html.forEach(h=>{const d=document.createElement('div');d.className='nb-html';d.innerHTML=h;out.appendChild(d)});
+    r.imgs.forEach(i=>{const m=document.createElement('img');m.src='data:image/png;base64,'+i;m.alt='Plot';out.appendChild(m)});
+    if(r.err){const p=document.createElement('pre');p.className='err';p.textContent=r.err;out.appendChild(p)}
+    if(!out.childNodes.length)out.textContent='Done (no output). End a cell with an expression to see its value.'}
+  catch(e){out.className='nb-out err';out.textContent=String(e.message||e)}
+  b.disabled=false}
+// Show the notebook of one view (and hide it when that view is not on the Data tab); the first time it gets its example menu and a first cell.
+function nbShow(key,on){const root=nbRoot(key);if(!root)return;root.hidden=!on;
+  if(on&&!root.dataset.ready){root.dataset.ready='1';const ex=NBK[key].ex;
+    root.querySelector('.nb-ex').innerHTML='<option value="">Add an example…</option>'+ex.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).join('');
+    nbCell(root,ex[0][1])}}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-nb],.nb-add');if(!t)return;const root=t.closest('.nbk');
+  if(t.classList.contains('nb-add'))nbCell(root,'');
+  else{const w=t.closest('.nb-cell');if(t.dataset.nb==='run')nbRun(w);else w.remove()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.shiftKey&&e.target.classList&&e.target.classList.contains('nb-code')){e.preventDefault();nbRun(e.target.closest('.nb-cell'))}});
+document.addEventListener('change',e=>{const t=e.target;if(t.classList&&t.classList.contains('nb-ex')&&t.value!==''){const root=t.closest('.nbk');nbCell(root,NBK[root.dataset.nbk].ex[Number(t.value)][1]);t.value=''}});
+
+const TSYM=[['TPS','Training throughput','tokens/s'],['F','Achieved compute per GPU','TFLOP/s'],['F<sub>peak</sub>','Peak compute of the GPU','TFLOP/s'],['P','Average power per GPU','W'],['N','GPUs used',''],['t','Execution time','h'],['η','Energy efficiency','tokens/J']];
+function tGuideHTML(){
+  const rowsT=Object.values(TG).map(g=>{const ms=TMK.filter(k=>METRICS[k].g===g);if(!ms.length)return'';
+    return `<tr class="grp"><th colspan="3">${g}</th></tr>`+ms.map(k=>{const m=METRICS[k];return `<tr><th scope="row">${esc(m.l)}${m.s?` <span class="badge">${esc(m.s)}</span>`:''}<span class="u">${esc(m.u)}</span></th><td>${esc(m.d)}${MATH[k]?`<div class="dc-fx">${MATH[k]}</div>`:''}</td><td>${dirChip(m)}</td></tr>`}).join('')}).join('');
+  return `<p class="gi">Measured metrics come straight from the training summary files. Metrics marked "derived by this dashboard" are calculated from them. Runs with a comment in the summary (an error, or "Did not run") are treated as failed and hidden by default.</p>
+  <h3 class="gh">Comparing like with like</h3>
+  <p class="gi">${(()=>{const c={};trows.forEach(r=>{if(r.global_batch!=null)c[r.global_batch]=(c[r.global_batch]||0)+1});const e=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return e?`${e[1].toLocaleString('en')} of ${trows.length.toLocaleString('en')} runs process ${e[0]} samples per optimizer step (the global batch): the sweeps change the micro-batch per GPU and compensate with gradient accumulation, so the global batch stays the same.`:''})()} What does change between runs is the framework, the parallelism, the micro-batch and the number of GPUs, so the <b>Compare like with like</b> buttons fix the model, the parallelism, the micro-batch and the GPU count and leave one thing free to compare. A default filter pauses itself when the chart varies by that dimension, so a chart by GPUs shows all GPU counts and a chart by cluster shows every cluster. The default also keeps MareNostrum 5, the real results, apart from the synthetic cluster until a chart compares clusters.</p>
+  <h3 class="gh">Parallelism</h3>
+  <p class="gi">Megatron runs report the sizes of tensor (TP), pipeline (PP), data (DP), context (CP), expert (EP) and sequence (SP) parallelism, shown as <b>TP4 PP2 DP4</b>; there TP × PP × DP equals the number of GPUs. DDP, FSDP and ZeRO runs replicate or shard the model across all GPUs and report none of these sizes, so their parallelism is just the strategy name and TP, PP, DP, CP, EP and SP show <b>n/a</b>. The parallelism family groups the strategies: <b>Data parallel (DDP)</b>, <b>Sharded data parallel</b> (FSDP, ZeRO-2, ZeRO-3), <b>Tensor / pipeline parallel</b> (Megatron) and <b>No parallelism</b> (one GPU).</p>
+  <h3 class="gh">Symbols</h3><div class="syms">${TSYM.map(([s,n,u])=>`<span class="sym"><b>${s}</b><span>${n}${u?', '+u:''}</span></span>`).join('')}</div>
+  <h3 class="gh">Metrics</h3><div class="tw"><table class="mtab"><tbody>${rowsT}</tbody></table></div>`}
+
+function tBuild(){
+  const shown=TGROUPS.filter(k=>TALL[k].length>1);
+  $('#t-groups').innerHTML=shown.map(k=>`<details data-tg="${k}"${TOPEN.includes(k)?' open':''}><summary>${TDIMS[k]}<span class="st" data-tst="${k}"></span></summary><div class="opts">${TALL[k].map(v=>`<label><input type="checkbox" data-td="${k}" data-tv="${esc(v)}"> ${esc(v)}</label>`).join('')}</div></details>`).join('');
+  $('#t-chips').innerHTML=TALL.system_label.map(v=>`<button class="chip" data-ts="${esc(v)}" aria-pressed="false"><i style="background:${tColor('system_label',v)}"></i>${esc(v)} <small></small></button>`).join('');
+  $('#t-tabs').innerHTML=Object.entries(TTABS).map(([k,t])=>`<button role="tab" data-tt="${k}">${t.t}</button>`).join('');
+  $('#t-nfail').textContent=`(${trows.filter(r=>r.failed).length})`;
+  $('#t-gbody').innerHTML=tGuideHTML();
+  $('#t-foot').innerHTML=[...TX.notes,`Data built ${P.built} from analytics/data/training. Energy figures assume the reported average power is per GPU.`].map(n=>`<p>${esc(n)}</p>`).join('');
+  const fixed=TGROUPS.filter(k=>TALL[k].length===1&&TALL[k][0]!=='n/a').map(k=>`${TDIMS[k]} ${TALL[k][0]}`);
+  $('#t-fixed').textContent=fixed.length?`Same in every run: ${fixed.join(', ')}.`:'';$('#t-fixed').hidden=!fixed.length;
+  const b=P.trainCfg.banner||'';$('#t-banner').textContent=b;$('#t-banner').hidden=!b;
+  $('#t-presets').innerHTML=TPRESETS.map((p,i)=>`<button class="chip" data-tp="${i}" aria-pressed="false">${esc(p.name)}</button>`).join('');$('#t-presets-wrap').hidden=TPRESETS.length<2}
+function tSync(d){const L=tLifted();
+  Object.entries(TS.sel).forEach(([k,s])=>{const el=document.querySelector(`[data-tst="${k}"]`);if(el)el.textContent=L.includes(k)?'paused':s.size?`${s.size} selected${TDEF[k]&&!TS.touched.has(k)?' (default)':k==='model'&&autoM2()?' (scaling default)':''}`:'All'});
+  document.querySelectorAll('details[data-tg]').forEach(el=>el.classList.toggle('paused',L.includes(el.dataset.tg)));
+  document.querySelectorAll('input[data-td]').forEach(i=>i.checked=TS.sel[i.dataset.td].has(i.dataset.tv));
+  const cnt={};tFiltered('system_label').forEach(r=>cnt[r.system_label]=(cnt[r.system_label]||0)+1);
+  document.querySelectorAll('#t-chips .chip').forEach(b=>{const lc=L.includes('system_label'),on=!lc&&TS.sel.system_label.has(b.dataset.ts),n=cnt[b.dataset.ts]||0;b.setAttribute('aria-pressed',on);b.classList.toggle('dim',!lc&&TS.sel.system_label.size>0&&!on);b.classList.toggle('none',!n);b.title=n?'':'No runs match the current filters';b.querySelector('small').textContent=n});
+  document.querySelectorAll('#t-tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tt===TS.tab));
+  document.querySelectorAll('#t-presets .chip').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.tp)===TS.preset&&!TS.touched.size));
+  const cs=document.querySelector('#t-ctl [data-tk="cluster"]');if(cs&&cs.value!==clusterVal())tCtlUI();
+  $('#t-failed').checked=TS.failed;
+  const nf=trows.filter(r=>r.failed).length,total=trows.length-(TS.failed||TS.tab==='map'?0:nf);
+  $('#t-count').textContent=`${d.length.toLocaleString('en')} of ${total.toLocaleString('en')} runs shown${Object.keys(TDEF).length&&!TS.touched.size?` (${TPRESETS[TS.preset]?TPRESETS[TS.preset].name:'default filters'})`:''}`}
+const clusterVal=()=>{const s=TS.sel.system_label;return tLifted().includes('system_label')?'':s.size===1?[...s][0]:s.size>1?'__many':''};
+const rowsPicker=(v,cols)=>`<fieldset class="mrows"><legend>Rows</legend>${THR.map(([k,l])=>`<label${k===cols?' class="off" title="Already used as the columns"':''}><input type="checkbox" data-tr="${k}"${v.includes(k)&&k!==cols?' checked':''}${k===cols?' disabled':''}> ${l}</label>`).join('')}</fieldset>`;
+const clusterSelect=()=>{const v=clusterVal();return `<label>Cluster<select data-tk="cluster"><option value=""${v===''?' selected':''}>All clusters</option>${TALL.system_label.map(c=>`<option value="${esc(c)}"${v===c?' selected':''}>${esc(c)}</option>`).join('')}${v==='__many'?'<option value="__many" selected disabled>Several selected</option>':''}</select></label>`};
+function tCtlUI(){const T=TTABS[TS.tab],v=TS.ctl[TS.tab];
+  $('#t-ctl').innerHTML=T.c.filter(([k,l,o,w])=>!w||w(v)).map(([k,l,o])=>k==='cluster'?clusterSelect():k==='rows'&&TS.tab==='map'?rowsPicker(v.rows,v.cols):o?`<label>${l}<select data-tk="${k}">${optHTML(o,v[k])}</select></label>`:`<label class="chk"><input type="checkbox" data-tk="${k}"${v[k]?' checked':''}> ${l}</label>`).join('');
+  $('#t-info').hidden=TS.tab==='data'}
+function tDraw(){
+  if(!TX)return;
+  const d=tFiltered();tSync(d);const isT=TS.tab==='data';nbShow('tr',isT);
+  $('#t-plot').style.height='';
+  $('#t-empty').hidden=d.length>0;$('#t-plot').hidden=isT||!d.length;$('#t-table').hidden=!isT||!d.length;
+  if(!d.length){$('#t-empty').innerHTML='<p>No runs match these filters.</p><button class="ghost" id="t-reset2">Reset to defaults</button>';$('#t-note').hidden=true;$('#t-info').hidden=true;return}
+  ({compare:tCompare,scale:tScale,dist:tDist,trade:tTrade,map:tMap,data:tTable})[TS.tab](d)}
+function tInit(){
+  $('#t-logo').src=$('.logo').src;
+  if(!TX){ // no training data yet (or unreadable): show a helpful message instead of an empty dashboard
+    $('#tr').classList.add('solo');['#t-side','#t-chips','#t-tabs','#t-ctl','#t-guide','#t-banner','#t-fixed'].forEach(s=>$(s).hidden=true);$('#t-count').parentElement.hidden=true;
+    const e=P.training&&P.training.error;
+    $('#t-empty').innerHTML=e?`<p>The training data could not be loaded: ${esc(e)}</p>`:'<p>No training results yet.</p><p>Add the training summary CSV files to <code>analytics/data/training/</code> and rebuild the dashboard with <code>python build_dashboard.py</code>.</p>';
+    $('#t-empty').hidden=false;$('#t-plot').hidden=true;return}
+  tApply();tBuild();tCtlUI()}
+function setView(v){const tr=v==='tr';$('#inf').hidden=tr;$('#tr').hidden=!tr;
+  document.querySelectorAll('#views button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
+  try{history.replaceState(null,'',tr?'#training':location.pathname+location.search)}catch(e){}
+  tr?tDraw():draw()}
+const startView=()=>{try{return location.hash==='#training'?'tr':'inf'}catch(e){return'inf'}};
+
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.td){const s=TS.sel[t.dataset.td];t.checked?s.add(t.dataset.tv):s.delete(t.dataset.tv);TS.touched.add(t.dataset.td);tDraw()}
+  else if(t.id==='t-failed'){TS.failed=t.checked;tDraw()}
+  else if(t.dataset.tr){const c=TS.ctl.map,on=new Set(c.rows);t.checked?on.add(t.dataset.tr):on.delete(t.dataset.tr);c.rows=THR.map(o=>o[0]).filter(k=>on.has(k));tDraw()}
+  else if(t.dataset.tk==='cluster'){TS.sel.system_label.clear();if(t.value&&t.value!=='__many')TS.sel.system_label.add(t.value);TS.touched.add('system_label');tDraw()}
+  else if(t.dataset.tk){TS.ctl[TS.tab][t.dataset.tk]=t.type==='checkbox'?t.checked:t.value;
+    if(['agg','x','metric','cols'].includes(t.dataset.tk)){tCtlUI();const el=document.querySelector(`#t-ctl [data-tk="${t.dataset.tk}"]`);if(el)el.focus()}tDraw()}});
+document.addEventListener('click',e=>{const t=e.target.closest('button,th');if(!t)return;
+  if(t.dataset.view)setView(t.dataset.view);
+  else if(t.dataset.tp!==undefined){tApply(Number(t.dataset.tp),true);tCtlUI();tDraw()}
+  else if(t.dataset.ts){const s=TS.sel.system_label;s.has(t.dataset.ts)?s.delete(t.dataset.ts):s.add(t.dataset.ts);TS.touched.add('system_label');tDraw()}
+  else if(t.dataset.tt){tEnter(t.dataset.tt);tCtlUI();tDraw()}
+  else if(t.dataset.tsort){const k=t.dataset.tsort;TS.sort=[k,TS.sort[0]===k?-TS.sort[1]:-1];tDraw()}
+  else if(t.id==='t-more'){TS.show+=200;tDraw()}
+  else if(t.id==='t-csv')tCsv(tFiltered());
+  else if(t.id==='t-reset'||t.id==='t-reset2'){tApply();tDraw()}
+  else if(t.id==='t-clear'){tClear();tDraw()}
+  else if(t.id==='t-ftoggle')$('#t-side').classList.toggle('open')});
+
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.d){const s=S.sel[t.dataset.d];t.checked?s.add(t.dataset.v):s.delete(t.dataset.v);S.touched.add(t.dataset.d);draw()}
+  else if(t.id==='failed'){S.failed=t.checked;draw()}
+  else if(t.dataset.hc){S.sel.system_label.clear();if(t.value&&t.value!=='__many')S.sel.system_label.add(t.value);S.touched.add('system_label');draw()}
+  else if(t.dataset.hr){const c=S.ctl.heat,on=new Set(c.rows);t.checked?on.add(t.dataset.hr):on.delete(t.dataset.hr);c.rows=HR.map(o=>o[0]).filter(k=>on.has(k));draw()}
+  else if(t.dataset.k){S.ctl[S.tab][t.dataset.k]=t.type==='checkbox'?t.checked:t.value;if(['agg','cols'].includes(t.dataset.k)){ctlUI();document.querySelector('#ctl [data-k="agg"]').focus()}draw()}});
+document.addEventListener('click',e=>{const t=e.target.closest('button,th');if(!t)return;
+  if(t.dataset.s){const s=S.sel.system_label;s.has(t.dataset.s)?s.delete(t.dataset.s):s.add(t.dataset.s);draw()}
+  else if(t.dataset.t){enterTab(t.dataset.t);ctlUI();draw()}
+  else if(t.dataset.sort){const k=t.dataset.sort;S.sort=[k,S.sort[0]===k?-S.sort[1]:-1];draw()}
+  else if(t.id==='more'){S.show+=200;draw()}
+  else if(t.id==='csv')csv(filtered());
+  else if(t.id==='reset'||t.id==='reset2'){applyDefaults();draw()}
+  else if(t.id==='clear'){clearAll();draw()}
+  else if(t.id==='ftoggle')$('#side').classList.toggle('open')});
+const redraw=()=>$('#tr').hidden?draw():tDraw();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+applyDefaults();$('#fav').href=$('.logo').src;
+buildUI();ctlUI();
+tInit();
+setView(startView());
+</script>
+</body>
+</html>

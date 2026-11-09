@@ -1,0 +1,126 @@
+{
+  "filters": {
+    "dataset": [
+      "sharegpt"
+    ],
+    "framework": [
+      "vllm"
+    ],
+    "gpus": [
+      4
+    ],
+    "max_len": [
+      4096
+    ],
+    "concurrency": [
+      250
+    ]
+  },
+  "scaling": {
+    "model": "Llama-3.1-8B-Instruct"
+  },
+  "training": {
+    "presets": [
+      {
+        "name": "Mistral 7B, FSDP",
+        "filters": {
+          "system_label": [
+            "MareNostrum 5"
+          ],
+          "model": [
+            "mistral_7b"
+          ],
+          "parallelism": [
+            "fsdp"
+          ],
+          "batch_size": [
+            2
+          ],
+          "gpus": [
+            8
+          ]
+        },
+        "compare": {
+          "x": "framework",
+          "color": "system_label"
+        }
+      },
+      {
+        "name": "Gemma 1B, DDP",
+        "filters": {
+          "system_label": [
+            "MareNostrum 5"
+          ],
+          "model": [
+            "gemma_1b"
+          ],
+          "parallelism": [
+            "ddp"
+          ],
+          "batch_size": [
+            2
+          ],
+          "gpus": [
+            8
+          ]
+        },
+        "compare": {
+          "x": "framework",
+          "color": "system_label"
+        }
+      },
+      {
+        "name": "Qwen 7B, Megatron",
+        "filters": {
+          "system_label": [
+            "MareNostrum 5"
+          ],
+          "model": [
+            "qwen2.5_7b"
+          ],
+          "framework": [
+            "megatron-nemo-2509"
+          ],
+          "batch_size": [
+            2
+          ],
+          "gpus": [
+            16
+          ]
+        },
+        "compare": {
+          "x": "parallel_config",
+          "color": "system_label"
+        }
+      },
+      {
+        "name": "Llama 70B, Megatron",
+        "filters": {
+          "system_label": [
+            "MareNostrum 5"
+          ],
+          "model": [
+            "llama3_70b"
+          ],
+          "framework": [
+            "megatron-nemo-2509"
+          ],
+          "batch_size": [
+            2
+          ],
+          "gpus": [
+            64
+          ]
+        },
+        "compare": {
+          "x": "parallel_config",
+          "color": "system_label"
+        }
+      }
+    ],
+    "banner": "",
+    "scaling": {
+      "model": "mistral_7b"
+    }
+  }
+}
