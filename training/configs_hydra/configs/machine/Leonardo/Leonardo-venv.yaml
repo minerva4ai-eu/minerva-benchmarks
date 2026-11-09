@@ -8,3 +8,5 @@ machine:
   name: Leonardo-Boost-4xA100 # actual name of super computer running benchmarks
   name_pattern: Leonardo # configuration files naming convention pattern
   runtime_env_mode: venv
+  env:
+    DS_IGNORE_CUDA_DETECTION: 1 # no nvcc on compute nodes; DeepSpeed probes it on import (ops are not JIT-built, torch_adam)
