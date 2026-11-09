@@ -220,7 +220,7 @@ for conc in "${concurrencies[@]}"; do
     ##################################################
     # GPU MONITOR (inside container)
     ##################################################
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
             python3 gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 &
     GPU_MON_PID=$!
 
@@ -228,7 +228,7 @@ for conc in "${concurrencies[@]}"; do
     # BENCHMARK (inside container)
     ##################################################
     # #python3 $BENCHMARK_FILE \
-    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $VLLM_IMAGE \
+    singularity exec -B $BINDINGS_SINGULARITY $ADDITIONAL_SINGULARITY_ARGS $METRICS_IMAGE \
             python3 $BENCHMARK_FILE \
             --backend vllm \
             --host localhost \
@@ -254,7 +254,10 @@ done
 echo "Remove TMPDIR"
 rm -rf $TMPDIR
 echo "$TMPDIR Removed!"
-sleep 10
+
+while true; do
+    sleep 10
+done;
 
 
 echo "Benchmark finished"
