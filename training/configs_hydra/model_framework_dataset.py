@@ -26,16 +26,6 @@ MODELS = [
     # "gemma3_12b",
 ]
 FRAMEWORKS = [
-    "accelerate-cuda130",
-    "torchrun-cuda130",
-    # "deepspeed-accelerate-cuda130",
-    "megatron-nemo-2509",
-    "deepspeed-cuda130",
-]
-DATASETS = ["alpaca", "squadv2", "tulu-3-sft-mixture"]
-
-################################################################]
-AVAILABLE_FRAMEWORKS = [
     "accelerate-cuda128",
     "accelerate-cuda130",
     "torchrun-cuda128",
@@ -44,5 +34,7 @@ AVAILABLE_FRAMEWORKS = [
     "deepspeed-cuda130",
     "megatron-nemo-2509",
 ]
+DATASETS = ["alpaca", "squadv2", "tulu-3-sft-mixture"]
 
+################################################################]
 MEGATRON_PARALLELISM_AVAILABLE = ["tp", "pp", "cp", "dp", "ep", "sp"]
