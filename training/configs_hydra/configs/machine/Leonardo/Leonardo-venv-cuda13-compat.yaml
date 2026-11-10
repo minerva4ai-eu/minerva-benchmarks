@@ -1,0 +1,10 @@
+# @package _global_
+# Leonardo-venv plus the CUDA 13.0 forward-compat libs, to run the cuda130 frameworks
+# on the Booster driver 535 (CUDA 12.2). Install the libs first, see guide-to-test.txt.
+defaults:
+  - /machine/Leonardo/Leonardo-venv
+  - _self_
+
+machine:
+  env:
+    LD_LIBRARY_PATH: ${abs_path:envs/cuda-compat-13-0}

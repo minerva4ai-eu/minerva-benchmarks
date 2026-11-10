@@ -8,6 +8,8 @@ machine:
   name: Leonardo-Boost-4xA100 # actual name of super computer running benchmarks
   name_pattern: Leonardo # configuration files naming convention pattern
   runtime_env_mode: singularity
+  singularity_args:
+    - "--nv"
   singularity_binds:
     - "${model.path}"
 
