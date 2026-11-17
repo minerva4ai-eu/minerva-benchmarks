@@ -3,25 +3,25 @@ defaults:
   - _self_
 
 gpu:
-  name: <must fill value>
+  name: Leonardo_4xA100-SXM-64GB
   accelerator_type: cuda 
-  vram_gb: <must fill value>
-  theoretical_peak_fp64_tflops: <must fill value>
-  theoretical_peak_fp64_tensor_tflops: <must fill value>
-  theoretical_peak_fp32_tflops: <must fill value>
-  theoretical_peak_tf32_tensor_tflops: <must fill value>
-  theoretical_peak_fp16_tensor_tflops: <must fill value>
-  theoretical_peak_bf16_tensor_tflops: <must fill value>
-  theoretical_peak_fp8_tensor_tflops: <must fill value>
-  theoretical_peak_int8_tensor_tops: <must fill value>
+  vram_gb: 64
+  theoretical_peak_fp64_tflops: 9.7
+  theoretical_peak_fp64_tensor_tflops: 19.5 # Leonardo custom A100 (124 SM): 22.4
+  theoretical_peak_fp32_tflops: 19.5
+  theoretical_peak_tf32_tensor_tflops: 156 # Leonardo custom A100: 179
+  theoretical_peak_fp16_tensor_tflops: 312 # TODO: 312 is the standard A100 (108 SM), Leonardo custom A100 (124 SM) is 358 - decide which to use
+  theoretical_peak_bf16_tensor_tflops: 312 # TODO: same as fp16 (358 on Leonardo)
+  theoretical_peak_fp8_tensor_tflops: 0 # A100 has no FP8 support
+  theoretical_peak_int8_tensor_tops: 624
 
 comm:
-  internode_comm: <must fill value>
-  internode_comm_bandwidth_GBs: <must fill value>
-  intranode_comm: <must fill value>
-  intranode_comm_bandwidth_GBs: <must fill value>
+  internode_comm: infiniband
+  internode_comm_bandwidth_GBs: 50 # 2x dual-port HDR100 NICs = 400 Gbps per node
+  intranode_comm: nvlink
+  intranode_comm_bandwidth_GBs: 600 # NVLink 3.0 aggregate (200 GB/s per GPU pair)
 
 node:
-  gpus_per_node: <must fill value>
+  gpus_per_node: 4
 
 

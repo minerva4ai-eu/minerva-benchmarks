@@ -3,6 +3,7 @@ from copy import deepcopy
 from functools import cache
 from typing import Literal
 
+from configs_hydra.dataclasses_hydra.arch import PrecisionType
 from configs_hydra.dataclasses_hydra.benchmark import BenchmarkConfig, EnvMode
 from omegaconf import DictConfig
 
@@ -71,6 +72,33 @@ class ExecutionEnvironmentValidityRule(ConstraintRule):
             True,
             "execution_env_validity_check",
         )
+
+
+class PrecisionSupportedByArchRule(ConstraintRule):
+    """Precision needs hardware support: skip it if the GPU's theoretical peak for it is 0 (e.g. fp8 on A100)."""
+
+    # precision -> theoretical-peak fields that must all be > 0
+    REQUIRED_PEAKS = {
+        PrecisionType.fp32: ("theoretical_peak_fp32_tflops",),
+        PrecisionType.fp16: ("theoretical_peak_fp16_tensor_tflops",),
+        PrecisionType.bf16: ("theoretical_peak_bf16_tensor_tflops",),
+        PrecisionType.fp8: ("theoretical_peak_fp8_tensor_tflops",),
+        PrecisionType.bf16_fp8: (
+            "theoretical_peak_bf16_tensor_tflops",
+            "theoretical_peak_fp8_tensor_tflops",
+        ),
+    }
+
+    def check(self, c: BenchmarkConfig) -> RuleResult:
+        precision = c.model.training.precision
+        for field in self.REQUIRED_PEAKS.get(PrecisionType(precision), ()):
+            if c.arch.gpu[field] == 0:
+                return RuleResult(
+                    False,
+                    "precision_supported_by_arch",
+                    f"Precision '{precision}' not supported by {c.arch.gpu.name}: {field} = 0",
+                )
+        return RuleResult(True, "precision_supported_by_arch")
 
 
 class ParallelismGPUFloor(ConstraintRule):
@@ -693,6 +721,7 @@ class MinNodesMemoryRule(ConstraintRule):
 # Registry — just add new rules here, no other changes needed
 ALL_RULES = [
     ExecutionEnvironmentValidityRule(),
+    PrecisionSupportedByArchRule(),
     ParallelismGPUFloor(),
     FrameworkParallelismValidityRule(),
     MinNodesMemoryRule(),

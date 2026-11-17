@@ -14,14 +14,14 @@ class GpuConfig:
     name: str = MISSING
     accelerator_type: str = "cuda"
     vram_gb: float = 1
-    theoretical_peak_fp64_tflops: int = MISSING
-    theoretical_peak_fp64_tensor_tflops: int = MISSING
-    theoretical_peak_fp32_tflops: int = MISSING
-    theoretical_peak_tf32_tensor_tflops: int = MISSING
-    theoretical_peak_fp16_tensor_tflops: int = MISSING
-    theoretical_peak_bf16_tensor_tflops: int = MISSING
-    theoretical_peak_fp8_tensor_tflops: int = MISSING
-    theoretical_peak_int8_tensor_tops: int = MISSING
+    theoretical_peak_fp64_tflops: float = MISSING
+    theoretical_peak_fp64_tensor_tflops: float = MISSING
+    theoretical_peak_fp32_tflops: float = MISSING
+    theoretical_peak_tf32_tensor_tflops: float = MISSING
+    theoretical_peak_fp16_tensor_tflops: float = MISSING
+    theoretical_peak_bf16_tensor_tflops: float = MISSING
+    theoretical_peak_fp8_tensor_tflops: float = MISSING
+    theoretical_peak_int8_tensor_tops: float = MISSING
 
     def __post_init__(self):
         self._check_accelerator_type()
@@ -53,7 +53,7 @@ class PrecisionType(str, Enum):
     bf16_fp8 = "bf16_fp8"  # Only applies for Megatron bench
 
 
-def get_peak_flops(cfg: GpuConfig, precision: str) -> int:
+def get_peak_flops(cfg: GpuConfig, precision: str) -> float:
     if precision == PrecisionType.fp32:
         return cfg.theoretical_peak_fp32_tflops
     if precision == PrecisionType.bf16:
