@@ -150,7 +150,15 @@ NON_AGGREGATED_KEYS = {
 }
 
 SUMMED_KEYS = {
-    "training_throughput_tokens_per_sec_global",
+    "training_throughput_tokens_per_sec_per_gpu",
+}
+
+# Loss metrics are only computed by the ranks holding the last layer when
+# pipeline parallelism is active; the other ranks report 0, so only the
+# non-zero (real) losses are averaged.
+LOSS_KEYS = {
+    "training_loss",
+    "validation_loss",
 }
 
 CONFIG_TO_DISPLAY = {
@@ -251,6 +259,9 @@ def aggregate_rank_summaries(summary_paths):
             combined[key] = max(values)
         elif short_key in SUMMED_KEYS:
             combined[key] = sum(values)
+        elif short_key in LOSS_KEYS:
+            losses = [value for value in values if value != 0]
+            combined[key] = statistics.mean(losses) if losses else 0.0
         else:
             combined[key] = statistics.mean(values)
     return combined
