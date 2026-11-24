@@ -102,10 +102,13 @@ VENV_PATH : $VENV_PATH"
     export JOB_CACHE="$SRUN_LOGS/.cache"
     export PROFILER_OUTDIR="$SRUN_LOGS/outputs/gpus-monitor/step-$SLURM_STEP_ID/profiler/$SLURM_NODEID-$SLURMD_NODENAME"
     
-    bash "$SRUN_SCRIPT" "$YAML_PATH" 
+    bash "$SRUN_SCRIPT" "$YAML_PATH"
+    local rc=$?
 
-    echo "Ending runner_fn: `date`"
+    echo "Ending runner_fn: `date` (exit code $rc)"
     echo -e "Finished run: \n\n"
+    # Propagate the training exit code so the Slurm step reflects success/failure
+    return $rc
 }
 export -f runner_fn
 
@@ -184,7 +187,13 @@ TRAIN_MODULE: $TRAIN_MODULE"
         --export=ALL \
         --time="$TIME_LIMIT" \
         bash -c "runner_fn $YAML_PATH" &
-        
+    SRUN_PIDS+=($!)
+
 done
 
-wait
+# Fail the job if any step failed (a bare `wait` always returns 0)
+JOB_EXIT_CODE=0
+for pid in "${SRUN_PIDS[@]}"; do
+    wait "$pid" || JOB_EXIT_CODE=$?
+done
+exit $JOB_EXIT_CODE
