@@ -64,6 +64,45 @@ def get_peak_flops(cfg: GpuConfig, precision: str) -> float:
         return cfg.theoretical_peak_bf16_tensor_tflops
     if precision == PrecisionType.fp8:
         return cfg.theoretical_peak_fp8_tensor_tflops
+    return None
+
+
+def get_peak_flops_field(precision: str) -> str:
+    if precision == PrecisionType.fp32:
+        return "theoretical_peak_fp32_tflops"
+    if precision == PrecisionType.bf16:
+        return "theoretical_peak_bf16_tensor_tflops"
+    if precision == PrecisionType.fp16:
+        return "theoretical_peak_fp16_tensor_tflops"
+    if precision == PrecisionType.bf16_fp8:
+        return "theoretical_peak_bf16_tensor_tflops"
+    if precision == PrecisionType.fp8:
+        return "theoretical_peak_fp8_tensor_tflops"
+    return None
+
+
+def get_required_peak_flops() -> tuple[str]:
+    required_peak_flops = {
+        PrecisionType.fp32: (get_peak_flops_field(PrecisionType.fp32),),
+        PrecisionType.fp16: (get_peak_flops_field(PrecisionType.fp16),),
+        PrecisionType.bf16: (get_peak_flops_field(PrecisionType.bf16),),
+        PrecisionType.fp8: (get_peak_flops_field(PrecisionType.fp8),),
+        PrecisionType.bf16_fp8: (
+            get_peak_flops_field(PrecisionType.bf16_fp8),
+            get_peak_flops_field(PrecisionType.bf16_fp8),
+        ),
+    }
+    assert (
+        len(
+            set(required_peak_flops.keys()).difference(
+                set(PrecisionType.__dict__["_member_map_"].values())
+            )
+        )
+        == 0
+    ), (
+        "Missmatch between keys in 'required_peak_flops' and available 'PrecisionType' types!"
+    )
+    return required_peak_flops
 
 
 @dataclass
