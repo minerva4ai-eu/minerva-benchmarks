@@ -43,7 +43,6 @@ training/.env
 # TEMP
 TRAINING-TODOS*
 .vscode
-training/analytics/results
 training/analytics/results.py
 nemo_top_le*
 nemo_list*
