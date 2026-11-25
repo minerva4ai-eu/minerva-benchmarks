@@ -88,8 +88,8 @@ def get_required_peak_flops() -> tuple[str]:
         PrecisionType.bf16: (get_peak_flops_field(PrecisionType.bf16),),
         PrecisionType.fp8: (get_peak_flops_field(PrecisionType.fp8),),
         PrecisionType.bf16_fp8: (
-            get_peak_flops_field(PrecisionType.bf16_fp8),
-            get_peak_flops_field(PrecisionType.bf16_fp8),
+            get_peak_flops_field(PrecisionType.bf16),
+            get_peak_flops_field(PrecisionType.fp8),
         ),
     }
     assert (
