@@ -130,6 +130,12 @@ class ModelConfig:
     # only "dense" or "moe". Checked only on function rules.megatron_divisors
     architecture_type: str = MISSING
 
+    # Optional: pin the sharding group size (GPUs cooperating to hold one DP
+    # copy's model state) instead of the automatic "shard to fit" sizing
+    # computed by rules.MinNodesMemoryRule.compute_shard_group.
+    # Must divide the total GPU count of every step.
+    shard_group_size: int | None = None
+
     # architecture dims — used by memory rule
     total_params_billions: float = MISSING
     num_layers: int = MISSING

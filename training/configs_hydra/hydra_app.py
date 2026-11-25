@@ -341,6 +341,27 @@ def _single_parallelism_framework(
                     tmp_cfg.slurm.sbatch.gpus_per_node = 1
                     tmp_cfg.slurm.sbatch.gres = "gpu:1"
 
+                # --- shard-to-fit / replicate-to-fill -------------------
+                # S = GPUs cooperating to hold one DP copy's sharded model
+                # state (auto-sized per combo from the memory rule); the rest
+                # of the world are data-parallel replicas (R = W / S).
+                # Recorded on the step config; the FSDP scripts turn it into
+                # a hybrid-sharding mesh.
+                world_gpus = (
+                    tmp_cfg.slurm.sbatch.gpus_per_node * tmp_cfg.slurm.sbatch.nodes
+                )
+                shard_size, dp_replicas, _ = (
+                    rules.MinNodesMemoryRule().compute_shard_group(
+                        tmp_cfg, world_gpus
+                    )
+                )
+                tmp_cfg.framework.shard_group_size = shard_size
+                # Tag the step id only where the layout actually changes vs
+                # full-world sharding (HSDP on FSDP), so existing job names
+                # stay comparable.
+                if parallelism == "fsdp" and shard_size < world_gpus:
+                    experiment_parameters += f"-shard{shard_size}-rep{dp_replicas}"
+
                 msg = (
                     f"\t· parallelism: {parallelism}"
                     + f" | nodes:{nodes}"

@@ -53,6 +53,12 @@ class FrameworkConfig:
     scripts: ScriptsConfig = field(default_factory=ScriptsConfig)
     datasets_allowed: list[str] | None = None
     env: dict = field(default_factory=dict)
+    # Resolved by the config generator ("shard to fit, replicate to fill"):
+    # GPUs cooperating to hold one DP copy's sharded model state. The
+    # training scripts turn it into the effective parallelism layout
+    # (e.g. the FSDP hybrid-sharding mesh); the rest of the world are
+    # data-parallel replicas (world_gpus / shard_group_size).
+    shard_group_size: int | None = None
 
     def __post_init__(self):
         if not self.parallelism:

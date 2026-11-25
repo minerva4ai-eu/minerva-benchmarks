@@ -43,6 +43,16 @@ num_kv_heads: -1
 # on the model's requirements and the available hardware.
 max_gpus_scale: -1
 
+# Optional: pin the sharding group size — the number of GPUs that cooperate
+# to hold ONE data-parallel copy of the model state (params/grads/optimizer,
+# and for FSDP/ZeRO-3 the sharded weights). The remaining GPUs of every step
+# then run as data-parallel replicas (world / shard_group_size).
+# By default this is computed automatically per combo ("shard to fit,
+# replicate to fill"): the smallest node-aligned group that fits the model
+# state + activations in VRAM. If set, the value must divide the total GPU
+# count of every step.
+#shard_group_size: 4
+
 # This field specifies the supported frameworks for the model.
 # Not all models may support all frameworks listed in FRAMEWORKS in model_framework_dataset.py
 # E.g.:

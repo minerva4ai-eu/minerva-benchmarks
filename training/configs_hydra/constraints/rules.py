@@ -196,36 +196,44 @@ BYTES_PER_PARAM = {
 }
 OPTIMIZER_BYTES = {"adamw": 8, "adam": 8, "sgd": 0, "adafactor": 4}
 MAX_GPUS_SCALE = 256
-PARALLELISM_DIVISOR = {
-    "none": lambda n: 1,
-    "ddp": lambda n: 1,
-    "fsdp": lambda n: n,
-    # Single gpu
+# Per-component memory divisors for the single-axis (DDP/FSDP/ZeRO) schemes:
+# each entry maps a sharding size n to (params_divisor, gradients_divisor,
+# optimizer_divisor).
+# NOTE: activations are NOT divided by n — every rank runs the full
+# micro-batch forward/backward and holds its own activation buffers, so
+# activation memory is independent of the sharding size. (The legacy
+# PARALLELISM_DIVISOR lumped activations into M_total and divided everything,
+# which under-estimated memory at large batch sizes / long sequences.)
+STATE_DIVISORS = {
     # M = P×4 (params) + P×4 (grads) + P×8 (Adam states) + activations
-    #     = P×16 + activations
+    "none": lambda n: (1, 1, 1),
+    "ddp": lambda n: (1, 1, 1),
     # Zero 1 shards only optimizer states
-    # M = P×4 (params, replicated)
-    #    + P×4 (grads, replicated)
-    #    + P×8/n (optimizer, sharded)
-    #    + activations
-    #    = P×8 + P×8/n + activations
-    # divisor = M_single / M_per_gpu
-    #    = (P×16 + act) / (P×8 + P×8/n + act)
-    #    ≈ 16 / (8 + 8/n)           [for large P]
-    #    = 2n / (n + 1)
-    # Zero 2 only shards gradients and optimizer states
-    # M = P×4 (params, replicated)
-    #    + P×4/n (grads, sharded)
-    #    + P×8/n (optimizer, sharded)
-    #    + activations
-    #    = P×4 + P×12/n + activations
-    # divisor = (P×16 + act) / (P×4 + P×12/n + act)
-    #    ≈ 16 / (4 + 12/n)          [for large P]
-    #    = 4n / (n + 3)
-    "zero1": lambda n: 2 * n / (n + 1),
-    "zero2": lambda n: 4 * n / (n + 3),
-    "zero3": lambda n: n,
+    "zero1": lambda n: (1, 1, n),
+    # Zero 2 shards gradients and optimizer states
+    "zero2": lambda n: (1, n, n),
+    # Zero 3 / FSDP shard params, gradients and optimizer states
+    "zero3": lambda n: (n, n, n),
+    "fsdp": lambda n: (n, n, n),
 }
+
+
+def state_memory_per_gpu(
+    parallelism: str,
+    n: int,
+    m_params: float,
+    m_gradients: float,
+    m_optimizer: float,
+    m_activations: float,
+) -> float:
+    """Per-GPU model-state memory when `n` GPUs cooperate under `parallelism`."""
+    d_params, d_grads, d_opt = STATE_DIVISORS.get(parallelism, lambda n: (1, 1, 1))(n)
+    return (
+        m_params / d_params
+        + m_gradients / d_grads
+        + m_optimizer / d_opt
+        + m_activations
+    )
 
 
 def _cfg_get(node, key, default=None):
@@ -483,11 +491,12 @@ class MinNodesMemoryRule(ConstraintRule):
             f"c.framework.parallelism is expected to be dict of length 1, instead received: {c.framework.parallelism}"
         )
         parallelism = list(c.framework.parallelism.keys())[0]
-        divisor_fn = PARALLELISM_DIVISOR.get(parallelism, lambda n: 1)
 
         per_gpu = n = -1
         for n in self._gpu_candidates(gpus_per_node):
-            per_gpu = M_total / divisor_fn(n)
+            per_gpu = state_memory_per_gpu(
+                parallelism, n, M_params, M_gradients, M_optimizer, M_activations
+            )
             if per_gpu <= gpu_vram:
                 return n, {
                     "params_gb": round(M_params / 1e9, 2),
@@ -512,6 +521,73 @@ class MinNodesMemoryRule(ConstraintRule):
             "min_gpus": n,
             "arch_type": arch_type,
         }
+
+    def compute_shard_group(
+        self, c: BenchmarkConfig, world_gpus: int
+    ) -> tuple[int, int, dict]:
+        """Decide the sharding group size for one data-parallel copy.
+
+        "Shard to fit, replicate to fill": S is the smallest node-aligned shard
+        group that holds the full model state (per current batch/seq/precision),
+        and the rest of the world runs as data-parallel replicas: R = W / S.
+        Shard groups of size <= gpus_per_node stay on the intra-node fabric.
+
+        An explicit `model.shard_group_size` overrides the automatic sizing
+        (it must divide the world and still fit in memory).
+
+        Returns (shard_group_size, dp_replicas, breakdown).
+        """
+        s_min, breakdown = self._min_gpus_required(c)
+
+        override = _cfg_get(c.model, "shard_group_size", None)
+        if override:
+            if world_gpus % override != 0:
+                raise ValueError(
+                    f"model.shard_group_size={override} does not divide "
+                    f"world_gpus={world_gpus}"
+                )
+            if s_min > 0 and override < s_min:
+                raise ValueError(
+                    f"model.shard_group_size={override} is below the memory "
+                    f"minimum of {s_min} GPUs for this combo; breakdown: {breakdown}"
+                )
+            breakdown = {
+                **breakdown,
+                "shard_group_size": override,
+                "dp_replicas": world_gpus // override,
+                "shard_override": True,
+            }
+            return override, world_gpus // override, breakdown
+
+        if s_min <= 0:
+            # Model cannot fit even at the largest candidate — fall back to
+            # sharding the whole world (the memory rule still rejects the
+            # step if it is infeasible).
+            return world_gpus, 1, breakdown
+
+        shard = next(
+            (s for s in self._shard_candidates(world_gpus) if s >= s_min),
+            world_gpus,
+        )
+        breakdown = {
+            **breakdown,
+            "shard_group_size": shard,
+            "dp_replicas": world_gpus // shard,
+        }
+        return shard, world_gpus // shard, breakdown
+
+    @staticmethod
+    def _shard_candidates(world_gpus: int) -> list[int]:
+        """Power-of-two shard sizes that tile the world.
+
+        Sizes <= gpus_per_node keep the shard group (sub-)intra-node, i.e. on
+        the NVLink fabric; larger sizes span whole nodes."""
+        candidates, n = [], 1
+        while n <= world_gpus:
+            if world_gpus % n == 0:
+                candidates.append(n)
+            n *= 2
+        return candidates
 
     def _min_gpus_required_megatron(
         self,
