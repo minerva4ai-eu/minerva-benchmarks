@@ -253,6 +253,8 @@ def save_training_summary(
     steps_per_epoch: int | None = None,
     avg_step_time_sec: float | None = None,
     global_batch_size: int | None = None,
+    shard_group_size: int | None = None,
+    dp_replicas: int | None = None,
 ):
     if dist.is_initialized():
         world_size = dist.get_world_size()
@@ -366,6 +368,12 @@ def save_training_summary(
         "training_loss": training_loss,
         "validation_loss": None,
     }
+    # Effective HSDP layout ("shard to fit, replicate to fill"); recorded
+    # when the generator resolved a shard group for this run.
+    if shard_group_size is not None:
+        metrics_summary["shard_group_size"] = shard_group_size
+    if dp_replicas is not None:
+        metrics_summary["dp_replicas"] = dp_replicas
     if comm_metrics:
         # Generic NCCL communication volumes (bytes on the wire per NCCL-tests
         # bus-bandwidth conventions). Any framework can populate the same keys.

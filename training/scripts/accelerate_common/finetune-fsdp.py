@@ -16,6 +16,7 @@ from scripts.shared.data import (
 )
 from scripts.shared.flops import mfu_callback_from_hf_config
 from scripts.shared.gpu_monitor import start_gpu_monitor
+from scripts.shared.hsdp import build_hsdp_mesh
 from scripts.shared.logger import RankAdapter, setup_logging
 from scripts.shared.utils import (
     is_main_process,
@@ -96,7 +97,7 @@ def get_transformer_layer_classes(model):
     return classes
 
 
-def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False):
+def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False, mesh=None):
 
     layer_classes = get_transformer_layer_classes(model)
     logger.info(f"FSDP auto-wrap layer classes: {[c.__name__ for c in layer_classes]}")
@@ -139,10 +140,12 @@ def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False
                 fully_shard(
                     module,
                     mp_policy=mp_policy,
+                    mesh=mesh,
                 )
         fully_shard(
             model,
             mp_policy=mp_policy,
+            mesh=mesh,
         )
 
         if max_comm_comp_overlap:
@@ -153,7 +156,12 @@ def wrap_fsdp(model, dtype, v2: bool = True, max_comm_comp_overlap: bool = False
         model.config.use_cache = False
         model.gradient_checkpointing_enable()
     else:
-        # DEPRECATED: Moved to FSDPv2, wrappign with fully_shard()
+        # DEPRECATED: Moved to FSDP2, wrappign with fully_shard()
+        if mesh is not None:
+            logger.warning(
+                "HSDP mesh is only supported in the FSDP2 (v2) path; "
+                "falling back to full-world FSDP1 sharding."
+            )
         model = FSDP(
             model,
             auto_wrap_policy=auto_wrap_policy,
@@ -263,10 +271,34 @@ def main(repeatid: int):
     logger.info(
         f"Max communication-computation overlap: {args.fsdp_max_comm_comp_overlap}"
     )
+    # --- HSDP: "shard to fit, replicate to fill" ----------------------
+    # framework.shard_group_size (S) is resolved per step by the config
+    # generator; the rest of the world runs as DP replicas (R = W / S).
+    framework_cfg = config.framework
+    _framework_get = getattr(framework_cfg, "get", None)
+    shard_group_size = (
+        _framework_get("shard_group_size")
+        if callable(_framework_get)
+        else getattr(framework_cfg, "shard_group_size", None)
+    )
+    if shard_group_size is not None:
+        shard_group_size = int(shard_group_size)  # type: ignore[reportArgumentType]
+    hsdp_mesh = build_hsdp_mesh(world_size, shard_group_size)
+    effective_shard = shard_group_size or world_size
+    dp_replicas = world_size // effective_shard
+    if is_main_process(rank):
+        if hsdp_mesh is None:
+            logger.info(f"FSDP layout: full-shard across world={world_size}")
+        else:
+            logger.info(
+                f"FSDP layout: HSDP mesh {tuple(hsdp_mesh.shape)} — "
+                f"{dp_replicas} DP replica(s) x {effective_shard}-GPU shard group"
+            )
     model = wrap_fsdp(
         model,
         dtype,
         max_comm_comp_overlap=args.fsdp_max_comm_comp_overlap,
+        mesh=hsdp_mesh,
     )
     logger.info("Model wrapped with FSDP.")
 
@@ -441,6 +473,8 @@ def main(repeatid: int):
             gpu_stats=gpu_stats_during,
             training_loss=avg_final_loss.item(),
             # comm_metrics=collect_comm_metrics(skip_steps=1),
+            shard_group_size=effective_shard,
+            dp_replicas=dp_replicas,
         )
         logger.info("Fine-tuning completed successfully.")
     except Exception as e:
