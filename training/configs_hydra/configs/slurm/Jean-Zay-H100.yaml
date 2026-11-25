@@ -1,5 +1,5 @@
 defaults:
-  - /slurm: base
+  - base
   - _self_
 
 sbatch:
@@ -9,3 +9,7 @@ sbatch:
   extra_args:
     - "--hint=nomultithread"
     - "--exclusive"
+    - "--time=02:00:00"
+
+srun:
+  hours_limit: 2

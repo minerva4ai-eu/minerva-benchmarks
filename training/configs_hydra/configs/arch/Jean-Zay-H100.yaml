@@ -5,11 +5,12 @@ gpu:
   theoretical_peak_fp64_tflops: 34
   theoretical_peak_fp64_tensor_tflops: 67
   theoretical_peak_fp32_tflops: 67
-  theoretical_peak_tf32_tensor_tflops: 989
-  theoretical_peak_fp16_tensor_tflops: 1979
-  theoretical_peak_bf16_tensor_tflops: 1979
-  theoretical_peak_fp8_tensor_tflops: 3958
-  theoretical_peak_int8_tensor_tops: 3958
+  theoretical_peak_tf32_tensor_tflops: 495  # guillaumesalle444: the previous value (989) is for sparse calculus only
+  theoretical_peak_fp16_tensor_tflops: 989 # guillaumesalle444: the previous value (1979) is for sparse calculus only
+  theoretical_peak_bf16_tensor_tflops: 989 # guillaumesalle444: the previous value (1979) is for sparse calculus only
+  theoretical_peak_fp8_tensor_tflops: 1979 # guillaumesalle444: the previous value (3958) is for sparse calculus only
+  theoretical_peak_int8_tensor_tops: 1979 # guillaumesalle444: the previous value (3958) is for sparse calculus only
+# guillaumesalle444: check https://glennklockwood.com/garden/processors/h100
 
 comm:
   internode_comm: infiniband
