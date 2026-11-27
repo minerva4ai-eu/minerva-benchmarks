@@ -18,7 +18,6 @@ ENVIRONMENT="$1"
 case "$MACHINE" in
     bsc-mn5-acc)
         # How to activate miniforge environment in mn5-acc.
-        module load $MODULES
         source activate $ENVIRONMENT
         export PATH=$ENVIRONMENT/bin:$PATH
         which python
@@ -44,7 +43,6 @@ case "$MACHINE" in
 
     bsc-mn5-gpp)
         # How to activate miniforge environment in mn5-gpp.
-        module load $MODULES
         source activate $ENVIRONMENT
         export PATH=$ENVIRONMENT/bin:$PATH
         which python
@@ -53,15 +51,6 @@ case "$MACHINE" in
     csc-lumi-gpu)
         module purge
         module load $MODULES
-        ;;
-
-
-    bsc-mn5-gpp)
-        # How to activate miniforge environment in mn5-gpp.
-        module load $MODULES
-        source activate $ENVIRONMENT
-        export PATH=$ENVIRONMENT/bin:$PATH
-        which python
         ;;
 
     *)

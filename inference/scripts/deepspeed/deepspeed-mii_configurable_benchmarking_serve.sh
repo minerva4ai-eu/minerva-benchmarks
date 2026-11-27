@@ -1,15 +1,16 @@
 #!/bin/bash
 
-#SBATCH --job-name=MII-DeepSpeed-DYNAMIC
-#SBATCH --tasks-per-node=1
-#SBATCH --time=02:00:00
-
+scontrol show step $SLURM_JOB_ID.$SLURM_STEP_ID
+nvidia-smi
 
 # Get Arguments
 LAUNCH_FOLDER=$1
 BENCHMARK_FILE=$2
-DATASET=$3
-DATASET_PATH=$4
+export DATASET=$3
+export DATASET_PATH=$4
+export MODEL_PATH=$5
+export MAX_MODEL_LENGTH=$6
+export MODEL=$7
 
 # Print Arguments Received
 echo "LAUNCH_FOLDER: {$LAUNCH_FOLDER}"
@@ -23,12 +24,12 @@ echo "MACHINE: {$MACHINE}"
 echo "MACHINE_TYPE: {$MACHINE_TYPE}"
 
 # Activate environment
-source activate-env-per-supercomputer.sh $ENVIRONMENT_DEEPSPEED
+source $SCRIPTS_DIR/activate-env-per-supercomputer.sh $ENVIRONMENT_DEEPSPEED
 
 echo "Using TENSOR_PARALLEL: $TENSOR_PARALLEL"
 
 # Deploy the DeepSpeed-MII server.
-python $LAUNCH_FOLDER/serve_deepspeed_mii.py $TENSOR_PARALLEL &
+python $SCRIPTS_DIR/deepspeed/serve_deepspeed_mii.py $TENSOR_PARALLEL &
 
 sleep 180
 
@@ -48,7 +49,7 @@ for conc in "${concurrencies[@]}"; do
     SUMMARY_FILE="$LAUNCH_FOLDER/gpu_summary_${conc}.txt"
     
     # Run in GPU monitor in background.
-    python $LAUNCH_FOLDER/gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
+    python $SCRIPTS_DIR/deepspeed/gpu_summary_monitor-$MACHINE_TYPE.py "$SUMMARY_FILE" 0.10 & #> "$LOG_FILE" 2>&1 &
     GPU_MON_PID=$!
 
     # Run benchmark stressing the deepspeed-mii server.

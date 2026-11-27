@@ -7,6 +7,7 @@ get_dataset_path() {
   grep -oP "\"$dataset\"\\s*:\\s*\"[^\"]+\"" "$json_file" | \
     sed -E "s/.*: \"([^\"]+)\"/\1/"
 }
+export -f get_dataset_path
 
 # --- Utility to get model type from model_type_map.json ---
 get_model_type() {
@@ -15,6 +16,7 @@ get_model_type() {
   grep -oP "\"$model\"\\s*:\\s*\"[^\"]+\"" "$json_file" | \
     sed -E "s/.*: \"([^\"]+)\"/\1/"
 }
+export -f get_model_type
 
 # --- Utility to get model directory from model_type_directories.json ---
 get_model_directory() {
@@ -23,3 +25,4 @@ get_model_directory() {
   grep -oP "\"$model_type\"\\s*:\\s*\"[^\"]+\"" "$json_file" | \
     sed -E "s/.*: \"([^\"]+)\"/\1/"
 }
+export -f get_model_directory

@@ -1,0 +1,59 @@
+#!/bin/bash
+#SBATCH -A bsc99
+#SBATCH -q acc_bench
+#SBATCH -N 8
+#SBATCH --gres=gpu:4
+#SBATCH --ntasks-per-node=1
+#SBATCH -c 80
+#SBATCH -t 10-00:00:00
+
+
+# #SBATCH -D /home/bsc/bsc079516/minerva-benchmarks/inference
+#SBATCH -J minerva_infer
+#SBATCH -o ./job_outputs/%j/slurm-%x.out
+
+# ##############################################################################
+#                                  Overview
+
+# This job defines a launch submission setup using GNU parallel (a powerful 
+# tool for executing a command with arguments formed from combinatoric lists). 
+# In this case, the command is the worker script, which checks the arguments
+# and submits a job step.
+
+# This job script can be used with main.sh for a CLI submission. For MINERVA,
+# each cluster-specific configuration can be handled in a `NAME.job` job script,
+# defining it's own task submission (e.g. serial or parallel), file-reading,
+# logging, and environment setup (e.g. container vs native).
+
+# NOTE: Must be run from the `inference` directory, as it relies on relative 
+# paths to scripts and configs.
+# TODO: Fix relative paths
+
+# ##############################################################################
+#                            Environment Setup
+# ##############################################################################
+# module load jq parallel
+
+# set -a  # Automatically export all variables
+# source .env-$MACHINE
+# set +a  # Stop automatically exporting
+
+
+module load parallel
+export MACHINE="bsc-mn5-acc"
+
+
+# # Tmp dir
+# # Create Temporal directories (tolerate pre-existing dir / files owned by
+# # previous runs from other users; we only need our own subdirs to be writable).
+# TMPDIR=tmp
+# mkdir -p "$TMPDIR"
+# chmod 777 "$TMPDIR" 2>/dev/null || true
+export SINGULARITY_CACHEDIR=$TMPDIR
+export SINGULARITY_TMPDIR=$TMPDIR
+
+# ##############################################################################
+#                                   Main
+# ##############################################################################
+
+./run_all_benchmarks.sh
